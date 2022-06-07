@@ -13,3 +13,19 @@
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+*.tmp
+
+.env
+
+.DS_Store
+.vscode/
+.idea/
+.local/
+
+Makefile.overrides
+package-lock.json
+
+bin/
+coverage/
+node_modules/

@@ -1,0 +1,52 @@
+name: ci
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - '[0-9]+.x'
+    paths-ignore:
+      - 'docs/**'
+      - '*.md'
+  pull_request:
+
+jobs:
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: set up Go 1.x
+        uses: actions/setup-go@v3
+        with:
+          go-version: ^1.18
+
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: deps
+        run: make deps
+
+      - name: staticcheck
+        uses: dominikh/staticcheck-action@v1.2.0
+        with:
+          version: "2022.1.1"
+          install-go: false
+
+      - name: vet
+        run: make vet
+
+      - name: test
+        run: make test
+
+  automerge:
+    needs:
+      - build
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: write
+    steps:
+      - uses: fastify/github-action-merge-dependabot@v3.2.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
