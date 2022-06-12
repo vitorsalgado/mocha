@@ -11,6 +11,9 @@
       <a href="https://github.com/vitorsalgado/mocha/actions/workflows/ci.yml">
         <img src="https://github.com/vitorsalgado/mocha/actions/workflows/ci.yml/badge.svg" alt="CI Status" />
       </a>
+      <a href="https://codecov.io/gh/vitorsalgado/mocha">
+        <img src="https://codecov.io/gh/vitorsalgado/mocha/branch/main/graph/badge.svg?token=XOFUV52P31" alt="Coverage"/>
+      </a>
       <a href="#">
         <img src="https://img.shields.io/badge/go-1.18-blue" alt="Go 1.18" />
       </a>
