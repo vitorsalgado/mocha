@@ -37,7 +37,10 @@ jobs:
         run: make vet
 
       - name: test
-        run: make test
+        run: make coverage
+
+      - name: upload coverage
+        uses: codecov/codecov-action@v2
 
   automerge:
     needs:

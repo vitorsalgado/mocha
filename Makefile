@@ -18,7 +18,7 @@ run: ## run application
 
 .PHONY: test
 test: ## run tests
-	@go test -v ./...
+	@go test -v ./... -race
 
 .PHONY: bench
 bench: ## run benchmarks
@@ -26,9 +26,8 @@ bench: ## run benchmarks
 
 .PHONY: coverage
 coverage: ## run tests and generate coverage report
-	@mkdir -p coverage
-	@go test -v ./... -race -coverprofile=coverage/coverage.out -covermode=atomic
-	@go tool cover -html=coverage/coverage.out -o coverage/coverage.html
+	@go test -v ./... -race -coverprofile=coverage.out -covermode=atomic
+	@go tool cover -html=coverage.out -o coverage.html
 
 vet: ## check go code
 	@go vet ./...

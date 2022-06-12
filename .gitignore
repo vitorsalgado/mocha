@@ -25,6 +25,8 @@
 
 Makefile.overrides
 package-lock.json
+coverage.out
+coverage.html
 
 bin/
 coverage/
