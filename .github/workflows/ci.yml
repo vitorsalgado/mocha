@@ -46,6 +46,9 @@ jobs:
     needs:
       - build
     runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.user.login == 'dependabot[bot]'
     permissions:
       pull-requests: write
       contents: write
