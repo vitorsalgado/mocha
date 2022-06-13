@@ -1,57 +1,82 @@
 package mocha
 
 import (
-	"github.com/vitorsalgado/mocha/base"
+	"bufio"
 	"log"
 	"net/http"
-	"reflect"
-
-	"github.com/vitorsalgado/mocha/internal/arrays"
 )
 
 type Handler struct {
-	repo MockRepository
-}
-
-type Result struct {
-	IsMatch bool
+	repo               MockRepository
+	scenarioRepository ScenarioRepository
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	mocks := h.repo.GetAllSorted()
+	ctx := MatcherContext{Req: r, Repo: h.repo, ScenarioRepository: h.scenarioRepository}
+	result, err := FindMockForRequest(ctx)
 
-	for _, mock := range mocks {
-		if arrays.All(mock.Expectations, func(e any) bool {
-			var err error
-			var res bool
+	if err != nil {
+		respondErr(w, err)
+		return
+	}
 
-			switch e := e.(type) {
-			case Expectation[string]:
-				res, err = e.Matcher(e.Pick(r), base.MatcherContext{})
-			default:
-				log.Fatalf("unhandled matcher type %s", reflect.TypeOf(e))
-			}
+	if result.Matches {
+		mock := result.Matched
+		res, err := result.Matched.ResFn(r, mock)
+		if err != nil {
+			respondErr(w, err)
+			return
+		}
 
+		mock.Hits++
+		h.repo.Save(mock)
+
+		for k, v := range res.Headers {
+			w.Header().Add(k, v)
+		}
+
+		w.WriteHeader(res.Status)
+
+		if res.Body == nil {
+			return
+		}
+
+		scanner := bufio.NewScanner(res.Body)
+
+		for scanner.Scan() {
+			_, err = w.Write(scanner.Bytes())
 			if err != nil {
-				log.Fatal(e)
-			}
-
-			return res
-		}) {
-			res, err := mock.ResFn(r, mock)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			mock.Hits++
-
-			w.WriteHeader(res.Status)
-
-			_, _ = w.Write(res.Body)
-
-			for k, v := range res.Headers {
-				w.Header().Add(k, v)
+				respondErr(w, err)
 			}
 		}
+
+		if scanner.Err() != nil {
+			respondErr(w, err)
+			return
+		}
+
+		return
 	}
+
+	noMatch(w, result)
+}
+
+func noMatch(w http.ResponseWriter, result *FindMockResult) {
+	w.WriteHeader(http.StatusTeapot)
+	_, _ = w.Write([]byte("Request was not matched."))
+
+	if result.ClosestMatch != nil {
+		_, _ = w.Write([]byte("\n"))
+		_, _ = w.Write([]byte("\n"))
+	}
+}
+
+func respondErr(w http.ResponseWriter, err error) {
+	w.WriteHeader(http.StatusTeapot)
+	_, _ = w.Write([]byte("Request was not matched."))
+	_, _ = w.Write([]byte(err.Error()))
+
+	log.Printf("Reason: %v", err)
+
+	return
 }

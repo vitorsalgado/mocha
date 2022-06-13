@@ -1,7 +1,8 @@
 package mocha
 
 import (
-	"github.com/vitorsalgado/mocha/matchers"
+	"github.com/vitorsalgado/mocha/internal/assert"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"testing"
@@ -9,24 +10,27 @@ import (
 
 func TestMocha(t *testing.T) {
 	t.Run("should mock request", func(t *testing.T) {
-		m := New()
-		defer m.Close()
+		m := NewT(t)
 
-		m.Mock(NewBuilder().
-			Header("test", matchers.EqualTo("hello")).
-			Res().
-			Build())
+		scoped := m.Mock(Get(URLPath("/test")).
+			Header("test", Equal("hello")).
+			Query("filter", Equal("all")).
+			Reply(Created().BodyStr("hello world")))
 
-		req, _ := http.NewRequest(http.MethodGet, m.Server.URL, nil)
+		req, _ := http.NewRequest(http.MethodGet, m.Server.URL+"/test?filter=all", nil)
 		req.Header.Add("test", "hello")
+		req.URL.Query().Add("filter", "all")
 
 		res, err := http.DefaultClient.Do(req)
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		if res.StatusCode != 201 {
-			t.Errorf("expected status code 201. received %d", res.StatusCode)
-		}
+		body, err := ioutil.ReadAll(res.Body)
+
+		assert.Nil(t, err)
+		assert.True(t, scoped.IsDone())
+		assert.Equal(t, 201, res.StatusCode)
+		assert.Equal(t, string(body), "hello world")
 	})
 }
