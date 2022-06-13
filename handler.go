@@ -12,7 +12,7 @@ type Handler struct {
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ctx := MatcherContext{Req: r, Repo: h.repo, ScenarioRepository: h.scenarioRepository}
+	ctx := MatcherParams{Req: r, Repo: h.repo, ScenarioRepository: h.scenarioRepository}
 	result, err := FindMockForRequest(ctx)
 
 	if err != nil {
@@ -20,45 +20,44 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if result.Matches {
-		mock := result.Matched
-		res, err := result.Matched.ResFn(r, mock)
-		if err != nil {
-			respondErr(w, err)
-			return
-		}
-
-		mock.Hits++
-		h.repo.Save(mock)
-
-		for k, v := range res.Headers {
-			w.Header().Add(k, v)
-		}
-
-		w.WriteHeader(res.Status)
-
-		if res.Body == nil {
-			return
-		}
-
-		scanner := bufio.NewScanner(res.Body)
-
-		for scanner.Scan() {
-			_, err = w.Write(scanner.Bytes())
-			if err != nil {
-				respondErr(w, err)
-			}
-		}
-
-		if scanner.Err() != nil {
-			respondErr(w, err)
-			return
-		}
-
+	if !result.Matches {
+		noMatch(w, result)
 		return
 	}
 
-	noMatch(w, result)
+	mock := result.Matched
+	res, err := result.Matched.ResFn(r, mock)
+	if err != nil {
+		respondErr(w, err)
+		return
+	}
+
+	mock.Hits++
+	h.repo.Save(mock)
+
+	for k, v := range res.Headers {
+		w.Header().Add(k, v)
+	}
+
+	w.WriteHeader(res.Status)
+
+	if res.Body == nil {
+		return
+	}
+
+	scanner := bufio.NewScanner(res.Body)
+
+	for scanner.Scan() {
+		_, err = w.Write(scanner.Bytes())
+		if err != nil {
+			respondErr(w, err)
+		}
+	}
+
+	if scanner.Err() != nil {
+		respondErr(w, err)
+		return
+	}
 }
 
 func noMatch(w http.ResponseWriter, result *FindMockResult) {

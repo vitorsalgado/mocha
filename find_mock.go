@@ -6,14 +6,14 @@ type FindMockResult struct {
 	ClosestMatch *Mock
 }
 
-func FindMockForRequest(ctx MatcherContext) (*FindMockResult, error) {
-	mocks := ctx.Repo.FetchSorted()
+func FindMockForRequest(params MatcherParams) (*FindMockResult, error) {
+	mocks := params.Repo.FetchSorted()
 
 	var m *Mock
 	var w = 0
 
 	for _, mock := range mocks {
-		matches, err := mock.Matches(ctx)
+		matches, err := mock.Matches(params)
 		if err != nil {
 			return nil, err
 		}

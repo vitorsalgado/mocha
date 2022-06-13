@@ -57,7 +57,7 @@ func (m *Mock) Called() bool {
 	return m.Hits > 0
 }
 
-func (m *Mock) Matches(ctx MatcherContext) (MatchResult, error) {
+func (m *Mock) Matches(ctx MatcherParams) (MatchResult, error) {
 	weight := 0
 
 	for _, expect := range m.Expectations {

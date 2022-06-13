@@ -129,7 +129,7 @@ func (b *MockBuilder) Expect(matcher Matcher[*http.Request]) *MockBuilder {
 }
 
 func (b *MockBuilder) Scenario(name, requiredState, newState string) *MockBuilder {
-	b.Expect(ScenarioM[*http.Request](name, requiredState, newState))
+	b.Expect(scenarioMatcher[*http.Request](name, requiredState, newState))
 	return b
 }
 

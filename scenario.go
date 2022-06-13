@@ -24,21 +24,21 @@ type (
 		Save(scenario Scenario)
 	}
 
-	ScenarioInMemoryRepository struct {
+	scenarioInMemoryRepository struct {
 		data map[string]Scenario
 	}
 )
 
 func NewScenarioRepository() ScenarioRepository {
-	return &ScenarioInMemoryRepository{data: make(map[string]Scenario)}
+	return &scenarioInMemoryRepository{data: make(map[string]Scenario)}
 }
 
-func (repo *ScenarioInMemoryRepository) FetchByName(name string) *Scenario {
+func (repo *scenarioInMemoryRepository) FetchByName(name string) *Scenario {
 	s := repo.data[name]
 	return &s
 }
 
-func (repo *ScenarioInMemoryRepository) CreateNewIfNeeded(name string) *Scenario {
+func (repo *scenarioInMemoryRepository) CreateNewIfNeeded(name string) *Scenario {
 	s, ok := repo.data[name]
 
 	if !ok {
@@ -50,30 +50,31 @@ func (repo *ScenarioInMemoryRepository) CreateNewIfNeeded(name string) *Scenario
 	return &s
 }
 
-func (repo *ScenarioInMemoryRepository) Save(scenario Scenario) {
+func (repo *scenarioInMemoryRepository) Save(scenario Scenario) {
 	repo.data[scenario.Name] = scenario
 }
 
-func ScenarioM[V any](name, requiredState, newState string) Matcher[V] {
-	return func(_ V, ctx MatcherContext) (bool, error) {
+func scenarioMatcher[V any](name, requiredState, newState string) Matcher[V] {
+	return func(_ V, params MatcherParams) (bool, error) {
 		if requiredState == ScenarioStarted {
-			ctx.ScenarioRepository.CreateNewIfNeeded(name)
+			params.ScenarioRepository.CreateNewIfNeeded(name)
 		}
 
-		scenario := ctx.ScenarioRepository.FetchByName(name)
-		if scenario != nil {
-			if scenario.State == requiredState {
-				if newState != "" {
-					scenario.State = newState
-					ctx.ScenarioRepository.Save(*scenario)
-				}
+		scenario := params.ScenarioRepository.FetchByName(name)
 
-				return true, nil
-			} else {
-				return false, nil
+		if scenario == nil {
+			return true, nil
+		}
+
+		if scenario.State == requiredState {
+			if newState != "" {
+				scenario.State = newState
+				params.ScenarioRepository.Save(*scenario)
 			}
+
+			return true, nil
 		}
 
-		return true, nil
+		return false, nil
 	}
 }
