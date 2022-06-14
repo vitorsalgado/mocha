@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func Equal[T comparable](t *testing.T, expected, actual T, msg ...any) {
+func Equal[T any](t *testing.T, expected, actual T, msg ...any) {
 	t.Helper()
 
 	if !reflect.DeepEqual(expected, actual) {
