@@ -1,55 +1,96 @@
 package maps
 
 import (
+	"fmt"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
 )
 
-var fieldRegexp = regexp.MustCompile("(?P<field>\\w+)\\[(?P<idx>\\d+)]")
+var (
+	fieldRegExp = regexp.MustCompile("(?P<field>\\w+)\\[(?P<idx>\\d+)](.*)")
+	idxRegExp   = regexp.MustCompile("^\\[(?P<index>\\d+)](.*)")
+)
 
-func Get[T any](p string, m map[string]any) T {
-	var parts = strings.Split(p, ".")
-	var ret T
+func GetNew[R any](chain string, data any) (R, error) {
+	var dataType = reflect.TypeOf(data).Kind()
+	var hasBracket = strings.HasPrefix(chain, "[")
+	var ret R
 
-	for i, part := range parts {
-		var matches = fieldRegexp.FindAllStringSubmatch(part, -1)
+	switch dataType {
+	case reflect.Map:
+		if hasBracket {
+			return ret,
+				fmt.Errorf("json path chain starts with an index pattern [] when json is actually an object")
+		}
+
+		if strings.HasPrefix(chain, ".") {
+			chain = chain[1:]
+		}
+
+		parts := strings.Split(chain, ".")
+		s := len(parts)
+
+		if s == 0 {
+			return ret, fmt.Errorf("invalid json path %s", chain)
+		}
+
+		part := parts[0]
+
+		var matches = fieldRegExp.FindAllStringSubmatch(part, -1)
 		var field any
 		var fieldType reflect.Type
 
 		if matches != nil && len(matches) > 0 {
 			values := matches[0]
-			keys := fieldRegexp.SubexpNames()
-			params := make(map[string]string, len(values))
 
-			for c, key := range values {
-				params[keys[c]] = key
-			}
-
-			idx, _ := strconv.Atoi(params["idx"])
-			f := params["field"]
-			field = m[f]
+			idx, _ := strconv.Atoi(values[2])
+			field = data.(map[string]any)[values[1]]
 			field = field.([]any)[idx]
-			fieldType = reflect.TypeOf(field)
+			next := values[3]
+
+			if next != "" {
+				return GetNew[R](next, field)
+			}
 		} else {
-			field = m[part]
-			fieldType = reflect.TypeOf(field)
+			field = data.(map[string]any)[part]
 		}
+
+		fieldType = reflect.TypeOf(field)
 
 		if field == nil {
-			var noop T
-			return noop
+			var noop R
+			return noop, nil
 		}
 
-		switch fieldType.Kind() {
-		case reflect.Map:
-			n := strings.Join(parts[i+1:], ".")
-			return Get[T](n, field.(map[string]any))
-		default:
-			ret = field.(T)
+		if fieldType.Kind() == reflect.Map {
+			return GetNew[R](strings.Join(parts[1:], "."), field)
+		}
+
+		ret = field.(R)
+
+	case reflect.Slice:
+		if !hasBracket {
+			return *new(R),
+				fmt.Errorf("json is an array but the json path chain does not start with an index pattern []")
+		}
+
+		matches := idxRegExp.FindAllStringSubmatch(chain, -1)
+
+		if matches != nil && len(matches) > 0 {
+			values := matches[0]
+			idx, _ := strconv.Atoi(values[1])
+			next := values[2]
+			field := data.([]any)[idx]
+
+			if next == "" {
+				return field.(R), nil
+			}
+
+			return GetNew[R](next, field)
 		}
 	}
 
-	return ret
+	return ret, nil
 }
