@@ -9,11 +9,11 @@ import (
 )
 
 var (
-	fieldRegExp = regexp.MustCompile("(?P<field>\\w+)\\[(?P<idx>\\d+)](.*)")
-	idxRegExp   = regexp.MustCompile("^\\[(?P<index>\\d+)](.*)")
+	fieldRegExp = regexp.MustCompile("(\\w+)\\[(\\d+)](.*)")
+	idxRegExp   = regexp.MustCompile("^\\[(\\d+)](.*)")
 )
 
-func GetNew[R any](chain string, data any) (R, error) {
+func Reach[R any](chain string, data any) (R, error) {
 	var dataType = reflect.TypeOf(data).Kind()
 	var hasBracket = strings.HasPrefix(chain, "[")
 	var ret R
@@ -29,6 +29,27 @@ func GetNew[R any](chain string, data any) (R, error) {
 			chain = chain[1:]
 		}
 
+		var matches = fieldRegExp.FindAllStringSubmatch(chain, -1)
+
+		if matches != nil && len(matches) > 0 {
+			values := matches[0]
+
+			idx, _ := strconv.Atoi(values[2])
+			field := data.(map[string]any)[values[1]]
+			field = field.([]any)[idx]
+			next := values[3]
+
+			if next != "" {
+				return Reach[R](next, field)
+			}
+
+			if field == nil {
+				return ret, nil
+			}
+
+			return field.(R), nil
+		}
+
 		parts := strings.Split(chain, ".")
 		s := len(parts)
 
@@ -36,39 +57,16 @@ func GetNew[R any](chain string, data any) (R, error) {
 			return ret, fmt.Errorf("invalid json path %s", chain)
 		}
 
-		part := parts[0]
-
-		var matches = fieldRegExp.FindAllStringSubmatch(part, -1)
-		var field any
-		var fieldType reflect.Type
-
-		if matches != nil && len(matches) > 0 {
-			values := matches[0]
-
-			idx, _ := strconv.Atoi(values[2])
-			field = data.(map[string]any)[values[1]]
-			field = field.([]any)[idx]
-			next := values[3]
-
-			if next != "" {
-				return GetNew[R](next, field)
+		if s == 1 {
+			r := data.(map[string]any)[parts[0]]
+			if r == nil {
+				return ret, nil
 			}
-		} else {
-			field = data.(map[string]any)[part]
+
+			return data.(map[string]any)[parts[0]].(R), nil
 		}
 
-		fieldType = reflect.TypeOf(field)
-
-		if field == nil {
-			var noop R
-			return noop, nil
-		}
-
-		if fieldType.Kind() == reflect.Map {
-			return GetNew[R](strings.Join(parts[1:], "."), field)
-		}
-
-		ret = field.(R)
+		return Reach[R](strings.Join(parts[1:], "."), data.(map[string]any)[parts[0]])
 
 	case reflect.Slice:
 		if !hasBracket {
@@ -85,10 +83,14 @@ func GetNew[R any](chain string, data any) (R, error) {
 			field := data.([]any)[idx]
 
 			if next == "" {
+				if field == nil {
+					return ret, nil
+				}
+
 				return field.(R), nil
 			}
 
-			return GetNew[R](next, field)
+			return Reach[R](next, field)
 		}
 	}
 

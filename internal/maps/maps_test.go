@@ -7,8 +7,8 @@ import (
 	"testing"
 )
 
-func TestGetNew(t *testing.T) {
-	j := `
+func TestArray(t *testing.T) {
+	jsonData := `
 [
 	[
 		"dev", 
@@ -20,32 +20,36 @@ func TestGetNew(t *testing.T) {
 					{ "working": true }
 				]
 			]
-		}
+		},
+		null
 	]
 ]
 `
 	var data []any
-	err := json.Unmarshal([]byte(j), &data)
+	err := json.Unmarshal([]byte(jsonData), &data)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	qa, err := GetNew[string]("[0][1]", data)
-	working, err := GetNew[bool]("[0][2].entries[0][0].working", data)
+	qa, err := Reach[string]("[0][1]", data)
+	flg, err := Reach[float64]("[0][2].test", data)
+	working, err := Reach[bool]("[0][2].entries[0][0].working", data)
+	nilObj, err := Reach[any]("[0][3]", data)
 
 	assert.Nil(t, err)
 	assert.Equal(t, "qa", qa)
-	//assert.Equal(t, 1, testOk)
+	assert.Equal(t, 1, flg)
 	assert.True(t, working)
+	assert.Nil(t, nilObj)
 }
 
-func TestGet(t *testing.T) {
+func TestObject(t *testing.T) {
 	j := `
 {
 	"name": "test",
 	"age": 100,
 	"active": true,
-	"jobs": ["qa", "dev"],
+	"jobs": ["qa", "dev", null],
 	"extra": {
 		"salary": 50,
 		"home": "Chile",
@@ -64,31 +68,37 @@ func TestGet(t *testing.T) {
 	"nothing": null
 }
 `
-	m := make(map[string]any)
-	err := json.Unmarshal([]byte(j), &m)
+	data := make(map[string]any)
+	err := json.Unmarshal([]byte(j), &data)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	name, _ := GetNew[string]("name", m)
-	age, _ := GetNew[float64]("age", m)
-	active, _ := GetNew[bool]("active", m)
-	salary, _ := GetNew[float64]("extra.salary", m)
-	employer, _ := GetNew[any]("extra.employer", m)
-	street, _ := GetNew[string]("extra.address.street", m)
-	jobs, _ := GetNew[[]any]("jobs", m)
-	qa, _ := GetNew[string]("jobs[0]", m)
-	deepValue, _ := GetNew[string]("deep[1].params[0].name", m)
-	nothing, _ := GetNew[any]("nothing", m)
+	name, err := Reach[string]("name", data)
+	age, err := Reach[float64]("age", data)
+	active, err := Reach[bool]("active", data)
+	ext, err := Reach[map[string]any]("extra", data)
+	salary, err := Reach[float64]("extra.salary", data)
+	employer, err := Reach[any]("extra.employer", data)
+	street, err := Reach[string]("extra.address.street", data)
+	jobs, err := Reach[[]any]("jobs", data)
+	nilJob, err := Reach[any]("jobs[2]", data)
+	qa, err := Reach[string]("jobs[0]", data)
+	deepValue, err := Reach[string]("deep[1].params[0].name", data)
+	nothing, err := Reach[any]("nothing", data)
 
+	assert.Nil(t, err)
 	assert.Equal(t, "test", name)
 	assert.Equal(t, float64(100), age)
 	assert.True(t, active)
+	assert.NotNil(t, ext)
+	assert.Equal(t, float64(50), ext["salary"].(float64))
 	assert.Equal(t, 50, salary)
 	assert.Nil(t, employer)
 	assert.Equal(t, "somewhere nice", street)
-	assert.Equal(t, 2, len(jobs))
-	assert.Equal(t, []any{"qa", "dev"}, jobs)
+	assert.Equal(t, 3, len(jobs))
+	assert.Equal(t, []any{"qa", "dev", nil}, jobs)
+	assert.Nil(t, nilJob)
 	assert.Equal(t, "qa", qa)
 	assert.Equal(t, "deep value", deepValue)
 	assert.Nil(t, nothing)
