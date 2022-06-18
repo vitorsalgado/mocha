@@ -1,4 +1,4 @@
-package maps
+package jsonpath
 
 import (
 	"fmt"
@@ -13,7 +13,7 @@ var (
 	idxRegExp   = regexp.MustCompile("^\\[(\\d+)](.*)")
 )
 
-func Reach[R any](chain string, data any) (R, error) {
+func Get[R any](chain string, data any) (R, error) {
 	var dataType = reflect.TypeOf(data).Kind()
 	var hasBracket = strings.HasPrefix(chain, "[")
 	var ret R
@@ -40,7 +40,7 @@ func Reach[R any](chain string, data any) (R, error) {
 			next := values[3]
 
 			if next != "" {
-				return Reach[R](next, field)
+				return Get[R](next, field)
 			}
 
 			if field == nil {
@@ -66,7 +66,7 @@ func Reach[R any](chain string, data any) (R, error) {
 			return data.(map[string]any)[parts[0]].(R), nil
 		}
 
-		return Reach[R](strings.Join(parts[1:], "."), data.(map[string]any)[parts[0]])
+		return Get[R](strings.Join(parts[1:], "."), data.(map[string]any)[parts[0]])
 
 	case reflect.Slice:
 		if !hasBracket {
@@ -90,7 +90,7 @@ func Reach[R any](chain string, data any) (R, error) {
 				return field.(R), nil
 			}
 
-			return Reach[R](next, field)
+			return Get[R](next, field)
 		}
 	}
 

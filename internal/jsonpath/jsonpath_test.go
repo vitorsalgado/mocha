@@ -1,4 +1,4 @@
-package maps
+package jsonpath
 
 import (
 	"encoding/json"
@@ -31,10 +31,10 @@ func TestArray(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	qa, err := Reach[string]("[0][1]", data)
-	flg, err := Reach[float64]("[0][2].test", data)
-	working, err := Reach[bool]("[0][2].entries[0][0].working", data)
-	nilObj, err := Reach[any]("[0][3]", data)
+	qa, err := Get[string]("[0][1]", data)
+	flg, err := Get[float64]("[0][2].test", data)
+	working, err := Get[bool]("[0][2].entries[0][0].working", data)
+	nilObj, err := Get[any]("[0][3]", data)
 
 	assert.Nil(t, err)
 	assert.Equal(t, "qa", qa)
@@ -74,18 +74,18 @@ func TestObject(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	name, err := Reach[string]("name", data)
-	age, err := Reach[float64]("age", data)
-	active, err := Reach[bool]("active", data)
-	ext, err := Reach[map[string]any]("extra", data)
-	salary, err := Reach[float64]("extra.salary", data)
-	employer, err := Reach[any]("extra.employer", data)
-	street, err := Reach[string]("extra.address.street", data)
-	jobs, err := Reach[[]any]("jobs", data)
-	nilJob, err := Reach[any]("jobs[2]", data)
-	qa, err := Reach[string]("jobs[0]", data)
-	deepValue, err := Reach[string]("deep[1].params[0].name", data)
-	nothing, err := Reach[any]("nothing", data)
+	name, err := Get[string]("name", data)
+	age, err := Get[float64]("age", data)
+	active, err := Get[bool]("active", data)
+	ext, err := Get[map[string]any]("extra", data)
+	salary, err := Get[float64]("extra.salary", data)
+	employer, err := Get[any]("extra.employer", data)
+	street, err := Get[string]("extra.address.street", data)
+	jobs, err := Get[[]any]("jobs", data)
+	nilJob, err := Get[any]("jobs[2]", data)
+	qa, err := Get[string]("jobs[0]", data)
+	deepValue, err := Get[string]("deep[1].params[0].name", data)
+	nothing, err := Get[any]("nothing", data)
 
 	assert.Nil(t, err)
 	assert.Equal(t, "test", name)
