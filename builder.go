@@ -28,23 +28,13 @@ func (b *MockBuilder) Priority(p int) *MockBuilder {
 }
 
 func (b *MockBuilder) Method(method string) *MockBuilder {
-	var matcher Matcher[string]
-	var weight = 0
-
-	if method == "*" {
-		matcher = Anything[string]()
-	} else {
-		matcher = EqualFold(method)
-	}
-
-	weight = 3
 	b.mock.Expectations = append(
 		b.mock.Expectations,
 		Expectation[string]{
 			Name:    "method",
 			Pick:    func(r *MockRequest) string { return r.RawRequest.Method },
-			Matcher: matcher,
-			Weight:  weight,
+			Matcher: EqualFold(method),
+			Weight:  3,
 		})
 
 	return b
@@ -129,6 +119,18 @@ func (b *MockBuilder) Body(matchers ...Matcher[any]) *MockBuilder {
 	return b
 }
 
+func (b *MockBuilder) FormField(field string, matcher Matcher[string]) *MockBuilder {
+	b.mock.Expectations = append(b.mock.Expectations,
+		Expectation[string]{
+			Name:    "form",
+			Pick:    func(r *MockRequest) string { return r.RawRequest.Form.Get(field) },
+			Matcher: matcher,
+			Weight:  1,
+		})
+
+	return b
+}
+
 func (b *MockBuilder) Expect(matcher Matcher[*http.Request]) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
@@ -148,7 +150,7 @@ func (b *MockBuilder) Scenario(name, requiredState, newState string) *MockBuilde
 }
 
 func (b *MockBuilder) Reply(reply Reply) *MockBuilder {
-	b.mock.ResFn = reply.Build()
+	b.mock.Responder = reply.Build()
 	return b
 }
 

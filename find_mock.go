@@ -7,7 +7,7 @@ type FindMockResult struct {
 }
 
 func FindMockForRequest(params MatcherParams) (*FindMockResult, error) {
-	mocks := params.Repo.FetchSorted()
+	mocks := params.MockStore.FetchSorted()
 
 	var m *Mock
 	var w = 0

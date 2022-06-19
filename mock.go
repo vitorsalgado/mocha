@@ -16,11 +16,11 @@ type (
 		Name         string
 		Priority     int
 		Expectations []any
-		ResFn        ResponseDelegate
+		Responder    Responder
 		Hits         int
 	}
 
-	MockRepository interface {
+	MockStore interface {
 		Save(mock *Mock)
 		FetchSorted() []Mock
 		GetByID(id int32) Mock
@@ -64,22 +64,22 @@ func (m *Mock) Matches(ctx MatcherParams) (MatchResult, error) {
 	for _, expect := range m.Expectations {
 		switch e := expect.(type) {
 		case Expectation[string]:
-			if res, err := e.Matcher(e.Pick(ctx.Req), ctx); err != nil || !res {
+			if res, err := e.Matcher(e.Pick(ctx.Request), ctx); err != nil || !res {
 				return MatchResult{IsMatch: false, Weight: weight}, err
 			}
 			weight = weight + e.Weight
 		case Expectation[url.URL]:
-			if res, err := e.Matcher(e.Pick(ctx.Req), ctx); err != nil || !res {
+			if res, err := e.Matcher(e.Pick(ctx.Request), ctx); err != nil || !res {
 				return MatchResult{IsMatch: false, Weight: weight}, err
 			}
 			weight = weight + e.Weight
 		case Expectation[*http.Request]:
-			if res, err := e.Matcher(e.Pick(ctx.Req), ctx); err != nil || !res {
+			if res, err := e.Matcher(e.Pick(ctx.Request), ctx); err != nil || !res {
 				return MatchResult{IsMatch: false, Weight: weight}, err
 			}
 			weight = weight + e.Weight
 		case Expectation[any]:
-			if res, err := e.Matcher(e.Pick(ctx.Req), ctx); err != nil || !res {
+			if res, err := e.Matcher(e.Pick(ctx.Request), ctx); err != nil || !res {
 				return MatchResult{IsMatch: false, Weight: weight}, err
 			}
 			weight = weight + e.Weight
@@ -91,16 +91,16 @@ func (m *Mock) Matches(ctx MatcherParams) (MatchResult, error) {
 	return MatchResult{IsMatch: true}, nil
 }
 
-type InMemoryMockRepository struct {
+type InMemoMockStore struct {
 	data map[int32]Mock
 	ids  internal.ID
 }
 
-func NewMockRepository() MockRepository {
-	return &InMemoryMockRepository{data: make(map[int32]Mock)}
+func NewMockStore() MockStore {
+	return &InMemoMockStore{data: make(map[int32]Mock)}
 }
 
-func (repo *InMemoryMockRepository) Save(mock *Mock) {
+func (repo *InMemoMockStore) Save(mock *Mock) {
 	if mock.ID == 0 {
 		mock.ID = repo.ids.Next()
 	}
@@ -108,11 +108,11 @@ func (repo *InMemoryMockRepository) Save(mock *Mock) {
 	repo.data[mock.ID] = *mock
 }
 
-func (repo *InMemoryMockRepository) GetByID(id int32) Mock {
+func (repo *InMemoMockStore) GetByID(id int32) Mock {
 	return repo.data[id]
 }
 
-func (repo *InMemoryMockRepository) FetchSorted() []Mock {
+func (repo *InMemoMockStore) FetchSorted() []Mock {
 	size := len(repo.data)
 	mocks := make([]Mock, size)
 	i := 0
@@ -129,7 +129,7 @@ func (repo *InMemoryMockRepository) FetchSorted() []Mock {
 	return mocks
 }
 
-func (repo *InMemoryMockRepository) GetByIDs(ids []int32) []Mock {
+func (repo *InMemoMockStore) GetByIDs(ids []int32) []Mock {
 	size := len(ids)
 	arr := make([]Mock, 0, size)
 
@@ -140,7 +140,7 @@ func (repo *InMemoryMockRepository) GetByIDs(ids []int32) []Mock {
 	return arr
 }
 
-func (repo *InMemoryMockRepository) Pending(ids []int32) []Mock {
+func (repo *InMemoMockStore) Pending(ids []int32) []Mock {
 	r := make([]Mock, 0)
 
 	for _, mock := range repo.GetByIDs(ids) {
@@ -152,11 +152,11 @@ func (repo *InMemoryMockRepository) Pending(ids []int32) []Mock {
 	return r
 }
 
-func (repo *InMemoryMockRepository) Delete(id int32) {
+func (repo *InMemoMockStore) Delete(id int32) {
 	delete(repo.data, id)
 }
 
-func (repo *InMemoryMockRepository) Flush() {
+func (repo *InMemoMockStore) Flush() {
 	for key := range repo.data {
 		delete(repo.data, key)
 	}

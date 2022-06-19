@@ -18,27 +18,27 @@ func (s Scenario) HasStarted() bool {
 }
 
 type (
-	ScenarioRepository interface {
+	ScenarioStore interface {
 		FetchByName(name string) *Scenario
 		CreateNewIfNeeded(name string) *Scenario
 		Save(scenario Scenario)
 	}
 
-	scenarioInMemoryRepository struct {
+	scenarioInMemoStore struct {
 		data map[string]Scenario
 	}
 )
 
-func NewScenarioRepository() ScenarioRepository {
-	return &scenarioInMemoryRepository{data: make(map[string]Scenario)}
+func NewScenarioStore() ScenarioStore {
+	return &scenarioInMemoStore{data: make(map[string]Scenario)}
 }
 
-func (repo *scenarioInMemoryRepository) FetchByName(name string) *Scenario {
+func (repo *scenarioInMemoStore) FetchByName(name string) *Scenario {
 	s := repo.data[name]
 	return &s
 }
 
-func (repo *scenarioInMemoryRepository) CreateNewIfNeeded(name string) *Scenario {
+func (repo *scenarioInMemoStore) CreateNewIfNeeded(name string) *Scenario {
 	s, ok := repo.data[name]
 
 	if !ok {
@@ -50,17 +50,17 @@ func (repo *scenarioInMemoryRepository) CreateNewIfNeeded(name string) *Scenario
 	return &s
 }
 
-func (repo *scenarioInMemoryRepository) Save(scenario Scenario) {
+func (repo *scenarioInMemoStore) Save(scenario Scenario) {
 	repo.data[scenario.Name] = scenario
 }
 
 func scenarioMatcher[V any](name, requiredState, newState string) Matcher[V] {
 	return func(_ V, params MatcherParams) (bool, error) {
 		if requiredState == ScenarioStarted {
-			params.ScenarioRepository.CreateNewIfNeeded(name)
+			params.ScenarioStore.CreateNewIfNeeded(name)
 		}
 
-		scenario := params.ScenarioRepository.FetchByName(name)
+		scenario := params.ScenarioStore.FetchByName(name)
 
 		if scenario == nil {
 			return true, nil
@@ -69,7 +69,7 @@ func scenarioMatcher[V any](name, requiredState, newState string) Matcher[V] {
 		if scenario.State == requiredState {
 			if newState != "" {
 				scenario.State = newState
-				params.ScenarioRepository.Save(*scenario)
+				params.ScenarioStore.Save(*scenario)
 			}
 
 			return true, nil

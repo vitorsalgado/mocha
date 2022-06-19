@@ -1,7 +1,6 @@
 package mocha
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -15,10 +14,10 @@ type (
 		Delay   int
 	}
 
-	ResponseDelegate func(r *http.Request, mock *Mock) (*Response, error)
+	Responder func(r *http.Request, mock *Mock) (*Response, error)
 
 	Reply interface {
-		Build() ResponseDelegate
+		Build() Responder
 	}
 
 	StdReply struct {
@@ -43,23 +42,11 @@ func (reply *StdReply) Header(key, value string) *StdReply {
 	return reply
 }
 
-func (reply *StdReply) Fault() *StdReply {
-	reply.response.Body = &F{}
-	return reply
-}
-
 func (reply *StdReply) BodyStr(value string) *StdReply {
 	reply.response.Body = strings.NewReader(value)
 	return reply
 }
 
-func (reply *StdReply) Build() ResponseDelegate {
+func (reply *StdReply) Build() Responder {
 	return func(_ *http.Request, _ *Mock) (*Response, error) { return reply.response, nil }
-}
-
-type F struct {
-}
-
-func (f F) Read([]byte) (int, error) {
-	return 0, fmt.Errorf("test error")
 }

@@ -7,26 +7,26 @@ import (
 )
 
 type Handler struct {
-	repo               MockRepository
-	scenarioRepository ScenarioRepository
-	bodyParsers        []BodyParser
+	mocks     MockStore
+	scenarios ScenarioStore
+	parsers   []BodyParser
 }
 
 func newHandler(
-	mockstore MockRepository,
-	scenariostore ScenarioRepository, parsers []BodyParser,
+	mockstore MockStore,
+	scenariostore ScenarioStore, parsers []BodyParser,
 ) *Handler {
-	return &Handler{repo: mockstore, scenarioRepository: scenariostore, bodyParsers: parsers}
+	return &Handler{mocks: mockstore, scenarios: scenariostore, parsers: parsers}
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	req, err := WrapRequest(r, h.bodyParsers)
+	req, err := WrapRequest(r, h.parsers)
 	if err != nil {
 		respondErr(w, err)
 		return
 	}
 
-	params := MatcherParams{Req: req, Repo: h.repo, ScenarioRepository: h.scenarioRepository}
+	params := MatcherParams{Request: req, MockStore: h.mocks, ScenarioStore: h.scenarios}
 	result, err := FindMockForRequest(params)
 
 	if err != nil {
@@ -40,14 +40,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mock := result.Matched
-	res, err := result.Matched.ResFn(r, mock)
+	res, err := result.Matched.Responder(r, mock)
 	if err != nil {
 		respondErr(w, err)
 		return
 	}
 
 	mock.Hits++
-	h.repo.Save(mock)
+	h.mocks.Save(mock)
 
 	for k, v := range res.Headers {
 		w.Header().Add(k, v)

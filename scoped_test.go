@@ -1,12 +1,13 @@
 package mocha
 
 import (
-	"github.com/vitorsalgado/mocha/internal/assert"
 	"testing"
+
+	"github.com/vitorsalgado/mocha/internal/assert"
 )
 
 func TestScoped(t *testing.T) {
-	repo := NewMockRepository()
+	repo := NewMockStore()
 	repo.Save(&Mock{ID: 1})
 	repo.Save(&Mock{ID: 2})
 	repo.Save(&Mock{ID: 3})

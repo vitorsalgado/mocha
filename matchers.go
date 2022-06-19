@@ -48,3 +48,15 @@ func JSONPath[V any](p string, matcher Matcher[V]) Matcher[any] {
 		return matcher(value.(V), params)
 	}
 }
+
+func Trim(matcher Matcher[string]) Matcher[string] {
+	return func(v string, params MatcherParams) (bool, error) {
+		return matcher(strings.TrimSpace(v), params)
+	}
+}
+
+func ToLowerCase(matcher Matcher[string]) Matcher[string] {
+	return func(v string, params MatcherParams) (bool, error) {
+		return matcher(strings.ToLower(v), params)
+	}
+}

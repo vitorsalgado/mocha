@@ -1,13 +1,14 @@
 package middleware
 
 import (
-	"github.com/vitorsalgado/mocha/internal/assert"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/vitorsalgado/mocha/internal/assert"
 )
 
 func TestRecover(t *testing.T) {

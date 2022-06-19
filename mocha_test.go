@@ -1,16 +1,13 @@
 package mocha
 
 import (
-	"bytes"
-	"encoding/json"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
-	"strings"
 	"testing"
 
 	"github.com/vitorsalgado/mocha/internal/assert"
+	"github.com/vitorsalgado/mocha/internal/testutil"
 )
 
 func TestMocha(t *testing.T) {
@@ -39,30 +36,6 @@ func TestMocha(t *testing.T) {
 	})
 }
 
-func TestFormUrlEncoded(t *testing.T) {
-	m := NewT(t)
-
-	scoped := m.Mock(Post(URLPath("/test")).
-		Reply(OK()))
-
-	data := url.Values{}
-	data.Set("var1", "dev")
-	data.Set("vqr2", "qa")
-
-	req, _ := http.NewRequest(http.MethodPost, m.Server.URL+"/test", strings.NewReader(data.Encode()))
-	req.Header.Add("test", "hello")
-	req.Header.Add("content-type", "application/x-www-form-urlencoded")
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer res.Body.Close()
-
-	assert.True(t, scoped.IsDone())
-}
-
 type J struct {
 	Name string `json:"name"`
 	OK   bool   `json:"ok"`
@@ -77,16 +50,10 @@ func TestPostJSON(t *testing.T) {
 			JSONPath("name", Equal("dev")), JSONPath("ok", Equal(true))).
 		Reply(OK()))
 
-	body, err := json.Marshal(&J{Name: "dev", OK: true})
-	if err != nil {
-		log.Fatal(err)
-	}
+	req := testutil.PostJSON(m.Server.URL+"/test", &J{Name: "dev", OK: true})
+	req.Header("test", "hello")
 
-	req, _ := http.NewRequest(http.MethodPost, m.Server.URL+"/test", bytes.NewReader(body))
-	req.Header.Add("test", "hello")
-	req.Header.Add("content-type", ContentTypeJSON)
-
-	res, err := http.DefaultClient.Do(req)
+	res, err := req.Do()
 	if err != nil {
 		log.Fatal(err)
 	}

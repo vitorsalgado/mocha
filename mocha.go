@@ -8,7 +8,7 @@ import (
 type (
 	Mocha struct {
 		Server  *httptest.Server
-		Repo    MockRepository
+		Repo    MockStore
 		Parsers []BodyParser
 	}
 
@@ -18,8 +18,8 @@ type (
 )
 
 func New() *Mocha {
-	repo := NewMockRepository()
-	sp := NewScenarioRepository()
+	repo := NewMockStore()
+	sp := NewScenarioStore()
 
 	parsers := make([]BodyParser, 0)
 	parsers = append(parsers, &JSONBodyParser{}, &FormURLEncodedParser{})
