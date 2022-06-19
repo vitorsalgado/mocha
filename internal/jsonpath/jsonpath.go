@@ -1,6 +1,7 @@
 package jsonpath
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -9,90 +10,116 @@ import (
 )
 
 var (
-	fieldRegExp = regexp.MustCompile("(\\w+)\\[(\\d+)](.*)")
-	idxRegExp   = regexp.MustCompile("^\\[(\\d+)](.*)")
+	fieldRegExp = regexp.MustCompile(`(\w+)\[(\d+)](.*)`)
+	idxRegExp   = regexp.MustCompile(`^\[(\d+)](.*)`)
+
+	ErrFieldNotFound = errors.New("could not find a field using provided json path")
 )
 
-func Get[R any](chain string, data any) (R, error) {
+func Get(chain string, data any) (any, error) {
 	var dataType = reflect.TypeOf(data).Kind()
 	var hasBracket = strings.HasPrefix(chain, "[")
-	var ret R
 
 	switch dataType {
 	case reflect.Map:
 		if hasBracket {
-			return ret,
-				fmt.Errorf("json path chain starts with an index pattern [] when json is actually an object")
+			return nil,
+				fmt.Errorf("json path starts with an index pattern [n] when the json is actually an object")
 		}
 
-		if strings.HasPrefix(chain, ".") {
-			chain = chain[1:]
-		}
+		chain := strings.TrimPrefix(chain, ".")
 
-		var matches = fieldRegExp.FindAllStringSubmatch(chain, -1)
-
-		if matches != nil && len(matches) > 0 {
+		if matches := fieldRegExp.FindAllStringSubmatch(chain, -1); len(matches) > 0 {
 			values := matches[0]
+			idx, err := strconv.Atoi(values[2])
 
-			idx, _ := strconv.Atoi(values[2])
-			field := data.(map[string]any)[values[1]]
-			field = field.([]any)[idx]
+			if err != nil {
+				return nil, err
+			}
+
+			field := data.(map[string]any)[values[1]].([]any)
+			size := len(field)
+
+			if idx > size-1 {
+				return nil, ErrFieldNotFound
+			}
+
+			entry := field[idx]
 			next := values[3]
 
 			if next != "" {
-				return Get[R](next, field)
+				return Get(next, entry)
 			}
 
-			if field == nil {
-				return ret, nil
+			if entry == nil {
+				if len(field) <= (idx + 1) {
+					return nil, nil
+				}
+
+				return nil, ErrFieldNotFound
 			}
 
-			return field.(R), nil
+			return entry, nil
 		}
 
 		parts := strings.Split(chain, ".")
 		s := len(parts)
 
 		if s == 0 {
-			return ret, fmt.Errorf("invalid json path %s", chain)
+			return nil, fmt.Errorf("invalid json path %s", chain)
 		}
 
 		if s == 1 {
-			r := data.(map[string]any)[parts[0]]
-			if r == nil {
-				return ret, nil
+			val, ok := data.(map[string]any)[parts[0]]
+			if !ok {
+				return nil, ErrFieldNotFound
 			}
 
-			return data.(map[string]any)[parts[0]].(R), nil
+			return val, nil
 		}
 
-		return Get[R](strings.Join(parts[1:], "."), data.(map[string]any)[parts[0]])
+		ch := strings.Join(parts[1:], ".")
+		val, ok := data.(map[string]any)[parts[0]]
+		if !ok {
+			return nil, ErrFieldNotFound
+		}
+
+		return Get(ch, val)
 
 	case reflect.Slice:
 		if !hasBracket {
-			return *new(R),
-				fmt.Errorf("json is an array but the json path chain does not start with an index pattern []")
+			return nil,
+				fmt.Errorf("json is an array but the json path does not start with an index pattern []")
 		}
 
-		matches := idxRegExp.FindAllStringSubmatch(chain, -1)
-
-		if matches != nil && len(matches) > 0 {
+		if matches := idxRegExp.FindAllStringSubmatch(chain, -1); len(matches) > 0 {
 			values := matches[0]
-			idx, _ := strconv.Atoi(values[1])
+			idx, err := strconv.Atoi(values[1])
+			if err != nil {
+				return nil, err
+			}
+
+			d := data.([]any)
+			size := len(d)
+
+			if idx > size-1 {
+				return nil, ErrFieldNotFound
+			}
+
 			next := values[2]
 			field := data.([]any)[idx]
 
 			if next == "" {
-				if field == nil {
-					return ret, nil
+				if field == nil && len(data.([]any)) < (idx+1) {
+					return nil, ErrFieldNotFound
 				}
 
-				return field.(R), nil
+				return field, nil
 			}
 
-			return Get[R](next, field)
+			return Get(next, field)
 		}
 	}
 
-	return ret, nil
+	return nil, ErrFieldNotFound
 }
