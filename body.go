@@ -9,7 +9,7 @@ import (
 type (
 	BodyParser interface {
 		CanParse(content string, r *http.Request) bool
-		Parse(r *http.Request, v any) error
+		Parse(r *http.Request) (any, error)
 	}
 
 	Parsers struct {
@@ -31,8 +31,14 @@ func (parser JSONBodyParser) CanParse(content string, _ *http.Request) bool {
 	return strings.Contains(content, ContentTypeJSON)
 }
 
-func (parser JSONBodyParser) Parse(r *http.Request, v any) error {
-	return json.NewDecoder(r.Body).Decode(v)
+func (parser JSONBodyParser) Parse(r *http.Request) (any, error) {
+	var d any
+	err := json.NewDecoder(r.Body).Decode(&d)
+	if err != nil {
+		return nil, err
+	}
+
+	return d, nil
 }
 
 type FormURLEncodedParser struct{}
@@ -41,13 +47,11 @@ func (parser FormURLEncodedParser) CanParse(content string, _ *http.Request) boo
 	return strings.Contains(content, ContentTypeFormURLEncoded)
 }
 
-func (parser *FormURLEncodedParser) Parse(r *http.Request, v any) error {
+func (parser *FormURLEncodedParser) Parse(r *http.Request) (any, error) {
 	err := r.ParseForm()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	v = r.Form.Encode()
-
-	return nil
+	return r.Form.Encode(), nil
 }

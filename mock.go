@@ -114,7 +114,7 @@ func (repo *InMemoryMockRepository) GetByID(id int32) Mock {
 
 func (repo *InMemoryMockRepository) FetchSorted() []Mock {
 	size := len(repo.data)
-	mocks := make([]Mock, size, size)
+	mocks := make([]Mock, size)
 	i := 0
 
 	for _, mock := range repo.data {
