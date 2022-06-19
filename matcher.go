@@ -1,12 +1,8 @@
 package mocha
 
-import (
-	"net/http"
-)
-
 type MatcherParams struct {
 	Config             Config
-	Req                *http.Request
+	Req                *MockRequest
 	Repo               MockRepository
 	ScenarioRepository ScenarioRepository
 }

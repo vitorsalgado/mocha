@@ -7,8 +7,9 @@ import (
 
 type (
 	Mocha struct {
-		Server *httptest.Server
-		Repo   MockRepository
+		Server  *httptest.Server
+		Repo    MockRepository
+		Parsers []BodyParser
 	}
 
 	Info struct {
@@ -19,7 +20,11 @@ type (
 func New() *Mocha {
 	repo := NewMockRepository()
 	sp := NewScenarioRepository()
-	return &Mocha{Server: httptest.NewServer(&Handler{repo: repo, scenarioRepository: sp}), Repo: repo}
+
+	parsers := make([]BodyParser, 0)
+	parsers = append(parsers, &JSONBodyParser{}, &FormURLEncodedParser{})
+
+	return &Mocha{Server: httptest.NewServer(newHandler(repo, sp, parsers)), Repo: repo}
 }
 
 func NewT(t *testing.T) *Mocha {

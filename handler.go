@@ -9,11 +9,25 @@ import (
 type Handler struct {
 	repo               MockRepository
 	scenarioRepository ScenarioRepository
+	bodyParsers        []BodyParser
+}
+
+func newHandler(
+	mockstore MockRepository,
+	scenariostore ScenarioRepository, parsers []BodyParser,
+) *Handler {
+	return &Handler{repo: mockstore, scenarioRepository: scenariostore, bodyParsers: parsers}
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	ctx := MatcherParams{Req: r, Repo: h.repo, ScenarioRepository: h.scenarioRepository}
-	result, err := FindMockForRequest(ctx)
+	req, err := WrapRequest(r, h.bodyParsers)
+	if err != nil {
+		respondErr(w, err)
+		return
+	}
+
+	params := MatcherParams{Req: req, Repo: h.repo, ScenarioRepository: h.scenarioRepository}
+	result, err := FindMockForRequest(params)
 
 	if err != nil {
 		respondErr(w, err)
@@ -76,6 +90,4 @@ func respondErr(w http.ResponseWriter, err error) {
 	_, _ = w.Write([]byte(err.Error()))
 
 	log.Printf("Reason: %v", err)
-
-	return
 }

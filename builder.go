@@ -42,7 +42,7 @@ func (b *MockBuilder) Method(method string) *MockBuilder {
 		b.mock.Expectations,
 		Expectation[string]{
 			Name:    "method",
-			Pick:    func(r *http.Request) string { return r.Method },
+			Pick:    func(r *MockRequest) string { return r.RawRequest.Method },
 			Matcher: matcher,
 			Weight:  weight,
 		})
@@ -55,7 +55,7 @@ func (b *MockBuilder) URL(matcher Matcher[url.URL]) *MockBuilder {
 		b.mock.Expectations,
 		Expectation[url.URL]{
 			Name:    "url",
-			Pick:    func(r *http.Request) url.URL { return *r.URL },
+			Pick:    func(r *MockRequest) url.URL { return *r.RawRequest.URL },
 			Matcher: matcher,
 			Weight:  10,
 		})
@@ -68,7 +68,7 @@ func (b *MockBuilder) Header(key string, matcher Matcher[string]) *MockBuilder {
 		b.mock.Expectations,
 		Expectation[string]{
 			Name:    "header",
-			Pick:    func(r *http.Request) string { return r.Header.Get(key) },
+			Pick:    func(r *MockRequest) string { return r.RawRequest.Header.Get(key) },
 			Matcher: matcher,
 			Weight:  1,
 		})
@@ -81,7 +81,7 @@ func (b *MockBuilder) Headers(matcher Matcher[map[string][]string]) *MockBuilder
 		b.mock.Expectations,
 		Expectation[map[string][]string]{
 			Name:    "headers",
-			Pick:    func(r *http.Request) map[string][]string { return r.Header },
+			Pick:    func(r *MockRequest) map[string][]string { return r.RawRequest.Header },
 			Matcher: matcher,
 			Weight:  3,
 		})
@@ -94,7 +94,7 @@ func (b *MockBuilder) Query(key string, matcher Matcher[string]) *MockBuilder {
 		b.mock.Expectations,
 		Expectation[string]{
 			Name:    "query",
-			Pick:    func(r *http.Request) string { return r.URL.Query().Get(key) },
+			Pick:    func(r *MockRequest) string { return r.RawRequest.URL.Query().Get(key) },
 			Matcher: matcher,
 			Weight:  1,
 		})
@@ -107,10 +107,24 @@ func (b *MockBuilder) Queries(matcher Matcher[map[string][]string]) *MockBuilder
 		b.mock.Expectations,
 		Expectation[map[string][]string]{
 			Name:    "queries",
-			Pick:    func(r *http.Request) map[string][]string { return r.URL.Query() },
+			Pick:    func(r *MockRequest) map[string][]string { return r.RawRequest.URL.Query() },
 			Matcher: matcher,
 			Weight:  3,
 		})
+
+	return b
+}
+
+func (b *MockBuilder) Body(matchers ...Matcher[any]) *MockBuilder {
+	for _, matcher := range matchers {
+		b.mock.Expectations = append(b.mock.Expectations,
+			Expectation[any]{
+				Name:    "body",
+				Pick:    func(r *MockRequest) any { return r.Body },
+				Matcher: matcher,
+				Weight:  7,
+			})
+	}
 
 	return b
 }
@@ -120,7 +134,7 @@ func (b *MockBuilder) Expect(matcher Matcher[*http.Request]) *MockBuilder {
 		b.mock.Expectations,
 		Expectation[*http.Request]{
 			Name:    "request",
-			Pick:    func(r *http.Request) *http.Request { return r },
+			Pick:    func(r *MockRequest) *http.Request { return r.RawRequest },
 			Matcher: matcher,
 			Weight:  3,
 		})

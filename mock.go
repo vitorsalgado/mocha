@@ -2,11 +2,12 @@ package mocha
 
 import (
 	"fmt"
-	"github.com/vitorsalgado/mocha/internal"
 	"net/http"
 	"net/url"
 	"reflect"
 	"sort"
+
+	"github.com/vitorsalgado/mocha/internal"
 )
 
 type (
@@ -29,7 +30,7 @@ type (
 		Flush()
 	}
 
-	RequestPicker[V any] func(r *http.Request) V
+	RequestPicker[V any] func(r *MockRequest) V
 
 	Expectation[V any] struct {
 		Matcher Matcher[V]
@@ -73,6 +74,11 @@ func (m *Mock) Matches(ctx MatcherParams) (MatchResult, error) {
 			}
 			weight = weight + e.Weight
 		case Expectation[*http.Request]:
+			if res, err := e.Matcher(e.Pick(ctx.Req), ctx); err != nil || !res {
+				return MatchResult{IsMatch: false, Weight: weight}, err
+			}
+			weight = weight + e.Weight
+		case Expectation[any]:
 			if res, err := e.Matcher(e.Pick(ctx.Req), ctx); err != nil || !res {
 				return MatchResult{IsMatch: false, Weight: weight}, err
 			}
