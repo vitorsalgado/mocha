@@ -27,7 +27,7 @@ func (p *Parsers) Get() []BodyParser {
 
 func ParseRequestBody(r *http.Request, parsers []BodyParser) (any, error) {
 	if r.Body != nil && r.Method != http.MethodGet && r.Method != http.MethodHead {
-		var content = r.Header.Get("content-type")
+		var content = r.Header.Get(HeaderContentType)
 
 		for _, parse := range parsers {
 			if parse.CanParse(content, r) {

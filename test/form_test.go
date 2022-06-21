@@ -25,7 +25,7 @@ func TestFormUrlEncoded(t *testing.T) {
 
 	req, _ := http.NewRequest(http.MethodPost, m.Server.URL+"/test", strings.NewReader(data.Encode()))
 	req.Header.Add("test", "hello")
-	req.Header.Add("content-type", "application/x-www-form-urlencoded")
+	req.Header.Add(mocha.HeaderContentType, mocha.ContentTypeFormURLEncoded)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
