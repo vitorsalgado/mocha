@@ -7,6 +7,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/vitorsalgado/mocha/matcher"
+
 	"github.com/vitorsalgado/mocha"
 	"github.com/vitorsalgado/mocha/internal/assert"
 )
@@ -14,7 +16,7 @@ import (
 func TestFormUrlEncoded(t *testing.T) {
 	m := mocha.NewT(t)
 
-	scoped := m.Mock(mocha.Post(mocha.URLPath("/test")).
+	scoped := m.Mock(mocha.Post(matcher.URLPath("/test")).
 		Reply(mocha.OK()))
 
 	data := url.Values{}

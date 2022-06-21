@@ -7,6 +7,8 @@ import (
 	"reflect"
 	"sort"
 
+	"github.com/vitorsalgado/mocha/matcher"
+
 	"github.com/vitorsalgado/mocha/internal"
 )
 
@@ -30,10 +32,10 @@ type (
 		Flush()
 	}
 
-	RequestPicker[V any] func(r *MockRequest) V
+	RequestPicker[V any] func(r *matcher.RequestInfo) V
 
 	Expectation[V any] struct {
-		Matcher Matcher[V]
+		Matcher matcher.Matcher[V]
 		Pick    RequestPicker[V]
 		Weight  int
 		Name    string
@@ -58,28 +60,28 @@ func (m *Mock) Called() bool {
 	return m.Hits > 0
 }
 
-func (m *Mock) Matches(ctx MatcherParams) (MatchResult, error) {
+func (m *Mock) Matches(ctx matcher.Params) (MatchResult, error) {
 	weight := 0
 
 	for _, expect := range m.Expectations {
 		switch e := expect.(type) {
 		case Expectation[string]:
-			if res, err := e.Matcher(e.Pick(ctx.Request), ctx); err != nil || !res {
+			if res, err := e.Matcher(e.Pick(ctx.RequestInfo), ctx); err != nil || !res {
 				return MatchResult{IsMatch: false, Weight: weight}, err
 			}
 			weight = weight + e.Weight
 		case Expectation[url.URL]:
-			if res, err := e.Matcher(e.Pick(ctx.Request), ctx); err != nil || !res {
+			if res, err := e.Matcher(e.Pick(ctx.RequestInfo), ctx); err != nil || !res {
 				return MatchResult{IsMatch: false, Weight: weight}, err
 			}
 			weight = weight + e.Weight
 		case Expectation[*http.Request]:
-			if res, err := e.Matcher(e.Pick(ctx.Request), ctx); err != nil || !res {
+			if res, err := e.Matcher(e.Pick(ctx.RequestInfo), ctx); err != nil || !res {
 				return MatchResult{IsMatch: false, Weight: weight}, err
 			}
 			weight = weight + e.Weight
 		case Expectation[any]:
-			if res, err := e.Matcher(e.Pick(ctx.Request), ctx); err != nil || !res {
+			if res, err := e.Matcher(e.Pick(ctx.RequestInfo), ctx); err != nil || !res {
 				return MatchResult{IsMatch: false, Weight: weight}, err
 			}
 			weight = weight + e.Weight

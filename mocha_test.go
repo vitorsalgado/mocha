@@ -1,6 +1,7 @@
 package mocha
 
 import (
+	"github.com/vitorsalgado/mocha/matcher"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -14,9 +15,9 @@ func TestMocha(t *testing.T) {
 	t.Run("should mock request", func(t *testing.T) {
 		m := NewT(t)
 
-		scoped := m.Mock(Get(URLPath("/test")).
-			Header("test", EqualTo("hello")).
-			Query("filter", EqualTo("all")).
+		scoped := m.Mock(Get(matcher.URLPath("/test")).
+			Header("test", matcher.EqualTo("hello")).
+			Query("filter", matcher.EqualTo("all")).
 			Reply(Created().BodyStr("hello world")))
 
 		req, _ := http.NewRequest(http.MethodGet, m.Server.URL+"/test?filter=all", nil)
@@ -44,10 +45,10 @@ type J struct {
 func TestPostJSON(t *testing.T) {
 	m := NewT(t)
 
-	scoped := m.Mock(Post(URLPath("/test")).
-		Header("test", EqualTo("hello")).
+	scoped := m.Mock(Post(matcher.URLPath("/test")).
+		Header("test", matcher.EqualTo("hello")).
 		Body(
-			JSONPath("name", Equal("dev")), JSONPath("ok", Equal(true))).
+			matcher.JSONPath("name", matcher.Equal("dev")), matcher.JSONPath("ok", matcher.Equal(true))).
 		Reply(OK()))
 
 	req := testutil.PostJSON(m.Server.URL+"/test", &J{Name: "dev", OK: true})

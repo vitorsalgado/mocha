@@ -23,8 +23,10 @@ func New() *Mocha {
 
 	parsers := make([]BodyParser, 0)
 	parsers = append(parsers, &JSONBodyParser{}, &FormURLEncodedParser{})
+	extras := NewExtras()
+	extras.Set("scenarios", NewScenarioStore())
 
-	return &Mocha{Server: httptest.NewServer(newHandler(repo, sp, parsers)), Repo: repo}
+	return &Mocha{Server: httptest.NewServer(newHandler(repo, sp, parsers, extras)), Repo: repo}
 }
 
 func NewT(t *testing.T) *Mocha {

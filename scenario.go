@@ -1,5 +1,11 @@
 package mocha
 
+import (
+	"fmt"
+
+	"github.com/vitorsalgado/mocha/matcher"
+)
+
 const (
 	ScenarioStarted = "STARTED"
 )
@@ -18,27 +24,21 @@ func (s Scenario) HasStarted() bool {
 }
 
 type (
-	ScenarioStore interface {
-		FetchByName(name string) *Scenario
-		CreateNewIfNeeded(name string) *Scenario
-		Save(scenario Scenario)
-	}
-
-	scenarioInMemoStore struct {
+	ScenarioStore struct {
 		data map[string]Scenario
 	}
 )
 
-func NewScenarioStore() ScenarioStore {
-	return &scenarioInMemoStore{data: make(map[string]Scenario)}
+func NewScenarioStore() *ScenarioStore {
+	return &ScenarioStore{data: make(map[string]Scenario)}
 }
 
-func (repo *scenarioInMemoStore) FetchByName(name string) *Scenario {
+func (repo *ScenarioStore) FetchByName(name string) *Scenario {
 	s := repo.data[name]
 	return &s
 }
 
-func (repo *scenarioInMemoStore) CreateNewIfNeeded(name string) *Scenario {
+func (repo *ScenarioStore) CreateNewIfNeeded(name string) *Scenario {
 	s, ok := repo.data[name]
 
 	if !ok {
@@ -50,17 +50,23 @@ func (repo *scenarioInMemoStore) CreateNewIfNeeded(name string) *Scenario {
 	return &s
 }
 
-func (repo *scenarioInMemoStore) Save(scenario Scenario) {
+func (repo *ScenarioStore) Save(scenario Scenario) {
 	repo.data[scenario.Name] = scenario
 }
 
-func scenarioMatcher[V any](name, requiredState, newState string) Matcher[V] {
-	return func(_ V, params MatcherParams) (bool, error) {
-		if requiredState == ScenarioStarted {
-			params.ScenarioStore.CreateNewIfNeeded(name)
+func scenarioMatcher[V any](name, requiredState, newState string) matcher.Matcher[V] {
+	return func(_ V, params matcher.Params) (bool, error) {
+		s, _ := params.Extras.Get("scenarios")
+		scenarios, e := s.(*ScenarioStore)
+		if !e {
+			return false, fmt.Errorf("")
 		}
 
-		scenario := params.ScenarioStore.FetchByName(name)
+		if requiredState == ScenarioStarted {
+			scenarios.CreateNewIfNeeded(name)
+		}
+
+		scenario := scenarios.FetchByName(name)
 
 		if scenario == nil {
 			return true, nil
@@ -69,7 +75,7 @@ func scenarioMatcher[V any](name, requiredState, newState string) Matcher[V] {
 		if scenario.State == requiredState {
 			if newState != "" {
 				scenario.State = newState
-				params.ScenarioStore.Save(*scenario)
+				scenarios.Save(*scenario)
 			}
 
 			return true, nil

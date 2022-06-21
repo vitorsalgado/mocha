@@ -2,16 +2,11 @@ package mocha
 
 import (
 	"net/http"
+
+	"github.com/vitorsalgado/mocha/matcher"
 )
 
-type (
-	MockRequest struct {
-		RawRequest *http.Request
-		Body       any
-	}
-)
-
-func WrapRequest(r *http.Request, parsers []BodyParser) (*MockRequest, error) {
+func WrapRequest(r *http.Request, parsers []BodyParser) (*matcher.RequestInfo, error) {
 	if r.Body != nil && r.Method != http.MethodGet {
 		var content = r.Header.Get("content-type")
 
@@ -22,10 +17,10 @@ func WrapRequest(r *http.Request, parsers []BodyParser) (*MockRequest, error) {
 					return nil, err
 				}
 
-				return &MockRequest{RawRequest: r, Body: body}, nil
+				return &matcher.RequestInfo{Request: r, Body: body}, nil
 			}
 		}
 	}
 
-	return &MockRequest{RawRequest: r}, nil
+	return &matcher.RequestInfo{Request: r}, nil
 }

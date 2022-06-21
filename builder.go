@@ -3,19 +3,29 @@ package mocha
 import (
 	"net/http"
 	"net/url"
+
+	"github.com/vitorsalgado/mocha/matcher"
 )
 
 type MockBuilder struct {
 	mock *Mock
 }
 
-func NewBuilder() *MockBuilder               { return &MockBuilder{mock: NewMock()} }
-func Get(m Matcher[url.URL]) *MockBuilder    { return NewBuilder().URL(m).Method(http.MethodGet) }
-func Post(m Matcher[url.URL]) *MockBuilder   { return NewBuilder().URL(m).Method(http.MethodPost) }
-func Put(m Matcher[url.URL]) *MockBuilder    { return NewBuilder().URL(m).Method(http.MethodPut) }
-func Patch(u Matcher[url.URL]) *MockBuilder  { return NewBuilder().URL(u).Method(http.MethodPatch) }
-func Delete(m Matcher[url.URL]) *MockBuilder { return NewBuilder().URL(m).Method(http.MethodDelete) }
-func Head(m Matcher[url.URL]) *MockBuilder   { return NewBuilder().URL(m).Method(http.MethodHead) }
+func NewBuilder() *MockBuilder                    { return &MockBuilder{mock: NewMock()} }
+func Get(m matcher.Matcher[url.URL]) *MockBuilder { return NewBuilder().URL(m).Method(http.MethodGet) }
+func Post(m matcher.Matcher[url.URL]) *MockBuilder {
+	return NewBuilder().URL(m).Method(http.MethodPost)
+}
+func Put(m matcher.Matcher[url.URL]) *MockBuilder { return NewBuilder().URL(m).Method(http.MethodPut) }
+func Patch(u matcher.Matcher[url.URL]) *MockBuilder {
+	return NewBuilder().URL(u).Method(http.MethodPatch)
+}
+func Delete(m matcher.Matcher[url.URL]) *MockBuilder {
+	return NewBuilder().URL(m).Method(http.MethodDelete)
+}
+func Head(m matcher.Matcher[url.URL]) *MockBuilder {
+	return NewBuilder().URL(m).Method(http.MethodHead)
+}
 
 func (b *MockBuilder) Name(name string) *MockBuilder {
 	b.mock.Name = name
@@ -32,86 +42,86 @@ func (b *MockBuilder) Method(method string) *MockBuilder {
 		b.mock.Expectations,
 		Expectation[string]{
 			Name:    "method",
-			Pick:    func(r *MockRequest) string { return r.RawRequest.Method },
-			Matcher: EqualFold(method),
+			Pick:    func(r *matcher.RequestInfo) string { return r.Request.Method },
+			Matcher: matcher.EqualFold(method),
 			Weight:  3,
 		})
 
 	return b
 }
 
-func (b *MockBuilder) URL(matcher Matcher[url.URL]) *MockBuilder {
+func (b *MockBuilder) URL(m matcher.Matcher[url.URL]) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
 		Expectation[url.URL]{
 			Name:    "url",
-			Pick:    func(r *MockRequest) url.URL { return *r.RawRequest.URL },
-			Matcher: matcher,
+			Pick:    func(r *matcher.RequestInfo) url.URL { return *r.Request.URL },
+			Matcher: m,
 			Weight:  10,
 		})
 
 	return b
 }
 
-func (b *MockBuilder) Header(key string, matcher Matcher[string]) *MockBuilder {
+func (b *MockBuilder) Header(key string, m matcher.Matcher[string]) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
 		Expectation[string]{
 			Name:    "header",
-			Pick:    func(r *MockRequest) string { return r.RawRequest.Header.Get(key) },
-			Matcher: matcher,
+			Pick:    func(r *matcher.RequestInfo) string { return r.Request.Header.Get(key) },
+			Matcher: m,
 			Weight:  1,
 		})
 
 	return b
 }
 
-func (b *MockBuilder) Headers(matcher Matcher[map[string][]string]) *MockBuilder {
+func (b *MockBuilder) Headers(m matcher.Matcher[map[string][]string]) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
 		Expectation[map[string][]string]{
 			Name:    "headers",
-			Pick:    func(r *MockRequest) map[string][]string { return r.RawRequest.Header },
-			Matcher: matcher,
+			Pick:    func(r *matcher.RequestInfo) map[string][]string { return r.Request.Header },
+			Matcher: m,
 			Weight:  3,
 		})
 
 	return b
 }
 
-func (b *MockBuilder) Query(key string, matcher Matcher[string]) *MockBuilder {
+func (b *MockBuilder) Query(key string, m matcher.Matcher[string]) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
 		Expectation[string]{
 			Name:    "query",
-			Pick:    func(r *MockRequest) string { return r.RawRequest.URL.Query().Get(key) },
-			Matcher: matcher,
+			Pick:    func(r *matcher.RequestInfo) string { return r.Request.URL.Query().Get(key) },
+			Matcher: m,
 			Weight:  1,
 		})
 
 	return b
 }
 
-func (b *MockBuilder) Queries(matcher Matcher[map[string][]string]) *MockBuilder {
+func (b *MockBuilder) Queries(m matcher.Matcher[map[string][]string]) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
 		Expectation[map[string][]string]{
 			Name:    "queries",
-			Pick:    func(r *MockRequest) map[string][]string { return r.RawRequest.URL.Query() },
-			Matcher: matcher,
+			Pick:    func(r *matcher.RequestInfo) map[string][]string { return r.Request.URL.Query() },
+			Matcher: m,
 			Weight:  3,
 		})
 
 	return b
 }
 
-func (b *MockBuilder) Body(matchers ...Matcher[any]) *MockBuilder {
-	for _, matcher := range matchers {
+func (b *MockBuilder) Body(matchers ...matcher.Matcher[any]) *MockBuilder {
+	for _, m := range matchers {
 		b.mock.Expectations = append(b.mock.Expectations,
 			Expectation[any]{
 				Name:    "body",
-				Pick:    func(r *MockRequest) any { return r.Body },
-				Matcher: matcher,
+				Pick:    func(r *matcher.RequestInfo) any { return r.Body },
+				Matcher: m,
 				Weight:  7,
 			})
 	}
@@ -119,25 +129,25 @@ func (b *MockBuilder) Body(matchers ...Matcher[any]) *MockBuilder {
 	return b
 }
 
-func (b *MockBuilder) FormField(field string, matcher Matcher[string]) *MockBuilder {
+func (b *MockBuilder) FormField(field string, m matcher.Matcher[string]) *MockBuilder {
 	b.mock.Expectations = append(b.mock.Expectations,
 		Expectation[string]{
 			Name:    "form",
-			Pick:    func(r *MockRequest) string { return r.RawRequest.Form.Get(field) },
-			Matcher: matcher,
+			Pick:    func(r *matcher.RequestInfo) string { return r.Request.Form.Get(field) },
+			Matcher: m,
 			Weight:  1,
 		})
 
 	return b
 }
 
-func (b *MockBuilder) Expect(matcher Matcher[*http.Request]) *MockBuilder {
+func (b *MockBuilder) Expect(m matcher.Matcher[*http.Request]) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
 		Expectation[*http.Request]{
 			Name:    "request",
-			Pick:    func(r *MockRequest) *http.Request { return r.RawRequest },
-			Matcher: matcher,
+			Pick:    func(r *matcher.RequestInfo) *http.Request { return r.Request },
+			Matcher: m,
 			Weight:  3,
 		})
 

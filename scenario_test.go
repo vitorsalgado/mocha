@@ -1,26 +1,28 @@
 package mocha
 
 import (
-	"github.com/vitorsalgado/mocha/internal/assert"
 	"io/ioutil"
 	"net/http"
 	"testing"
+
+	"github.com/vitorsalgado/mocha/internal/assert"
+	"github.com/vitorsalgado/mocha/matcher"
 )
 
 func TestScenario(t *testing.T) {
 	m := NewT(t)
 
-	s1 := m.Mock(Get(URLPath("/1")).
+	s1 := m.Mock(Get(matcher.URLPath("/1")).
 		Scenario("test", ScenarioStarted, "step2").
 		Name("step-1").
 		Reply(OK().BodyStr("step1")))
 
-	s2 := m.Mock(Get(URLPath("/2")).
+	s2 := m.Mock(Get(matcher.URLPath("/2")).
 		Scenario("test", "step2", "step3").
 		Name("step-2").
 		Reply(OK().BodyStr("step2")))
 
-	s3 := m.Mock(Get(URLPath("/3")).
+	s3 := m.Mock(Get(matcher.URLPath("/3")).
 		Scenario("test", "step3", "step4").
 		Name("step-3").
 		Reply(OK().BodyStr("step3")))

@@ -4,19 +4,24 @@ import (
 	"bufio"
 	"log"
 	"net/http"
+
+	"github.com/vitorsalgado/mocha/matcher"
 )
 
 type Handler struct {
 	mocks     MockStore
-	scenarios ScenarioStore
+	scenarios *ScenarioStore
 	parsers   []BodyParser
+	extras    Extras
 }
 
 func newHandler(
 	mockstore MockStore,
-	scenariostore ScenarioStore, parsers []BodyParser,
+	scenariostore *ScenarioStore,
+	parsers []BodyParser,
+	extras Extras,
 ) *Handler {
-	return &Handler{mocks: mockstore, scenarios: scenariostore, parsers: parsers}
+	return &Handler{mocks: mockstore, scenarios: scenariostore, parsers: parsers, extras: extras}
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -26,8 +31,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	params := MatcherParams{Request: req, MockStore: h.mocks, ScenarioStore: h.scenarios}
-	result, err := FindMockForRequest(params)
+	params := matcher.Params{RequestInfo: req, Extras: &h.extras}
+	result, err := FindMockForRequest(h.mocks, params)
 
 	if err != nil {
 		respondErr(w, err)

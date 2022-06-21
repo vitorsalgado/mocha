@@ -1,13 +1,15 @@
 package mocha
 
+import "github.com/vitorsalgado/mocha/matcher"
+
 type FindMockResult struct {
 	Matches      bool
 	Matched      *Mock
 	ClosestMatch *Mock
 }
 
-func FindMockForRequest(params MatcherParams) (*FindMockResult, error) {
-	mocks := params.MockStore.FetchSorted()
+func FindMockForRequest(mockstore MockStore, params matcher.Params) (*FindMockResult, error) {
+	mocks := mockstore.FetchSorted()
 
 	var m *Mock
 	var w = 0
