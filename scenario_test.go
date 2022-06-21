@@ -11,19 +11,25 @@ import (
 
 func TestScenario(t *testing.T) {
 	m := NewT(t)
+	scenario := "test"
 
 	s1 := m.Mock(Get(matcher.URLPath("/1")).
-		Scenario("test", ScenarioStarted, "step2").
+		StartScenario(scenario).
+		ScenarioStateWillBe("step2").
 		Name("step-1").
 		Reply(OK().BodyStr("step1")))
 
 	s2 := m.Mock(Get(matcher.URLPath("/2")).
-		Scenario("test", "step2", "step3").
+		ScenarioIs(scenario).
+		ScenarioStateIs("step2").
+		ScenarioStateWillBe("step3").
 		Name("step-2").
 		Reply(OK().BodyStr("step2")))
 
 	s3 := m.Mock(Get(matcher.URLPath("/3")).
-		Scenario("test", "step3", "step4").
+		ScenarioIs(scenario).
+		ScenarioStateIs("step3").
+		ScenarioStateWillBe("step4").
 		Name("step-3").
 		Reply(OK().BodyStr("step3")))
 

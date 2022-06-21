@@ -8,7 +8,10 @@ import (
 )
 
 type MockBuilder struct {
-	mock *Mock
+	scenario              string
+	scenarioRequiredState string
+	scenarioNewState      string
+	mock                  *Mock
 }
 
 func NewBuilder() *MockBuilder                    { return &MockBuilder{mock: NewMock()} }
@@ -154,8 +157,24 @@ func (b *MockBuilder) Expect(m matcher.Matcher[*http.Request]) *MockBuilder {
 	return b
 }
 
-func (b *MockBuilder) Scenario(name, requiredState, newState string) *MockBuilder {
-	b.Expect(scenarioMatcher[*http.Request](name, requiredState, newState))
+func (b *MockBuilder) StartScenario(scenario string) *MockBuilder {
+	b.scenario = scenario
+	b.scenarioRequiredState = ScenarioStarted
+	return b
+}
+
+func (b *MockBuilder) ScenarioIs(scenario string) *MockBuilder {
+	b.scenario = scenario
+	return b
+}
+
+func (b *MockBuilder) ScenarioStateIs(requiredState string) *MockBuilder {
+	b.scenarioRequiredState = requiredState
+	return b
+}
+
+func (b *MockBuilder) ScenarioStateWillBe(newState string) *MockBuilder {
+	b.scenarioNewState = newState
 	return b
 }
 
@@ -165,5 +184,9 @@ func (b *MockBuilder) Reply(reply Reply) *MockBuilder {
 }
 
 func (b *MockBuilder) Build() *Mock {
+	if b.scenario != "" {
+		b.Expect(scenarioMatcher[*http.Request](b.scenario, b.scenarioRequiredState, b.scenarioNewState))
+	}
+
 	return b.mock
 }
