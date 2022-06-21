@@ -62,7 +62,6 @@ func (m *Mock) Called() bool {
 
 func (m *Mock) Matches(ctx matcher.Params) (MatchResult, error) {
 	weight := 0
-
 	for _, expect := range m.Expectations {
 		switch e := expect.(type) {
 		case Expectation[string]:

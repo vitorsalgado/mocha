@@ -9,30 +9,28 @@ import (
 )
 
 type Handler struct {
-	mocks     MockStore
-	scenarios *ScenarioStore
-	parsers   []BodyParser
-	extras    Extras
+	mocks   MockStore
+	parsers []BodyParser
+	extras  Extras
 }
 
 func newHandler(
 	mockstore MockStore,
-	scenariostore *ScenarioStore,
 	parsers []BodyParser,
 	extras Extras,
 ) *Handler {
-	return &Handler{mocks: mockstore, scenarios: scenariostore, parsers: parsers, extras: extras}
+	return &Handler{mocks: mockstore, parsers: parsers, extras: extras}
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	req, err := WrapRequest(r, h.parsers)
+	parsedbody, err := ParseRequestBody(r, h.parsers)
 	if err != nil {
 		respondErr(w, err)
 		return
 	}
 
-	params := matcher.Params{RequestInfo: req, Extras: &h.extras}
-	result, err := FindMockForRequest(h.mocks, params)
+	params := matcher.Params{RequestInfo: &matcher.RequestInfo{Request: r, ParsedBody: parsedbody}, Extras: &h.extras}
+	result, err := findMockForRequest(h.mocks, params)
 
 	if err != nil {
 		respondErr(w, err)
@@ -79,7 +77,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func noMatch(w http.ResponseWriter, result *FindMockResult) {
+func noMatch(w http.ResponseWriter, result *findMockResult) {
 	w.WriteHeader(http.StatusTeapot)
 	_, _ = w.Write([]byte("Request was not matched."))
 

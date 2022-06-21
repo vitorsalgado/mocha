@@ -8,8 +8,8 @@ type (
 	}
 
 	RequestInfo struct {
-		Request *http.Request
-		Body    any
+		Request    *http.Request
+		ParsedBody any
 	}
 
 	Params struct {

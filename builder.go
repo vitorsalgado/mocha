@@ -120,7 +120,7 @@ func (b *MockBuilder) Body(matchers ...matcher.Matcher[any]) *MockBuilder {
 		b.mock.Expectations = append(b.mock.Expectations,
 			Expectation[any]{
 				Name:    "body",
-				Pick:    func(r *matcher.RequestInfo) any { return r.Body },
+				Pick:    func(r *matcher.RequestInfo) any { return r.ParsedBody },
 				Matcher: m,
 				Weight:  7,
 			})

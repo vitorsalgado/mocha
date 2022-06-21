@@ -2,13 +2,13 @@ package mocha
 
 import "github.com/vitorsalgado/mocha/matcher"
 
-type FindMockResult struct {
+type findMockResult struct {
 	Matches      bool
 	Matched      *Mock
 	ClosestMatch *Mock
 }
 
-func FindMockForRequest(mockstore MockStore, params matcher.Params) (*FindMockResult, error) {
+func findMockForRequest(mockstore MockStore, params matcher.Params) (*findMockResult, error) {
 	mocks := mockstore.FetchSorted()
 
 	var m *Mock
@@ -21,7 +21,7 @@ func FindMockForRequest(mockstore MockStore, params matcher.Params) (*FindMockRe
 		}
 
 		if matches.IsMatch {
-			return &FindMockResult{Matches: true, Matched: &mock}, nil
+			return &findMockResult{Matches: true, Matched: &mock}, nil
 		}
 
 		if matches.Weight > 0 && matches.Weight > w {
@@ -31,8 +31,8 @@ func FindMockForRequest(mockstore MockStore, params matcher.Params) (*FindMockRe
 	}
 
 	if m == nil {
-		return &FindMockResult{Matches: false}, nil
+		return &findMockResult{Matches: false}, nil
 	}
 
-	return &FindMockResult{Matches: false, ClosestMatch: m}, nil
+	return &findMockResult{Matches: false, ClosestMatch: m}, nil
 }

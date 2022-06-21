@@ -1,8 +1,6 @@
 package mocha
 
 import (
-	"fmt"
-
 	"github.com/vitorsalgado/mocha/matcher"
 )
 
@@ -24,21 +22,27 @@ func (s Scenario) HasStarted() bool {
 }
 
 type (
-	ScenarioStore struct {
+	ScenarioStore interface {
+		FetchByName(name string) *Scenario
+		CreateNewIfNeeded(name string) *Scenario
+		Save(scenario Scenario)
+	}
+
+	scenarioStore struct {
 		data map[string]Scenario
 	}
 )
 
-func NewScenarioStore() *ScenarioStore {
-	return &ScenarioStore{data: make(map[string]Scenario)}
+func NewScenarioStore() ScenarioStore {
+	return &scenarioStore{data: make(map[string]Scenario)}
 }
 
-func (repo *ScenarioStore) FetchByName(name string) *Scenario {
+func (repo *scenarioStore) FetchByName(name string) *Scenario {
 	s := repo.data[name]
 	return &s
 }
 
-func (repo *ScenarioStore) CreateNewIfNeeded(name string) *Scenario {
+func (repo *scenarioStore) CreateNewIfNeeded(name string) *Scenario {
 	s, ok := repo.data[name]
 
 	if !ok {
@@ -50,17 +54,14 @@ func (repo *ScenarioStore) CreateNewIfNeeded(name string) *Scenario {
 	return &s
 }
 
-func (repo *ScenarioStore) Save(scenario Scenario) {
+func (repo *scenarioStore) Save(scenario Scenario) {
 	repo.data[scenario.Name] = scenario
 }
 
 func scenarioMatcher[V any](name, requiredState, newState string) matcher.Matcher[V] {
 	return func(_ V, params matcher.Params) (bool, error) {
-		s, _ := params.Extras.Get("scenarios")
-		scenarios, e := s.(*ScenarioStore)
-		if !e {
-			return false, fmt.Errorf("")
-		}
+		s, _ := params.Extras.Get(BuiltIntExtraScenario)
+		scenarios := s.(ScenarioStore)
 
 		if requiredState == ScenarioStarted {
 			scenarios.CreateNewIfNeeded(name)

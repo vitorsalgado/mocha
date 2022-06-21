@@ -25,6 +25,25 @@ func (p *Parsers) Get() []BodyParser {
 	return p.parsers
 }
 
+func ParseRequestBody(r *http.Request, parsers []BodyParser) (any, error) {
+	if r.Body != nil && r.Method != http.MethodGet && r.Method != http.MethodHead {
+		var content = r.Header.Get("content-type")
+
+		for _, parse := range parsers {
+			if parse.CanParse(content, r) {
+				body, err := parse.Parse(r)
+				if err != nil {
+					return nil, err
+				}
+
+				return body, nil
+			}
+		}
+	}
+
+	return nil, nil
+}
+
 type JSONBodyParser struct{}
 
 func (parser JSONBodyParser) CanParse(content string, _ *http.Request) bool {

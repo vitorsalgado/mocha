@@ -18,15 +18,13 @@ type (
 )
 
 func New() *Mocha {
-	repo := NewMockStore()
-	sp := NewScenarioStore()
-
+	mockstore := NewMockStore()
 	parsers := make([]BodyParser, 0)
 	parsers = append(parsers, &JSONBodyParser{}, &FormURLEncodedParser{})
 	extras := NewExtras()
-	extras.Set("scenarios", NewScenarioStore())
+	extras.Set(BuiltIntExtraScenario, NewScenarioStore())
 
-	return &Mocha{Server: httptest.NewServer(newHandler(repo, sp, parsers, extras)), Repo: repo}
+	return &Mocha{Server: httptest.NewServer(newHandler(mockstore, parsers, extras)), Repo: mockstore}
 }
 
 func NewT(t *testing.T) *Mocha {

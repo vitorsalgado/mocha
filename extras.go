@@ -4,6 +4,8 @@ type Extras struct {
 	deps map[string]any
 }
 
+var BuiltIntExtraScenario = "__mocha:scenarios"
+
 func NewExtras() Extras {
 	return Extras{deps: make(map[string]any)}
 }
