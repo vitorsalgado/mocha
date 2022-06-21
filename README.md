@@ -1,7 +1,7 @@
 <h1 id="mocha-top" align="center">Mocha</h1>
 
 <div align="center">
-    <a href="#"><img src="logo.png" width="120px" alt="Mocha Logo"></a>
+    <a href="#"><img src="docs/logo.png" width="120px" alt="Mocha Logo"></a>
     <p align="center">
         HTTP mocking in GO
         <br />
