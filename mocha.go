@@ -1,42 +1,56 @@
 package mocha
 
 import (
+	"context"
 	"net/http/httptest"
 	"testing"
 )
 
 type (
 	Mocha struct {
-		Server  *httptest.Server
-		Repo    MockStore
-		Parsers []BodyParser
-	}
-
-	Info struct {
-		URL string
+		Server    *httptest.Server
+		mockstore MockStore
+		context   context.Context
 	}
 )
 
-func New() *Mocha {
+func New(context context.Context) *Mocha {
 	mockstore := NewMockStore()
 	parsers := make([]BodyParser, 0)
 	parsers = append(parsers, &JSONBodyParser{}, &FormURLEncodedParser{})
 	extras := NewExtras()
 	extras.Set(BuiltIntExtraScenario, NewScenarioStore())
 
-	return &Mocha{Server: httptest.NewServer(newHandler(mockstore, parsers, extras)), Repo: mockstore}
+	return &Mocha{
+		Server:    httptest.NewUnstartedServer(newHandler(mockstore, parsers, extras)),
+		mockstore: mockstore,
+		context:   context}
 }
 
-func NewT(t *testing.T) *Mocha {
-	m := New()
+func ForTestWithContext(t *testing.T, context context.Context) *Mocha {
+	m := New(context)
 	t.Cleanup(func() { m.Close() })
-
 	return m
 }
 
-func (m *Mocha) Start() Info {
+func ForTest(t *testing.T) *Mocha {
+	return ForTestWithContext(t, context.Background())
+}
+
+func (m *Mocha) Start() ServerInfo {
 	m.Server.Start()
-	return Info{URL: m.Server.URL}
+
+	go func() {
+		<-m.context.Done()
+		m.Close()
+	}()
+
+	return ServerInfo{URL: m.Server.URL}
+}
+
+func (m *Mocha) StartTLS() ServerInfo {
+	m.Server.StartTLS()
+	return ServerInfo{URL: m.Server.URL}
 }
 
 func (m *Mocha) Mock(builders ...*MockBuilder) *Scoped {
@@ -45,11 +59,11 @@ func (m *Mocha) Mock(builders ...*MockBuilder) *Scoped {
 	for _, b := range builders {
 		mock := b.Build()
 
-		m.Repo.Save(mock)
+		m.mockstore.Save(mock)
 		added = append(added, mock.ID)
 	}
 
-	return NewScoped(m.Repo, added)
+	return NewScoped(m.mockstore, added)
 }
 
 func (m *Mocha) Close() {

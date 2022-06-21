@@ -1,11 +1,12 @@
 package mocha
 
 import (
-	"github.com/vitorsalgado/mocha/matcher"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"testing"
+
+	"github.com/vitorsalgado/mocha/matcher"
 
 	"github.com/vitorsalgado/mocha/internal/assert"
 	"github.com/vitorsalgado/mocha/internal/testutil"
@@ -13,7 +14,8 @@ import (
 
 func TestMocha(t *testing.T) {
 	t.Run("should mock request", func(t *testing.T) {
-		m := NewT(t)
+		m := ForTest(t)
+		m.Start()
 
 		scoped := m.Mock(Get(matcher.URLPath("/test")).
 			Header("test", matcher.EqualTo("hello")).
@@ -43,7 +45,8 @@ type J struct {
 }
 
 func TestPostJSON(t *testing.T) {
-	m := NewT(t)
+	m := ForTest(t)
+	m.Start()
 
 	scoped := m.Mock(Post(matcher.URLPath("/test")).
 		Header("test", matcher.EqualTo("hello")).

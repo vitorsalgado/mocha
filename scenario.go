@@ -5,7 +5,8 @@ import (
 )
 
 const (
-	ScenarioStarted = "STARTED"
+	ScenarioStarted       = "STARTED"
+	BuiltIntExtraScenario = "__mocha:scenarios"
 )
 
 type Scenario struct {

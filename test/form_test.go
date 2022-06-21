@@ -7,14 +7,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/vitorsalgado/mocha/matcher"
-
 	"github.com/vitorsalgado/mocha"
 	"github.com/vitorsalgado/mocha/internal/assert"
+	"github.com/vitorsalgado/mocha/matcher"
 )
 
 func TestFormUrlEncoded(t *testing.T) {
-	m := mocha.NewT(t)
+	m := mocha.ForTest(t)
+	m.Start()
 
 	scoped := m.Mock(mocha.Post(matcher.URLPath("/test")).
 		Reply(mocha.OK()))

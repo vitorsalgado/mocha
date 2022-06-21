@@ -10,7 +10,8 @@ import (
 )
 
 func TestScenario(t *testing.T) {
-	m := NewT(t)
+	m := ForTest(t)
+	m.Start()
 	scenario := "test"
 
 	s1 := m.Mock(Get(matcher.URLPath("/1")).
