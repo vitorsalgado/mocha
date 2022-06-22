@@ -7,6 +7,8 @@ import (
 )
 
 type (
+	ConfT interface{ *Config | *ConfigBuilder }
+
 	Mocha struct {
 		Server    *httptest.Server
 		mockstore MockStore
@@ -14,7 +16,19 @@ type (
 	}
 )
 
-func New(context context.Context) *Mocha {
+func New[C ConfT](options C) *Mocha {
+	var opts *Config
+	switch conf := any(options).(type) {
+	case *ConfigBuilder:
+		opts = conf.Build()
+	case *Config:
+		opts = conf
+	}
+
+	if opts == nil {
+		opts = Options().Build()
+	}
+
 	mockstore := NewMockStore()
 	parsers := make([]BodyParser, 0)
 	parsers = append(parsers, &JSONBodyParser{}, &FormURLEncodedParser{})
@@ -24,27 +38,21 @@ func New(context context.Context) *Mocha {
 	return &Mocha{
 		Server:    httptest.NewUnstartedServer(newHandler(mockstore, parsers, extras)),
 		mockstore: mockstore,
-		context:   context}
+		context:   opts.Context}
 }
 
-func ForTestWithContext(t *testing.T, context context.Context) *Mocha {
-	m := New(context)
+func ConfigureForTest[C ConfT](t *testing.T, options C) *Mocha {
+	m := New(options)
 	t.Cleanup(func() { m.Close() })
 	return m
 }
 
 func ForTest(t *testing.T) *Mocha {
-	return ForTestWithContext(t, context.Background())
+	return ConfigureForTest(t, Options())
 }
 
 func (m *Mocha) Start() ServerInfo {
 	m.Server.Start()
-
-	go func() {
-		<-m.context.Done()
-		m.Close()
-	}()
-
 	return ServerInfo{URL: m.Server.URL}
 }
 
