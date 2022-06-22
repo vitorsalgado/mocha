@@ -29,6 +29,9 @@ func Delete(m matcher.Matcher[url.URL]) *MockBuilder {
 func Head(m matcher.Matcher[url.URL]) *MockBuilder {
 	return NewBuilder().URL(m).Method(http.MethodHead)
 }
+func Options(m matcher.Matcher[url.URL]) *MockBuilder {
+	return NewBuilder().URL(m).Method(http.MethodOptions)
+}
 
 func (b *MockBuilder) Name(name string) *MockBuilder {
 	b.mock.Name = name

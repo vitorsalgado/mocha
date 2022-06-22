@@ -23,7 +23,7 @@ type (
 	}
 )
 
-func Options() *ConfigBuilder {
+func Setup() *ConfigBuilder {
 	return &ConfigBuilder{conf: &Config{BodyParsers: make([]BodyParser, 0)}}
 }
 

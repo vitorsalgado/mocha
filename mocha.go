@@ -26,7 +26,7 @@ func New[C ConfT](options C) *Mocha {
 	}
 
 	if opts == nil {
-		opts = Options().Build()
+		opts = Setup().Build()
 	}
 
 	mockstore := NewMockStore()
@@ -48,7 +48,7 @@ func ConfigureForTest[C ConfT](t *testing.T, options C) *Mocha {
 }
 
 func ForTest(t *testing.T) *Mocha {
-	return ConfigureForTest(t, Options())
+	return ConfigureForTest(t, Setup())
 }
 
 func (m *Mocha) Start() ServerInfo {
