@@ -2,6 +2,7 @@ package mocha
 
 import (
 	"encoding/json"
+	"github.com/vitorsalgado/mocha/internal/mime"
 	"net/http"
 	"strings"
 )
@@ -47,7 +48,7 @@ func ParseRequestBody(r *http.Request, parsers []BodyParser) (any, error) {
 type JSONBodyParser struct{}
 
 func (parser JSONBodyParser) CanParse(content string, _ *http.Request) bool {
-	return strings.Contains(content, ContentTypeJSON)
+	return strings.Contains(content, mime.ContentTypeJSON)
 }
 
 func (parser JSONBodyParser) Parse(r *http.Request) (any, error) {
@@ -63,7 +64,7 @@ func (parser JSONBodyParser) Parse(r *http.Request) (any, error) {
 type FormURLEncodedParser struct{}
 
 func (parser FormURLEncodedParser) CanParse(content string, _ *http.Request) bool {
-	return strings.Contains(content, ContentTypeFormURLEncoded)
+	return strings.Contains(content, mime.ContentTypeFormURLEncoded)
 }
 
 func (parser *FormURLEncodedParser) Parse(r *http.Request) (any, error) {

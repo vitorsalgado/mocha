@@ -1,6 +1,7 @@
 package test
 
 import (
+	"github.com/vitorsalgado/mocha/internal/mime"
 	"log"
 	"net/http"
 	"net/url"
@@ -25,7 +26,7 @@ func TestFormUrlEncoded(t *testing.T) {
 
 	req, _ := http.NewRequest(http.MethodPost, m.Server.URL+"/test", strings.NewReader(data.Encode()))
 	req.Header.Add("test", "hello")
-	req.Header.Add(mocha.HeaderContentType, mocha.ContentTypeFormURLEncoded)
+	req.Header.Add(mocha.HeaderContentType, mime.ContentTypeFormURLEncoded)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
