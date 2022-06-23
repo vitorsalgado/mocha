@@ -1,17 +1,20 @@
 package mocha
 
-import "github.com/vitorsalgado/mocha/matcher"
+import (
+	"github.com/vitorsalgado/mocha/matcher"
+	"github.com/vitorsalgado/mocha/mock"
+)
 
 type findMockResult struct {
 	Matches      bool
-	Matched      *Mock
-	ClosestMatch *Mock
+	Matched      *mock.Mock
+	ClosestMatch *mock.Mock
 }
 
-func findMockForRequest(mockstore MockStore, params matcher.Params) (*findMockResult, error) {
+func findMockForRequest(mockstore mock.Storage, params matcher.Params) (*findMockResult, error) {
 	mocks := mockstore.FetchSorted()
 
-	var m *Mock
+	var m *mock.Mock
 	var w = 0
 
 	for _, mock := range mocks {

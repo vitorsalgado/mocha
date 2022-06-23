@@ -1,7 +1,9 @@
 package test
 
 import (
+	"github.com/stretchr/testify/assert"
 	"github.com/vitorsalgado/mocha/internal/mime"
+	"github.com/vitorsalgado/mocha/reply"
 	"log"
 	"net/http"
 	"net/url"
@@ -9,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/vitorsalgado/mocha"
-	"github.com/vitorsalgado/mocha/internal/assert"
 	"github.com/vitorsalgado/mocha/matcher"
 )
 
@@ -18,7 +19,7 @@ func TestFormUrlEncoded(t *testing.T) {
 	m.Start()
 
 	scoped := m.Mock(mocha.Post(matcher.URLPath("/test")).
-		Reply(mocha.OK()))
+		Reply(reply.OK()))
 
 	data := url.Values{}
 	data.Set("var1", "dev")

@@ -2,10 +2,9 @@ package jsonpath
 
 import (
 	"encoding/json"
+	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
-
-	"github.com/vitorsalgado/mocha/internal/assert"
 )
 
 func TestArray(t *testing.T) {
@@ -38,7 +37,7 @@ func TestArray(t *testing.T) {
 
 	flg, err := Get("[0][2].test", data)
 	assert.Nil(t, err)
-	assert.Equal(t, 1, flg.(float64))
+	assert.Equal(t, float64(1), flg.(float64))
 
 	working, err := Get("[0][2].entries[0][0].working", data)
 	assert.Nil(t, err)
@@ -128,7 +127,7 @@ func TestObject(t *testing.T) {
 	assert.True(t, active.(bool))
 	assert.NotNil(t, ext)
 	assert.Equal(t, float64(50), ext.(map[string]any)["salary"].(float64))
-	assert.Equal(t, 50, salary.(float64))
+	assert.Equal(t, float64(50), salary.(float64))
 	assert.Nil(t, employer)
 	assert.Equal(t, "somewhere nice", street)
 	assert.Equal(t, 3, len(jobs.([]any)))

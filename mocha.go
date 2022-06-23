@@ -2,6 +2,7 @@ package mocha
 
 import (
 	"context"
+	"github.com/vitorsalgado/mocha/mock"
 	"net/http/httptest"
 	"testing"
 )
@@ -11,7 +12,7 @@ type (
 
 	Mocha struct {
 		Server    *httptest.Server
-		mockstore MockStore
+		mockstore mock.Storage
 		context   context.Context
 	}
 )
@@ -29,7 +30,7 @@ func New[C ConfT](options C) *Mocha {
 		opts = Setup().Build()
 	}
 
-	mockstore := NewMockStore()
+	mockstore := mock.NewMockStore()
 	parsers := make([]BodyParser, 0)
 	parsers = append(parsers, &JSONBodyParser{}, &FormURLEncodedParser{})
 	extras := NewExtras()
@@ -65,10 +66,10 @@ func (m *Mocha) Mock(builders ...*MockBuilder) *Scoped {
 	added := make([]int32, 0)
 
 	for _, b := range builders {
-		mock := b.Build()
+		mk := b.Build()
 
-		m.mockstore.Save(mock)
-		added = append(added, mock.ID)
+		m.mockstore.Save(mk)
+		added = append(added, mk.ID)
 	}
 
 	return NewScoped(m.mockstore, added)

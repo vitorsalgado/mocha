@@ -1,9 +1,8 @@
 package matcher
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
-
-	"github.com/vitorsalgado/mocha/internal/assert"
 )
 
 func TestAnythingMatcher(t *testing.T) {

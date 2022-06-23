@@ -2,10 +2,11 @@ package mocha
 
 import (
 	"errors"
+	"github.com/vitorsalgado/mocha/mock"
 )
 
 type Scoped struct {
-	store MockStore
+	store mock.Storage
 	mocks []int32
 }
 
@@ -13,7 +14,7 @@ var (
 	ErrScopeNotDone = errors.New("there are still mocks that were not called")
 )
 
-func NewScoped(repo MockStore, mocks []int32) *Scoped {
+func NewScoped(repo mock.Storage, mocks []int32) *Scoped {
 	return &Scoped{store: repo, mocks: mocks}
 }
 
@@ -28,7 +29,7 @@ func (s *Scoped) IsDone() bool {
 	return true
 }
 
-func (s *Scoped) Pending() []Mock {
+func (s *Scoped) Pending() []mock.Mock {
 	return s.store.Pending(s.mocks)
 }
 

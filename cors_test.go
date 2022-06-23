@@ -1,6 +1,7 @@
 package mocha
 
 import (
+	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -8,7 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/vitorsalgado/mocha/internal/assert"
 	"github.com/vitorsalgado/mocha/internal/middleware"
 )
 

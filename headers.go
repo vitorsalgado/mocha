@@ -8,9 +8,9 @@ const (
 
 	HeaderAccessControlAllowOrigin      = "Access-Control-Allow-Origin"
 	HeaderAccessControlAllowMethods     = "Access-Control-Allow-Methods"
-	HeaderAccessControlAllowHeaders     = "Access-Control-Allow-Headers"
-	HeaderAccessControlExposeHeaders    = "Access-Control-Expose-Headers"
+	HeaderAccessControlAllowHeaders     = "Access-Control-Allow-Header"
+	HeaderAccessControlExposeHeaders    = "Access-Control-Expose-Header"
 	HeaderAccessControlMaxAge           = "Access-Control-Max-Age"
 	HeaderAccessControlAllowCredentials = "Access-Control-Allow-Credentials"
-	HeaderAccessControlRequestHeaders   = "Access-Control-Request-Headers"
+	HeaderAccessControlRequestHeaders   = "Access-Control-Request-Header"
 )

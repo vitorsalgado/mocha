@@ -1,7 +1,7 @@
 package mocha
 
 import (
-	"bufio"
+	"github.com/vitorsalgado/mocha/mock"
 	"log"
 	"net/http"
 
@@ -9,13 +9,13 @@ import (
 )
 
 type Handler struct {
-	mocks   MockStore
+	mocks   mock.Storage
 	parsers []BodyParser
 	extras  Extras
 }
 
 func newHandler(
-	mockstore MockStore,
+	mockstore mock.Storage,
 	parsers []BodyParser,
 	extras Extras,
 ) *Handler {
@@ -42,18 +42,18 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mock := result.Matched
-	res, err := result.Matched.Responder(r, mock)
+	m := result.Matched
+	res, err := result.Matched.Reply.Build(r, m)
 	if err != nil {
 		respondErr(w, err)
 		return
 	}
 
-	mock.Hits++
-	h.mocks.Save(mock)
+	m.Hits++
+	h.mocks.Save(m)
 
-	for k, v := range res.Headers {
-		w.Header().Add(k, v)
+	for k := range res.Header {
+		w.Header().Add(k, res.Header.Get(k))
 	}
 
 	w.WriteHeader(res.Status)
@@ -62,19 +62,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	scanner := bufio.NewScanner(res.Body)
-
-	for scanner.Scan() {
-		_, err = w.Write(scanner.Bytes())
-		if err != nil {
-			respondErr(w, err)
-		}
-	}
-
-	if scanner.Err() != nil {
-		respondErr(w, err)
-		return
-	}
+	w.Write(res.Body)
 }
 
 func noMatch(w http.ResponseWriter, result *findMockResult) {

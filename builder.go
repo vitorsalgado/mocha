@@ -1,6 +1,7 @@
 package mocha
 
 import (
+	"github.com/vitorsalgado/mocha/mock"
 	"net/http"
 	"net/url"
 
@@ -11,10 +12,10 @@ type MockBuilder struct {
 	scenario              string
 	scenarioRequiredState string
 	scenarioNewState      string
-	mock                  *Mock
+	mock                  *mock.Mock
 }
 
-func NewBuilder() *MockBuilder                    { return &MockBuilder{mock: NewMock()} }
+func NewBuilder() *MockBuilder                    { return &MockBuilder{mock: mock.New()} }
 func Get(m matcher.Matcher[url.URL]) *MockBuilder { return NewBuilder().URL(m).Method(http.MethodGet) }
 func Post(m matcher.Matcher[url.URL]) *MockBuilder {
 	return NewBuilder().URL(m).Method(http.MethodPost)
@@ -46,7 +47,7 @@ func (b *MockBuilder) Priority(p int) *MockBuilder {
 func (b *MockBuilder) Method(method string) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
-		Expectation[string]{
+		mock.Expectation[string]{
 			Name:    "method",
 			Pick:    func(r *matcher.RequestInfo) string { return r.Request.Method },
 			Matcher: matcher.EqualFold(method),
@@ -59,7 +60,7 @@ func (b *MockBuilder) Method(method string) *MockBuilder {
 func (b *MockBuilder) URL(m matcher.Matcher[url.URL]) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
-		Expectation[url.URL]{
+		mock.Expectation[url.URL]{
 			Name:    "url",
 			Pick:    func(r *matcher.RequestInfo) url.URL { return *r.Request.URL },
 			Matcher: m,
@@ -72,7 +73,7 @@ func (b *MockBuilder) URL(m matcher.Matcher[url.URL]) *MockBuilder {
 func (b *MockBuilder) Header(key string, m matcher.Matcher[string]) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
-		Expectation[string]{
+		mock.Expectation[string]{
 			Name:    "header",
 			Pick:    func(r *matcher.RequestInfo) string { return r.Request.Header.Get(key) },
 			Matcher: m,
@@ -85,7 +86,7 @@ func (b *MockBuilder) Header(key string, m matcher.Matcher[string]) *MockBuilder
 func (b *MockBuilder) Headers(m matcher.Matcher[map[string][]string]) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
-		Expectation[map[string][]string]{
+		mock.Expectation[map[string][]string]{
 			Name:    "headers",
 			Pick:    func(r *matcher.RequestInfo) map[string][]string { return r.Request.Header },
 			Matcher: m,
@@ -98,7 +99,7 @@ func (b *MockBuilder) Headers(m matcher.Matcher[map[string][]string]) *MockBuild
 func (b *MockBuilder) Query(key string, m matcher.Matcher[string]) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
-		Expectation[string]{
+		mock.Expectation[string]{
 			Name:    "query",
 			Pick:    func(r *matcher.RequestInfo) string { return r.Request.URL.Query().Get(key) },
 			Matcher: m,
@@ -111,7 +112,7 @@ func (b *MockBuilder) Query(key string, m matcher.Matcher[string]) *MockBuilder 
 func (b *MockBuilder) Queries(m matcher.Matcher[map[string][]string]) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
-		Expectation[map[string][]string]{
+		mock.Expectation[map[string][]string]{
 			Name:    "queries",
 			Pick:    func(r *matcher.RequestInfo) map[string][]string { return r.Request.URL.Query() },
 			Matcher: m,
@@ -124,7 +125,7 @@ func (b *MockBuilder) Queries(m matcher.Matcher[map[string][]string]) *MockBuild
 func (b *MockBuilder) Body(matchers ...matcher.Matcher[any]) *MockBuilder {
 	for _, m := range matchers {
 		b.mock.Expectations = append(b.mock.Expectations,
-			Expectation[any]{
+			mock.Expectation[any]{
 				Name:    "body",
 				Pick:    func(r *matcher.RequestInfo) any { return r.ParsedBody },
 				Matcher: m,
@@ -137,7 +138,7 @@ func (b *MockBuilder) Body(matchers ...matcher.Matcher[any]) *MockBuilder {
 
 func (b *MockBuilder) FormField(field string, m matcher.Matcher[string]) *MockBuilder {
 	b.mock.Expectations = append(b.mock.Expectations,
-		Expectation[string]{
+		mock.Expectation[string]{
 			Name:    "form",
 			Pick:    func(r *matcher.RequestInfo) string { return r.Request.Form.Get(field) },
 			Matcher: m,
@@ -150,7 +151,7 @@ func (b *MockBuilder) FormField(field string, m matcher.Matcher[string]) *MockBu
 func (b *MockBuilder) Expect(m matcher.Matcher[*http.Request]) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
-		Expectation[*http.Request]{
+		mock.Expectation[*http.Request]{
 			Name:    "request",
 			Pick:    func(r *matcher.RequestInfo) *http.Request { return r.Request },
 			Matcher: m,
@@ -181,12 +182,12 @@ func (b *MockBuilder) ScenarioStateWillBe(newState string) *MockBuilder {
 	return b
 }
 
-func (b *MockBuilder) Reply(reply Reply) *MockBuilder {
-	b.mock.Responder = reply.Build()
+func (b *MockBuilder) Reply(reply mock.Reply) *MockBuilder {
+	b.mock.Reply = reply
 	return b
 }
 
-func (b *MockBuilder) Build() *Mock {
+func (b *MockBuilder) Build() *mock.Mock {
 	if b.scenario != "" {
 		b.Expect(scenarioMatcher[*http.Request](b.scenario, b.scenarioRequiredState, b.scenarioNewState))
 	}

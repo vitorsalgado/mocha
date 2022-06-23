@@ -1,14 +1,13 @@
 package middleware
 
 import (
+	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
-
-	"github.com/vitorsalgado/mocha/internal/assert"
 )
 
 func TestMiddlewaresComposition(t *testing.T) {

@@ -1,11 +1,12 @@
 package mocha
 
 import (
+	"github.com/stretchr/testify/assert"
+	"github.com/vitorsalgado/mocha/reply"
 	"io/ioutil"
 	"net/http"
 	"testing"
 
-	"github.com/vitorsalgado/mocha/internal/assert"
 	"github.com/vitorsalgado/mocha/matcher"
 )
 
@@ -18,21 +19,21 @@ func TestScenario(t *testing.T) {
 		StartScenario(scenario).
 		ScenarioStateWillBe("step2").
 		Name("step-1").
-		Reply(OK().BodyStr("step1")))
+		Reply(reply.OK().BodyString("step1")))
 
 	s2 := m.Mock(Get(matcher.URLPath("/2")).
 		ScenarioIs(scenario).
 		ScenarioStateIs("step2").
 		ScenarioStateWillBe("step3").
 		Name("step-2").
-		Reply(OK().BodyStr("step2")))
+		Reply(reply.OK().BodyString("step2")))
 
 	s3 := m.Mock(Get(matcher.URLPath("/3")).
 		ScenarioIs(scenario).
 		ScenarioStateIs("step3").
 		ScenarioStateWillBe("step4").
 		Name("step-3").
-		Reply(OK().BodyStr("step3")))
+		Reply(reply.OK().BodyString("step3")))
 
 	req, _ := http.NewRequest(http.MethodGet, m.Server.URL+"/1", nil)
 	res, _ := http.DefaultClient.Do(req)

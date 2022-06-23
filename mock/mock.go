@@ -1,15 +1,14 @@
-package mocha
+package mock
 
 import (
 	"fmt"
+	"github.com/vitorsalgado/mocha/internal"
+	"github.com/vitorsalgado/mocha/matcher"
 	"net/http"
 	"net/url"
 	"reflect"
 	"sort"
-
-	"github.com/vitorsalgado/mocha/matcher"
-
-	"github.com/vitorsalgado/mocha/internal"
+	"time"
 )
 
 type (
@@ -18,11 +17,11 @@ type (
 		Name         string
 		Priority     int
 		Expectations []any
-		Responder    Responder
+		Reply        Reply
 		Hits         int
 	}
 
-	MockStore interface {
+	Storage interface {
 		Save(mock *Mock)
 		FetchSorted() []Mock
 		GetByID(id int32) Mock
@@ -46,9 +45,23 @@ type (
 		Weight     int
 		IsMatch    bool
 	}
+
+	Response struct {
+		Status  int
+		Header  http.Header
+		Cookies []*http.Cookie
+		Body    []byte
+		Delay   time.Duration
+		Err     error
+	}
+
+	Reply interface {
+		Err() error
+		Build(*http.Request, *Mock) (*Response, error)
+	}
 )
 
-func NewMock() *Mock {
+func New() *Mock {
 	return &Mock{}
 }
 
@@ -97,7 +110,7 @@ type InMemoMockStore struct {
 	ids  internal.ID
 }
 
-func NewMockStore() MockStore {
+func NewMockStore() Storage {
 	return &InMemoMockStore{data: make(map[int32]Mock)}
 }
 

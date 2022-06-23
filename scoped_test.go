@@ -1,16 +1,16 @@
 package mocha
 
 import (
+	"github.com/stretchr/testify/assert"
+	"github.com/vitorsalgado/mocha/mock"
 	"testing"
-
-	"github.com/vitorsalgado/mocha/internal/assert"
 )
 
 func TestScoped(t *testing.T) {
-	repo := NewMockStore()
-	repo.Save(&Mock{ID: 1})
-	repo.Save(&Mock{ID: 2})
-	repo.Save(&Mock{ID: 3})
+	repo := mock.NewMockStore()
+	repo.Save(&mock.Mock{ID: 1})
+	repo.Save(&mock.Mock{ID: 2})
+	repo.Save(&mock.Mock{ID: 3})
 
 	ids := []int32{1, 2}
 	scoped := NewScoped(repo, ids)
