@@ -2,6 +2,7 @@ package mocha
 
 import (
 	"context"
+	"github.com/vitorsalgado/mocha/cors"
 	"net/http"
 )
 
@@ -11,7 +12,7 @@ type (
 		Addr        string
 		BodyParsers []BodyParser
 		Middlewares []func(http.Handler) http.Handler
-		CORS        *CORSOptions
+		CORS        *cors.Options
 	}
 
 	Conf interface {
@@ -47,7 +48,7 @@ func (cb *ConfigBuilder) Middlewares(fn ...func(next http.Handler) http.Handler)
 	return cb
 }
 
-func (cb *ConfigBuilder) CORS(options *CORSOptionsBuilder) *ConfigBuilder {
+func (cb *ConfigBuilder) CORS(options *cors.OptionsBuilder) *ConfigBuilder {
 	cb.conf.CORS = options.Build()
 	return cb
 }

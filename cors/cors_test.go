@@ -1,15 +1,15 @@
-package mocha
+package cors
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/vitorsalgado/mocha/internal/header"
+	"github.com/vitorsalgado/mocha/internal/middleware"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
-
-	"github.com/vitorsalgado/mocha/internal/middleware"
 )
 
 func TestCORS(t *testing.T) {
@@ -21,7 +21,7 @@ func TestCORS(t *testing.T) {
 	}
 
 	ts := httptest.NewServer(
-		middleware.Compose(CORS(*CORSOpts().
+		middleware.Compose(CORS(*Configure().
 			AllowMethods("GET", "POST").
 			AllowedHeaders("x-allow-this", "x-allow-that").
 			ExposeHeaders("x-expose-this").
@@ -39,11 +39,11 @@ func TestCORS(t *testing.T) {
 		}
 
 		assert.Equal(t, http.StatusNoContent, res.StatusCode)
-		assert.Equal(t, "*", res.Header.Get(HeaderAccessControlAllowOrigin))
-		assert.Equal(t, "x-expose-this", res.Header.Get(HeaderAccessControlExposeHeaders))
-		assert.Equal(t, "true", res.Header.Get(HeaderAccessControlAllowCredentials))
-		assert.Equal(t, "GET,POST", res.Header.Get(HeaderAccessControlAllowMethods))
-		assert.Equal(t, "x-allow-this,x-allow-that", res.Header.Get(HeaderAccessControlAllowHeaders))
+		assert.Equal(t, "*", res.Header.Get(header.AccessControlAllowOrigin))
+		assert.Equal(t, "x-expose-this", res.Header.Get(header.AccessControlExposeHeaders))
+		assert.Equal(t, "true", res.Header.Get(header.AccessControlAllowCredentials))
+		assert.Equal(t, "GET,POST", res.Header.Get(header.AccessControlAllowMethods))
+		assert.Equal(t, "x-allow-this,x-allow-that", res.Header.Get(header.AccessControlAllowHeaders))
 
 		// check the actual request
 		res, err = http.Get(ts.URL)
@@ -58,9 +58,9 @@ func TestCORS(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.True(t, strings.Contains(string(body), msg))
-		assert.Equal(t, "*", res.Header.Get(HeaderAccessControlAllowOrigin))
-		assert.Equal(t, "x-expose-this", res.Header.Get(HeaderAccessControlExposeHeaders))
-		assert.Equal(t, "true", res.Header.Get(HeaderAccessControlAllowCredentials))
+		assert.Equal(t, "*", res.Header.Get(header.AccessControlAllowOrigin))
+		assert.Equal(t, "x-expose-this", res.Header.Get(header.AccessControlExposeHeaders))
+		assert.Equal(t, "true", res.Header.Get(header.AccessControlAllowCredentials))
 		assert.Equal(t, "text/plain", res.Header.Get("content-type"))
 	})
 }

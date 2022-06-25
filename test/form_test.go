@@ -2,6 +2,7 @@ package test
 
 import (
 	"github.com/stretchr/testify/assert"
+	"github.com/vitorsalgado/mocha/internal/header"
 	"github.com/vitorsalgado/mocha/internal/mime"
 	"github.com/vitorsalgado/mocha/reply"
 	"log"
@@ -27,7 +28,7 @@ func TestFormUrlEncoded(t *testing.T) {
 
 	req, _ := http.NewRequest(http.MethodPost, m.Server.URL+"/test", strings.NewReader(data.Encode()))
 	req.Header.Add("test", "hello")
-	req.Header.Add(mocha.HeaderContentType, mime.ContentTypeFormURLEncoded)
+	req.Header.Add(header.ContentType, mime.ContentTypeFormURLEncoded)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {

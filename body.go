@@ -2,6 +2,7 @@ package mocha
 
 import (
 	"encoding/json"
+	"github.com/vitorsalgado/mocha/internal/header"
 	"github.com/vitorsalgado/mocha/internal/mime"
 	"net/http"
 	"strings"
@@ -28,7 +29,7 @@ func (p *Parsers) Get() []BodyParser {
 
 func ParseRequestBody(r *http.Request, parsers []BodyParser) (any, error) {
 	if r.Body != nil && r.Method != http.MethodGet && r.Method != http.MethodHead {
-		var content = r.Header.Get(HeaderContentType)
+		var content = r.Header.Get(header.ContentType)
 
 		for _, parse := range parsers {
 			if parse.CanParse(content, r) {
