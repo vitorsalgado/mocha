@@ -1,11 +1,11 @@
 package mocha
 
 import (
-	"github.com/vitorsalgado/mocha/mock"
 	"net/http"
 	"net/url"
 
 	"github.com/vitorsalgado/mocha/matcher"
+	"github.com/vitorsalgado/mocha/mock"
 )
 
 type (
@@ -162,7 +162,7 @@ func (b *MockBuilder) Form(m matcher.Matcher[url.Values]) *MockBuilder {
 	return b
 }
 
-func (b *MockBuilder) Expect(m matcher.Matcher[*http.Request]) *MockBuilder {
+func (b *MockBuilder) RequestMatches(m matcher.Matcher[*http.Request]) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
 		mock.Expectation[*http.Request]{
@@ -203,7 +203,7 @@ func (b *MockBuilder) Reply(reply mock.Reply) *MockBuilder {
 
 func (b *MockBuilder) Build() *mock.Mock {
 	if b.scenario != "" {
-		b.Expect(scenarioMatcher[*http.Request](b.scenario, b.scenarioRequiredState, b.scenarioNewState))
+		b.RequestMatches(scenarioMatcher[*http.Request](b.scenario, b.scenarioRequiredState, b.scenarioNewState))
 	}
 
 	return b.mock

@@ -2,8 +2,9 @@ package mocha
 
 import (
 	"context"
-	"github.com/vitorsalgado/mocha/cors"
 	"net/http"
+
+	"github.com/vitorsalgado/mocha/cors"
 )
 
 type (

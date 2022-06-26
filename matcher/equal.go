@@ -11,7 +11,7 @@ func EqualTo[E any](expected E) Matcher[E] {
 	}
 }
 
-func Equal(expected any) Matcher[any] {
+func EqualAny(expected any) Matcher[any] {
 	return func(v any, params Params) (bool, error) {
 		return reflect.DeepEqual(expected, v), nil
 	}

@@ -1,12 +1,13 @@
 package mocha
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/vitorsalgado/mocha/reply"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/vitorsalgado/mocha/reply"
 
 	"github.com/vitorsalgado/mocha/internal/testutil"
 	"github.com/vitorsalgado/mocha/matcher"
@@ -51,7 +52,7 @@ func TestPostJSON(t *testing.T) {
 	scoped := m.Mock(Post(matcher.URLPath("/test")).
 		Header("test", matcher.EqualTo("hello")).
 		Body(
-			matcher.JSONPath("name", matcher.Equal("dev")), matcher.JSONPath("ok", matcher.Equal(true))).
+			matcher.JSONPath("name", matcher.EqualAny("dev")), matcher.JSONPath("ok", matcher.EqualAny(true))).
 		Reply(reply.OK()))
 
 	req := testutil.PostJSON(m.Server.URL+"/test", &J{Name: "dev", OK: true})

@@ -1,8 +1,9 @@
 package matcher
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestJSONPath(t *testing.T) {
@@ -17,7 +18,7 @@ func TestJSONPath(t *testing.T) {
 	}
 
 	t.Run("should read match text field on object root", func(t *testing.T) {
-		res, err := JSONPath("name", Equal("someone"))(m, Params{})
+		res, err := JSONPath("name", EqualAny("someone"))(m, Params{})
 		assert.Nil(t, err)
 		assert.True(t, res)
 	})
@@ -35,7 +36,7 @@ func TestJSONPath(t *testing.T) {
 	})
 
 	t.Run("should return error when any error occurs", func(t *testing.T) {
-		res, err := JSONPath("312nj.,", Equal("anything"))(m, Params{})
+		res, err := JSONPath("312nj.,", EqualAny("anything"))(m, Params{})
 		assert.NotNil(t, err)
 		assert.False(t, res)
 	})
