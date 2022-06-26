@@ -14,16 +14,16 @@ type (
 		Parse(r *http.Request) (any, error)
 	}
 
-	Parsers struct {
+	bodyParsers struct {
 		parsers []BodyParser
 	}
 )
 
-func (p *Parsers) Compose(parsers ...BodyParser) {
+func (p *bodyParsers) Compose(parsers ...BodyParser) {
 	p.parsers = append(p.parsers, parsers...)
 }
 
-func (p *Parsers) Get() []BodyParser {
+func (p *bodyParsers) Get() []BodyParser {
 	return p.parsers
 }
 

@@ -7,13 +7,13 @@ import (
 )
 
 func TestScoped(t *testing.T) {
-	repo := mock.NewMockStore()
+	repo := mock.NewMockStorage()
 	repo.Save(&mock.Mock{ID: 1})
 	repo.Save(&mock.Mock{ID: 2})
 	repo.Save(&mock.Mock{ID: 3})
 
 	ids := []int32{1, 2}
-	scoped := NewScoped(repo, ids)
+	scoped := scoped(repo, ids)
 
 	t.Run("should not return done when there is still pending mocks", func(t *testing.T) {
 		assert.False(t, scoped.IsDone())
@@ -21,7 +21,7 @@ func TestScoped(t *testing.T) {
 	})
 
 	t.Run("should return done when all mocks were called", func(t *testing.T) {
-		m := repo.GetByID(1)
+		m := repo.FetchByID(1)
 		m.Hit()
 
 		repo.Save(&m)
@@ -29,7 +29,7 @@ func TestScoped(t *testing.T) {
 		assert.False(t, scoped.IsDone())
 		assert.NotNil(t, scoped.Done())
 
-		m = repo.GetByID(2)
+		m = repo.FetchByID(2)
 		m.Hit()
 
 		repo.Save(&m)

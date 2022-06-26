@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/vitorsalgado/mocha/internal"
 	"github.com/vitorsalgado/mocha/matcher"
+	"io"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -24,20 +25,20 @@ type (
 	Storage interface {
 		Save(mock *Mock)
 		FetchSorted() []Mock
-		GetByID(id int32) Mock
-		GetByIDs(ids []int32) []Mock
+		FetchByID(id int32) Mock
+		FetchByIDs(ids []int32) []Mock
 		Pending(ids []int32) []Mock
 		Delete(id int32)
 		Flush()
 	}
 
-	RequestPicker[V any] func(r *matcher.RequestInfo) V
+	ExpectationValuePicker[V any] func(r *matcher.RequestInfo) V
 
 	Expectation[V any] struct {
-		Matcher matcher.Matcher[V]
-		Pick    RequestPicker[V]
-		Weight  int
-		Name    string
+		Name        string
+		Matcher     matcher.Matcher[V]
+		ValuePicker ExpectationValuePicker[V]
+		Weight      int
 	}
 
 	MatchResult struct {
@@ -54,6 +55,8 @@ type (
 		Delay   time.Duration
 		Err     error
 	}
+
+	Responder func(io.Writer, *http.Request, *Mock) error
 
 	Reply interface {
 		Err() error
@@ -78,22 +81,22 @@ func (m *Mock) Matches(ctx matcher.Params) (MatchResult, error) {
 	for _, expect := range m.Expectations {
 		switch e := expect.(type) {
 		case Expectation[string]:
-			if res, err := e.Matcher(e.Pick(ctx.RequestInfo), ctx); err != nil || !res {
+			if res, err := e.Matcher(e.ValuePicker(ctx.RequestInfo), ctx); err != nil || !res {
 				return MatchResult{IsMatch: false, Weight: weight}, err
 			}
 			weight = weight + e.Weight
 		case Expectation[url.URL]:
-			if res, err := e.Matcher(e.Pick(ctx.RequestInfo), ctx); err != nil || !res {
+			if res, err := e.Matcher(e.ValuePicker(ctx.RequestInfo), ctx); err != nil || !res {
 				return MatchResult{IsMatch: false, Weight: weight}, err
 			}
 			weight = weight + e.Weight
 		case Expectation[*http.Request]:
-			if res, err := e.Matcher(e.Pick(ctx.RequestInfo), ctx); err != nil || !res {
+			if res, err := e.Matcher(e.ValuePicker(ctx.RequestInfo), ctx); err != nil || !res {
 				return MatchResult{IsMatch: false, Weight: weight}, err
 			}
 			weight = weight + e.Weight
 		case Expectation[any]:
-			if res, err := e.Matcher(e.Pick(ctx.RequestInfo), ctx); err != nil || !res {
+			if res, err := e.Matcher(e.ValuePicker(ctx.RequestInfo), ctx); err != nil || !res {
 				return MatchResult{IsMatch: false, Weight: weight}, err
 			}
 			weight = weight + e.Weight
@@ -110,7 +113,7 @@ type InMemoMockStore struct {
 	ids  internal.ID
 }
 
-func NewMockStore() Storage {
+func NewMockStorage() Storage {
 	return &InMemoMockStore{data: make(map[int32]Mock)}
 }
 
@@ -122,7 +125,7 @@ func (repo *InMemoMockStore) Save(mock *Mock) {
 	repo.data[mock.ID] = *mock
 }
 
-func (repo *InMemoMockStore) GetByID(id int32) Mock {
+func (repo *InMemoMockStore) FetchByID(id int32) Mock {
 	return repo.data[id]
 }
 
@@ -143,12 +146,12 @@ func (repo *InMemoMockStore) FetchSorted() []Mock {
 	return mocks
 }
 
-func (repo *InMemoMockStore) GetByIDs(ids []int32) []Mock {
+func (repo *InMemoMockStore) FetchByIDs(ids []int32) []Mock {
 	size := len(ids)
 	arr := make([]Mock, 0, size)
 
 	for _, id := range ids {
-		arr = append(arr, repo.GetByID(id))
+		arr = append(arr, repo.FetchByID(id))
 	}
 
 	return arr
@@ -157,7 +160,7 @@ func (repo *InMemoMockStore) GetByIDs(ids []int32) []Mock {
 func (repo *InMemoMockStore) Pending(ids []int32) []Mock {
 	r := make([]Mock, 0)
 
-	for _, mock := range repo.GetByIDs(ids) {
+	for _, mock := range repo.FetchByIDs(ids) {
 		if !mock.Called() {
 			r = append(r, mock)
 		}

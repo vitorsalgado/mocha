@@ -3,23 +3,25 @@ package mocha
 import (
 	"context"
 	"github.com/vitorsalgado/mocha/mock"
+	"github.com/vitorsalgado/mocha/templating"
 	"net/http/httptest"
 	"testing"
 )
 
 type (
-	ConfT interface{ *Config | *ConfigBuilder }
+	configT interface{ *Config | *ConfigBuilder }
 
 	Mocha struct {
-		Server    *httptest.Server
-		mockstore mock.Storage
-		context   context.Context
+		Server         *httptest.Server
+		mockStorage    mock.Storage
+		context        context.Context
+		templateParser templating.Parser
 	}
 )
 
-func New[C ConfT](options C) *Mocha {
+func New[C configT](config C) *Mocha {
 	var opts *Config
-	switch conf := any(options).(type) {
+	switch conf := any(config).(type) {
 	case *ConfigBuilder:
 		opts = conf.Build()
 	case *Config:
@@ -30,19 +32,20 @@ func New[C ConfT](options C) *Mocha {
 		opts = Setup().Build()
 	}
 
-	mockstore := mock.NewMockStore()
-	parsers := make([]BodyParser, 0)
+	mockStorage := mock.NewMockStorage()
+	parsers := make([]BodyParser, len(opts.BodyParsers)+2)
+	parsers = append(parsers, opts.BodyParsers...)
 	parsers = append(parsers, &JSONBodyParser{}, &FormURLEncodedParser{})
 	extras := NewExtras()
 	extras.Set(BuiltIntExtraScenario, NewScenarioStore())
 
 	return &Mocha{
-		Server:    httptest.NewUnstartedServer(newHandler(mockstore, parsers, extras)),
-		mockstore: mockstore,
-		context:   opts.Context}
+		Server:      httptest.NewUnstartedServer(newHandler(mockStorage, parsers, extras)),
+		mockStorage: mockStorage,
+		context:     opts.Context}
 }
 
-func ConfigureForTest[C ConfT](t *testing.T, options C) *Mocha {
+func ConfigureForTest[C configT](t *testing.T, options C) *Mocha {
 	m := New(options)
 	t.Cleanup(func() { m.Close() })
 	return m
@@ -63,16 +66,16 @@ func (m *Mocha) StartTLS() ServerInfo {
 }
 
 func (m *Mocha) Mock(builders ...*MockBuilder) *Scoped {
-	added := make([]int32, 0)
+	added := make([]int32, len(builders))
 
 	for _, b := range builders {
-		mk := b.Build()
+		newMock := b.Build()
 
-		m.mockstore.Save(mk)
-		added = append(added, mk.ID)
+		m.mockStorage.Save(newMock)
+		added = append(added, newMock.ID)
 	}
 
-	return NewScoped(m.mockstore, added)
+	return scoped(m.mockStorage, added)
 }
 
 func (m *Mocha) Close() {

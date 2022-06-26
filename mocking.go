@@ -11,31 +11,30 @@ type findMockResult struct {
 	ClosestMatch *mock.Mock
 }
 
-func findMockForRequest(mockstore mock.Storage, params matcher.Params) (*findMockResult, error) {
-	mocks := mockstore.FetchSorted()
-
-	var m *mock.Mock
+func findMockForRequest(storage mock.Storage, params matcher.Params) (*findMockResult, error) {
+	var mocks = storage.FetchSorted()
+	var matched *mock.Mock
 	var w = 0
 
-	for _, mock := range mocks {
-		matches, err := mock.Matches(params)
+	for _, m := range mocks {
+		matches, err := m.Matches(params)
 		if err != nil {
 			return nil, err
 		}
 
 		if matches.IsMatch {
-			return &findMockResult{Matches: true, Matched: &mock}, nil
+			return &findMockResult{Matches: true, Matched: &m}, nil
 		}
 
 		if matches.Weight > 0 && matches.Weight > w {
-			m = &mock
+			matched = &m
 			w = matches.Weight
 		}
 	}
 
-	if m == nil {
+	if matched == nil {
 		return &findMockResult{Matches: false}, nil
 	}
 
-	return &findMockResult{Matches: false, ClosestMatch: m}, nil
+	return &findMockResult{Matches: false, ClosestMatch: matched}, nil
 }

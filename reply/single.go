@@ -4,16 +4,27 @@ import (
 	"bytes"
 	"encoding/json"
 	"github.com/vitorsalgado/mocha/mock"
+	"github.com/vitorsalgado/mocha/templating"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
 )
 
-type SingleReply struct {
-	err      error
-	response *mock.Response
-}
+type (
+	SingleReply struct {
+		err      error
+		response *mock.Response
+		bodyType BodyType
+		template string
+	}
+
+	BodyType int
+)
+
+const (
+	BodyTemplate BodyType = iota
+)
 
 func New() *SingleReply {
 	return &SingleReply{
@@ -42,61 +53,75 @@ func BadGateway() *SingleReply          { return New().Status(http.StatusBadGate
 func ServiceUnavailable() *SingleReply  { return New().Status(http.StatusServiceUnavailable) }
 func GatewayTimeout() *SingleReply      { return New().Status(http.StatusGatewayTimeout) }
 
-func (reply *SingleReply) Status(status int) *SingleReply {
-	reply.response.Status = status
-	return reply
+func (r *SingleReply) Status(status int) *SingleReply {
+	r.response.Status = status
+	return r
 }
 
-func (reply *SingleReply) Header(key, value string) *SingleReply {
-	reply.response.Header.Add(key, value)
-	return reply
+func (r *SingleReply) Header(key, value string) *SingleReply {
+	r.response.Header.Add(key, value)
+	return r
 }
 
-func (reply *SingleReply) Cookie(cookie http.Cookie) *SingleReply {
-	reply.response.Cookies = append(reply.response.Cookies, &cookie)
-	return reply
+func (r *SingleReply) Cookie(cookie http.Cookie) *SingleReply {
+	r.response.Cookies = append(r.response.Cookies, &cookie)
+	return r
 }
 
-func (reply *SingleReply) RemoveCookie(cookie http.Cookie) *SingleReply {
+func (r *SingleReply) RemoveCookie(cookie http.Cookie) *SingleReply {
 	cookie.MaxAge = -1
-	reply.response.Cookies = append(reply.response.Cookies, &cookie)
-	return reply
+	r.response.Cookies = append(r.response.Cookies, &cookie)
+	return r
 }
 
-func (reply *SingleReply) Body(value []byte) *SingleReply {
-	reply.response.Body = value
-	return reply
+func (r *SingleReply) Body(value []byte) *SingleReply {
+	r.response.Body = value
+	return r
 }
 
-func (reply *SingleReply) BodyString(value string) *SingleReply {
-	reply.response.Body = []byte(value)
-	return reply
+func (r *SingleReply) BodyString(value string) *SingleReply {
+	r.response.Body = []byte(value)
+	return r
 }
 
-func (reply *SingleReply) BodyJSON(data any) *SingleReply {
+func (r *SingleReply) BodyTemplate(tmpl string) *SingleReply {
+	return r
+}
+
+func (r *SingleReply) BodyJSON(data any) *SingleReply {
 	buf := &bytes.Buffer{}
-	reply.response.Err = json.NewEncoder(buf).Encode(data)
-	return reply
+	r.response.Err = json.NewEncoder(buf).Encode(data)
+	return r
 }
 
-func (reply *SingleReply) BodyReader(reader io.Reader) *SingleReply {
+func (r *SingleReply) BodyReader(reader io.Reader) *SingleReply {
 	b, err := ioutil.ReadAll(reader)
 
-	reply.response.Body = b
-	reply.err = err
+	r.response.Body = b
+	r.err = err
 
-	return reply
+	return r
 }
 
-func (reply *SingleReply) Delay(duration time.Duration) *SingleReply {
-	reply.response.Delay = duration
-	return reply
+func (r *SingleReply) Delay(duration time.Duration) *SingleReply {
+	r.response.Delay = duration
+	return r
 }
 
-func (reply *SingleReply) Err() error {
-	return reply.err
+func (r *SingleReply) Err() error {
+	return r.err
 }
 
-func (reply *SingleReply) Build(_ *http.Request, _ *mock.Mock) (*mock.Response, error) {
-	return reply.response, reply.err
+func (r *SingleReply) Build(_ *http.Request, _ *mock.Mock) (*mock.Response, error) {
+	if r.err != nil {
+		return nil, r.err
+	}
+
+	switch r.bodyType {
+	case BodyTemplate:
+		tmpl := templating.New()
+		tmpl.Template(r.template).Name("")
+	}
+
+	return r.response, r.err
 }
