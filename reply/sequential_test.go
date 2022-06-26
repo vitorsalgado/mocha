@@ -1,10 +1,11 @@
 package reply
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/vitorsalgado/mocha/mock"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/vitorsalgado/mocha/mock"
 )
 
 func TestSequential(t *testing.T) {
@@ -37,7 +38,7 @@ func TestSequential(t *testing.T) {
 		assert.Equal(t, http.StatusNotFound, res.Status)
 
 		m.Hit()
-		res, err = builder.Build(req, m)
+		_, err = builder.Build(req, m)
 		assert.NotNil(t, err)
 	})
 

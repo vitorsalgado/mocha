@@ -2,12 +2,13 @@ package mock
 
 import (
 	"fmt"
-	"github.com/vitorsalgado/mocha/matcher"
 	"net/http"
 	"net/url"
 	"reflect"
 	"sync"
 	"time"
+
+	"github.com/vitorsalgado/mocha/matcher"
 )
 
 type (
@@ -25,9 +26,7 @@ type (
 
 	Storage interface {
 		Save(mock *Mock)
-		FetchByID(id int) *Mock
-		FetchByIDs(ids ...int) []*Mock
-		FetchEligibleSorted() []*Mock
+		FetchEligible() []*Mock
 		FetchAll() []*Mock
 		Delete(id int)
 		Flush()

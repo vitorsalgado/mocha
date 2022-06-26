@@ -2,6 +2,7 @@ package mocha
 
 import (
 	"errors"
+
 	"github.com/vitorsalgado/mocha/mock"
 )
 
@@ -64,8 +65,14 @@ func (s *Scoped) Enable() {
 }
 
 func (s *Scoped) Clean() {
-	for _, m := range s.mocks {
-		s.storage.Delete(m.ID)
+	ids := make([]int, len(s.mocks))
+
+	for i, m := range s.mocks {
+		ids[i] = m.ID
+	}
+
+	for _, id := range ids {
+		s.storage.Delete(id)
 	}
 
 	s.mocks = make([]*mock.Mock, 0)

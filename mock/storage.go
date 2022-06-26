@@ -7,38 +7,27 @@ import (
 
 type (
 	BuiltInStorage struct {
-		data map[int]*Mock
+		data []*Mock
 		mu   sync.Mutex
 	}
 )
 
 func NewStorage() Storage {
-	return &BuiltInStorage{data: make(map[int]*Mock)}
+	return &BuiltInStorage{data: make([]*Mock, 0)}
 }
 
 func (repo *BuiltInStorage) Save(mock *Mock) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
-	repo.data[mock.ID] = mock
+	repo.data = append(repo.data, mock)
+
+	sort.SliceStable(repo.data, func(a, b int) bool {
+		return repo.data[a].Priority < repo.data[b].Priority
+	})
 }
 
-func (repo *BuiltInStorage) FetchByID(id int) *Mock {
-	return repo.data[id]
-}
-
-func (repo *BuiltInStorage) FetchByIDs(ids ...int) []*Mock {
-	size := len(ids)
-	arr := make([]*Mock, size, size)
-
-	for i, id := range ids {
-		arr[i] = repo.FetchByID(id)
-	}
-
-	return arr
-}
-
-func (repo *BuiltInStorage) FetchEligibleSorted() []*Mock {
+func (repo *BuiltInStorage) FetchEligible() []*Mock {
 	mocks := make([]*Mock, 0)
 
 	for _, mock := range repo.data {
@@ -47,32 +36,26 @@ func (repo *BuiltInStorage) FetchEligibleSorted() []*Mock {
 		}
 	}
 
-	sort.SliceStable(mocks, func(a, b int) bool {
-		return mocks[a].Priority < mocks[b].Priority
-	})
-
 	return mocks
 }
 
 func (repo *BuiltInStorage) FetchAll() []*Mock {
-	size := len(repo.data)
-	mocks := make([]*Mock, size, size)
-	i := 0
-
-	for _, m := range repo.data {
-		mocks[i] = m
-		i++
-	}
-
-	return mocks
+	return repo.data
 }
 
 func (repo *BuiltInStorage) Delete(id int) {
-	delete(repo.data, id)
+	index := -1
+	for i, m := range repo.data {
+		if m.ID == id {
+			index = i
+			break
+		}
+	}
+
+	repo.data = repo.data[:index+copy(repo.data[index:], repo.data[index+1:])]
 }
 
 func (repo *BuiltInStorage) Flush() {
-	for key := range repo.data {
-		delete(repo.data, key)
-	}
+	repo.data = nil
+	repo.data = make([]*Mock, 0)
 }

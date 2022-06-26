@@ -2,9 +2,10 @@ package mocha
 
 import (
 	"context"
-	"github.com/vitorsalgado/mocha/mock"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/vitorsalgado/mocha/mock"
 )
 
 type (
@@ -65,7 +66,7 @@ func (m *Mocha) StartTLS() ServerInfo {
 
 func (m *Mocha) Mock(builders ...*MockBuilder) *Scoped {
 	size := len(builders)
-	added := make([]*mock.Mock, size, size)
+	added := make([]*mock.Mock, size)
 
 	for i, b := range builders {
 		newMock := b.Build()

@@ -1,16 +1,21 @@
 package mocha
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/vitorsalgado/mocha/mock"
-	"testing"
 )
 
 func TestScoped(t *testing.T) {
+	m1 := mock.New()
+	m2 := mock.New()
+	m3 := mock.New()
+
 	repo := mock.NewStorage()
-	repo.Save(mock.New())
-	repo.Save(mock.New())
-	repo.Save(mock.New())
+	repo.Save(m1)
+	repo.Save(m2)
+	repo.Save(m3)
 
 	scoped := Scope(repo, repo.FetchAll())
 
@@ -20,17 +25,13 @@ func TestScoped(t *testing.T) {
 	})
 
 	t.Run("should return done when all mocks were called", func(t *testing.T) {
-		m := repo.FetchByID(1)
-		m.Hit()
+		m1.Hit()
 
 		assert.False(t, scoped.IsDone())
 		assert.NotNil(t, scoped.Done())
 
-		m = repo.FetchByID(2)
-		m.Hit()
-
-		m = repo.FetchByID(3)
-		m.Hit()
+		m2.Hit()
+		m3.Hit()
 
 		assert.True(t, scoped.IsDone())
 		assert.Nil(t, scoped.Done())

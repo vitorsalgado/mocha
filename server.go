@@ -22,12 +22,12 @@ type (
 	HTTPTestServerBuilder struct {
 	}
 
-	standardServer struct {
+	StandardServer struct {
 		server *httptest.Server
 	}
 )
 
-func (s standardServer) Start() ServerInfo {
+func (s StandardServer) Start() ServerInfo {
 	s.server.Start()
 	return ServerInfo{}
 }

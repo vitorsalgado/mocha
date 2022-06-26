@@ -2,10 +2,11 @@ package mocha
 
 import (
 	"encoding/json"
-	"github.com/vitorsalgado/mocha/internal/header"
-	"github.com/vitorsalgado/mocha/internal/mime"
 	"net/http"
 	"strings"
+
+	"github.com/vitorsalgado/mocha/internal/header"
+	"github.com/vitorsalgado/mocha/internal/mime"
 )
 
 type (
@@ -13,19 +14,7 @@ type (
 		CanParse(content string, r *http.Request) bool
 		Parse(r *http.Request) (any, error)
 	}
-
-	bodyParsers struct {
-		parsers []BodyParser
-	}
 )
-
-func (p *bodyParsers) Compose(parsers ...BodyParser) {
-	p.parsers = append(p.parsers, parsers...)
-}
-
-func (p *bodyParsers) Get() []BodyParser {
-	return p.parsers
-}
 
 func ParseRequestBody(r *http.Request, parsers []BodyParser) (any, error) {
 	if r.Body != nil && r.Method != http.MethodGet && r.Method != http.MethodHead {
