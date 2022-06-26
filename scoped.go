@@ -7,20 +7,19 @@ import (
 
 type Scoped struct {
 	storage mock.Storage
-	mocks   []int32
+	mocks   []*mock.Mock
 }
 
 var (
 	ErrScopeNotDone = errors.New("there are still mocks that were not called")
 )
 
-func Scope(repo mock.Storage, mocks []int32) *Scoped {
+func Scope(repo mock.Storage, mocks []*mock.Mock) *Scoped {
 	return &Scoped{storage: repo, mocks: mocks}
 }
 
 func (s *Scoped) IsDone() bool {
-	for _, key := range s.mocks {
-		m := s.storage.FetchByID(key)
+	for _, m := range s.mocks {
 		if !m.Called() {
 			return false
 		}
@@ -30,19 +29,46 @@ func (s *Scoped) IsDone() bool {
 }
 
 func (s *Scoped) Pending() []mock.Mock {
-	return s.storage.Pending(s.mocks)
+	ret := make([]mock.Mock, 0)
+	for _, m := range s.mocks {
+		if !m.Called() {
+			ret = append(ret, *m)
+		}
+	}
+
+	return ret
 }
 
 func (s *Scoped) IsPending() bool {
-	return len(s.storage.Pending(s.mocks)) > 0
+	pending := false
+	for _, m := range s.mocks {
+		if !m.Called() {
+			pending = true
+			break
+		}
+	}
+
+	return pending
+}
+
+func (s *Scoped) Disable() {
+	for _, m := range s.mocks {
+		m.Disable()
+	}
+}
+
+func (s *Scoped) Enable() {
+	for _, m := range s.mocks {
+		m.Enable()
+	}
 }
 
 func (s *Scoped) Clean() {
-	for _, key := range s.mocks {
-		s.storage.Delete(key)
+	for _, m := range s.mocks {
+		s.storage.Delete(m.ID)
 	}
 
-	s.mocks = make([]int32, 0)
+	s.mocks = make([]*mock.Mock, 0)
 }
 
 func (s *Scoped) Done() error {

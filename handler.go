@@ -49,8 +49,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	m.Hits++
-	h.mocks.Save(m)
+	m.Hit()
 
 	for k := range res.Header {
 		w.Header().Add(k, res.Header.Get(k))

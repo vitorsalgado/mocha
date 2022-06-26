@@ -30,7 +30,7 @@ func New[C configT](config C) *Mocha {
 		opts = Setup().Build()
 	}
 
-	mockStorage := mock.NewMockStorage()
+	mockStorage := mock.NewStorage()
 	parsers := make([]BodyParser, 0)
 	parsers = append(parsers, opts.BodyParsers...)
 	parsers = append(parsers, &JSONBodyParser{}, &FormURLEncodedParser{})
@@ -65,12 +65,12 @@ func (m *Mocha) StartTLS() ServerInfo {
 
 func (m *Mocha) Mock(builders ...*MockBuilder) *Scoped {
 	size := len(builders)
-	added := make([]int32, size, size)
+	added := make([]*mock.Mock, size, size)
 
 	for i, b := range builders {
 		newMock := b.Build()
 		m.mockStorage.Save(newMock)
-		added[i] = newMock.ID
+		added[i] = newMock
 	}
 
 	return Scope(m.mockStorage, added)

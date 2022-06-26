@@ -18,7 +18,7 @@ run: ## run application
 
 .PHONY: test
 test: ## run tests
-	@go test -v ./... -race
+	@go test -race -v ./... -race
 
 .PHONY: bench
 bench: ## run benchmarks

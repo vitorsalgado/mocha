@@ -2,32 +2,34 @@ package mock
 
 import (
 	"fmt"
-	"github.com/vitorsalgado/mocha/internal"
 	"github.com/vitorsalgado/mocha/matcher"
 	"net/http"
 	"net/url"
 	"reflect"
-	"sort"
+	"sync"
 	"time"
 )
 
 type (
 	Mock struct {
-		ID           int32
+		ID           int
 		Name         string
 		Priority     int
 		Expectations []any
 		Reply        Reply
 		Hits         int
+		Enabled      bool
+
+		mu *sync.Mutex
 	}
 
 	Storage interface {
 		Save(mock *Mock)
-		FetchEligible() []Mock
-		FetchByID(id int32) Mock
-		FetchByIDs(ids []int32) []Mock
-		Pending(ids []int32) []Mock
-		Delete(id int32)
+		FetchByID(id int) *Mock
+		FetchByIDs(ids ...int) []*Mock
+		FetchEligibleSorted() []*Mock
+		FetchAll() []*Mock
+		Delete(id int)
 		Flush()
 	}
 
@@ -61,11 +63,15 @@ type (
 	}
 )
 
+var id = autoID{}
+
 func New() *Mock {
-	return &Mock{}
+	return &Mock{ID: id.Next(), Enabled: true, mu: &sync.Mutex{}}
 }
 
 func (m *Mock) Hit() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.Hits++
 }
 
@@ -73,112 +79,53 @@ func (m *Mock) Called() bool {
 	return m.Hits > 0
 }
 
-func (m *Mock) Matches(ctx matcher.Params) (MatchResult, error) {
+func (m *Mock) Enable() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.Enabled = true
+}
+
+func (m *Mock) Disable() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.Enabled = false
+}
+
+func (m *Mock) Matches(params matcher.Params) (MatchResult, error) {
 	weight := 0
 	for _, expect := range m.Expectations {
+		var matched bool
+		var err error
+		var w int
+
 		switch e := expect.(type) {
-		case Expectation[string]:
-			if res, err := e.Matcher(e.ValuePicker(ctx.RequestInfo), ctx); err != nil || !res {
-				return MatchResult{IsMatch: false, Weight: weight}, err
-			}
-			weight = weight + e.Weight
-		case Expectation[url.URL]:
-			if res, err := e.Matcher(e.ValuePicker(ctx.RequestInfo), ctx); err != nil || !res {
-				return MatchResult{IsMatch: false, Weight: weight}, err
-			}
-			weight = weight + e.Weight
-		case Expectation[*http.Request]:
-			if res, err := e.Matcher(e.ValuePicker(ctx.RequestInfo), ctx); err != nil || !res {
-				return MatchResult{IsMatch: false, Weight: weight}, err
-			}
-			weight = weight + e.Weight
-		case Expectation[any]:
-			if res, err := e.Matcher(e.ValuePicker(ctx.RequestInfo), ctx); err != nil || !res {
-				return MatchResult{IsMatch: false, Weight: weight}, err
-			}
-			weight = weight + e.Weight
 		default:
-			return MatchResult{IsMatch: false, Weight: weight}, fmt.Errorf("unhandled matcher type %s", reflect.TypeOf(e))
+			return MatchResult{IsMatch: false, Weight: weight},
+				fmt.Errorf("unhandled matcher type %s", reflect.TypeOf(e))
+
+		case Expectation[any]:
+			matched, w, err = matches(e, params)
+		case Expectation[string]:
+			matched, w, err = matches(e, params)
+		case Expectation[url.URL]:
+			matched, w, err = matches(e, params)
+		case Expectation[*http.Request]:
+			matched, w, err = matches(e, params)
+		case Expectation[url.Values]:
+			matched, w, err = matches(e, params)
 		}
+
+		if err != nil || !matched {
+			return MatchResult{IsMatch: false, Weight: weight}, err
+		}
+
+		weight += w
 	}
 
 	return MatchResult{IsMatch: true}, nil
 }
 
-func matches[V any](ctx matcher.Params, e Expectation[V], weight int) (MatchResult, error) {
-	if res, err := e.Matcher(e.ValuePicker(ctx.RequestInfo), ctx); err != nil || !res {
-		return MatchResult{IsMatch: false, Weight: weight}, err
-	}
-	return MatchResult{}, nil
-}
-
-type InMemoMockStore struct {
-	data map[int32]Mock
-	ids  internal.ID
-}
-
-func NewMockStorage() Storage {
-	return &InMemoMockStore{data: make(map[int32]Mock)}
-}
-
-func (repo *InMemoMockStore) Save(mock *Mock) {
-	if mock.ID == 0 {
-		mock.ID = repo.ids.Next()
-	}
-
-	repo.data[mock.ID] = *mock
-}
-
-func (repo *InMemoMockStore) FetchByID(id int32) Mock {
-	return repo.data[id]
-}
-
-func (repo *InMemoMockStore) FetchEligible() []Mock {
-	size := len(repo.data)
-	mocks := make([]Mock, size)
-	i := 0
-
-	for _, mock := range repo.data {
-		mocks[i] = mock
-		i++
-	}
-
-	sort.SliceStable(mocks, func(a, b int) bool {
-		return mocks[a].Priority < mocks[b].Priority
-	})
-
-	return mocks
-}
-
-func (repo *InMemoMockStore) FetchByIDs(ids []int32) []Mock {
-	size := len(ids)
-	arr := make([]Mock, 0, size)
-
-	for _, id := range ids {
-		arr = append(arr, repo.FetchByID(id))
-	}
-
-	return arr
-}
-
-func (repo *InMemoMockStore) Pending(ids []int32) []Mock {
-	r := make([]Mock, 0)
-
-	for _, mock := range repo.FetchByIDs(ids) {
-		if !mock.Called() {
-			r = append(r, mock)
-		}
-	}
-
-	return r
-}
-
-func (repo *InMemoMockStore) Delete(id int32) {
-	delete(repo.data, id)
-}
-
-func (repo *InMemoMockStore) Flush() {
-	for key := range repo.data {
-		delete(repo.data, key)
-	}
+func matches[V any](e Expectation[V], params matcher.Params) (bool, int, error) {
+	res, err := e.Matcher(e.ValuePicker(params.RequestInfo), params)
+	return res, e.Weight, err
 }

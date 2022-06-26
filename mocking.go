@@ -12,7 +12,7 @@ type findMockResult struct {
 }
 
 func findMockForRequest(storage mock.Storage, params matcher.Params) (*findMockResult, error) {
-	var mocks = storage.FetchEligible()
+	var mocks = storage.FetchEligibleSorted()
 	var matched *mock.Mock
 	var w = 0
 
@@ -23,11 +23,11 @@ func findMockForRequest(storage mock.Storage, params matcher.Params) (*findMockR
 		}
 
 		if matches.IsMatch {
-			return &findMockResult{Matches: true, Matched: &m}, nil
+			return &findMockResult{Matches: true, Matched: m}, nil
 		}
 
 		if matches.Weight > 0 && matches.Weight > w {
-			matched = &m
+			matched = m
 			w = matches.Weight
 		}
 	}
