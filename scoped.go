@@ -14,7 +14,7 @@ var (
 	ErrScopeNotDone = errors.New("there are still mocks that were not called")
 )
 
-func scoped(repo mock.Storage, mocks []int32) *Scoped {
+func Scope(repo mock.Storage, mocks []int32) *Scoped {
 	return &Scoped{storage: repo, mocks: mocks}
 }
 

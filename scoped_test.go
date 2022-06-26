@@ -13,7 +13,7 @@ func TestScoped(t *testing.T) {
 	repo.Save(&mock.Mock{ID: 3})
 
 	ids := []int32{1, 2}
-	scoped := scoped(repo, ids)
+	scoped := Scope(repo, ids)
 
 	t.Run("should not return done when there is still pending mocks", func(t *testing.T) {
 		assert.False(t, scoped.IsDone())

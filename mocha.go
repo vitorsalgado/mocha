@@ -3,7 +3,6 @@ package mocha
 import (
 	"context"
 	"github.com/vitorsalgado/mocha/mock"
-	"github.com/vitorsalgado/mocha/templating"
 	"net/http/httptest"
 	"testing"
 )
@@ -12,10 +11,9 @@ type (
 	configT interface{ *Config | *ConfigBuilder }
 
 	Mocha struct {
-		Server         *httptest.Server
-		mockStorage    mock.Storage
-		context        context.Context
-		templateParser templating.Parser
+		Server      *httptest.Server
+		mockStorage mock.Storage
+		context     context.Context
 	}
 )
 
@@ -33,7 +31,7 @@ func New[C configT](config C) *Mocha {
 	}
 
 	mockStorage := mock.NewMockStorage()
-	parsers := make([]BodyParser, len(opts.BodyParsers)+2)
+	parsers := make([]BodyParser, 0)
 	parsers = append(parsers, opts.BodyParsers...)
 	parsers = append(parsers, &JSONBodyParser{}, &FormURLEncodedParser{})
 	extras := NewExtras()
@@ -66,16 +64,16 @@ func (m *Mocha) StartTLS() ServerInfo {
 }
 
 func (m *Mocha) Mock(builders ...*MockBuilder) *Scoped {
-	added := make([]int32, len(builders))
+	size := len(builders)
+	added := make([]int32, size, size)
 
-	for _, b := range builders {
+	for i, b := range builders {
 		newMock := b.Build()
-
 		m.mockStorage.Save(newMock)
-		added = append(added, newMock.ID)
+		added[i] = newMock.ID
 	}
 
-	return scoped(m.mockStorage, added)
+	return Scope(m.mockStorage, added)
 }
 
 func (m *Mocha) Close() {

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/vitorsalgado/mocha/internal"
 	"github.com/vitorsalgado/mocha/matcher"
-	"io"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -24,7 +23,7 @@ type (
 
 	Storage interface {
 		Save(mock *Mock)
-		FetchSorted() []Mock
+		FetchEligible() []Mock
 		FetchByID(id int32) Mock
 		FetchByIDs(ids []int32) []Mock
 		Pending(ids []int32) []Mock
@@ -55,8 +54,6 @@ type (
 		Delay   time.Duration
 		Err     error
 	}
-
-	Responder func(io.Writer, *http.Request, *Mock) error
 
 	Reply interface {
 		Err() error
@@ -108,6 +105,13 @@ func (m *Mock) Matches(ctx matcher.Params) (MatchResult, error) {
 	return MatchResult{IsMatch: true}, nil
 }
 
+func matches[V any](ctx matcher.Params, e Expectation[V], weight int) (MatchResult, error) {
+	if res, err := e.Matcher(e.ValuePicker(ctx.RequestInfo), ctx); err != nil || !res {
+		return MatchResult{IsMatch: false, Weight: weight}, err
+	}
+	return MatchResult{}, nil
+}
+
 type InMemoMockStore struct {
 	data map[int32]Mock
 	ids  internal.ID
@@ -129,7 +133,7 @@ func (repo *InMemoMockStore) FetchByID(id int32) Mock {
 	return repo.data[id]
 }
 
-func (repo *InMemoMockStore) FetchSorted() []Mock {
+func (repo *InMemoMockStore) FetchEligible() []Mock {
 	size := len(repo.data)
 	mocks := make([]Mock, size)
 	i := 0

@@ -16,14 +16,16 @@ type (
 		err      error
 		response *mock.Response
 		bodyType BodyType
-		template string
+		template templating.Template
+		model    any
 	}
 
 	BodyType int
 )
 
 const (
-	BodyTemplate BodyType = iota
+	BodyDefault BodyType = iota
+	BodyTemplate
 )
 
 func New() *SingleReply {
@@ -53,75 +55,94 @@ func BadGateway() *SingleReply          { return New().Status(http.StatusBadGate
 func ServiceUnavailable() *SingleReply  { return New().Status(http.StatusServiceUnavailable) }
 func GatewayTimeout() *SingleReply      { return New().Status(http.StatusGatewayTimeout) }
 
-func (r *SingleReply) Status(status int) *SingleReply {
-	r.response.Status = status
-	return r
+func (rpl *SingleReply) Status(status int) *SingleReply {
+	rpl.response.Status = status
+	return rpl
 }
 
-func (r *SingleReply) Header(key, value string) *SingleReply {
-	r.response.Header.Add(key, value)
-	return r
+func (rpl *SingleReply) Header(key, value string) *SingleReply {
+	rpl.response.Header.Add(key, value)
+	return rpl
 }
 
-func (r *SingleReply) Cookie(cookie http.Cookie) *SingleReply {
-	r.response.Cookies = append(r.response.Cookies, &cookie)
-	return r
+func (rpl *SingleReply) Cookie(cookie http.Cookie) *SingleReply {
+	rpl.response.Cookies = append(rpl.response.Cookies, &cookie)
+	return rpl
 }
 
-func (r *SingleReply) RemoveCookie(cookie http.Cookie) *SingleReply {
+func (rpl *SingleReply) RemoveCookie(cookie http.Cookie) *SingleReply {
 	cookie.MaxAge = -1
-	r.response.Cookies = append(r.response.Cookies, &cookie)
-	return r
+	rpl.response.Cookies = append(rpl.response.Cookies, &cookie)
+	return rpl
 }
 
-func (r *SingleReply) Body(value []byte) *SingleReply {
-	r.response.Body = value
-	return r
+func (rpl *SingleReply) Body(value []byte) *SingleReply {
+	rpl.response.Body = value
+	return rpl
 }
 
-func (r *SingleReply) BodyString(value string) *SingleReply {
-	r.response.Body = []byte(value)
-	return r
+func (rpl *SingleReply) BodyString(value string) *SingleReply {
+	rpl.response.Body = []byte(value)
+	return rpl
 }
 
-func (r *SingleReply) BodyTemplate(tmpl string) *SingleReply {
-	return r
-}
-
-func (r *SingleReply) BodyJSON(data any) *SingleReply {
+func (rpl *SingleReply) BodyJSON(data any) *SingleReply {
 	buf := &bytes.Buffer{}
-	r.response.Err = json.NewEncoder(buf).Encode(data)
-	return r
+	rpl.response.Err = json.NewEncoder(buf).Encode(data)
+	return rpl
 }
 
-func (r *SingleReply) BodyReader(reader io.Reader) *SingleReply {
+func (rpl *SingleReply) BodyReader(reader io.Reader) *SingleReply {
 	b, err := ioutil.ReadAll(reader)
 
-	r.response.Body = b
-	r.err = err
+	rpl.response.Body = b
+	rpl.err = err
 
-	return r
+	return rpl
 }
 
-func (r *SingleReply) Delay(duration time.Duration) *SingleReply {
-	r.response.Delay = duration
-	return r
-}
-
-func (r *SingleReply) Err() error {
-	return r.err
-}
-
-func (r *SingleReply) Build(_ *http.Request, _ *mock.Mock) (*mock.Response, error) {
-	if r.err != nil {
-		return nil, r.err
+func (rpl *SingleReply) BodyTemplate(template any) *SingleReply {
+	switch e := template.(type) {
+	case string:
+		rpl.template = templating.New().Template(e)
+	case templating.Template:
+		err := e.Compile()
+		rpl.template = e
+		rpl.err = err
+	case *templating.Template:
+		rpl.template = *e
+	default:
+		panic(".BodyTemplate() parameter must be: string | templating.Template")
 	}
 
-	switch r.bodyType {
+	return rpl
+}
+
+func (rpl *SingleReply) Mode(model any) *SingleReply {
+	rpl.model = model
+	return rpl
+}
+
+func (rpl *SingleReply) Delay(duration time.Duration) *SingleReply {
+	rpl.response.Delay = duration
+	return rpl
+}
+
+func (rpl *SingleReply) Err() error {
+	return rpl.err
+}
+
+func (rpl *SingleReply) Build(_ *http.Request, _ *mock.Mock) (*mock.Response, error) {
+	if rpl.err != nil {
+		return nil, rpl.err
+	}
+
+	switch rpl.bodyType {
 	case BodyTemplate:
-		tmpl := templating.New()
-		tmpl.Template(r.template).Name("")
+		b, err := rpl.template.Parse(rpl.model)
+		rpl.response.Body = b
+		rpl.err = err
 	}
 
-	return r.response, r.err
+	return rpl.response, rpl.err
 }

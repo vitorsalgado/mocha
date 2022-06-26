@@ -141,10 +141,22 @@ func (b *MockBuilder) Body(matchers ...matcher.Matcher[any]) *MockBuilder {
 func (b *MockBuilder) FormField(field string, m matcher.Matcher[string]) *MockBuilder {
 	b.mock.Expectations = append(b.mock.Expectations,
 		mock.Expectation[string]{
-			Name:        "form",
+			Name:        "form_field",
 			ValuePicker: func(r *matcher.RequestInfo) string { return r.Request.Form.Get(field) },
 			Matcher:     m,
 			Weight:      1,
+		})
+
+	return b
+}
+
+func (b *MockBuilder) Form(m matcher.Matcher[url.Values]) *MockBuilder {
+	b.mock.Expectations = append(b.mock.Expectations,
+		mock.Expectation[url.Values]{
+			Name:        "form",
+			ValuePicker: func(r *matcher.RequestInfo) url.Values { return r.Request.Form },
+			Matcher:     m,
+			Weight:      3,
 		})
 
 	return b

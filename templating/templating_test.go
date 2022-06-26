@@ -1,7 +1,6 @@
 package templating
 
 import (
-	"bytes"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
 	"os"
@@ -26,14 +25,16 @@ func TestGoTemplating_Compile(t *testing.T) {
 	}
 
 	tmpl := New()
-	tmpl.Template(string(tpl)).FuncMap(template.FuncMap{"trim": strings.TrimSpace})
-
-	buf := &bytes.Buffer{}
-	data := testData{Key: "  hello   ", Value: "world "}
-	err = tmpl.Parse(buf, data)
+	err = tmpl.Template(string(tpl)).FuncMap(template.FuncMap{"trim": strings.TrimSpace}).Compile()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "hello world \n", buf.String())
+	data := testData{Key: "  hello   ", Value: "world "}
+	b, err := tmpl.Parse(data)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, "hello world \n", string(b))
 }

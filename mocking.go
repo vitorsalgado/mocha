@@ -12,7 +12,7 @@ type findMockResult struct {
 }
 
 func findMockForRequest(storage mock.Storage, params matcher.Params) (*findMockResult, error) {
-	var mocks = storage.FetchSorted()
+	var mocks = storage.FetchEligible()
 	var matched *mock.Mock
 	var w = 0
 

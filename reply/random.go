@@ -27,7 +27,7 @@ func (mr *RandomReply) Build(r *http.Request, m *mock.Mock) (*mock.Response, err
 	size := len(mr.replies)
 	if size == 0 {
 		return nil,
-			fmt.Errorf("you need to set at least one response when using multiple response builder")
+			fmt.Errorf("you need to set at least one response when using random reply")
 	}
 
 	index := rand.Intn(len(mr.replies)-1) + 0
