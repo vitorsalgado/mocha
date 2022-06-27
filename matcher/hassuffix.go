@@ -2,8 +2,8 @@ package matcher
 
 import "strings"
 
-func Contains(value string) Matcher[string] {
+func HasSuffix(value string) Matcher[string] {
 	return func(v string, params Params) (bool, error) {
-		return strings.Contains(v, value), nil
+		return strings.HasSuffix(v, value), nil
 	}
 }
