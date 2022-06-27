@@ -176,7 +176,7 @@ func (b *MockBuilder) Repeat(times int) *MockBuilder {
 		mock.Expectation[any]{
 			Name:        "repeat",
 			ValuePicker: func(r *matcher.RequestInfo) any { return r.Request },
-			Matcher:     matcher.Repeat(times),
+			Matcher:     matcher.Repeat[any](times),
 			Weight:      weightNone,
 		})
 

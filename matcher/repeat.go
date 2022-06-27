@@ -1,9 +1,9 @@
 package matcher
 
-func Repeat(times int) Matcher[any] {
+func Repeat[V any](times int) Matcher[V] {
 	count := 0
 
-	return func(v any, params Params) (bool, error) {
+	return func(_ V, params Params) (bool, error) {
 		count++
 
 		return count <= times, nil
