@@ -17,6 +17,14 @@ type (
 	}
 )
 
+const (
+	weightNone    = 0
+	weightVeryLow = 1
+	weightLow     = 3
+	weightRegular = 5
+	weightHigh    = 7
+)
+
 func NewBuilder() *MockBuilder                    { return &MockBuilder{mock: mock.New()} }
 func Get(m matcher.Matcher[url.URL]) *MockBuilder { return NewBuilder().URL(m).Method(http.MethodGet) }
 func Post(m matcher.Matcher[url.URL]) *MockBuilder {
@@ -53,7 +61,7 @@ func (b *MockBuilder) Method(method string) *MockBuilder {
 			Name:        "method",
 			ValuePicker: func(r *matcher.RequestInfo) string { return r.Request.Method },
 			Matcher:     matcher.EqualFold(method),
-			Weight:      3,
+			Weight:      weightVeryLow,
 		})
 
 	return b
@@ -66,7 +74,7 @@ func (b *MockBuilder) URL(m matcher.Matcher[url.URL]) *MockBuilder {
 			Name:        "url",
 			ValuePicker: func(r *matcher.RequestInfo) url.URL { return *r.Request.URL },
 			Matcher:     m,
-			Weight:      10,
+			Weight:      weightRegular,
 		})
 
 	return b
@@ -79,7 +87,7 @@ func (b *MockBuilder) Header(key string, m matcher.Matcher[string]) *MockBuilder
 			Name:        "header",
 			ValuePicker: func(r *matcher.RequestInfo) string { return r.Request.Header.Get(key) },
 			Matcher:     m,
-			Weight:      1,
+			Weight:      weightVeryLow,
 		})
 
 	return b
@@ -92,7 +100,7 @@ func (b *MockBuilder) Headers(m matcher.Matcher[map[string][]string]) *MockBuild
 			Name:        "headers",
 			ValuePicker: func(r *matcher.RequestInfo) map[string][]string { return r.Request.Header },
 			Matcher:     m,
-			Weight:      3,
+			Weight:      weightLow,
 		})
 
 	return b
@@ -105,7 +113,7 @@ func (b *MockBuilder) Query(key string, m matcher.Matcher[string]) *MockBuilder 
 			Name:        "query",
 			ValuePicker: func(r *matcher.RequestInfo) string { return r.Request.URL.Query().Get(key) },
 			Matcher:     m,
-			Weight:      1,
+			Weight:      weightVeryLow,
 		})
 
 	return b
@@ -118,7 +126,7 @@ func (b *MockBuilder) Queries(m matcher.Matcher[map[string][]string]) *MockBuild
 			Name:        "queries",
 			ValuePicker: func(r *matcher.RequestInfo) map[string][]string { return r.Request.URL.Query() },
 			Matcher:     m,
-			Weight:      3,
+			Weight:      weightVeryLow,
 		})
 
 	return b
@@ -131,7 +139,7 @@ func (b *MockBuilder) Body(matchers ...matcher.Matcher[any]) *MockBuilder {
 				Name:        "body",
 				ValuePicker: func(r *matcher.RequestInfo) any { return r.ParsedBody },
 				Matcher:     m,
-				Weight:      7,
+				Weight:      weightHigh,
 			})
 	}
 
@@ -144,7 +152,7 @@ func (b *MockBuilder) FormField(field string, m matcher.Matcher[string]) *MockBu
 			Name:        "form_field",
 			ValuePicker: func(r *matcher.RequestInfo) string { return r.Request.Form.Get(field) },
 			Matcher:     m,
-			Weight:      1,
+			Weight:      weightVeryLow,
 		})
 
 	return b
@@ -156,7 +164,33 @@ func (b *MockBuilder) Form(m matcher.Matcher[url.Values]) *MockBuilder {
 			Name:        "form",
 			ValuePicker: func(r *matcher.RequestInfo) url.Values { return r.Request.Form },
 			Matcher:     m,
-			Weight:      3,
+			Weight:      weightLow,
+		})
+
+	return b
+}
+
+func (b *MockBuilder) Repeat(times int) *MockBuilder {
+	b.mock.Expectations = append(
+		b.mock.Expectations,
+		mock.Expectation[any]{
+			Name:        "repeat",
+			ValuePicker: func(r *matcher.RequestInfo) any { return r.Request },
+			Matcher:     matcher.Repeat(times),
+			Weight:      weightNone,
+		})
+
+	return b
+}
+
+func (b *MockBuilder) Matches(m matcher.Matcher[any]) *MockBuilder {
+	b.mock.Expectations = append(
+		b.mock.Expectations,
+		mock.Expectation[any]{
+			Name:        "any",
+			ValuePicker: func(r *matcher.RequestInfo) any { return r.Request },
+			Matcher:     m,
+			Weight:      weightLow,
 		})
 
 	return b
@@ -169,7 +203,7 @@ func (b *MockBuilder) RequestMatches(m matcher.Matcher[*http.Request]) *MockBuil
 			Name:        "request",
 			ValuePicker: func(r *matcher.RequestInfo) *http.Request { return r.Request },
 			Matcher:     m,
-			Weight:      3,
+			Weight:      weightLow,
 		})
 
 	return b
