@@ -7,10 +7,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/vitorsalgado/mocha/reply"
-
 	"github.com/vitorsalgado/mocha/internal/testutil"
 	"github.com/vitorsalgado/mocha/matcher"
+	"github.com/vitorsalgado/mocha/reply"
 )
 
 func TestMocha(t *testing.T) {

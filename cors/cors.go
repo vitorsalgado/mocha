@@ -1,10 +1,11 @@
 package cors
 
 import (
-	"github.com/vitorsalgado/mocha/internal/header"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/vitorsalgado/mocha/internal/header"
 )
 
 type Options struct {

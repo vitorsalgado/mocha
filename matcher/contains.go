@@ -1,8 +1,6 @@
 package matcher
 
-import (
-	"strings"
-)
+import "strings"
 
 func Contains[E any](value E) Matcher[E] {
 	return func(v E, params Params) (bool, error) {

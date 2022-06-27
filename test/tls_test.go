@@ -2,15 +2,15 @@ package test
 
 import (
 	"crypto/tls"
-	"github.com/stretchr/testify/assert"
-	"github.com/vitorsalgado/mocha/reply"
 	"log"
 	"net/http"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/vitorsalgado/mocha"
 	"github.com/vitorsalgado/mocha/internal/testutil"
 	"github.com/vitorsalgado/mocha/matcher"
+	"github.com/vitorsalgado/mocha/reply"
 )
 
 func TestTLS(t *testing.T) {

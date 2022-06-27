@@ -1,10 +1,11 @@
 package reply
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/vitorsalgado/mocha/mock"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/vitorsalgado/mocha/mock"
 )
 
 func TestRandomReplies(t *testing.T) {

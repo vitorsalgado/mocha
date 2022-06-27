@@ -1,18 +1,18 @@
 package test
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/vitorsalgado/mocha/internal/header"
-	"github.com/vitorsalgado/mocha/internal/mime"
-	"github.com/vitorsalgado/mocha/reply"
 	"log"
 	"net/http"
 	"net/url"
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/vitorsalgado/mocha"
+	"github.com/vitorsalgado/mocha/internal/header"
+	"github.com/vitorsalgado/mocha/internal/mime"
 	"github.com/vitorsalgado/mocha/matcher"
+	"github.com/vitorsalgado/mocha/reply"
 )
 
 func TestFormUrlEncoded(t *testing.T) {

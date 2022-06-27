@@ -3,12 +3,13 @@ package reply
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/vitorsalgado/mocha/mock"
-	"github.com/vitorsalgado/mocha/templating"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"time"
+
+	"github.com/vitorsalgado/mocha/mock"
+	"github.com/vitorsalgado/mocha/templating"
 )
 
 type (

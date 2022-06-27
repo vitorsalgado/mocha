@@ -1,15 +1,16 @@
 package cors
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/vitorsalgado/mocha/internal/header"
-	"github.com/vitorsalgado/mocha/internal/middleware"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/vitorsalgado/mocha/internal/header"
+	"github.com/vitorsalgado/mocha/internal/middleware"
 )
 
 func TestCORS(t *testing.T) {

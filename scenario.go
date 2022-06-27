@@ -1,8 +1,6 @@
 package mocha
 
-import (
-	"github.com/vitorsalgado/mocha/matcher"
-)
+import "github.com/vitorsalgado/mocha/matcher"
 
 const (
 	ScenarioStarted       = "STARTED"

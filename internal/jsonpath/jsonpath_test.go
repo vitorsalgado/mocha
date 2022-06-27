@@ -2,9 +2,10 @@ package jsonpath
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
 	"log"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestArray(t *testing.T) {

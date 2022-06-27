@@ -2,8 +2,9 @@ package reply
 
 import (
 	"fmt"
-	"github.com/vitorsalgado/mocha/mock"
 	"net/http"
+
+	"github.com/vitorsalgado/mocha/mock"
 )
 
 type SequentialReply struct {

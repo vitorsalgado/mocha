@@ -1,13 +1,13 @@
 package mocha
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/vitorsalgado/mocha/reply"
 	"io/ioutil"
 	"net/http"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/vitorsalgado/mocha/matcher"
+	"github.com/vitorsalgado/mocha/reply"
 )
 
 func TestScenario(t *testing.T) {

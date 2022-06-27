@@ -1,11 +1,12 @@
 package reply
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/vitorsalgado/mocha/mock"
 	"net/http"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/vitorsalgado/mocha/mock"
 )
 
 func TestSingleFactories(t *testing.T) {

@@ -2,9 +2,10 @@ package reply
 
 import (
 	"fmt"
-	"github.com/vitorsalgado/mocha/mock"
 	"math/rand"
 	"net/http"
+
+	"github.com/vitorsalgado/mocha/mock"
 )
 
 type RandomReply struct {
