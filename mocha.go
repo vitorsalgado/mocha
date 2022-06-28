@@ -16,33 +16,35 @@ type (
 		Server      *httptest.Server
 		mockStorage mock.Storage
 		context     context.Context
+		params      params.Params
 	}
 )
 
 func New[C configT](config C) *Mocha {
-	var opts *Config
+	var parsedConfig *Config
 	switch conf := any(config).(type) {
 	case *ConfigBuilder:
-		opts = conf.Build()
+		parsedConfig = conf.Build()
 	case *Config:
-		opts = conf
+		parsedConfig = conf
 	}
 
-	if opts == nil {
-		opts = Setup().Build()
+	if parsedConfig == nil {
+		parsedConfig = Setup().Build()
 	}
 
 	mockStorage := mock.NewStorage()
 	parsers := make([]BodyParser, 0)
-	parsers = append(parsers, opts.BodyParsers...)
+	parsers = append(parsers, parsedConfig.BodyParsers...)
 	parsers = append(parsers, &JSONBodyParser{}, &FormURLEncodedParser{})
-	extras := params.New()
-	extras.Set(BuiltIntExtraScenario, NewScenarioStore())
+	params := params.New()
+	params.Set(BuiltIntExtraScenario, NewScenarioStore())
 
 	return &Mocha{
-		Server:      httptest.NewUnstartedServer(newHandler(mockStorage, parsers, extras)),
+		Server:      httptest.NewUnstartedServer(newHandler(mockStorage, parsers, params)),
 		mockStorage: mockStorage,
-		context:     opts.Context}
+		context:     parsedConfig.Context,
+		params:      params}
 }
 
 func ConfigureForTest[C configT](t *testing.T, options C) *Mocha {
@@ -76,6 +78,10 @@ func (m *Mocha) Mock(builders ...*MockBuilder) *Scoped {
 	}
 
 	return Scope(m.mockStorage, added)
+}
+
+func (m *Mocha) Parameters() *params.Params {
+	return &m.params
 }
 
 func (m *Mocha) Close() {

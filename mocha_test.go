@@ -1,6 +1,7 @@
 package mocha
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -65,4 +66,29 @@ func TestPostJSON(t *testing.T) {
 	defer res.Body.Close()
 
 	assert.True(t, scoped.IsDone())
+}
+
+func TestCustomParameters(t *testing.T) {
+	key := "k"
+	expected := "test"
+
+	m := ForTest(t)
+	m.Start()
+	m.Parameters().Set(key, expected)
+
+	scope := m.Mock(Get(matcher.URLPath("/test")).
+		Matches(func(v any, params matcher.Params) (bool, error) {
+			p, _ := params.Extras.Get(key)
+			return p.(string) == expected, nil
+		}).
+		Reply(reply.Accepted()))
+
+	req := testutil.Get(fmt.Sprintf("%s/test", m.Server.URL))
+	res, err := req.Do()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Nil(t, scope.Done())
+	assert.Equal(t, http.StatusAccepted, res.StatusCode)
 }
