@@ -73,18 +73,18 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func noMatch(w http.ResponseWriter, result *findMockResult) {
 	w.WriteHeader(http.StatusTeapot)
-	_, _ = w.Write([]byte("Request was not matched."))
+	w.Write([]byte("Request was not matched."))
 
 	if result.ClosestMatch != nil {
-		_, _ = w.Write([]byte("\n"))
-		_, _ = w.Write([]byte("\n"))
+		w.Write([]byte("\n"))
+		w.Write([]byte("\n"))
 	}
 }
 
 func respondErr(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusTeapot)
-	_, _ = w.Write([]byte("Request was not matched."))
-	_, _ = w.Write([]byte(err.Error()))
+	w.Write([]byte("Request was not matched."))
+	w.Write([]byte(err.Error()))
 
 	log.Printf("Reason: %v", err)
 }
