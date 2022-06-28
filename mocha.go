@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/vitorsalgado/mocha/mock"
+	"github.com/vitorsalgado/mocha/params"
 )
 
 type (
@@ -35,7 +36,7 @@ func New[C configT](config C) *Mocha {
 	parsers := make([]BodyParser, 0)
 	parsers = append(parsers, opts.BodyParsers...)
 	parsers = append(parsers, &JSONBodyParser{}, &FormURLEncodedParser{})
-	extras := NewExtras()
+	extras := params.New()
 	extras.Set(BuiltIntExtraScenario, NewScenarioStore())
 
 	return &Mocha{

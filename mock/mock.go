@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/vitorsalgado/mocha/matcher"
+	"github.com/vitorsalgado/mocha/params"
 )
 
 type (
@@ -20,8 +21,20 @@ type (
 		Reply        Reply
 		Hits         int
 		Enabled      bool
+		PostActions  []PostAction
 
 		mu *sync.Mutex
+	}
+
+	PostActionArgs struct {
+		Request  *http.Request
+		Response *Response
+		Mock     *Mock
+		Params   params.Params
+	}
+
+	PostAction interface {
+		Run(args PostActionArgs) error
 	}
 
 	Storage interface {
@@ -65,7 +78,7 @@ type (
 var id = autoID{}
 
 func New() *Mock {
-	return &Mock{ID: id.Next(), Enabled: true, mu: &sync.Mutex{}}
+	return &Mock{ID: id.Next(), Enabled: true, PostActions: make([]PostAction, 0), mu: &sync.Mutex{}}
 }
 
 func (m *Mock) Hit() {

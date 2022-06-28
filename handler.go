@@ -1,25 +1,26 @@
 package mocha
 
 import (
-	"github.com/vitorsalgado/mocha/mock"
 	"log"
 	"net/http"
 
 	"github.com/vitorsalgado/mocha/matcher"
+	"github.com/vitorsalgado/mocha/mock"
+	"github.com/vitorsalgado/mocha/params"
 )
 
 type Handler struct {
 	mocks   mock.Storage
 	parsers []BodyParser
-	extras  Extras
+	params  params.Params
 }
 
 func newHandler(
 	mockstore mock.Storage,
 	parsers []BodyParser,
-	extras Extras,
+	params params.Params,
 ) *Handler {
-	return &Handler{mocks: mockstore, parsers: parsers, extras: extras}
+	return &Handler{mocks: mockstore, parsers: parsers, params: params}
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +30,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	params := matcher.Params{RequestInfo: &matcher.RequestInfo{Request: r, ParsedBody: parsedbody}, Extras: &h.extras}
+	params := matcher.Params{RequestInfo: &matcher.RequestInfo{Request: r, ParsedBody: parsedbody}, Extras: &h.params}
 	result, err := findMockForRequest(h.mocks, params)
 
 	if err != nil {
@@ -57,11 +58,17 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(res.Status)
 
-	if res.Body == nil {
-		return
+	if res.Body != nil {
+		w.Write(res.Body)
 	}
 
-	w.Write(res.Body)
+	args := mock.PostActionArgs{Request: r, Response: res, Mock: m, Params: h.params}
+	for _, action := range m.PostActions {
+		err := action.Run(args)
+		if err != nil {
+			log.Println(err)
+		}
+	}
 }
 
 func noMatch(w http.ResponseWriter, result *findMockResult) {

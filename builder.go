@@ -230,6 +230,11 @@ func (b *MockBuilder) ScenarioStateWillBe(newState string) *MockBuilder {
 	return b
 }
 
+func (b *MockBuilder) PostAction(action mock.PostAction) *MockBuilder {
+	b.mock.PostActions = append(b.mock.PostActions, action)
+	return b
+}
+
 func (b *MockBuilder) Reply(reply mock.Reply) *MockBuilder {
 	b.mock.Reply = reply
 	return b
