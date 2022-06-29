@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/vitorsalgado/mocha/mock"
+	"github.com/vitorsalgado/mocha/params"
 )
 
 type RandomReply struct {
@@ -24,7 +25,11 @@ func (mr *RandomReply) Then(reply mock.Reply) *RandomReply {
 	return mr
 }
 
-func (mr *RandomReply) Build(r *http.Request, m *mock.Mock) (*mock.Response, error) {
+func (mr *RandomReply) Err() error {
+	return nil
+}
+
+func (mr *RandomReply) Build(r *http.Request, m *mock.Mock, p *params.Params) (*mock.Response, error) {
 	size := len(mr.replies)
 	if size == 0 {
 		return nil,
@@ -34,5 +39,5 @@ func (mr *RandomReply) Build(r *http.Request, m *mock.Mock) (*mock.Response, err
 	index := rand.Intn(len(mr.replies)-1) + 0
 	reply := mr.replies[index]
 
-	return reply.Build(r, m)
+	return reply.Build(r, m, p)
 }

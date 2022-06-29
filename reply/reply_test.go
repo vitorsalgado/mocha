@@ -1,6 +1,7 @@
 package reply
 
 import (
+	"io/ioutil"
 	"net/http"
 	"testing"
 	"time"
@@ -44,7 +45,11 @@ func TestSingleReplies(t *testing.T) {
 		RemoveCookie(http.Cookie{Name: "cookie_test_remove"}).
 		Body([]byte("hi")).
 		Delay(5*time.Second).
-		Build(req, &m)
+		Build(req, &m, nil)
+
+	assert.Nil(t, err)
+
+	b, err := ioutil.ReadAll(res.Body)
 
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusCreated, res.Status)
@@ -54,6 +59,6 @@ func TestSingleReplies(t *testing.T) {
 	assert.Equal(t, "cookie_test", res.Cookies[0].Name)
 	assert.Equal(t, "cookie_test_remove", res.Cookies[1].Name)
 	assert.Equal(t, -1, res.Cookies[1].MaxAge)
-	assert.Equal(t, "hi", string(res.Body))
+	assert.Equal(t, "hi", string(b))
 	assert.Equal(t, 5*time.Second, res.Delay)
 }

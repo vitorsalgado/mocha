@@ -16,7 +16,7 @@ type (
 		Server      *httptest.Server
 		mockStorage mock.Storage
 		context     context.Context
-		params      params.Params
+		params      *params.Params
 	}
 )
 
@@ -40,8 +40,11 @@ func New[C configT](config C) *Mocha {
 	params := params.New()
 	params.Set(BuiltIntExtraScenario, NewScenarioStore())
 
+	server := httptest.NewUnstartedServer(newHandler(mockStorage, parsers, params))
+	server.EnableHTTP2 = true
+
 	return &Mocha{
-		Server:      httptest.NewUnstartedServer(newHandler(mockStorage, parsers, params)),
+		Server:      server,
 		mockStorage: mockStorage,
 		context:     parsedConfig.Context,
 		params:      params}
@@ -81,7 +84,7 @@ func (m *Mocha) Mock(builders ...*MockBuilder) *Scoped {
 }
 
 func (m *Mocha) Parameters() *params.Params {
-	return &m.params
+	return m.params
 }
 
 func (m *Mocha) Close() {

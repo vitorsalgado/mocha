@@ -6,8 +6,8 @@ type (
 	}
 )
 
-func New() Params {
-	return Params{param: make(map[string]any)}
+func New() *Params {
+	return &Params{param: make(map[string]any)}
 }
 
 func (p Params) Get(key string) (any, bool) {

@@ -1,6 +1,7 @@
 package templating
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
 	"path"
@@ -32,10 +33,11 @@ func TestGoTemplating_Compile(t *testing.T) {
 	}
 
 	data := testData{Key: "  hello   ", Value: "world "}
-	b, err := tmpl.Parse(data)
+	buf := bytes.Buffer{}
+	err = tmpl.Parse(&buf, data)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, "hello world \n", string(b))
+	assert.Equal(t, "hello world \n", buf.String())
 }

@@ -18,27 +18,27 @@ func TestSequential(t *testing.T) {
 			Then(NotFound())
 
 		m.Hit()
-		res, err := builder.Build(req, m)
+		res, err := builder.Build(req, m, nil)
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusInternalServerError, res.Status)
 
 		m.Hit()
-		res, err = builder.Build(req, m)
+		res, err = builder.Build(req, m, nil)
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusBadRequest, res.Status)
 
 		m.Hit()
-		res, err = builder.Build(req, m)
+		res, err = builder.Build(req, m, nil)
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusOK, res.Status)
 
 		m.Hit()
-		res, err = builder.Build(req, m)
+		res, err = builder.Build(req, m, nil)
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusNotFound, res.Status)
 
 		m.Hit()
-		_, err = builder.Build(req, m)
+		_, err = builder.Build(req, m, nil)
 		assert.NotNil(t, err)
 	})
 
@@ -49,19 +49,19 @@ func TestSequential(t *testing.T) {
 		builder := Sequential().Add(OK()).ReplyOnSequenceEnded(NotFound())
 
 		m.Hit()
-		res, err := builder.Build(req, m)
+		res, err := builder.Build(req, m, nil)
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusOK, res.Status)
 
 		m.Hit()
-		res, err = builder.Build(req, m)
+		res, err = builder.Build(req, m, nil)
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusNotFound, res.Status)
 	})
 }
 
 func TestShouldReturnErrorWhenSequenceDoesNotContainReplies(t *testing.T) {
-	res, err := Sequential().Build(nil, nil)
+	res, err := Sequential().Build(nil, nil, nil)
 	assert.Nil(t, res)
 	assert.NotNil(t, err)
 }

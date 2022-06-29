@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/vitorsalgado/mocha/mock"
+	"github.com/vitorsalgado/mocha/params"
 )
 
 type SequentialReply struct {
@@ -31,7 +32,11 @@ func (mr *SequentialReply) Then(reply mock.Reply) *SequentialReply {
 	return mr
 }
 
-func (mr *SequentialReply) Build(r *http.Request, m *mock.Mock) (*mock.Response, error) {
+func (mr *SequentialReply) Err() error {
+	return nil
+}
+
+func (mr *SequentialReply) Build(r *http.Request, m *mock.Mock, p *params.Params) (*mock.Response, error) {
 	size := len(mr.replies)
 	if size == 0 {
 		return nil,
@@ -46,7 +51,7 @@ func (mr *SequentialReply) Build(r *http.Request, m *mock.Mock) (*mock.Response,
 
 	if reply == nil {
 		if mr.replyOnNotFound != nil {
-			return mr.replyOnNotFound.Build(r, m)
+			return mr.replyOnNotFound.Build(r, m, p)
 		}
 
 		return nil,
@@ -56,5 +61,5 @@ func (mr *SequentialReply) Build(r *http.Request, m *mock.Mock) (*mock.Response,
 				size)
 	}
 
-	return reply.Build(r, m)
+	return reply.Build(r, m, p)
 }

@@ -1,6 +1,7 @@
 package mocha
 
 import (
+	"bufio"
 	"log"
 	"net/http"
 
@@ -12,13 +13,13 @@ import (
 type Handler struct {
 	mocks   mock.Storage
 	parsers []BodyParser
-	params  params.Params
+	params  *params.Params
 }
 
 func newHandler(
 	mockstore mock.Storage,
 	parsers []BodyParser,
-	params params.Params,
+	params *params.Params,
 ) *Handler {
 	return &Handler{mocks: mockstore, parsers: parsers, params: params}
 }
@@ -30,7 +31,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	params := matcher.Params{RequestInfo: &matcher.RequestInfo{Request: r, ParsedBody: parsedbody}, Extras: &h.params}
+	params := matcher.Params{RequestInfo: &matcher.RequestInfo{Request: r, ParsedBody: parsedbody}, Extras: h.params}
 	result, err := findMockForRequest(h.mocks, params)
 
 	if err != nil {
@@ -44,7 +45,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	m := result.Matched
-	res, err := result.Matched.Reply.Build(r, m)
+	res, err := result.Matched.Reply.Build(r, m, h.params)
 	if err != nil {
 		respondErr(w, err)
 		return
@@ -59,7 +60,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(res.Status)
 
 	if res.Body != nil {
-		w.Write(res.Body)
+		scanner := bufio.NewScanner(res.Body)
+		for scanner.Scan() {
+			w.Write(scanner.Bytes())
+		}
+
+		if scanner.Err() != nil {
+			panic(scanner.Err())
+		}
 	}
 
 	args := mock.PostActionArgs{Request: r, Response: res, Mock: m, Params: h.params}

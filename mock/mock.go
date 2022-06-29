@@ -2,6 +2,7 @@ package mock
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -30,7 +31,7 @@ type (
 		Request  *http.Request
 		Response *Response
 		Mock     *Mock
-		Params   params.Params
+		Params   *params.Params
 	}
 
 	PostAction interface {
@@ -64,14 +65,14 @@ type (
 		Status  int
 		Header  http.Header
 		Cookies []*http.Cookie
-		Body    []byte
+		Body    io.Reader
 		Delay   time.Duration
 		Err     error
 	}
 
 	Reply interface {
 		Err() error
-		Build(*http.Request, *Mock) (*Response, error)
+		Build(*http.Request, *Mock, *params.Params) (*Response, error)
 	}
 )
 

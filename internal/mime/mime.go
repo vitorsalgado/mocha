@@ -6,6 +6,7 @@ const (
 	ContentTypeJSON           = "application/json"
 	ContentTypeXML            = "application/xml"
 	ContentTypeTextHTML       = "text/html"
+	ContentTypeTextPlain      = "text/plain"
 	ContentTypeFormURLEncoded = "application/x-www-form-urlencoded"
 )
 

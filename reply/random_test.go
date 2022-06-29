@@ -17,7 +17,7 @@ func TestRandomReplies(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		res, err := Random().
 			Add(BadRequest(), OK(), Created(), InternalServerError()).
-			Build(req, &m)
+			Build(req, &m, nil)
 
 		contains := false
 		for _, status := range statuses {
@@ -33,7 +33,7 @@ func TestRandomReplies(t *testing.T) {
 }
 
 func TestShouldReturnErrorWhenRandomDoesNotContainReplies(t *testing.T) {
-	res, err := Random().Build(nil, nil)
+	res, err := Random().Build(nil, nil, nil)
 	assert.Nil(t, res)
 	assert.NotNil(t, err)
 }

@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"io"
-	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/vitorsalgado/mocha/mock"
+	"github.com/vitorsalgado/mocha/params"
 	"github.com/vitorsalgado/mocha/templating"
 )
 
@@ -78,12 +79,12 @@ func (rpl *SingleReply) RemoveCookie(cookie http.Cookie) *SingleReply {
 }
 
 func (rpl *SingleReply) Body(value []byte) *SingleReply {
-	rpl.response.Body = value
+	rpl.response.Body = bytes.NewReader(value)
 	return rpl
 }
 
 func (rpl *SingleReply) BodyString(value string) *SingleReply {
-	rpl.response.Body = []byte(value)
+	rpl.response.Body = strings.NewReader(value)
 	return rpl
 }
 
@@ -94,11 +95,7 @@ func (rpl *SingleReply) BodyJSON(data any) *SingleReply {
 }
 
 func (rpl *SingleReply) BodyReader(reader io.Reader) *SingleReply {
-	b, err := ioutil.ReadAll(reader)
-
-	rpl.response.Body = b
-	rpl.err = err
-
+	rpl.response.Body = reader
 	return rpl
 }
 
@@ -133,15 +130,17 @@ func (rpl *SingleReply) Err() error {
 	return rpl.err
 }
 
-func (rpl *SingleReply) Build(_ *http.Request, _ *mock.Mock) (*mock.Response, error) {
+func (rpl *SingleReply) Build(_ *http.Request, _ *mock.Mock, _ *params.Params) (*mock.Response, error) {
 	if rpl.err != nil {
 		return nil, rpl.err
 	}
 
 	switch rpl.bodyType {
 	case BodyTemplate:
-		b, err := rpl.template.Parse(rpl.model)
-		rpl.response.Body = b
+		buf := &bytes.Buffer{}
+		err := rpl.template.Parse(buf, rpl.model)
+
+		rpl.response.Body = buf
 		rpl.err = err
 	}
 

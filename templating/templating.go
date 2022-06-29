@@ -1,14 +1,14 @@
 package templating
 
 import (
-	"bytes"
+	"io"
 	"text/template"
 )
 
 type (
 	Template interface {
 		Compile() error
-		Parse(data any) ([]byte, error)
+		Parse(io.Writer, any) error
 	}
 
 	BuiltInTemplate struct {
@@ -49,9 +49,6 @@ func (gt *BuiltInTemplate) Compile() error {
 	return nil
 }
 
-func (gt *BuiltInTemplate) Parse(data any) ([]byte, error) {
-	buf := &bytes.Buffer{}
-	err := gt.t.Execute(buf, data)
-
-	return buf.Bytes(), err
+func (gt *BuiltInTemplate) Parse(w io.Writer, data any) error {
+	return gt.t.Execute(w, data)
 }
