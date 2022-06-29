@@ -33,7 +33,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	params := matcher.Params{RequestInfo: &matcher.RequestInfo{Request: r, ParsedBody: parsedbody}, Extras: h.params}
 	result, err := findMockForRequest(h.mocks, params)
-
 	if err != nil {
 		respondErr(w, err)
 		return
@@ -49,6 +48,14 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		respondErr(w, err)
 		return
+	}
+
+	mp := mock.ResponseMapperArgs{Request: r, Parameters: h.params}
+	for _, mapper := range res.Mappers {
+		if err := mapper(res, mp); err != nil {
+			respondErr(w, err)
+			return
+		}
 	}
 
 	m.Hit()

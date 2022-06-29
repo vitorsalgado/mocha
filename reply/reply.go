@@ -34,7 +34,10 @@ func New() *SingleReply {
 	return &SingleReply{
 		response: &mock.Response{
 			Cookies: make([]*http.Cookie, 0),
-			Header:  make(http.Header)}}
+			Header:  make(http.Header),
+			Mappers: make([]mock.ResponseMapper, 0),
+		},
+	}
 }
 
 func OK() *SingleReply                  { return New().Status(http.StatusOK) }
@@ -116,13 +119,18 @@ func (rpl *SingleReply) BodyTemplate(template any) *SingleReply {
 	return rpl
 }
 
-func (rpl *SingleReply) Mode(model any) *SingleReply {
+func (rpl *SingleReply) Model(model any) *SingleReply {
 	rpl.model = model
 	return rpl
 }
 
 func (rpl *SingleReply) Delay(duration time.Duration) *SingleReply {
 	rpl.response.Delay = duration
+	return rpl
+}
+
+func (rpl *SingleReply) Map(mapper mock.ResponseMapper) *SingleReply {
+	rpl.response.Mappers = append(rpl.response.Mappers, mapper)
 	return rpl
 }
 

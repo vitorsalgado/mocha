@@ -10,6 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/vitorsalgado/mocha/internal/testutil"
 	"github.com/vitorsalgado/mocha/matcher"
+	"github.com/vitorsalgado/mocha/mock"
 	"github.com/vitorsalgado/mocha/reply"
 )
 
@@ -91,4 +92,29 @@ func TestCustomParameters(t *testing.T) {
 
 	assert.Nil(t, scope.Done())
 	assert.Equal(t, http.StatusAccepted, res.StatusCode)
+}
+
+func TestResponseMapper(t *testing.T) {
+	m := ForTest(t)
+	m.Start()
+
+	scoped := m.Mock(Get(matcher.URLPath("/test")).
+		Reply(reply.
+			OK().
+			Map(func(r *mock.Response, rma mock.ResponseMapperArgs) error {
+				r.Header.Add("x-test", rma.Request.Header.Get("x-param"))
+				return nil
+			})))
+
+	req := testutil.Get(fmt.Sprintf("%s/test", m.Server.URL))
+	req.Header("x-param", "dev")
+
+	res, err := req.Do()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Nil(t, scoped.Done())
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+	assert.Equal(t, "dev", res.Header.Get("x-test"))
 }

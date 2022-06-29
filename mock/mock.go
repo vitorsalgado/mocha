@@ -38,6 +38,28 @@ type (
 		Run(args PostActionArgs) error
 	}
 
+	Response struct {
+		Status  int
+		Header  http.Header
+		Cookies []*http.Cookie
+		Body    io.Reader
+		Delay   time.Duration
+		Err     error
+		Mappers []ResponseMapper
+	}
+
+	Reply interface {
+		Err() error
+		Build(*http.Request, *Mock, *params.Params) (*Response, error)
+	}
+
+	ResponseMapperArgs struct {
+		Request    *http.Request
+		Parameters *params.Params
+	}
+
+	ResponseMapper func(res *Response, args ResponseMapperArgs) error
+
 	Storage interface {
 		Save(mock *Mock)
 		FetchEligible() []*Mock
@@ -60,26 +82,18 @@ type (
 		Weight     int
 		IsMatch    bool
 	}
-
-	Response struct {
-		Status  int
-		Header  http.Header
-		Cookies []*http.Cookie
-		Body    io.Reader
-		Delay   time.Duration
-		Err     error
-	}
-
-	Reply interface {
-		Err() error
-		Build(*http.Request, *Mock, *params.Params) (*Response, error)
-	}
 )
 
 var id = autoID{}
 
 func New() *Mock {
-	return &Mock{ID: id.Next(), Enabled: true, PostActions: make([]PostAction, 0), mu: &sync.Mutex{}}
+	return &Mock{
+		ID:          id.Next(),
+		Enabled:     true,
+		PostActions: make([]PostAction, 0),
+
+		mu: &sync.Mutex{},
+	}
 }
 
 func (m *Mock) Hit() {
