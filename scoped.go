@@ -85,3 +85,12 @@ func (s *Scoped) Done() error {
 
 	return nil
 }
+
+func (s *Scoped) Hits() int {
+	total := 0
+	for _, m := range s.mocks {
+		total += m.Hits
+	}
+
+	return total
+}

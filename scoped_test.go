@@ -38,6 +38,10 @@ func TestScoped(t *testing.T) {
 		assert.Equal(t, 0, len(scoped.Pending()))
 	})
 
+	t.Run("should return total hits from mocks", func(t *testing.T) {
+		assert.Equal(t, 3, scoped.Hits())
+	})
+
 	t.Run("should clean all mocks associated with scope when calling .Clean()", func(t *testing.T) {
 		scoped.Clean()
 		assert.Equal(t, 0, len(scoped.Pending()))
