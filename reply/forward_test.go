@@ -11,6 +11,8 @@ import (
 )
 
 func TestForward(t *testing.T) {
+	t.Parallel()
+
 	t.Run("should forward and respond basic GET", func(t *testing.T) {
 		dest := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "/path/test/example", r.URL.Path)
@@ -97,5 +99,47 @@ func TestForward(t *testing.T) {
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusNoContent, res.Status)
 		assert.Equal(t, "", string(b))
+	})
+
+	t.Run("should remove prefix from URL", func(t *testing.T) {
+		dest := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "/example", r.URL.Path)
+			assert.Equal(t, "all", r.URL.Query().Get("filter"))
+
+			w.WriteHeader(http.StatusOK)
+		}))
+
+		defer dest.Close()
+
+		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080/path/test/example?filter=all", nil)
+
+		res, err := From(dest.URL).StripPrefix("/path/test").Build(req, nil, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.NotNil(t, res)
+		assert.Equal(t, http.StatusOK, res.Status)
+	})
+
+	t.Run("should remove suffix from URL", func(t *testing.T) {
+		dest := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			assert.Equal(t, "/path/test", r.URL.Path)
+			assert.Equal(t, "all", r.URL.Query().Get("filter"))
+
+			w.WriteHeader(http.StatusOK)
+		}))
+
+		defer dest.Close()
+
+		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080/path/test/example?filter=all", nil)
+
+		res, err := From(dest.URL).StripSuffix("/example").Build(req, nil, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		assert.NotNil(t, res)
+		assert.Equal(t, http.StatusOK, res.Status)
 	})
 }

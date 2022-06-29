@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"github.com/vitorsalgado/mocha/mock"
@@ -28,6 +29,8 @@ type ProxyReply struct {
 	proxyHeaders         http.Header
 	proxyHeadersToRemove []string
 	delay                time.Duration
+	trimPrefix           string
+	trimSuffix           string
 }
 
 func From(target string) *ProxyReply {
@@ -63,6 +66,16 @@ func (r *ProxyReply) RemoveProxyHeader(header string) *ProxyReply {
 	return r
 }
 
+func (r *ProxyReply) StripPrefix(prefix string) *ProxyReply {
+	r.trimPrefix = prefix
+	return r
+}
+
+func (r *ProxyReply) StripSuffix(suffix string) *ProxyReply {
+	r.trimSuffix = suffix
+	return r
+}
+
 func (r *ProxyReply) Err() error {
 	return nil
 }
@@ -73,9 +86,21 @@ func (r *ProxyReply) Build(req *http.Request, m *mock.Mock, p *params.Params) (*
 		return nil, err
 	}
 
-	req.Host = t.Host
+	path := req.URL.Path
+
+	if r.trimPrefix != "" {
+		path = strings.TrimPrefix(path, r.trimPrefix)
+	}
+
+	if r.trimSuffix != "" {
+		path = strings.TrimSuffix(path, r.trimSuffix)
+	}
+
 	req.URL.Host = t.Host
 	req.URL.Scheme = t.Scheme
+	req.URL.Path = path
+
+	req.Host = t.Host
 	req.RequestURI = ""
 
 	for _, h := range r.proxyHeadersToRemove {
