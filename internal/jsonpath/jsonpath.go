@@ -13,9 +13,16 @@ var (
 	fieldRegExp = regexp.MustCompile(`(\w+)\[(\d+)](.*)`)
 	idxRegExp   = regexp.MustCompile(`^\[(\d+)](.*)`)
 
+	// ErrInvalidJSONPath is thrown when a JSON path is invalid.
 	ErrFieldNotFound = errors.New("could not find a field using provided json path")
 )
 
+// Get returns the field with the given path from the given json data
+// Example:
+//	data := map[string]any{"address": map[string]any{"street": "somewhere"}}
+//	Get("address.street", data)
+//	will return "somewhere"
+// For arrays, use the notation "field[index]" to get a specific index
 func Get(chain string, data any) (any, error) {
 	var dataType = reflect.TypeOf(data).Kind()
 	var hasBracket = strings.HasPrefix(chain, "[")

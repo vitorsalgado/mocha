@@ -1,5 +1,6 @@
 package header
 
+// Common HTTP headers used internally
 const (
 	ContentType   = "Content-Type"
 	Vary          = "Vary"

@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// Options represents available internal http.Client options
 type Options struct {
 	Timeout             time.Duration
 	TLSHandshakeTimeout time.Duration
@@ -13,6 +14,7 @@ type Options struct {
 	DialTimeout         time.Duration
 }
 
+// New creates a new configurable http.Client instance
 func New(options Options) *http.Client {
 	return &http.Client{
 		Timeout: 5 * time.Second,
