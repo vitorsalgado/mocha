@@ -3,7 +3,7 @@ package matcher
 import "net/http"
 
 type (
-	Extras interface {
+	Params interface {
 		Get(key string) (any, bool)
 	}
 
@@ -12,10 +12,10 @@ type (
 		ParsedBody any
 	}
 
-	Params struct {
+	Args struct {
 		RequestInfo *RequestInfo
-		Extras      Extras
+		Params      Params
 	}
 
-	Matcher[V any] func(v V, params Params) (bool, error)
+	Matcher[V any] func(v V, params Args) (bool, error)
 )

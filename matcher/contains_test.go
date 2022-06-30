@@ -7,7 +7,7 @@ import (
 )
 
 func TestContains(t *testing.T) {
-	params := Params{}
+	params := Args{}
 
 	t.Run("should return true when value is contained in the matcher argument", func(t *testing.T) {
 		result, err := Contains("world")("hello world", params)

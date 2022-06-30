@@ -5,8 +5,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/vitorsalgado/mocha/internal/params"
 	"github.com/vitorsalgado/mocha/mock"
-	"github.com/vitorsalgado/mocha/params"
 )
 
 type (
@@ -16,7 +16,7 @@ type (
 		Server      *httptest.Server
 		mockStorage mock.Storage
 		context     context.Context
-		params      *params.Params
+		params      params.Params
 	}
 )
 
@@ -83,7 +83,7 @@ func (m *Mocha) Mock(builders ...*MockBuilder) *Scoped {
 	return Scope(m.mockStorage, added)
 }
 
-func (m *Mocha) Parameters() *params.Params {
+func (m *Mocha) Parameters() params.Params {
 	return m.params
 }
 

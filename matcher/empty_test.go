@@ -7,7 +7,7 @@ import (
 )
 
 func TestIsEmpty(t *testing.T) {
-	params := Params{}
+	params := Args{}
 
 	resy, err := IsEmpty[string]()("", params)
 	assert.Nil(t, err)

@@ -11,7 +11,7 @@ type findMockResult struct {
 	ClosestMatch *mock.Mock
 }
 
-func findMockForRequest(storage mock.Storage, params matcher.Params) (*findMockResult, error) {
+func findMockForRequest(storage mock.Storage, params matcher.Args) (*findMockResult, error) {
 	var mocks = storage.FetchEligible()
 	var matched *mock.Mock
 	var w = 0

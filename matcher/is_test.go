@@ -7,7 +7,7 @@ import (
 )
 
 func TestIs(t *testing.T) {
-	result, err := Is(EqualTo("test"))("test", Params{})
+	result, err := Is(EqualTo("test"))("test", Args{})
 
 	assert.Nil(t, err)
 	assert.True(t, result)

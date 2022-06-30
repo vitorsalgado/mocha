@@ -42,7 +42,7 @@ func (m *Mock) Disable() {
 	m.Enabled = false
 }
 
-func (m *Mock) Matches(params matcher.Params) (MatchResult, error) {
+func (m *Mock) Matches(params matcher.Args) (MatchResult, error) {
 	weight := 0
 	for _, expect := range m.Expectations {
 		var matched bool
@@ -86,7 +86,7 @@ func (m *Mock) Matches(params matcher.Params) (MatchResult, error) {
 	return MatchResult{IsMatch: true}, nil
 }
 
-func matches[V any](e Expectation[V], params matcher.Params) (bool, int, error) {
+func matches[V any](e Expectation[V], params matcher.Args) (bool, int, error) {
 	res, err := e.Matcher(e.ValuePicker(params.RequestInfo), params)
 	return res, e.Weight, err
 }

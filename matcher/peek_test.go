@@ -8,7 +8,7 @@ import (
 )
 
 func TestPeek(t *testing.T) {
-	params := Params{}
+	params := Args{}
 
 	t.Run("should return peek error", func(t *testing.T) {
 		actionErr := fmt.Errorf("action failed")

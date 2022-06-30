@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/vitorsalgado/mocha/internal/params"
 	"github.com/vitorsalgado/mocha/mock"
-	"github.com/vitorsalgado/mocha/params"
 )
 
 type SequentialReply struct {
@@ -36,7 +36,7 @@ func (mr *SequentialReply) Err() error {
 	return nil
 }
 
-func (mr *SequentialReply) Build(r *http.Request, m *mock.Mock, p *params.Params) (*mock.Response, error) {
+func (mr *SequentialReply) Build(r *http.Request, m *mock.Mock, p params.Params) (*mock.Response, error) {
 	size := len(mr.replies)
 	if size == 0 {
 		return nil,

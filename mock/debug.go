@@ -8,7 +8,7 @@ import (
 )
 
 func Debug[V any](name string, mk Mock, m matcher.Matcher[V]) matcher.Matcher[V] {
-	return func(v V, params matcher.Params) (bool, error) {
+	return func(v V, params matcher.Args) (bool, error) {
 		result, err := m(v, params)
 
 		fmt.Printf("\"%s\" received %v\n", name, stylize.Gray(fmt.Sprintf("%v", v)))

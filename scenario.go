@@ -58,8 +58,8 @@ func (repo *scenarioStore) Save(scenario Scenario) {
 }
 
 func scenarioMatcher[V any](name, requiredState, newState string) matcher.Matcher[V] {
-	return func(_ V, params matcher.Params) (bool, error) {
-		s, _ := params.Extras.Get(BuiltIntExtraScenario)
+	return func(_ V, params matcher.Args) (bool, error) {
+		s, _ := params.Params.Get(BuiltIntExtraScenario)
 		scenarios := s.(ScenarioStore)
 
 		if requiredState == ScenarioStarted {

@@ -3,7 +3,7 @@ package matcher
 import "reflect"
 
 func IsPresent[V any]() Matcher[V] {
-	return func(v V, params Params) (bool, error) {
+	return func(v V, params Args) (bool, error) {
 		val := reflect.ValueOf(v)
 
 		switch val.Kind() {

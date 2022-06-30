@@ -8,7 +8,7 @@ import (
 
 func TestNot(t *testing.T) {
 	value := "test"
-	params := Params{}
+	params := Args{}
 
 	t.Run("should return true when value is not equal", func(t *testing.T) {
 		result, err := Not(EqualTo("dev"))(value, params)

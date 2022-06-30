@@ -19,7 +19,7 @@ func TestHasKey(t *testing.T) {
 		"zero":    0,
 	}
 
-	params := Params{}
+	params := Args{}
 
 	result, err := HasKey[any]("name")(m, params)
 	assert.True(t, result)

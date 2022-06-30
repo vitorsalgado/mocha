@@ -8,7 +8,7 @@ import (
 )
 
 func TestRegExpMatches(t *testing.T) {
-	params := Params{}
+	params := Args{}
 
 	t.Run("should match the regular expression string pattern", func(t *testing.T) {
 		result, err := RegExpMatches[string]("tEsT")("tEsT", params)

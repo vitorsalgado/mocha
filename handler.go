@@ -6,21 +6,21 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/vitorsalgado/mocha/internal/params"
 	"github.com/vitorsalgado/mocha/matcher"
 	"github.com/vitorsalgado/mocha/mock"
-	"github.com/vitorsalgado/mocha/params"
 )
 
 type Handler struct {
 	mocks   mock.Storage
 	parsers []BodyParser
-	params  *params.Params
+	params  params.Params
 }
 
 func newHandler(
 	mockstore mock.Storage,
 	parsers []BodyParser,
-	params *params.Params,
+	params params.Params,
 ) *Handler {
 	return &Handler{mocks: mockstore, parsers: parsers, params: params}
 }
@@ -32,7 +32,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	params := matcher.Params{RequestInfo: &matcher.RequestInfo{Request: r, ParsedBody: parsedbody}, Extras: h.params}
+	params := matcher.Args{RequestInfo: &matcher.RequestInfo{Request: r, ParsedBody: parsedbody}, Params: h.params}
 	result, err := findMockForRequest(h.mocks, params)
 	if err != nil {
 		respondErr(w, err)

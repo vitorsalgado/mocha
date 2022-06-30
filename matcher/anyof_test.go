@@ -11,7 +11,7 @@ func TestAnyOf(t *testing.T) {
 		EqualTo("test"),
 		EqualFold("dev"),
 		ToLowerCase(EqualTo("TEST")),
-		Contains("qa"))("test", Params{})
+		Contains("qa"))("test", Args{})
 	assert.Nil(t, err)
 	assert.True(t, result)
 }

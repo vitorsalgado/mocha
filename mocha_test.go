@@ -79,8 +79,8 @@ func TestCustomParameters(t *testing.T) {
 	m.Parameters().Set(key, expected)
 
 	scope := m.Mock(Get(matcher.URLPath("/test")).
-		Matches(func(v any, params matcher.Params) (bool, error) {
-			p, _ := params.Extras.Get(key)
+		Matches(func(v any, params matcher.Args) (bool, error) {
+			p, _ := params.Params.Get(key)
 			return p.(string) == expected, nil
 		}).
 		Reply(reply.Accepted()))

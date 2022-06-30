@@ -25,7 +25,10 @@ const (
 	weightHigh    = 7
 )
 
-func NewBuilder() *MockBuilder                    { return &MockBuilder{mock: mock.New()} }
+func NewBuilder() *MockBuilder {
+	return &MockBuilder{mock: mock.New()}
+}
+
 func Get(m matcher.Matcher[url.URL]) *MockBuilder { return NewBuilder().URL(m).Method(http.MethodGet) }
 func Post(m matcher.Matcher[url.URL]) *MockBuilder {
 	return NewBuilder().URL(m).Method(http.MethodPost)

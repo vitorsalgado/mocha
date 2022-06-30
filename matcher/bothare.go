@@ -9,7 +9,7 @@ func BothAre[E any](first Matcher[E]) bothAre[E] {
 }
 
 func (ba bothAre[E]) And(second Matcher[E]) Matcher[E] {
-	return func(v E, params Params) (bool, error) {
+	return func(v E, params Args) (bool, error) {
 		r1, err := ba.first(v, params)
 		if err != nil {
 			return false, err

@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/vitorsalgado/mocha/internal/params"
 	"github.com/vitorsalgado/mocha/mock"
-	"github.com/vitorsalgado/mocha/params"
 )
 
 var forbiddenHeaders = []string{
@@ -80,7 +80,7 @@ func (r *ProxyReply) Err() error {
 	return nil
 }
 
-func (r *ProxyReply) Build(req *http.Request, m *mock.Mock, p *params.Params) (*mock.Response, error) {
+func (r *ProxyReply) Build(req *http.Request, m *mock.Mock, p params.Params) (*mock.Response, error) {
 	t, err := url.Parse(r.target)
 	if err != nil {
 		return nil, err

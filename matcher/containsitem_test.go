@@ -7,7 +7,7 @@ import (
 )
 
 func TestContainsItem(t *testing.T) {
-	params := Params{}
+	params := Args{}
 
 	t.Run("should return true when value is contained inside matcher array argument", func(t *testing.T) {
 		result, err := ContainsItem("apple")([]string{"banana", "apple", "orange"}, params)

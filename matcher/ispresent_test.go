@@ -7,7 +7,7 @@ import (
 )
 
 func TestIsPresent(t *testing.T) {
-	params := Params{}
+	params := Args{}
 
 	resy, _ := IsPresent[string]()("test", params)
 	resn, _ := IsPresent[string]()("", params)

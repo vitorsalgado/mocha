@@ -10,7 +10,7 @@ type RegExpMatcherTypes interface {
 }
 
 func RegExpMatches[V any, T RegExpMatcherTypes](re T) Matcher[V] {
-	return func(v V, params Params) (bool, error) {
+	return func(v V, params Args) (bool, error) {
 		switch e := any(re).(type) {
 		case string:
 			return regexp.Match(e, []byte(fmt.Sprintf("%v", v)))

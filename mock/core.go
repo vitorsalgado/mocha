@@ -7,8 +7,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/vitorsalgado/mocha/internal/params"
 	"github.com/vitorsalgado/mocha/matcher"
-	"github.com/vitorsalgado/mocha/params"
 )
 
 type (
@@ -29,7 +29,7 @@ type (
 		Request  *http.Request
 		Response *Response
 		Mock     *Mock
-		Params   *params.Params
+		Params   params.Params
 	}
 
 	PostAction interface {
@@ -48,12 +48,12 @@ type (
 
 	Reply interface {
 		Err() error
-		Build(*http.Request, *Mock, *params.Params) (*Response, error)
+		Build(*http.Request, *Mock, params.Params) (*Response, error)
 	}
 
 	ResponseMapperArgs struct {
 		Request    *http.Request
-		Parameters *params.Params
+		Parameters params.Params
 	}
 
 	ResponseMapper func(res *Response, args ResponseMapperArgs) error

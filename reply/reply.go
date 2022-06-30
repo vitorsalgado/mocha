@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/vitorsalgado/mocha/internal/params"
 	"github.com/vitorsalgado/mocha/mock"
-	"github.com/vitorsalgado/mocha/params"
 	"github.com/vitorsalgado/mocha/templating"
 )
 
@@ -138,7 +138,7 @@ func (rpl *SingleReply) Err() error {
 	return rpl.err
 }
 
-func (rpl *SingleReply) Build(_ *http.Request, _ *mock.Mock, _ *params.Params) (*mock.Response, error) {
+func (rpl *SingleReply) Build(_ *http.Request, _ *mock.Mock, _ params.Params) (*mock.Response, error) {
 	if rpl.err != nil {
 		return nil, rpl.err
 	}

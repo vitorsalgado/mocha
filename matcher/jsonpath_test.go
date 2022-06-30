@@ -18,25 +18,25 @@ func TestJSONPath(t *testing.T) {
 	}
 
 	t.Run("should read match text field on object root", func(t *testing.T) {
-		res, err := JSONPath("name", EqualAny("someone"))(m, Params{})
+		res, err := JSONPath("name", EqualAny("someone"))(m, Args{})
 		assert.Nil(t, err)
 		assert.True(t, res)
 	})
 
 	t.Run("should match numeric field value", func(t *testing.T) {
-		res, err := JSONPath("age", EqualTo(34))(m, Params{})
+		res, err := JSONPath("age", EqualTo(34))(m, Args{})
 		assert.Nil(t, err)
 		assert.True(t, res)
 	})
 
 	t.Run("should match nested object field", func(t *testing.T) {
-		res, err := JSONPath("address.street", EqualTo("very nice place"))(m, Params{})
+		res, err := JSONPath("address.street", EqualTo("very nice place"))(m, Args{})
 		assert.Nil(t, err)
 		assert.True(t, res)
 	})
 
 	t.Run("should return error when any error occurs", func(t *testing.T) {
-		res, err := JSONPath("312nj.,", EqualAny("anything"))(m, Params{})
+		res, err := JSONPath("312nj.,", EqualAny("anything"))(m, Args{})
 		assert.NotNil(t, err)
 		assert.False(t, res)
 	})
