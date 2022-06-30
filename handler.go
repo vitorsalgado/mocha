@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/vitorsalgado/mocha/matcher"
 	"github.com/vitorsalgado/mocha/mock"
@@ -59,6 +60,10 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	m.Hit()
+
+	if res.Delay > 0 {
+		<-time.After(res.Delay)
+	}
 
 	for k := range res.Header {
 		w.Header().Add(k, res.Header.Get(k))

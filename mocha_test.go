@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/vitorsalgado/mocha/internal/testutil"
@@ -117,4 +118,29 @@ func TestResponseMapper(t *testing.T) {
 	assert.Nil(t, scoped.Done())
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.Equal(t, "dev", res.Header.Get("x-test"))
+}
+
+func TestDelay(t *testing.T) {
+	m := ForTest(t)
+	m.Start()
+
+	start := time.Now()
+	delay := time.Duration(1250) * time.Millisecond
+
+	scoped := m.Mock(Get(matcher.URLPath("/test")).
+		Reply(reply.
+			OK().
+			Delay(delay)))
+
+	req := testutil.Get(fmt.Sprintf("%s/test", m.Server.URL))
+	res, err := req.Do()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	elapsed := time.Since(start)
+
+	assert.Nil(t, scoped.Done())
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+	assert.GreaterOrEqual(t, elapsed, delay)
 }
