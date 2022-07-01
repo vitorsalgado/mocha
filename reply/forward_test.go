@@ -69,7 +69,7 @@ func TestForward(t *testing.T) {
 		body := strings.NewReader(expected)
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", body)
 
-		forward := ProxiedFrom(dest.URL)
+		forward := ProxyFrom(dest.URL)
 		res, err := forward.Build(req, nil, nil)
 		if err != nil {
 			t.Fatal(err)

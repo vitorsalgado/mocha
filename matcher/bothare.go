@@ -1,14 +1,14 @@
 package matcher
 
-type bothAre[E any] struct {
+type BothAreMatcher[E any] struct {
 	first Matcher[E]
 }
 
-func BothAre[E any](first Matcher[E]) bothAre[E] {
-	return bothAre[E]{first: first}
+func BothAre[E any](first Matcher[E]) BothAreMatcher[E] {
+	return BothAreMatcher[E]{first: first}
 }
 
-func (ba bothAre[E]) And(second Matcher[E]) Matcher[E] {
+func (ba BothAreMatcher[E]) And(second Matcher[E]) Matcher[E] {
 	return func(v E, params Args) (bool, error) {
 		r1, err := ba.first(v, params)
 		if err != nil {

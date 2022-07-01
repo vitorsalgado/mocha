@@ -47,7 +47,7 @@ deps: ## check dependencies
 download: ## download dependencies
 	@go mod download
 
-prep: ## prepare local development  environment
+prep: ## prepare local development environment
 	@echo "local tools"
 	@go install honnef.co/go/tools/cmd/staticcheck@latest
 	@npm i --no-package-lock

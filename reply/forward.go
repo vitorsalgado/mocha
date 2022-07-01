@@ -42,7 +42,7 @@ func From(target string) *ProxyReply {
 	}
 }
 
-func ProxiedFrom(target string) *ProxyReply {
+func ProxyFrom(target string) *ProxyReply {
 	return From(target)
 }
 
@@ -71,7 +71,7 @@ func (r *ProxyReply) StripSuffix(suffix string) *ProxyReply {
 	return r
 }
 
-func (r *ProxyReply) Build(req *http.Request, m *mock.Mock, p params.Params) (*mock.Response, error) {
+func (r *ProxyReply) Build(req *http.Request, _ *mock.Mock, _ params.Params) (*mock.Response, error) {
 	t, err := url.Parse(r.target)
 	if err != nil {
 		return nil, err
@@ -117,7 +117,11 @@ func (r *ProxyReply) Build(req *http.Request, m *mock.Mock, p params.Params) (*m
 	}
 
 	buf := &bytes.Buffer{}
-	io.Copy(buf, res.Body)
+	_, err = io.Copy(buf, res.Body)
+	if err != nil {
+		return nil, err
+	}
+
 	response.Body = buf
 
 	for _, h := range forbiddenHeaders {

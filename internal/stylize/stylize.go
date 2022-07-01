@@ -77,7 +77,6 @@ func Inverse(s string) string       { return stylize(s, StyleInverse, 27) }
 func Hidden(s string) string        { return stylize(s, StyleHidden, 28) }
 func Strikethrough(s string) string { return stylize(s, StyleStrikethrough, 29) }
 
-// stylize stylizes the text using provided text style parameters
 func stylize(s string, open style, close int) string {
 	if noColor || isWin || isCI {
 		return s

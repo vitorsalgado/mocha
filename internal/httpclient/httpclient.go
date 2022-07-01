@@ -1,7 +1,6 @@
 package httpclient
 
 import (
-	"net"
 	"net/http"
 	"time"
 )
@@ -22,10 +21,6 @@ func New(options Options) *http.Client {
 			ResponseHeaderTimeout: options.Timeout,
 			TLSHandshakeTimeout:   options.TLSHandshakeTimeout,
 			DisableCompression:    true,
-			Dial: (&net.Dialer{
-				Timeout:   options.DialTimeout,
-				KeepAlive: options.KeepAlive,
-			}).Dial,
 		},
 	}
 }

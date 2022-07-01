@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/vitorsalgado/mocha/internal/testutil"
 	"github.com/vitorsalgado/mocha/matcher"
 	"github.com/vitorsalgado/mocha/mock"
@@ -53,7 +54,7 @@ func TestScoped(t *testing.T) {
 		assert.False(t, scoped.IsPending())
 	})
 
-	t.Run("should only consider enalbed mocks", func(t *testing.T) {
+	t.Run("should only consider enabled mocks", func(t *testing.T) {
 		m := ForTest(t)
 		m.Start()
 

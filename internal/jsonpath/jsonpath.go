@@ -13,7 +13,7 @@ var (
 	fieldRegExp = regexp.MustCompile(`(\w+)\[(\d+)](.*)`)
 	idxRegExp   = regexp.MustCompile(`^\[(\d+)](.*)`)
 
-	// ErrInvalidJSONPath is thrown when a JSON path is invalid.
+	// ErrFieldNotFound is thrown when a JSON path is invalid.
 	ErrFieldNotFound = errors.New("could not find a field using provided json path")
 )
 

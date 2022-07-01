@@ -18,22 +18,22 @@ type Handler struct {
 }
 
 func newHandler(
-	mockstore mock.Storage,
+	storage mock.Storage,
 	parsers []BodyParser,
 	params params.Params,
 ) *Handler {
-	return &Handler{mocks: mockstore, parsers: parsers, params: params}
+	return &Handler{mocks: storage, parsers: parsers, params: params}
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	parsedbody, err := ParseRequestBody(r, h.parsers)
+	parseRequestBody, err := ParseRequestBody(r, h.parsers)
 	if err != nil {
 		respondErr(w, err)
 		return
 	}
 
-	params := matcher.Args{RequestInfo: &matcher.RequestInfo{Request: r, ParsedBody: parsedbody}, Params: h.params}
-	result, err := findMockForRequest(h.mocks, params)
+	parameters := matcher.Args{RequestInfo: &matcher.RequestInfo{Request: r, ParsedBody: parseRequestBody}, Params: h.params}
+	result, err := findMockForRequest(h.mocks, parameters)
 	if err != nil {
 		respondErr(w, err)
 		return
