@@ -1,0 +1,37 @@
+name: codeql
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 15 * * 0'
+
+jobs:
+  analyze:
+    name: analyze
+    runs-on: ubuntu-latest
+  
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      - name: initialize codeql
+        uses: github/codeql-action/init@v2
+        with:
+          languages: go
+          config-file: ./.github/codeql/codeql-config.yml
+
+      - name: cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: deps
+        run: make deps
+
+      - name: codeql analysis
+        uses: github/codeql-action/analyze@v2

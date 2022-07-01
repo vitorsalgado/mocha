@@ -1,0 +1,8 @@
+name: "codeql config"
+
+queries:
+  - uses: security-and-quality
+
+paths-ignore:
+  - node_modules
+  - test
