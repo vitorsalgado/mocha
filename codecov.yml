@@ -1,3 +1,2 @@
 ignore:
-  - "test"
   - "internal/testutil"
