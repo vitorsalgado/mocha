@@ -58,13 +58,15 @@ func (m *Mock) Matches(params matcher.Args) (MatchResult, error) {
 			matched, w, err = matches(e, params)
 		case Expectation[string]:
 			matched, w, err = matches(e, params)
-		case Expectation[int]:
-			matched, w, err = matches(e, params)
 		case Expectation[float64]:
 			matched, w, err = matches(e, params)
 		case Expectation[bool]:
 			matched, w, err = matches(e, params)
 		case Expectation[map[string]any]:
+			matched, w, err = matches(e, params)
+		case Expectation[map[string]string]:
+			matched, w, err = matches(e, params)
+		case Expectation[map[string][]string]:
 			matched, w, err = matches(e, params)
 		case Expectation[[]any]:
 			matched, w, err = matches(e, params)
