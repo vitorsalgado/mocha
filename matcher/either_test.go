@@ -1,6 +1,7 @@
 package matcher
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -30,6 +31,17 @@ func TestEither(t *testing.T) {
 	t.Run("should return false when both evaluates to false", func(t *testing.T) {
 		result, err := Either(EqualTo("dev"), Contains("qa"))("test", Args{})
 		assert.Nil(t, err)
+		assert.False(t, result)
+	})
+
+	t.Run("should return false when matchers throws errors", func(t *testing.T) {
+		result, err := Either(
+			func(_ string, _ Args) (bool, error) {
+				return false, fmt.Errorf("fail")
+			},
+			Contains("qa"))("test", Args{})
+
+		assert.NotNil(t, err)
 		assert.False(t, result)
 	})
 }

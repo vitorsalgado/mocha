@@ -20,6 +20,9 @@ func TestParameters(t *testing.T) {
 	assert.Equal(t, val1, v)
 	assert.True(t, ok)
 
+	all := params.GetAll()
+	assert.Equal(t, 2, len(all))
+
 	v, ok = params.Get(key2)
 	assert.Equal(t, val2, v)
 	assert.True(t, ok)

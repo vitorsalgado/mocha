@@ -1,10 +1,15 @@
 package mocha
 
 import (
+	"fmt"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/vitorsalgado/mocha/internal/testutil"
+	"github.com/vitorsalgado/mocha/matcher"
 	"github.com/vitorsalgado/mocha/mock"
+	"github.com/vitorsalgado/mocha/reply"
 )
 
 func TestScoped(t *testing.T) {
@@ -46,5 +51,88 @@ func TestScoped(t *testing.T) {
 		scoped.Clean()
 		assert.Equal(t, 0, len(scoped.Pending()))
 		assert.False(t, scoped.IsPending())
+	})
+
+	t.Run("should only consider enalbed mocks", func(t *testing.T) {
+		m := ForTest(t)
+		m.Start()
+
+		s1 := m.Mock(Get(matcher.URLPath("/test1")).Reply(reply.OK()))
+		s2 := m.Mock(
+			Get(matcher.URLPath("/test2")).Reply(reply.OK()),
+			Get(matcher.URLPath("/test3")).Reply(reply.OK()))
+
+		t.Run("initial state (enabled)", func(t *testing.T) {
+			req := testutil.Get(fmt.Sprintf("%s/test1", m.Server.URL))
+			res, err := req.Do()
+
+			assert.NoError(t, err)
+			assert.Equal(t, http.StatusOK, res.StatusCode)
+
+			req = testutil.Get(fmt.Sprintf("%s/test2", m.Server.URL))
+			res, err = req.Do()
+
+			assert.NoError(t, err)
+			assert.Equal(t, http.StatusOK, res.StatusCode)
+
+			req = testutil.Get(fmt.Sprintf("%s/test3", m.Server.URL))
+			res, err = req.Do()
+
+			assert.NoError(t, err)
+			assert.Equal(t, http.StatusOK, res.StatusCode)
+
+			assert.True(t, s1.IsDone())
+			assert.True(t, s2.IsDone())
+		})
+
+		t.Run("disabled", func(t *testing.T) {
+			s1.Disable()
+
+			req := testutil.Get(fmt.Sprintf("%s/test1", m.Server.URL))
+			res, err := req.Do()
+
+			assert.NoError(t, err)
+			assert.Equal(t, http.StatusTeapot, res.StatusCode)
+
+			req = testutil.Get(fmt.Sprintf("%s/test2", m.Server.URL))
+			res, err = req.Do()
+
+			assert.NoError(t, err)
+			assert.Equal(t, http.StatusOK, res.StatusCode)
+
+			req = testutil.Get(fmt.Sprintf("%s/test3", m.Server.URL))
+			res, err = req.Do()
+
+			assert.NoError(t, err)
+			assert.Equal(t, http.StatusOK, res.StatusCode)
+			assert.Equal(t, 1, s1.Hits())
+		})
+
+		t.Run("enabling previously disabled", func(t *testing.T) {
+			s1.Enable()
+
+			req := testutil.Get(fmt.Sprintf("%s/test1", m.Server.URL))
+			res, err := req.Do()
+
+			assert.NoError(t, err)
+			assert.Equal(t, http.StatusOK, res.StatusCode)
+			assert.Equal(t, 2, s1.Hits())
+		})
+
+		t.Run("disabling multiple", func(t *testing.T) {
+			s2.Disable()
+
+			req := testutil.Get(fmt.Sprintf("%s/test2", m.Server.URL))
+			res, err := req.Do()
+
+			assert.NoError(t, err)
+			assert.Equal(t, http.StatusTeapot, res.StatusCode)
+
+			req = testutil.Get(fmt.Sprintf("%s/test3", m.Server.URL))
+			res, err = req.Do()
+
+			assert.NoError(t, err)
+			assert.Equal(t, http.StatusTeapot, res.StatusCode)
+		})
 	})
 }

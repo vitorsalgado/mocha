@@ -20,15 +20,6 @@ func (mr *RandomReply) Add(reply ...mock.Reply) *RandomReply {
 	return mr
 }
 
-func (mr *RandomReply) Then(reply mock.Reply) *RandomReply {
-	mr.Add(reply)
-	return mr
-}
-
-func (mr *RandomReply) Err() error {
-	return nil
-}
-
 func (mr *RandomReply) Build(r *http.Request, m *mock.Mock, p params.Params) (*mock.Response, error) {
 	size := len(mr.replies)
 	if size == 0 {

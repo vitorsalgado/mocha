@@ -46,11 +46,6 @@ func ProxiedFrom(target string) *ProxyReply {
 	return From(target)
 }
 
-func (r *ProxyReply) Target(target string) *ProxyReply {
-	r.target = target
-	return r
-}
-
 func (r *ProxyReply) Header(key, value string) *ProxyReply {
 	r.headers.Add(key, value)
 	return r
@@ -74,10 +69,6 @@ func (r *ProxyReply) StripPrefix(prefix string) *ProxyReply {
 func (r *ProxyReply) StripSuffix(suffix string) *ProxyReply {
 	r.trimSuffix = suffix
 	return r
-}
-
-func (r *ProxyReply) Err() error {
-	return nil
 }
 
 func (r *ProxyReply) Build(req *http.Request, m *mock.Mock, p params.Params) (*mock.Response, error) {

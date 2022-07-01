@@ -14,8 +14,7 @@ func TestSequential(t *testing.T) {
 		m.Name = "mock_test"
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 		builder := Sequential().
-			Add(InternalServerError(), BadRequest(), OK()).
-			Then(NotFound())
+			Add(InternalServerError(), BadRequest(), OK(), NotFound())
 
 		m.Hit()
 		res, err := builder.Build(req, m, nil)

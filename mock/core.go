@@ -47,7 +47,6 @@ type (
 	}
 
 	Reply interface {
-		Err() error
 		Build(*http.Request, *Mock, params.Params) (*Response, error)
 	}
 

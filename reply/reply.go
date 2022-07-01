@@ -134,10 +134,6 @@ func (rpl *SingleReply) Map(mapper mock.ResponseMapper) *SingleReply {
 	return rpl
 }
 
-func (rpl *SingleReply) Err() error {
-	return rpl.err
-}
-
 func (rpl *SingleReply) Build(_ *http.Request, _ *mock.Mock, _ params.Params) (*mock.Response, error) {
 	if rpl.err != nil {
 		return nil, rpl.err

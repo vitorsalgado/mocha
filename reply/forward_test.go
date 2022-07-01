@@ -17,6 +17,9 @@ func TestForward(t *testing.T) {
 		dest := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "/path/test/example", r.URL.Path)
 			assert.Equal(t, "all", r.URL.Query().Get("filter"))
+			assert.Equal(t, "", r.Header.Get("x-to-be-removed"))
+			assert.Equal(t, "ok", r.Header.Get("x-present"))
+			assert.Equal(t, "proxied", r.Header.Get("x-proxy"))
 
 			w.WriteHeader(http.StatusCreated)
 			w.Write([]byte("hello world"))
@@ -25,9 +28,14 @@ func TestForward(t *testing.T) {
 		defer dest.Close()
 
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080/path/test/example?filter=all", nil)
+		req.Header.Set("x-to-be-removed", "nok")
+		req.Header.Set("x-present", "ok")
 
-		forward := From(dest.URL)
-		res, err := forward.Build(req, nil, nil)
+		res, err := From(dest.URL).
+			ProxyHeader("x-proxy", "proxied").
+			RemoveProxyHeader("x-to-be-removed").
+			Header("x-res", "response").
+			Build(req, nil, nil)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -40,6 +48,7 @@ func TestForward(t *testing.T) {
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusCreated, res.Status)
 		assert.Equal(t, "hello world", string(b))
+		assert.Equal(t, "response", res.Header.Get("x-res"))
 	})
 
 	t.Run("should forward and respond POST with body", func(t *testing.T) {

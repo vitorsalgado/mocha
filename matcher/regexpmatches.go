@@ -11,15 +11,18 @@ type RegExpMatcherTypes interface {
 
 func RegExpMatches[V any, T RegExpMatcherTypes](re T) Matcher[V] {
 	return func(v V, params Args) (bool, error) {
+		var err error
+		var result bool
+
 		switch e := any(re).(type) {
 		case string:
 			return regexp.Match(e, []byte(fmt.Sprintf("%v", v)))
 		case regexp.Regexp:
-			return e.Match([]byte(fmt.Sprintf("%v", v))), nil
+			result = e.Match([]byte(fmt.Sprintf("%v", v)))
 		case *regexp.Regexp:
-			return e.Match([]byte(fmt.Sprintf("%v", v))), nil
+			result = e.Match([]byte(fmt.Sprintf("%v", v)))
 		}
 
-		return false, fmt.Errorf("unable to apply regexp expression for value %v", v)
+		return result, err
 	}
 }

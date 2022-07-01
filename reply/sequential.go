@@ -27,15 +27,6 @@ func (mr *SequentialReply) Add(reply ...mock.Reply) *SequentialReply {
 	return mr
 }
 
-func (mr *SequentialReply) Then(reply mock.Reply) *SequentialReply {
-	mr.Add(reply)
-	return mr
-}
-
-func (mr *SequentialReply) Err() error {
-	return nil
-}
-
 func (mr *SequentialReply) Build(r *http.Request, m *mock.Mock, p params.Params) (*mock.Response, error) {
 	size := len(mr.replies)
 	if size == 0 {

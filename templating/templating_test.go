@@ -17,7 +17,7 @@ type testData struct {
 	Value string
 }
 
-func TestGoTemplating_Compile(t *testing.T) {
+func TestGoTemplating(t *testing.T) {
 	wd, _ := os.Getwd()
 	filename := path.Join(wd, "_testdata/test.tmpl")
 
@@ -40,4 +40,11 @@ func TestGoTemplating_Compile(t *testing.T) {
 	}
 
 	assert.Equal(t, "hello world \n", buf.String())
+}
+
+func TestTemplatingError(t *testing.T) {
+	tmpl := New()
+	err := tmpl.Name("fail").Template("invalid {{ .hi }").Compile()
+
+	assert.NotNil(t, err)
 }
