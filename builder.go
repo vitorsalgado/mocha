@@ -214,7 +214,7 @@ func (b *MockBuilder) RequestMatches(m matcher.Matcher[*http.Request]) *MockBuil
 
 func (b *MockBuilder) StartScenario(scenario string) *MockBuilder {
 	b.scenario = scenario
-	b.scenarioRequiredState = ScenarioStarted
+	b.scenarioRequiredState = matcher.ScenarioStarted
 	return b
 }
 
@@ -245,7 +245,7 @@ func (b *MockBuilder) Reply(reply mock.Reply) *MockBuilder {
 
 func (b *MockBuilder) Build() *mock.Mock {
 	if b.scenario != "" {
-		b.RequestMatches(scenarioMatcher[*http.Request](b.scenario, b.scenarioRequiredState, b.scenarioNewState))
+		b.RequestMatches(matcher.Scenario[*http.Request](b.scenario, b.scenarioRequiredState, b.scenarioNewState))
 	}
 
 	return b.mock

@@ -2,6 +2,7 @@ package mocha
 
 import (
 	"context"
+	"github.com/vitorsalgado/mocha/matcher"
 	"net/http/httptest"
 	"testing"
 
@@ -38,7 +39,7 @@ func New[C configT](config C) *Mocha {
 	parsers = append(parsers, parsedConfig.BodyParsers...)
 	parsers = append(parsers, &JSONBodyParser{}, &FormURLEncodedParser{})
 	params := params.New()
-	params.Set(BuiltInParamScenario, NewScenarioStore())
+	params.Set(matcher.BuiltInParamScenario, matcher.NewScenarioStore())
 
 	server := httptest.NewUnstartedServer(newHandler(mockStorage, parsers, params))
 	server.EnableHTTP2 = true

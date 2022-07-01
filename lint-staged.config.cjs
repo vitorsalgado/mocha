@@ -2,5 +2,5 @@
 
 module.exports = {
   '*.{md,json}': 'prettier --write --ignore-unknown',
-  '*.go': ['go fmt', 'go vet'],
+  '*.go': ['make fmt', 'make vet'],
 }
