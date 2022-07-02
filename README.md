@@ -3,9 +3,8 @@
 <div align="center">
     <a href="#"><img src="docs/logo.png" width="120px" alt="Mocha Logo"></a>
     <p align="center">
-        HTTP mocking in GO
+        HTTP Mocking Tool for Go
         <br />
-        <a href="https://github.com/vitorsalgado/mocha/actions/workflows/ci.yml"><strong>CI</strong></a> 
     </p>
     <div>
       <a href="https://github.com/vitorsalgado/mocha/actions/workflows/ci.yml">
@@ -103,7 +102,7 @@ func Test(t *testing.T) {
 
 Check our [Contributing](CONTRIBUTING.md) guide for more details.
 
-## License
+## License · [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fvitorsalgado%2Fmocha.svg?type=small)](https://app.fossa.com/projects/git%2Bgithub.com%2Fvitorsalgado%2Fmocha?ref=badge_small)
 
 This project is [MIT Licensed](LICENSE).
 
