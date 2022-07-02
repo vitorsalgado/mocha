@@ -51,3 +51,8 @@ prep: ## prepare local development environment
 	@echo "local tools"
 	@go install honnef.co/go/tools/cmd/staticcheck@latest
 	@npm i --no-package-lock
+
+.PHONY: docs
+docs: ## godocs
+	@echo navigate to: http://localhost:6060/pkg/github.com/vitorsalgado/mocha/
+	@godoc -http=:6060

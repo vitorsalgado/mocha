@@ -14,8 +14,7 @@ func TestAllOf(t *testing.T) {
 			EqualTo("test"),
 			EqualFold("TEST"),
 			ToUpperCase(EqualTo("TEST")),
-			Contains("tes"),
-		)("test", Args{})
+			Contains("tes"))("test", Args{})
 		assert.Nil(t, err)
 		assert.True(t, result)
 	})
