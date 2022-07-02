@@ -14,6 +14,7 @@
       <a href="https://codecov.io/gh/vitorsalgado/mocha">
         <img src="https://codecov.io/gh/vitorsalgado/mocha/branch/main/graph/badge.svg?token=XOFUV52P31" alt="Coverage"/>
       </a>
+<a href="https://app.fossa.com/projects/git%2Bgithub.com%2Fvitorsalgado%2Fmocha?ref=badge_shield" alt="FOSSA Status"><img src="https://app.fossa.com/api/projects/git%2Bgithub.com%2Fvitorsalgado%2Fmocha.svg?type=shield"/></a>
       <a href="#">
         <img alt="GitHub go.mod Go version" src="https://img.shields.io/github/go-mod/go-version/vitorsalgado/mocha">
       </a>
@@ -108,3 +109,6 @@ Check our [Contributing](CONTRIBUTING.md) guide for more details.
 This project is [MIT Licensed](LICENSE).
 
 <p align="center"><a href="#mocha-top">back to the top</a></p>
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fvitorsalgado%2Fmocha.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fvitorsalgado%2Fmocha?ref=badge_large)
