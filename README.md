@@ -11,17 +11,14 @@
       <a href="https://github.com/vitorsalgado/mocha/actions/workflows/ci.yml">
         <img src="https://github.com/vitorsalgado/mocha/actions/workflows/ci.yml/badge.svg" alt="CI Status" />
       </a>
-      <a href="https://github.com/vitorsalgado/mocha/actions/workflows/codeql-analysis.yml">
-        <img src="https://github.com/vitorsalgado/mocha/actions/workflows/codeql-analysis.yml/badge.svg" alt="CodeQL Status" />
-      </a>
       <a href="https://codecov.io/gh/vitorsalgado/mocha">
         <img src="https://codecov.io/gh/vitorsalgado/mocha/branch/main/graph/badge.svg?token=XOFUV52P31" alt="Coverage"/>
       </a>
       <a href="#">
-        <img src="https://img.shields.io/badge/go-1.18-blue" alt="Go 1.18" />
+        <img alt="GitHub go.mod Go version" src="https://img.shields.io/github/go-mod/go-version/vitorsalgado/mocha">
       </a>
-      <a href="https://conventionalcommits.org">
-        <img src="https://img.shields.io/badge/Conventional%20Commits-1.0.0-yellow.svg" alt="Conventional Commits"/>
+      <a href="https://pkg.go.dev/github.com/vitorsalgado/mocha">
+        <img src="https://pkg.go.dev/badge/github.com/vitorsalgado/mocha.svg" alt="Go Reference">
       </a>
     </div>
 </div>
@@ -101,6 +98,10 @@ func Test(t *testing.T) {
 - [ ] CLI
 - [ ] Proxy and Record
 - [ ] Configure mocks with JSON/YAML files
+
+## Contributing
+
+Check our [Contributing](CONTRIBUTING.md) guide for more details.
 
 ## License
 
