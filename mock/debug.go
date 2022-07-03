@@ -7,6 +7,9 @@ import (
 	"github.com/vitorsalgado/mocha/matcher"
 )
 
+// Debug wraps a matcher.Matcher adding debugging logs.
+// The return value will be the same of the provided matcher.Matcher.
+// Debug is used internally by Mocha.
 func Debug[V any](name string, mk Mock, m matcher.Matcher[V]) matcher.Matcher[V] {
 	return func(v V, params matcher.Args) (bool, error) {
 		result, err := m(v, params)

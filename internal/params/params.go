@@ -1,11 +1,22 @@
+// Package params expose a simple in-memory key/value store, used internally by Mocha.
 package params
 
 type (
+	// Params defines the contract to an in-memory storage for generic parameters.
 	Params interface {
+		// Get returns the parameter by its key.
 		Get(key string) (any, bool)
+
+		// GetAll returns all stored parameters.
 		GetAll() map[string]any
+
+		// Set sets a parameter.
 		Set(key string, dep any)
+
+		// Remove removes a parameter by its key.
 		Remove(key string)
+
+		// Has checks if a parameter with the given key exists.
 		Has(key string) bool
 	}
 
@@ -14,6 +25,7 @@ type (
 	}
 )
 
+// New returns a Params concrete implementation.
 func New() Params {
 	return &params{data: make(map[string]any)}
 }

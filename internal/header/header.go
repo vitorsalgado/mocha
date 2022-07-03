@@ -1,3 +1,4 @@
+// Package header contains common headers used internally.
 package header
 
 // Common HTTP headers used internally

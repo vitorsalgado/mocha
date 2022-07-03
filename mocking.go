@@ -17,7 +17,7 @@ func findMockForRequest(storage mock.Storage, params matcher.Args) (*findMockRes
 	var w = 0
 
 	for _, m := range mocks {
-		matches, err := m.Matches(params)
+		matches, err := m.Matches(params, m.Expectations)
 		if err != nil {
 			return nil, err
 		}

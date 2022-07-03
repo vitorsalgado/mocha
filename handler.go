@@ -11,56 +11,72 @@ import (
 	"github.com/vitorsalgado/mocha/mock"
 )
 
-type Handler struct {
-	mocks   mock.Storage
-	parsers []BodyParser
-	params  params.Params
+type mockHandler struct {
+	mocks       mock.Storage
+	bodyParsers []RequestBodyParser
+	params      params.Params
 }
 
 func newHandler(
 	storage mock.Storage,
-	parsers []BodyParser,
+	bodyParsers []RequestBodyParser,
 	params params.Params,
-) *Handler {
-	return &Handler{mocks: storage, parsers: parsers, params: params}
+) *mockHandler {
+	return &mockHandler{mocks: storage, bodyParsers: bodyParsers, params: params}
 }
 
-func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	parseRequestBody, err := ParseRequestBody(r, h.parsers)
+func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	parser, err := parseRequestBody(r, h.bodyParsers)
 	if err != nil {
-		respondErr(w, err)
+		respondError(w, err)
 		return
 	}
 
-	parameters := matcher.Args{RequestInfo: &matcher.RequestInfo{Request: r, ParsedBody: parseRequestBody}, Params: h.params}
+	// Match current request with all eligible stored matchers in order to find one mock.
+	parameters := matcher.Args{RequestInfo: &matcher.RequestInfo{Request: r, ParsedBody: parser}, Params: h.params}
 	result, err := findMockForRequest(h.mocks, parameters)
 	if err != nil {
-		respondErr(w, err)
+		respondError(w, err)
 		return
 	}
 
 	if !result.Matches {
-		noMatch(w, result)
+		respondNonMatched(w, result)
 		return
 	}
 
 	m := result.Matched
-	res, err := result.Matched.Reply.Build(r, m, h.params)
+	m.Hit()
+
+	// Run post matchers, after standard ones and after marking the mock as called.
+	afterResult, err := m.Matches(parameters, m.AfterExpectations)
 	if err != nil {
-		respondErr(w, err)
+		respondError(w, err)
 		return
 	}
 
-	mp := mock.ResponseMapperArgs{Request: r, Parameters: h.params}
+	if !afterResult.IsMatch {
+		respondNonMatched(w, result)
+		return
+	}
+
+	// Get the reply for the mock, after running all possible matchers.
+	res, err := result.Matched.Reply.Build(r, m, h.params)
+	if err != nil {
+		respondError(w, err)
+		return
+	}
+
+	// Map the response using mock mappers.
+	mapperArgs := mock.ResponseMapperArgs{Request: r, Parameters: h.params}
 	for _, mapper := range res.Mappers {
-		if err := mapper(res, mp); err != nil {
-			respondErr(w, err)
+		if err = mapper(res, mapperArgs); err != nil {
+			respondError(w, err)
 			return
 		}
 	}
 
-	m.Hit()
-
+	// If a delay is set, it will wait before continuing serving the mocked response.
 	if res.Delay > 0 {
 		<-time.After(res.Delay)
 	}
@@ -82,16 +98,18 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Run mocks post actions.
+	// Errors will only be logged.
 	args := mock.PostActionArgs{Request: r, Response: res, Mock: m, Params: h.params}
 	for _, action := range m.PostActions {
-		err := action.Run(args)
+		err = action.Run(args)
 		if err != nil {
 			log.Println(err)
 		}
 	}
 }
 
-func noMatch(w http.ResponseWriter, result *findMockResult) {
+func respondNonMatched(w http.ResponseWriter, result *findMockResult) {
 	w.WriteHeader(http.StatusTeapot)
 	w.Write([]byte("Request was not matched."))
 
@@ -101,7 +119,7 @@ func noMatch(w http.ResponseWriter, result *findMockResult) {
 	}
 }
 
-func respondErr(w http.ResponseWriter, err error) {
+func respondError(w http.ResponseWriter, err error) {
 	w.WriteHeader(http.StatusTeapot)
 	w.Write([]byte("Request was not matched."))
 	w.Write([]byte(err.Error()))

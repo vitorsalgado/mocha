@@ -44,7 +44,7 @@ func TestPostAction(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		assert.Nil(t, scope.Done())
+		assert.Nil(t, scope.MustBeDone())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		act.AssertExpectations(t)
 	})
@@ -67,7 +67,7 @@ func TestPostAction(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		assert.Nil(t, scope.Done())
+		assert.Nil(t, scope.MustBeDone())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		act.AssertExpectations(t)
 	})

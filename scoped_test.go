@@ -23,7 +23,7 @@ func TestScoped(t *testing.T) {
 	repo.Save(m2)
 	repo.Save(m3)
 
-	scoped := Scope(repo, repo.FetchAll())
+	scoped := scope(repo, repo.FetchAll())
 
 	t.Run("should not return done when there is still pending mocks", func(t *testing.T) {
 		assert.False(t, scoped.IsDone())
@@ -34,13 +34,13 @@ func TestScoped(t *testing.T) {
 		m1.Hit()
 
 		assert.False(t, scoped.IsDone())
-		assert.NotNil(t, scoped.Done())
+		assert.NotNil(t, scoped.MustBeDone())
 
 		m2.Hit()
 		m3.Hit()
 
 		assert.True(t, scoped.IsDone())
-		assert.Nil(t, scoped.Done())
+		assert.Nil(t, scoped.MustBeDone())
 		assert.Equal(t, 0, len(scoped.Pending()))
 	})
 

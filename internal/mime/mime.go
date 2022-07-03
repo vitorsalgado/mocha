@@ -1,27 +1,8 @@
+// Package mime contains common mime types used internally by Mocha.
 package mime
-
-import "strings"
 
 const (
 	ContentTypeJSON           = "application/json"
-	ContentTypeXML            = "application/xml"
-	ContentTypeTextHTML       = "text/html"
 	ContentTypeTextPlain      = "text/plain"
 	ContentTypeFormURLEncoded = "application/x-www-form-urlencoded"
 )
-
-var ext = map[string]string{
-	ContentTypeJSON:     ".json",
-	ContentTypeXML:      ".xml",
-	ContentTypeTextHTML: ".html",
-}
-
-func ExtensionFor(contenttype string) string {
-	contenttype = strings.TrimSpace(strings.Split(contenttype, ",")[0])
-	extension, ok := ext[contenttype]
-	if !ok {
-		return ".txt"
-	}
-
-	return extension
-}

@@ -1,8 +1,10 @@
-package matcher
+package scenario
+
+import "github.com/vitorsalgado/mocha/matcher"
 
 const (
-	ScenarioStarted      = "STARTED"
-	BuiltInParamScenario = "__mocha:scenarios"
+	StateStarted      = "STARTED"
+	BuiltInParamStore = "__mocha:scenarios"
 )
 
 type scenario struct {
@@ -11,15 +13,16 @@ type scenario struct {
 }
 
 func newScenario(name string) scenario {
-	return scenario{Name: name, State: ScenarioStarted}
+	return scenario{Name: name, State: StateStarted}
 }
 
+// HasStarted returns true when Scenario state is equal to "STARTED"
 func (s scenario) HasStarted() bool {
-	return s.State == ScenarioStarted
+	return s.State == StateStarted
 }
 
 type (
-	ScenarioStore interface {
+	Store interface {
 		FetchByName(name string) (scenario, bool)
 		CreateNewIfNeeded(name string) scenario
 		Save(scenario scenario)
@@ -30,7 +33,7 @@ type (
 	}
 )
 
-func NewScenarioStore() ScenarioStore {
+func NewStore() Store {
 	return &scenarioStore{data: make(map[string]scenario)}
 }
 
@@ -55,12 +58,12 @@ func (store *scenarioStore) Save(scenario scenario) {
 	store.data[scenario.Name] = scenario
 }
 
-func Scenario[V any](name, requiredState, newState string) Matcher[V] {
-	return func(_ V, params Args) (bool, error) {
-		s, _ := params.Params.Get(BuiltInParamScenario)
-		scenarios := s.(ScenarioStore)
+func Scenario[V any](name, requiredState, newState string) matcher.Matcher[V] {
+	return func(_ V, params matcher.Args) (bool, error) {
+		s, _ := params.Params.Get(BuiltInParamStore)
+		scenarios := s.(Store)
 
-		if requiredState == ScenarioStarted {
+		if requiredState == StateStarted {
 			scenarios.CreateNewIfNeeded(name)
 		}
 

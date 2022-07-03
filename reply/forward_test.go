@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -69,7 +70,8 @@ func TestForward(t *testing.T) {
 		body := strings.NewReader(expected)
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", body)
 
-		forward := ProxyFrom(dest.URL)
+		u, _ := url.Parse(dest.URL)
+		forward := ProxyFrom(u)
 		res, err := forward.Build(req, nil, nil)
 		if err != nil {
 			t.Fatal(err)

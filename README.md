@@ -94,9 +94,11 @@ func Test(t *testing.T) {
 
 ## Todo
 
-- [ ] CLI
-- [ ] Proxy and Record
 - [ ] Configure mocks with JSON/YAML files
+- [ ] CLI
+- [ ] Docker
+- [ ] Proxy and Record
+- [ ] Admin
 
 ## Contributing
 

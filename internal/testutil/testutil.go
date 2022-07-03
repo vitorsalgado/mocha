@@ -1,3 +1,4 @@
+// Package testutil contains internal test utilities.
 package testutil
 
 import (

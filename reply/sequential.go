@@ -8,25 +8,31 @@ import (
 	"github.com/vitorsalgado/mocha/mock"
 )
 
+// SequentialReply configures a sequence of replies to be used after a mock.Mock is matched to a http.Request.
 type SequentialReply struct {
 	replyOnNotFound mock.Reply
 	replies         []mock.Reply
 }
 
-func Sequential() *SequentialReply {
+// Seq creates a new SequentialReply.
+func Seq() *SequentialReply {
 	return &SequentialReply{replies: make([]mock.Reply, 0)}
 }
 
-func (mr *SequentialReply) ReplyOnSequenceEnded(reply mock.Reply) *SequentialReply {
+// AfterEnded sets a response to be used once the sequence is over.
+func (mr *SequentialReply) AfterEnded(reply mock.Reply) *SequentialReply {
 	mr.replyOnNotFound = reply
 	return mr
 }
 
+// Add adds a new response to the sequence.
 func (mr *SequentialReply) Add(reply ...mock.Reply) *SequentialReply {
 	mr.replies = append(mr.replies, reply...)
 	return mr
 }
 
+// Build builds a new response based on current mock.Mock call sequence.
+// When the sequence is over, it will return an error or a previously configured reply for this scenario.
 func (mr *SequentialReply) Build(r *http.Request, m *mock.Mock, p params.Params) (*mock.Response, error) {
 	size := len(mr.replies)
 	if size == 0 {

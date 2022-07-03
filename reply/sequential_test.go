@@ -14,7 +14,7 @@ func TestSequential(t *testing.T) {
 		m := mock.New()
 		m.Name = "mock_test"
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
-		builder := Sequential().
+		builder := Seq().
 			Add(InternalServerError(), BadRequest(), OK(), NotFound())
 
 		m.Hit()
@@ -46,7 +46,7 @@ func TestSequential(t *testing.T) {
 		m := mock.New()
 		m.Name = "mock_test"
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
-		builder := Sequential().Add(OK()).ReplyOnSequenceEnded(NotFound())
+		builder := Seq().Add(OK()).AfterEnded(NotFound())
 
 		m.Hit()
 		res, err := builder.Build(req, m, nil)
@@ -61,7 +61,7 @@ func TestSequential(t *testing.T) {
 }
 
 func TestShouldReturnErrorWhenSequenceDoesNotContainReplies(t *testing.T) {
-	res, err := Sequential().Build(nil, nil, nil)
+	res, err := Seq().Build(nil, nil, nil)
 	assert.Nil(t, res)
 	assert.NotNil(t, err)
 }

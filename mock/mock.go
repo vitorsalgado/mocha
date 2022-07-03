@@ -10,41 +10,58 @@ import (
 	"github.com/vitorsalgado/mocha/matcher"
 )
 
+// New returns a new Mock with default values set.
 func New() *Mock {
 	return &Mock{
-		ID:          id.Next(),
-		Enabled:     true,
-		PostActions: make([]PostAction, 0),
+		ID:                id.next(),
+		Enabled:           true,
+		Expectations:      make([]any, 0),
+		AfterExpectations: make([]any, 0),
+		PostActions:       make([]PostAction, 0),
 
 		mu: &sync.Mutex{},
 	}
 }
 
+// Hit notify that the Mock was called.
 func (m *Mock) Hit() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.Hits++
 }
 
+// Dec reduce one Mock call.
+func (m *Mock) Dec() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.Hits--
+}
+
+// Called checks if the Mock was called at least once.
 func (m *Mock) Called() bool {
 	return m.Hits > 0
 }
 
+// Enable enables the Mock.
+// The Mock will be eligible to be matched.
 func (m *Mock) Enable() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.Enabled = true
 }
 
+// Disable disables the Mock.
+// The Mock will not be eligible to be matched.
 func (m *Mock) Disable() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.Enabled = false
 }
 
-func (m *Mock) Matches(params matcher.Args) (MatchResult, error) {
+// Matches checks if current Mock matches against a list of expectations.
+func (m *Mock) Matches(params matcher.Args, expectations []any) (MatchResult, error) {
 	weight := 0
-	for _, expect := range m.Expectations {
+	for _, expect := range expectations {
 		var matched bool
 		var err error
 		var w int

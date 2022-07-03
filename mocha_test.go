@@ -21,10 +21,14 @@ func TestMocha(t *testing.T) {
 		m := ForTest(t)
 		m.Start()
 
-		scoped := m.Mock(Get(matcher.URLPath("/test")).
-			Header("test", matcher.EqualTo("hello")).
-			Query("filter", matcher.EqualTo("all")).
-			Reply(reply.Created().BodyString("hello world")))
+		scoped := m.Mock(
+			Get(matcher.URLPath("/test")).
+				Header("test", matcher.EqualTo("hello")).
+				Query("filter", matcher.EqualTo("all")).
+				Reply(
+					reply.
+						Created().
+						BodyString("hello world")))
 
 		req, _ := http.NewRequest(http.MethodGet, m.Server.URL+"/test?filter=all", nil)
 		req.Header.Add("test", "hello")
@@ -92,7 +96,7 @@ func TestCustomParameters(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Nil(t, scope.Done())
+	assert.Nil(t, scope.MustBeDone())
 	assert.Equal(t, http.StatusAccepted, res.StatusCode)
 }
 
@@ -116,7 +120,7 @@ func TestResponseMapper(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Nil(t, scoped.Done())
+	assert.Nil(t, scoped.MustBeDone())
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.Equal(t, "dev", res.Header.Get("x-test"))
 }
@@ -141,7 +145,37 @@ func TestDelay(t *testing.T) {
 
 	elapsed := time.Since(start)
 
-	assert.Nil(t, scoped.Done())
+	assert.Nil(t, scoped.MustBeDone())
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.GreaterOrEqual(t, elapsed, delay)
+}
+
+func TestAfterExpectations(t *testing.T) {
+	m := ForTest(t)
+	m.Start()
+
+	scoped := m.Mock(
+		NewBuilder().
+			MatchAfter(matcher.Repeat(2)).
+			Method("GET").
+			URL(matcher.URLPath("/test")).
+			Reply(reply.
+				OK()))
+
+	testutil.Get(fmt.Sprintf("%s/other", m.Server.URL)).Do()
+	testutil.Get(fmt.Sprintf("%s/other", m.Server.URL)).Do()
+
+	res, _ := testutil.Get(fmt.Sprintf("%s/other", m.Server.URL)).Do()
+	assert.Equal(t, res.StatusCode, http.StatusTeapot)
+
+	res, _ = testutil.Get(fmt.Sprintf("%s/test", m.Server.URL)).Do()
+	assert.Equal(t, res.StatusCode, http.StatusOK)
+
+	res, _ = testutil.Get(fmt.Sprintf("%s/test", m.Server.URL)).Do()
+	assert.Equal(t, res.StatusCode, http.StatusOK)
+
+	res, _ = testutil.Get(fmt.Sprintf("%s/test", m.Server.URL)).Do()
+	assert.Equal(t, res.StatusCode, http.StatusTeapot)
+
+	assert.Nil(t, scoped.MustBeDone())
 }

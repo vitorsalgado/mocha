@@ -1,4 +1,4 @@
-package matcher
+package scenario
 
 import (
 	"testing"
@@ -6,6 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/vitorsalgado/mocha/internal/params"
+	"github.com/vitorsalgado/mocha/matcher"
 )
 
 func TestScenario(t *testing.T) {
@@ -14,7 +15,7 @@ func TestScenario(t *testing.T) {
 	})
 
 	t.Run("should only create scenario if needed", func(t *testing.T) {
-		store := NewScenarioStore()
+		store := NewStore()
 		store.CreateNewIfNeeded("scenario-1")
 
 		s, ok := store.FetchByName("scenario-1")
@@ -34,13 +35,13 @@ func TestScenario(t *testing.T) {
 }
 
 func TestScenarioConditions(t *testing.T) {
-	store := NewScenarioStore()
+	store := NewStore()
 	p := params.New()
-	p.Set(BuiltInParamScenario, store)
-	args := Args{Params: p}
+	p.Set(BuiltInParamStore, store)
+	args := matcher.Args{Params: p}
 
 	t.Run("should return true when scenario is not started and also not found", func(t *testing.T) {
-		m := Scenario[any]("test", "required", "new")
+		m := Scenario[any]("test", "required", "newScenario")
 		res, err := m(nil, args)
 
 		assert.Nil(t, err)
@@ -50,7 +51,7 @@ func TestScenarioConditions(t *testing.T) {
 	t.Run("should return false when scenario exists but it is not in the required state", func(t *testing.T) {
 		store.CreateNewIfNeeded("hi")
 
-		m := Scenario[any]("hi", "required", "new")
+		m := Scenario[any]("hi", "required", "newScenario")
 		res, err := m(nil, args)
 
 		assert.Nil(t, err)

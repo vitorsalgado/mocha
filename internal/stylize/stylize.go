@@ -1,4 +1,4 @@
-// Package stylize contains functions to colorize and stylize texts for terminal
+// Package stylize contains functions to colorize and stylize texts for terminal.
 package stylize
 
 import (

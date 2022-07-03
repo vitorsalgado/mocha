@@ -1,3 +1,4 @@
+// Package jsonpath expose functions to retrieve JSON fields value based on its key path.
 package jsonpath
 
 import (
