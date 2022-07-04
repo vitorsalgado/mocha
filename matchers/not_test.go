@@ -8,17 +8,16 @@ import (
 
 func TestNot(t *testing.T) {
 	value := "test"
-	params := Args{}
 
 	t.Run("should return true when value is not equal", func(t *testing.T) {
-		result, err := Not(EqualTo("dev"))(value, params)
+		result, err := Not(EqualTo("dev")).Matches(value, emptyArgs())
 
 		assert.Nil(t, err)
 		assert.True(t, result)
 	})
 
 	t.Run("should return false when value is equal", func(t *testing.T) {
-		result, err := Not(EqualTo("test"))(value, params)
+		result, err := Not(EqualTo("test")).Matches(value, emptyArgs())
 
 		assert.Nil(t, err)
 		assert.False(t, result)

@@ -10,9 +10,11 @@ import (
 // Debug wraps a matchers.Matcher adding debugging logs.
 // The return value will be the same of the provided matchers.Matcher.
 // Debug is used internally by Mocha.
-func Debug[V any](name string, mk Mock, m matchers.Matcher[V]) matchers.Matcher[V] {
-	return func(v V, params matchers.Args) (bool, error) {
-		result, err := m(v, params)
+func Debug[V any](name string, mk Mock, matcher matchers.Matcher[V]) matchers.Matcher[V] {
+	m := matchers.Matcher[V]{}
+	m.Name = "Debug"
+	m.Matches = func(v V, params matchers.Args) (bool, error) {
+		result, err := matcher.Matches(v, params)
 
 		fmt.Printf("\"%s\" received %v\n", name, stylize.Gray(fmt.Sprintf("%v", v)))
 
@@ -28,4 +30,6 @@ func Debug[V any](name string, mk Mock, m matchers.Matcher[V]) matchers.Matcher[
 
 		return result, err
 	}
+
+	return m
 }

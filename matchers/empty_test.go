@@ -7,25 +7,23 @@ import (
 )
 
 func TestIsEmpty(t *testing.T) {
-	params := Args{}
-
-	resy, err := IsEmpty[string]()("", params)
+	resy, err := IsEmpty[string]().Matches("", emptyArgs())
 	assert.Nil(t, err)
-	resn, err := IsEmpty[string]()("test", params)
+	resn, err := IsEmpty[string]().Matches("test", emptyArgs())
 	assert.Nil(t, err)
 	assert.True(t, resy)
 	assert.False(t, resn)
 
-	resy, err = IsEmpty[[]string]()([]string{}, params)
+	resy, err = IsEmpty[[]string]().Matches([]string{}, emptyArgs())
 	assert.Nil(t, err)
-	resn, err = IsEmpty[[]string]()([]string{"test"}, params)
+	resn, err = IsEmpty[[]string]().Matches([]string{"test"}, emptyArgs())
 	assert.Nil(t, err)
 	assert.True(t, resy)
 	assert.False(t, resn)
 
-	resy, err = IsEmpty[map[string]string]()(map[string]string{}, params)
+	resy, err = IsEmpty[map[string]string]().Matches(map[string]string{}, emptyArgs())
 	assert.Nil(t, err)
-	resn, err = IsEmpty[map[string]string]()(map[string]string{"k": "v"}, params)
+	resn, err = IsEmpty[map[string]string]().Matches(map[string]string{"k": "v"}, emptyArgs())
 	assert.Nil(t, err)
 	assert.True(t, resy)
 	assert.False(t, resn)

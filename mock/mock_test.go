@@ -194,9 +194,9 @@ func TestMock_Matches(t *testing.T) {
 	t.Run("should return not matched and error when one of expectations returns error", func(t *testing.T) {
 		// string
 		res, err := m.Matches(params, []any{Expectation[string]{
-			Matcher: func(_ string, p matchers.Args) (bool, error) {
+			Matcher: matchers.Fn(func(_ string, p matchers.Args) (bool, error) {
 				return false, fmt.Errorf("fail")
-			},
+			}),
 			ValuePicker: func(r *matchers.RequestInfo) string {
 				return "dev"
 			},

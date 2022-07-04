@@ -5,9 +5,13 @@ package matchers
 func Repeat(times int) Matcher[any] {
 	count := 0
 
-	return func(_ any, params Args) (bool, error) {
+	m := Matcher[any]{}
+	m.Name = "Repeat"
+	m.Matches = func(_ any, params Args) (bool, error) {
 		count++
 
 		return count <= times, nil
 	}
+
+	return m
 }

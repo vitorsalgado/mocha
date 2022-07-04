@@ -19,33 +19,31 @@ func TestHasKey(t *testing.T) {
 		"zero":    0,
 	}
 
-	params := Args{}
-
-	result, err := HasKey[any]("name")(m, params)
+	result, err := HasKey[any]("name").Matches(m, emptyArgs())
 	assert.True(t, result)
 	assert.Nil(t, err)
 
-	result, err = HasKey[any]("age")(m, params)
+	result, err = HasKey[any]("age").Matches(m, emptyArgs())
 	assert.True(t, result)
 	assert.Nil(t, err)
 
-	result, err = HasKey[any]("address")(m, params)
+	result, err = HasKey[any]("address").Matches(m, emptyArgs())
 	assert.True(t, result)
 	assert.Nil(t, err)
 
-	result, err = HasKey[any]("active")(m, params)
+	result, err = HasKey[any]("active").Matches(m, emptyArgs())
 	assert.True(t, result)
 	assert.Nil(t, err)
 
-	result, err = HasKey[any]("zero")(m, params)
+	result, err = HasKey[any]("zero").Matches(m, emptyArgs())
 	assert.True(t, result)
 	assert.Nil(t, err)
 
-	result, err = HasKey[any]("options")(m, params)
+	result, err = HasKey[any]("options").Matches(m, emptyArgs())
 	assert.True(t, result)
 	assert.Nil(t, err)
 
-	result, err = HasKey[any]("none")(m, params)
+	result, err = HasKey[any]("none").Matches(m, emptyArgs())
 	assert.False(t, result)
 	assert.Nil(t, err)
 }

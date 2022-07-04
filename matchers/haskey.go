@@ -8,7 +8,9 @@ import "github.com/vitorsalgado/mocha/internal/jsonpath"
 //	HasKey("name") will return true
 //	HasKey("address.street") will return false.
 func HasKey[V any](path string) Matcher[any] {
-	return func(v any, params Args) (bool, error) {
+	m := Matcher[any]{}
+	m.Name = "HasKey"
+	m.Matches = func(v any, args Args) (bool, error) {
 		value, err := jsonpath.Get(path, v)
 		if err != nil || value == nil {
 			return false, err
@@ -16,4 +18,6 @@ func HasKey[V any](path string) Matcher[any] {
 
 		return true, nil
 	}
+
+	return m
 }

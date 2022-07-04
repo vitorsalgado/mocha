@@ -84,10 +84,10 @@ func TestCustomParameters(t *testing.T) {
 	m.Parameters().Set(key, expected)
 
 	scope := m.Mock(Get(matchers.URLPath("/test")).
-		Matches(func(v any, params matchers.Args) (bool, error) {
+		Matches(matchers.Fn(func(v any, params matchers.Args) (bool, error) {
 			p, _ := params.Params.Get(key)
 			return p.(string) == expected, nil
-		}).
+		})).
 		Reply(reply.Accepted()))
 
 	req := testutil.Get(fmt.Sprintf("%s/test", m.Server.URL))

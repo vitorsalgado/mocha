@@ -4,7 +4,9 @@ import "reflect"
 
 // IsPresent checks if matcher argument contains a value that is not nil or the zero value for the argument type.
 func IsPresent[V any]() Matcher[V] {
-	return func(v V, params Args) (bool, error) {
+	m := Matcher[V]{}
+	m.Name = "IsPresent"
+	m.Matches = func(v V, args Args) (bool, error) {
 		val := reflect.ValueOf(v)
 
 		switch val.Kind() {
@@ -16,4 +18,6 @@ func IsPresent[V any]() Matcher[V] {
 
 		return true, nil
 	}
+
+	return m
 }

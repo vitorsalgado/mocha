@@ -7,7 +7,7 @@ import (
 )
 
 func TestTrim(t *testing.T) {
-	result, err := Trim(EqualTo("test"))("  test  ", Args{})
+	result, err := Trim(EqualTo("test")).Matches("  test  ", Args{})
 
 	assert.Nil(t, err)
 	assert.True(t, result)

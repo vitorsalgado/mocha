@@ -254,6 +254,6 @@ func (m *Mock) Matches(params matchers.Args, expectations []any) (MatchResult, e
 }
 
 func matches[V any](e Expectation[V], params matchers.Args) (bool, int, error) {
-	res, err := e.Matcher(e.ValuePicker(params.RequestInfo), params)
+	res, err := e.Matcher.Matches(e.ValuePicker(params.RequestInfo), params)
 	return res, e.Weight, err
 }

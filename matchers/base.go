@@ -1,6 +1,9 @@
 package matchers
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 type (
 	Params interface {
@@ -17,5 +20,21 @@ type (
 		Params      Params
 	}
 
-	Matcher[V any] func(v V, params Args) (bool, error)
+	Matcher[V any] struct {
+		Matches     func(v V, args Args) (bool, error)
+		Description string
+		Name        string
+	}
 )
+
+func (m Matcher[V]) Describe(describe string) {
+	m.Description = describe
+}
+
+func (m Matcher[V]) Describef(format string, a ...any) {
+	m.Description = fmt.Sprintf(format, a...)
+}
+
+func emptyArgs() Args {
+	return Args{}
+}

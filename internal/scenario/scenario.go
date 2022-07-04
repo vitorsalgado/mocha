@@ -59,7 +59,9 @@ func (store *scenarioStore) Save(scenario scenario) {
 }
 
 func Scenario[V any](name, requiredState, newState string) matchers.Matcher[V] {
-	return func(_ V, params matchers.Args) (bool, error) {
+	m := matchers.Matcher[V]{}
+	m.Name = "Scenario"
+	m.Matches = func(_ V, params matchers.Args) (bool, error) {
 		s, _ := params.Params.Get(BuiltInParamStore)
 		scenarios := s.(Store)
 
@@ -83,4 +85,6 @@ func Scenario[V any](name, requiredState, newState string) matchers.Matcher[V] {
 
 		return false, nil
 	}
+
+	return m
 }

@@ -7,7 +7,7 @@ import (
 )
 
 func TestAnythingMatcher(t *testing.T) {
-	res, err := Anything[any]()(nil, Args{})
+	res, err := Anything[any]().Matches(nil, emptyArgs())
 	assert.Nil(t, err)
 	assert.True(t, res)
 }

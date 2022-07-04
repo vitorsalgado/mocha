@@ -8,19 +8,19 @@ import (
 
 func TestRepeat(t *testing.T) {
 	m := Repeat(5)
-	result, _ := m(nil, Args{})
+	result, _ := m.Matches(nil, Args{})
 	assert.True(t, result)
-	result, _ = m(nil, Args{})
+	result, _ = m.Matches(nil, Args{})
 	assert.True(t, result)
-	result, _ = m(nil, Args{})
+	result, _ = m.Matches(nil, Args{})
 	assert.True(t, result)
-	result, _ = m(nil, Args{})
+	result, _ = m.Matches(nil, Args{})
 	assert.True(t, result)
-	result, _ = m(nil, Args{})
+	result, _ = m.Matches(nil, Args{})
 	assert.True(t, result)
 
-	result, _ = m(nil, Args{})
+	result, _ = m.Matches(nil, Args{})
 	assert.False(t, result)
-	result, _ = m(nil, Args{})
+	result, _ = m.Matches(nil, Args{})
 	assert.False(t, result)
 }

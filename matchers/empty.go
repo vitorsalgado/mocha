@@ -2,7 +2,11 @@ package matchers
 
 // IsEmpty returns true if matcher value has zero length.
 func IsEmpty[V any]() Matcher[V] {
-	return func(v V, params Args) (bool, error) {
-		return Len[V](0)(v, params)
+	m := Matcher[V]{}
+	m.Name = "IsEmpty"
+	m.Matches = func(v V, args Args) (bool, error) {
+		return Len[V](0).Matches(v, args)
 	}
+
+	return m
 }

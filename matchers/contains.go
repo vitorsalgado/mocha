@@ -3,8 +3,12 @@ package matchers
 import "strings"
 
 // Contains returns true when the expected value is contained in the matcher argument.
-func Contains(value string) Matcher[string] {
-	return func(v string, params Args) (bool, error) {
-		return strings.Contains(v, value), nil
+func Contains(expectation string) Matcher[string] {
+	m := Matcher[string]{}
+	m.Name = "Contains"
+	m.Matches = func(v string, args Args) (bool, error) {
+		return strings.Contains(v, expectation), nil
 	}
+
+	return m
 }
