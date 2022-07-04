@@ -24,9 +24,9 @@ test: ## run tests
 bench: ## run benchmarks
 	@go test -v ./... -bench=. -count 2 -benchmem -run=^#
 
-.PHONY: coverage
-coverage: ## run tests and generate coverage report
-	@go test -v ./... -race -coverprofile=coverage.out -covermode=atomic
+.PHONY: cov
+cov: ## run tests and generate coverage report
+	@go test -v ./... -race -coverprofile=coverage.out
 	@go tool cover -html=coverage.out -o coverage.html
 
 vet: ## check go code

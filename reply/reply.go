@@ -16,7 +16,6 @@ import (
 type (
 	// StdReply holds the configuration on how the mock.Response should be built.
 	StdReply struct {
-		err      error
 		response *mock.Response
 		bodyType bodyType
 		template templating.Template
@@ -39,6 +38,7 @@ func New() *StdReply {
 			Header:  make(http.Header),
 			Mappers: make([]mock.ResponseMapper, 0),
 		},
+		bodyType: bodyDefault,
 	}
 }
 
@@ -139,7 +139,13 @@ func (rpl *StdReply) BodyString(value string) *StdReply {
 // BodyJSON defines the response body encoding the given value using json.Encoder.
 func (rpl *StdReply) BodyJSON(data any) *StdReply {
 	buf := &bytes.Buffer{}
-	rpl.response.Err = json.NewEncoder(buf).Encode(data)
+	err := json.NewEncoder(buf).Encode(data)
+	if err != nil {
+		panic(err)
+	}
+
+	rpl.response.Body = buf
+
 	return rpl
 }
 
@@ -151,6 +157,7 @@ func (rpl *StdReply) BodyReader(reader io.Reader) *StdReply {
 
 // BodyTemplate defines the response body using a template.
 // It accepts a string or a templating.Template implementation. If a different type is provided, it panics.
+// It panics if template .Compile() returns any error.
 func (rpl *StdReply) BodyTemplate(template any) *StdReply {
 	switch e := template.(type) {
 	case string:
@@ -158,9 +165,13 @@ func (rpl *StdReply) BodyTemplate(template any) *StdReply {
 	case templating.Template:
 		err := e.Compile()
 		rpl.template = e
-		rpl.err = err
+
+		if err != nil {
+			panic(err)
+		}
 	case *templating.Template:
 		rpl.template = *e
+
 	default:
 		panic(".bodyTemplate() parameter must be: string | templating.Template")
 	}
@@ -188,18 +199,16 @@ func (rpl *StdReply) Map(mapper mock.ResponseMapper) *StdReply {
 
 // Build builds a mock.Response based on StdReply definition.
 func (rpl *StdReply) Build(_ *http.Request, _ *mock.Mock, _ params.Params) (*mock.Response, error) {
-	if rpl.err != nil {
-		return nil, rpl.err
-	}
-
 	switch rpl.bodyType {
 	case bodyTemplate:
 		buf := &bytes.Buffer{}
 		err := rpl.template.Parse(buf, rpl.model)
+		if err != nil {
+			return nil, err
+		}
 
 		rpl.response.Body = buf
-		rpl.err = err
 	}
 
-	return rpl.response, rpl.err
+	return rpl.response, nil
 }

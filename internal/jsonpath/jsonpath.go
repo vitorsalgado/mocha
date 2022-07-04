@@ -39,11 +39,7 @@ func Get(chain string, data any) (any, error) {
 
 		if matches := fieldRegExp.FindAllStringSubmatch(chain, -1); len(matches) > 0 {
 			values := matches[0]
-			idx, err := strconv.Atoi(values[2])
-
-			if err != nil {
-				return nil, err
-			}
+			idx, _ := strconv.Atoi(values[2])
 
 			field := data.(map[string]any)[values[1]].([]any)
 			size := len(field)
@@ -102,10 +98,7 @@ func Get(chain string, data any) (any, error) {
 
 		if matches := idxRegExp.FindAllStringSubmatch(chain, -1); len(matches) > 0 {
 			values := matches[0]
-			idx, err := strconv.Atoi(values[1])
-			if err != nil {
-				return nil, err
-			}
+			idx, _ := strconv.Atoi(values[1])
 
 			d := data.([]any)
 			size := len(d)

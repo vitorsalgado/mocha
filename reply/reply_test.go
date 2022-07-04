@@ -1,8 +1,11 @@
 package reply
 
 import (
+	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"path"
 	"testing"
 	"time"
 
@@ -11,7 +14,18 @@ import (
 	"github.com/vitorsalgado/mocha/mock"
 )
 
-func TestSingleFactories(t *testing.T) {
+var (
+	testMock = mock.Mock{Name: "mock_test"}
+	req, _   = http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
+)
+
+type jsonData struct {
+	Name   string `json:"name"`
+	Job    string `json:"job"`
+	Active bool   `json:"active"`
+}
+
+func TestReplyFactories(t *testing.T) {
 	assert.Equal(t, http.StatusOK, OK().response.Status)
 	assert.Equal(t, http.StatusCreated, Created().response.Status)
 	assert.Equal(t, http.StatusAccepted, Accepted().response.Status)
@@ -33,10 +47,7 @@ func TestSingleFactories(t *testing.T) {
 	assert.Equal(t, http.StatusGatewayTimeout, GatewayTimeout().response.Status)
 }
 
-func TestSingleReplies(t *testing.T) {
-	m := mock.Mock{Name: "mock_test"}
-	req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
-
+func TestReply(t *testing.T) {
 	res, err := New().
 		Status(http.StatusCreated).
 		Header("test", "dev").
@@ -46,7 +57,7 @@ func TestSingleReplies(t *testing.T) {
 		RemoveCookie(http.Cookie{Name: "cookie_test_remove"}).
 		Body([]byte("hi")).
 		Delay(5*time.Second).
-		Build(req, &m, nil)
+		Build(req, &testMock, nil)
 
 	assert.Nil(t, err)
 
@@ -62,4 +73,61 @@ func TestSingleReplies(t *testing.T) {
 	assert.Equal(t, -1, res.Cookies[1].MaxAge)
 	assert.Equal(t, "hi", string(b))
 	assert.Equal(t, 5*time.Second, res.Delay)
+}
+
+func TestStdReply_BodyString(t *testing.T) {
+	res, err := New().
+		Status(http.StatusCreated).
+		BodyString("text").
+		Build(req, &testMock, nil)
+
+	assert.Nil(t, err)
+
+	b, err := ioutil.ReadAll(res.Body)
+
+	assert.Nil(t, err)
+	assert.Equal(t, "text", string(b))
+}
+
+func TestStdReply_BodyJSON(t *testing.T) {
+	model := jsonData{
+		Name:   "the name",
+		Job:    "dev",
+		Active: true,
+	}
+
+	res, err := New().
+		Status(http.StatusCreated).
+		BodyJSON(model).
+		Build(req, &testMock, nil)
+
+	assert.Nil(t, err)
+
+	b := jsonData{}
+	err = json.NewDecoder(res.Body).Decode(&b)
+
+	assert.Nil(t, err)
+	assert.Equal(t, model, b)
+}
+
+func TestStdReply_BodyReader(t *testing.T) {
+	wd, _ := os.Getwd()
+	f, err := os.Open(path.Join(wd, "_testdata", "data.txt"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	defer f.Close()
+
+	res, err := New().
+		Status(http.StatusCreated).
+		BodyReader(f).
+		Build(req, &testMock, nil)
+
+	assert.Nil(t, err)
+
+	b, err := ioutil.ReadAll(res.Body)
+
+	assert.Nil(t, err)
+	assert.Equal(t, "hello\nworld\n", string(b))
 }

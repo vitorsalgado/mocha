@@ -9,6 +9,7 @@ import (
 
 type style int
 
+// Colors
 const (
 	ColorBlack style = iota + 30
 	ColorRed
@@ -20,6 +21,7 @@ const (
 	ColorWhite
 )
 
+// Bright Colors
 const (
 	ColorBlackBright style = iota + 90
 	ColorRedBright
@@ -31,14 +33,15 @@ const (
 	ColorWhiteBright
 )
 
+// Text Styles
 const (
-	Reset style = iota
-	StyleBold
+	StyleBold style = iota + 1
 	StyleDim
 	StyleItalic
 	StyleUnderline
 )
 
+// Additional Text Styles
 const (
 	StyleInverse style = iota + 7
 	StyleHidden
@@ -46,9 +49,9 @@ const (
 )
 
 var (
-	noColor = os.Getenv("MOCHA_NO_COLOR") == "true"
-	isWin   = runtime.GOOS == "windows"
-	_, isCI = os.LookupEnv("CI")
+	_, noColor = os.LookupEnv("NO_COLOR")
+	_, isCI    = os.LookupEnv("CI")
+	isWin      = runtime.GOOS == "windows"
 )
 
 func Black(s string) string         { return stylize(s, ColorBlack, 39) }
