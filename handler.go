@@ -34,7 +34,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Match current request with all eligible stored matchers in order to find one mock.
 	parameters := matcher.Args{RequestInfo: &matcher.RequestInfo{Request: r, ParsedBody: parser}, Params: h.params}
-	result, err := findMockForRequest(h.mocks, parameters)
+	result, err := mock.FindForRequest(h.mocks, parameters)
 	if err != nil {
 		respondError(w, err)
 		return
@@ -109,7 +109,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func respondNonMatched(w http.ResponseWriter, result *findMockResult) {
+func respondNonMatched(w http.ResponseWriter, result *mock.FindResult) {
 	w.WriteHeader(http.StatusTeapot)
 	w.Write([]byte("Request was not matched."))
 

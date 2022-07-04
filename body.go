@@ -10,17 +10,15 @@ import (
 	"github.com/vitorsalgado/mocha/internal/mime"
 )
 
-type (
-	// RequestBodyParser parses request body if CanParse returns true.
-	// Multiple implementations of RequestBodyParser can be provided to Mocha using options.
-	RequestBodyParser interface {
-		// CanParse checks if current request body should be parsed by this component.
-		CanParse(content string, r *http.Request) bool
+// RequestBodyParser parses request body if CanParse returns true.
+// Multiple implementations of RequestBodyParser can be provided to Mocha using options.
+type RequestBodyParser interface {
+	// CanParse checks if current request body should be parsed by this component.
+	CanParse(content string, r *http.Request) bool
 
-		// Parse parses the request body.
-		Parse(r *http.Request) (any, error)
-	}
-)
+	// Parse parses the request body.
+	Parse(r *http.Request) (any, error)
+}
 
 // parseRequestBody tests given parsers until it finds one that can parse the request body.
 // User provided RequestBodyParser takes precedence.

@@ -153,4 +153,10 @@ func TestForward(t *testing.T) {
 		assert.NotNil(t, res)
 		assert.Equal(t, http.StatusOK, res.Status)
 	})
+
+	t.Run("should panic if provide raw target cannot be parsed to a URL", func(t *testing.T) {
+		assert.Panics(t, func() {
+			From(" http://fail test  ")
+		})
+	})
 }
