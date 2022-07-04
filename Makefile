@@ -26,7 +26,7 @@ bench: ## run benchmarks
 
 .PHONY: cov
 cov: ## run tests and generate coverage report
-	@go test -v ./... -race -coverprofile=coverage.out
+	@go test -v ./... -coverpkg=./... -race -coverprofile=coverage.out
 	@go tool cover -html=coverage.out -o coverage.html
 
 vet: ## check go code

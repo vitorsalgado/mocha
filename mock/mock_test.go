@@ -260,7 +260,7 @@ func TestMock_Matches(t *testing.T) {
 				Weight: 2,
 			},
 		})
-		assert.True(t, res.IsMatch)
+		assert.False(t, res.IsMatch)
 		assert.Nil(t, err)
 		assert.Equal(t, 5, res.Weight)
 	})

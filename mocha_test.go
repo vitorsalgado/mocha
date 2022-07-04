@@ -96,7 +96,7 @@ func TestCustomParameters(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Nil(t, scope.MustBeDone())
+	scope.MustBeDone()
 	assert.Equal(t, http.StatusAccepted, res.StatusCode)
 }
 
@@ -120,7 +120,7 @@ func TestResponseMapper(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Nil(t, scoped.MustBeDone())
+	scoped.MustBeDone()
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.Equal(t, "dev", res.Header.Get("x-test"))
 }
@@ -145,7 +145,7 @@ func TestDelay(t *testing.T) {
 
 	elapsed := time.Since(start)
 
-	assert.Nil(t, scoped.MustBeDone())
+	scoped.MustBeDone()
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.GreaterOrEqual(t, elapsed, delay)
 }
@@ -177,5 +177,5 @@ func TestAfterExpectations(t *testing.T) {
 	res, _ = testutil.Get(fmt.Sprintf("%s/test", m.Server.URL)).Do()
 	assert.Equal(t, res.StatusCode, http.StatusTeapot)
 
-	assert.Nil(t, scoped.MustBeDone())
+	scoped.MustBeDone()
 }

@@ -202,9 +202,10 @@ func (m *Mock) Disable() {
 // Will iterate through all expectations even if it doesn't match early.
 func (m *Mock) Matches(params matcher.Args, expectations []any) (MatchResult, error) {
 	weight := 0
-	matched := false
+	finalMatched := true
 
 	for _, expect := range expectations {
+		var matched bool
 		var err error
 		var w int
 
@@ -242,10 +243,14 @@ func (m *Mock) Matches(params matcher.Args, expectations []any) (MatchResult, er
 			return MatchResult{IsMatch: false, Weight: weight}, err
 		}
 
+		if !matched {
+			finalMatched = matched
+		}
+
 		weight += w
 	}
 
-	return MatchResult{IsMatch: matched, Weight: weight}, nil
+	return MatchResult{IsMatch: finalMatched, Weight: weight}, nil
 }
 
 func matches[V any](e Expectation[V], params matcher.Args) (bool, int, error) {

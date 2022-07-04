@@ -34,13 +34,12 @@ func TestScoped(t *testing.T) {
 		m1.Hit()
 
 		assert.False(t, scoped.IsDone())
-		assert.NotNil(t, scoped.MustBeDone())
 
 		m2.Hit()
 		m3.Hit()
 
 		assert.True(t, scoped.IsDone())
-		assert.Nil(t, scoped.MustBeDone())
+		scoped.MustBeDone()
 		assert.Equal(t, 0, len(scoped.Pending()))
 	})
 

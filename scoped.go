@@ -87,13 +87,11 @@ func (s *Scoped) Clean() {
 	s.mocks = make([]*mock.Mock, 0)
 }
 
-// MustBeDone returns an error when there are still pending mocks.
-func (s *Scoped) MustBeDone() error {
+// MustBeDone panic if there are still pending mocks.
+func (s *Scoped) MustBeDone() {
 	if s.IsPending() {
-		return ErrScopeNotDone
+		panic(ErrScopeNotDone)
 	}
-
-	return nil
 }
 
 // Hits returns the sum of the scoped mocks calls.
