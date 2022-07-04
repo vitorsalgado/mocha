@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/vitorsalgado/mocha/internal/params"
-	"github.com/vitorsalgado/mocha/matcher"
+	"github.com/vitorsalgado/mocha/matchers"
 )
 
 func TestScenario(t *testing.T) {
@@ -38,7 +38,7 @@ func TestScenarioConditions(t *testing.T) {
 	store := NewStore()
 	p := params.New()
 	p.Set(BuiltInParamStore, store)
-	args := matcher.Args{Params: p}
+	args := matchers.Args{Params: p}
 
 	t.Run("should return true when scenario is not started and also not found", func(t *testing.T) {
 		m := Scenario[any]("test", "required", "newScenario")

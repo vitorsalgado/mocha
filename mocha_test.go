@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/vitorsalgado/mocha/internal/testutil"
-	"github.com/vitorsalgado/mocha/matcher"
+	"github.com/vitorsalgado/mocha/matchers"
 	"github.com/vitorsalgado/mocha/mock"
 	"github.com/vitorsalgado/mocha/reply"
 )
@@ -22,9 +22,9 @@ func TestMocha(t *testing.T) {
 		m.Start()
 
 		scoped := m.Mock(
-			Get(matcher.URLPath("/test")).
-				Header("test", matcher.EqualTo("hello")).
-				Query("filter", matcher.EqualTo("all")).
+			Get(matchers.URLPath("/test")).
+				Header("test", matchers.EqualTo("hello")).
+				Query("filter", matchers.EqualTo("all")).
 				Reply(
 					reply.
 						Created().
@@ -56,10 +56,10 @@ func TestPostJSON(t *testing.T) {
 	m := ForTest(t)
 	m.Start()
 
-	scoped := m.Mock(Post(matcher.URLPath("/test")).
-		Header("test", matcher.EqualTo("hello")).
+	scoped := m.Mock(Post(matchers.URLPath("/test")).
+		Header("test", matchers.EqualTo("hello")).
 		Body(
-			matcher.JSONPath("name", matcher.EqualAny("dev")), matcher.JSONPath("ok", matcher.EqualAny(true))).
+			matchers.JSONPath("name", matchers.EqualAny("dev")), matchers.JSONPath("ok", matchers.EqualAny(true))).
 		Reply(reply.OK()))
 
 	req := testutil.PostJSON(m.Server.URL+"/test", &J{Name: "dev", OK: true})
@@ -83,8 +83,8 @@ func TestCustomParameters(t *testing.T) {
 	m.Start()
 	m.Parameters().Set(key, expected)
 
-	scope := m.Mock(Get(matcher.URLPath("/test")).
-		Matches(func(v any, params matcher.Args) (bool, error) {
+	scope := m.Mock(Get(matchers.URLPath("/test")).
+		Matches(func(v any, params matchers.Args) (bool, error) {
 			p, _ := params.Params.Get(key)
 			return p.(string) == expected, nil
 		}).
@@ -104,7 +104,7 @@ func TestResponseMapper(t *testing.T) {
 	m := ForTest(t)
 	m.Start()
 
-	scoped := m.Mock(Get(matcher.URLPath("/test")).
+	scoped := m.Mock(Get(matchers.URLPath("/test")).
 		Reply(reply.
 			OK().
 			Map(func(r *mock.Response, rma mock.ResponseMapperArgs) error {
@@ -132,7 +132,7 @@ func TestDelay(t *testing.T) {
 	start := time.Now()
 	delay := time.Duration(1250) * time.Millisecond
 
-	scoped := m.Mock(Get(matcher.URLPath("/test")).
+	scoped := m.Mock(Get(matchers.URLPath("/test")).
 		Reply(reply.
 			OK().
 			Delay(delay)))
@@ -156,9 +156,9 @@ func TestAfterExpectations(t *testing.T) {
 
 	scoped := m.Mock(
 		NewBuilder().
-			MatchAfter(matcher.Repeat(2)).
+			MatchAfter(matchers.Repeat(2)).
 			Method("GET").
-			URL(matcher.URLPath("/test")).
+			URL(matchers.URLPath("/test")).
 			Reply(reply.
 				OK()))
 

@@ -61,7 +61,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/vitorsalgado/mocha"
-	"github.com/vitorsalgado/mocha/matcher"
+	"github.com/vitorsalgado/mocha/matchers"
 	"github.com/vitorsalgado/mocha/reply"
 )
 
@@ -69,9 +69,9 @@ func Test(t *testing.T) {
 	m := mocha.ForTest(t)
 	m.Start()
 
-	scoped := m.Mock(mocha.Get(matcher.URLPath("/test")).
-		Header("test", matcher.EqualTo("hello")).
-		Query("filter", matcher.EqualTo("all")).
+	scoped := m.Mock(mocha.Get(matchers.URLPath("/test")).
+		Header("test", matchers.EqualTo("hello")).
+		Query("filter", matchers.EqualTo("all")).
 		Reply(reply.Created().BodyString("hello world")))
 
 	req, _ := http.NewRequest(http.MethodGet, m.Server.URL+"/test?filter=all", nil)

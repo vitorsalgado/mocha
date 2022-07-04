@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/vitorsalgado/mocha/internal/testutil"
-	"github.com/vitorsalgado/mocha/matcher"
+	"github.com/vitorsalgado/mocha/matchers"
 	"github.com/vitorsalgado/mocha/mock"
 	"github.com/vitorsalgado/mocha/reply"
 )
@@ -57,10 +57,10 @@ func TestScoped(t *testing.T) {
 		m := ForTest(t)
 		m.Start()
 
-		s1 := m.Mock(Get(matcher.URLPath("/test1")).Reply(reply.OK()))
+		s1 := m.Mock(Get(matchers.URLPath("/test1")).Reply(reply.OK()))
 		s2 := m.Mock(
-			Get(matcher.URLPath("/test2")).Reply(reply.OK()),
-			Get(matcher.URLPath("/test3")).Reply(reply.OK()))
+			Get(matchers.URLPath("/test2")).Reply(reply.OK()),
+			Get(matchers.URLPath("/test3")).Reply(reply.OK()))
 
 		t.Run("initial state (enabled)", func(t *testing.T) {
 			req := testutil.Get(fmt.Sprintf("%s/test1", m.Server.URL))

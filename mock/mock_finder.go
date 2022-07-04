@@ -1,7 +1,7 @@
 package mock
 
 import (
-	"github.com/vitorsalgado/mocha/matcher"
+	"github.com/vitorsalgado/mocha/matchers"
 )
 
 // FindResult holds the results for an attempt to match a mock to a request.
@@ -14,7 +14,7 @@ type FindResult struct {
 // FindForRequest tries to find a mock to the incoming HTTP request.
 // It runs all matchers of all eligible mocks on request until it finds one that matches every one of then.
 // It returns a FindResult with the find result, along with a possible closest match.
-func FindForRequest(storage Storage, params matcher.Args) (*FindResult, error) {
+func FindForRequest(storage Storage, params matchers.Args) (*FindResult, error) {
 	var mocks = storage.FetchEligible()
 	var matched *Mock
 	var w = 0

@@ -13,7 +13,7 @@ import (
 	"github.com/vitorsalgado/mocha"
 	"github.com/vitorsalgado/mocha/internal/header"
 	"github.com/vitorsalgado/mocha/internal/mime"
-	"github.com/vitorsalgado/mocha/matcher"
+	"github.com/vitorsalgado/mocha/matchers"
 	"github.com/vitorsalgado/mocha/reply"
 )
 
@@ -39,7 +39,7 @@ func TestForward(t *testing.T) {
 	m.Start()
 
 	t.Run("should forward request and respond using proxied response and mock definition", func(t *testing.T) {
-		scoped := m.Mock(mocha.Post(matcher.URLPath("/test")).
+		scoped := m.Mock(mocha.Post(matchers.URLPath("/test")).
 			Reply(reply.
 				From(dest.URL).
 				ProxyHeader("x-test", "ok").
