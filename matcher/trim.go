@@ -2,7 +2,7 @@ package matcher
 
 import "strings"
 
-// Trim trims matcher string arguemtn before submitting it to the provided matcher.
+// Trim trims' spaces of matcher argument before submitting it to the given matcher.
 func Trim(ms Matcher[string]) Matcher[string] {
 	return func(v string, params Args) (bool, error) {
 		return ms(strings.TrimSpace(v), params)

@@ -1,6 +1,6 @@
 package matcher
 
-// AllOf matches when all of the given matchers returns true.
+// AllOf matches when all the given matchers returns true.
 // Example:
 //	AllOf(EqualTo("test"),EqualFold("test"),Contains("tes"))
 func AllOf[E any](matchers ...Matcher[E]) Matcher[E] {

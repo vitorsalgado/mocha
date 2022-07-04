@@ -25,8 +25,8 @@
 ## Overview
 
 HTTP server mocking tool for Go.  
-**Mocha** creates an real HTTP server and lets you configure response stubs for specific requests based on a set of
-criterias. It provides a functional like API that allows you to match any part of a request against a set of matching
+**Mocha** creates a real HTTP server and lets you configure response stubs for specific requests based on a set of
+criteria. It provides a functional like API that allows you to match any part of a request against a set of matching
 functions.
 
 Inspired by [WireMock](https://github.com/wiremock/wiremock) and [Nock](https://github.com/nock/nock).

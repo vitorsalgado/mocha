@@ -98,8 +98,8 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Run mocks post actions.
-	// Errors will only be logged.
+	// Run post actions.
+	// Errors that happens here will only be logged.
 	args := mock.PostActionArgs{Request: r, Response: res, Mock: m, Params: h.params}
 	for _, action := range m.PostActions {
 		err = action.Run(args)
