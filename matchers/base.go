@@ -34,7 +34,3 @@ func (m Matcher[V]) Describe(describe string) {
 func (m Matcher[V]) Describef(format string, a ...any) {
 	m.Description = fmt.Sprintf(format, a...)
 }
-
-func emptyArgs() Args {
-	return Args{}
-}
