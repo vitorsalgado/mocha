@@ -10,11 +10,11 @@ type RegExpMatcherTypes interface {
 	string | regexp.Regexp | *regexp.Regexp
 }
 
-// RegExpMatches returns true then the given regular expression matches matcher argument.
-// RegExpMatches accepts a string or a regexp.Regexp.
-func RegExpMatches[V any, T RegExpMatcherTypes](re T) Matcher[V] {
+// MatchExpr returns true then the given regular expression matches matcher argument.
+// MatchExpr accepts a string or a regexp.Regexp.
+func MatchExpr[V any, T RegExpMatcherTypes](re T) Matcher[V] {
 	m := Matcher[V]{}
-	m.Name = "RegExpMatches"
+	m.Name = "MatchExpr"
 	m.Matches = func(v V, params Args) (bool, error) {
 		var err error
 		var result bool
