@@ -4,8 +4,9 @@ package stylize
 import (
 	"fmt"
 	"os"
-	"runtime"
 )
+
+const _colorEnv = "MOCHA_COLOR"
 
 type style int
 
@@ -49,9 +50,7 @@ const (
 )
 
 var (
-	_, noColor = os.LookupEnv("NO_COLOR")
-	_, isCI    = os.LookupEnv("CI")
-	isWin      = runtime.GOOS == "windows"
+	_, useColor = os.LookupEnv(_colorEnv)
 )
 
 func Black(s string) string         { return stylize(s, ColorBlack, 39) }
@@ -81,7 +80,7 @@ func Hidden(s string) string        { return stylize(s, StyleHidden, 28) }
 func Strikethrough(s string) string { return stylize(s, StyleStrikethrough, 29) }
 
 func stylize(s string, open style, close int) string {
-	if noColor || isWin || isCI {
+	if !useColor {
 		return s
 	}
 

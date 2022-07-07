@@ -9,12 +9,35 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	mok "github.com/stretchr/testify/mock"
 
+	"github.com/vitorsalgado/mocha/internal/params"
 	"github.com/vitorsalgado/mocha/internal/testutil"
 	"github.com/vitorsalgado/mocha/matchers"
 	"github.com/vitorsalgado/mocha/mock"
 	"github.com/vitorsalgado/mocha/reply"
 )
+
+type (
+	TestModel struct {
+		Name string `json:"name"`
+		OK   bool   `json:"ok"`
+	}
+
+	FakeT struct{ mok.Mock }
+)
+
+func (m *FakeT) Cleanup(_ func()) {
+	m.Called()
+}
+
+func (m *FakeT) Helper() {
+	m.Called()
+}
+
+func (m *FakeT) Errorf(format string, args ...any) {
+	m.Called(format, args)
+}
 
 func TestMocha(t *testing.T) {
 	t.Run("should mock request", func(t *testing.T) {
@@ -25,10 +48,9 @@ func TestMocha(t *testing.T) {
 			Get(matchers.URLPath("/test")).
 				Header("test", matchers.EqualTo("hello")).
 				Query("filter", matchers.EqualTo("all")).
-				Reply(
-					reply.
-						Created().
-						BodyString("hello world")))
+				Reply(reply.
+					Created().
+					BodyString("hello world")))
 
 		req, _ := http.NewRequest(http.MethodGet, m.Server.URL+"/test?filter=all", nil)
 		req.Header.Add("test", "hello")
@@ -47,11 +69,6 @@ func TestMocha(t *testing.T) {
 	})
 }
 
-type J struct {
-	Name string `json:"name"`
-	OK   bool   `json:"ok"`
-}
-
 func TestPostJSON(t *testing.T) {
 	m := ForTest(t)
 	m.Start()
@@ -59,10 +76,10 @@ func TestPostJSON(t *testing.T) {
 	scoped := m.Mock(Post(matchers.URLPath("/test")).
 		Header("test", matchers.EqualTo("hello")).
 		Body(
-			matchers.JSONPath("name", matchers.EqualAny("dev")), matchers.JSONPath("ok", matchers.EqualAny(true))).
+			matchers.JSONPath("name", matchers.EqualTo("dev")), matchers.JSONPath("ok", matchers.EqualTo(true))).
 		Reply(reply.OK()))
 
-	req := testutil.PostJSON(m.Server.URL+"/test", &J{Name: "dev", OK: true})
+	req := testutil.PostJSON(m.Server.URL+"/test", &TestModel{Name: "dev", OK: true})
 	req.Header("test", "hello")
 
 	res, err := req.Do()
@@ -150,7 +167,7 @@ func TestDelay(t *testing.T) {
 	assert.GreaterOrEqual(t, elapsed, delay)
 }
 
-func TestAfterExpectations(t *testing.T) {
+func TestPostExpectations(t *testing.T) {
 	m := ForTest(t)
 	m.Start()
 
@@ -178,4 +195,44 @@ func TestAfterExpectations(t *testing.T) {
 	assert.Equal(t, res.StatusCode, http.StatusTeapot)
 
 	scoped.MustBeDone()
+}
+
+func TestErrors(t *testing.T) {
+	fake := &FakeT{}
+
+	fake.On("Cleanup", mok.Anything).Return()
+	fake.On("Helper").Return()
+	fake.On("Errorf", mok.AnythingOfType("string"), mok.Anything).Return()
+
+	m := ForTest(fake)
+	m.Start()
+
+	t.Run("should log errors on reply", func(t *testing.T) {
+		scoped := m.Mock(Get(matchers.URLPath("/test1")).
+			ReplyFunction(func(r *http.Request, m *mock.Mock, p params.Params) (*mock.Response, error) {
+				return nil, fmt.Errorf("failed to build a response")
+			}))
+
+		res, err := testutil.Get(fmt.Sprintf("%s/test1", m.Server.URL)).Do()
+
+		assert.Nil(t, err)
+		assert.True(t, scoped.IsDone())
+		assert.Equal(t, http.StatusTeapot, res.StatusCode)
+		fake.AssertExpectations(t)
+	})
+
+	t.Run("should log errors from matchers", func(t *testing.T) {
+		scoped := m.Mock(Get(matchers.URLPath("/test2")).
+			Header("test", matchers.Fn(
+				func(_ string, _ matchers.Args) (bool, error) {
+					return false, fmt.Errorf("failed")
+				})))
+
+		res, err := testutil.Get(fmt.Sprintf("%s/test2", m.Server.URL)).Do()
+
+		assert.Nil(t, err)
+		assert.False(t, scoped.IsDone())
+		assert.Equal(t, http.StatusTeapot, res.StatusCode)
+		fake.AssertExpectations(t)
+	})
 }

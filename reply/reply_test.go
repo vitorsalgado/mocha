@@ -90,24 +90,36 @@ func TestStdReply_BodyString(t *testing.T) {
 }
 
 func TestStdReply_BodyJSON(t *testing.T) {
-	model := jsonData{
-		Name:   "the name",
-		Job:    "dev",
-		Active: true,
-	}
+	t.Run("should convert struct to json", func(t *testing.T) {
+		model := jsonData{
+			Name:   "the name",
+			Job:    "dev",
+			Active: true,
+		}
 
-	res, err := New().
-		Status(http.StatusCreated).
-		BodyJSON(model).
-		Build(req, &testMock, nil)
+		res, err := New().
+			Status(http.StatusCreated).
+			BodyJSON(model).
+			Build(req, &testMock, nil)
 
-	assert.Nil(t, err)
+		assert.Nil(t, err)
 
-	b := jsonData{}
-	err = json.NewDecoder(res.Body).Decode(&b)
+		b := jsonData{}
+		err = json.NewDecoder(res.Body).Decode(&b)
 
-	assert.Nil(t, err)
-	assert.Equal(t, model, b)
+		assert.Nil(t, err)
+		assert.Equal(t, model, b)
+	})
+
+	t.Run("should report conversion error", func(t *testing.T) {
+		res, err := New().
+			Status(http.StatusCreated).
+			BodyJSON(make(chan int)).
+			Build(req, &testMock, nil)
+
+		assert.Nil(t, res)
+		assert.NotNil(t, err)
+	})
 }
 
 func TestStdReply_BodyReader(t *testing.T) {

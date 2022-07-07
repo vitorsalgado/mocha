@@ -15,17 +15,21 @@ type mockHandler struct {
 	mocks       mock.Storage
 	bodyParsers []RequestBodyParser
 	params      params.Params
+	t           mock.T
 }
 
 func newHandler(
 	storage mock.Storage,
 	bodyParsers []RequestBodyParser,
 	params params.Params,
+	t mock.T,
 ) *mockHandler {
-	return &mockHandler{mocks: storage, bodyParsers: bodyParsers, params: params}
+	return &mockHandler{mocks: storage, bodyParsers: bodyParsers, params: params, t: t}
 }
 
 func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.t.Helper()
+
 	parser, err := parseRequestBody(r, h.bodyParsers)
 	if err != nil {
 		respondError(w, err)
@@ -34,7 +38,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	// Match current request with all eligible stored matchers in order to find one mock.
 	parameters := matchers.Args{RequestInfo: &matchers.RequestInfo{Request: r, ParsedBody: parser}, Params: h.params}
-	result, err := mock.FindForRequest(h.mocks, parameters)
+	result, err := mock.FindForRequest(h.mocks, parameters, h.t)
 	if err != nil {
 		respondError(w, err)
 		return
@@ -49,7 +53,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	m.Hit()
 
 	// Run post matchers, after standard ones and after marking the mock as called.
-	afterResult, err := m.Matches(parameters, m.AfterExpectations)
+	afterResult, err := m.Matches(parameters, m.PostExpectations, h.t)
 	if err != nil {
 		respondError(w, err)
 		return
@@ -63,6 +67,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Get the reply for the mock, after running all possible matchers.
 	res, err := result.Matched.Reply.Build(r, m, h.params)
 	if err != nil {
+		h.t.Errorf(err.Error())
 		respondError(w, err)
 		return
 	}

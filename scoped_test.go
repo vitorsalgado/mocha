@@ -28,12 +28,15 @@ func TestScoped(t *testing.T) {
 	t.Run("should not return done when there is still pending mocks", func(t *testing.T) {
 		assert.False(t, scoped.IsDone())
 		assert.Equal(t, 3, len(scoped.Pending()))
+		assert.True(t, scoped.IsPending())
+		assert.Panics(t, func() { scoped.MustBeDone() })
 	})
 
 	t.Run("should return done when all mocks were called", func(t *testing.T) {
 		m1.Hit()
 
 		assert.False(t, scoped.IsDone())
+		assert.Panics(t, func() { scoped.MustBeDone() })
 
 		m2.Hit()
 		m3.Hit()
@@ -41,6 +44,7 @@ func TestScoped(t *testing.T) {
 		assert.True(t, scoped.IsDone())
 		scoped.MustBeDone()
 		assert.Equal(t, 0, len(scoped.Pending()))
+		assert.False(t, scoped.IsPending())
 	})
 
 	t.Run("should return total hits from mocks", func(t *testing.T) {

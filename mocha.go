@@ -3,7 +3,6 @@ package mocha
 import (
 	"context"
 	"net/http/httptest"
-	"testing"
 
 	"github.com/vitorsalgado/mocha/internal/params"
 	"github.com/vitorsalgado/mocha/internal/scenario"
@@ -15,16 +14,17 @@ type (
 
 	// Mocha is the base for the mock server.
 	Mocha struct {
-		Server      *httptest.Server
-		mockStorage mock.Storage
-		context     context.Context
-		params      params.Params
+		Server  *httptest.Server
+		storage mock.Storage
+		context context.Context
+		params  params.Params
+		t       mock.T
 	}
 )
 
 // New creates a new Mocha mock server with the given configurations.
 // Parameter config accepts a Config or a Configurer implementation.
-func New[C configT](config C) *Mocha {
+func New[C configT](t mock.T, config C) *Mocha {
 	var parsedConfig *Config
 	switch conf := any(config).(type) {
 	case *Configurer:
@@ -37,35 +37,36 @@ func New[C configT](config C) *Mocha {
 		parsedConfig = Configure().Build()
 	}
 
-	mockStorage := mock.NewStorage()
+	storage := mock.NewStorage()
 	parsers := make([]RequestBodyParser, 0)
 	parsers = append(parsers, parsedConfig.BodyParsers...)
 	parsers = append(parsers, &jsonBodyParser{}, &plainTextParser{}, &formURLEncodedParser{}, &bytesParser{})
 	parameters := params.New()
 	parameters.Set(scenario.BuiltInParamStore, scenario.NewStore())
 
-	server := httptest.NewUnstartedServer(newHandler(mockStorage, parsers, parameters))
+	server := httptest.NewUnstartedServer(newHandler(storage, parsers, parameters, t))
 	server.EnableHTTP2 = true
 
 	return &Mocha{
-		Server:      server,
-		mockStorage: mockStorage,
-		context:     parsedConfig.Context,
-		params:      parameters}
+		Server:  server,
+		storage: storage,
+		context: parsedConfig.Context,
+		params:  parameters,
+		t:       t}
 }
 
 // ConfigureForTest creates a new Mocha mock server with the given configurations.
 // It closes the mock server after the tests finishes, using the testing.T cleanup feature.
 // Parameter config accepts a Config or a Configurer implementation.
-func ConfigureForTest[C configT](t *testing.T, options C) *Mocha {
-	m := New(options)
+func ConfigureForTest[C configT](t mock.T, options C) *Mocha {
+	m := New(t, options)
 	t.Cleanup(func() { m.Close() })
 	return m
 }
 
 // ForTest creates a new Mocha mock server with default configurations.
 // It closes the mock server after the tests finishes, using the testing.T cleanup feature.
-func ForTest(t *testing.T) *Mocha {
+func ForTest(t mock.T) *Mocha {
 	return ConfigureForTest(t, Configure())
 }
 
@@ -90,10 +91,9 @@ func (m *Mocha) StartTLS() ServerInfo {
 // 		Get(matchers.URLPath("/test")).
 // 			Header("test", matchers.EqualTo("hello")).
 // 			Query("filter", matchers.EqualTo("all")).
-// 			Reply(
-// 				reply.
-// 					Created().
-// 					BodyString("hello world")))
+// 			Reply(reply.
+// 				Created().
+// 				BodyString("hello world")))
 //
 //	assert.True(t, scoped.IsDone())
 func (m *Mocha) Mock(builders ...*MockBuilder) Scoped {
@@ -102,11 +102,11 @@ func (m *Mocha) Mock(builders ...*MockBuilder) Scoped {
 
 	for i, b := range builders {
 		newMock := b.Build()
-		m.mockStorage.Save(newMock)
+		m.storage.Save(newMock)
 		added[i] = newMock
 	}
 
-	return scope(m.mockStorage, added)
+	return scope(m.storage, added)
 }
 
 // Parameters allows managing custom parameters that will be available inside matchers.

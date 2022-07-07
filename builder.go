@@ -4,9 +4,11 @@ import (
 	"net/http"
 	"net/url"
 
+	"github.com/vitorsalgado/mocha/internal/params"
 	"github.com/vitorsalgado/mocha/internal/scenario"
 	"github.com/vitorsalgado/mocha/matchers"
 	"github.com/vitorsalgado/mocha/mock"
+	"github.com/vitorsalgado/mocha/reply"
 )
 
 type (
@@ -210,8 +212,8 @@ func (b *MockBuilder) Form(m matchers.Matcher[url.Values]) *MockBuilder {
 
 // Repeat defines to total times that a mock should be served, if request matches.
 func (b *MockBuilder) Repeat(times int) *MockBuilder {
-	b.mock.AfterExpectations = append(
-		b.mock.AfterExpectations,
+	b.mock.PostExpectations = append(
+		b.mock.PostExpectations,
 		mock.Expectation[any]{
 			Name:        "repeat",
 			ValuePicker: func(r *matchers.RequestInfo) any { return r.Request },
@@ -278,8 +280,8 @@ func (b *MockBuilder) ScenarioStateWillBe(newState string) *MockBuilder {
 // MatchAfter adds a matchers.Matcher to be run after the standard matchers and before serving the mocked response.
 // After matchers are mostly used in special cases, like when they need to keep data that should not be evaluated all the time.
 func (b *MockBuilder) MatchAfter(m matchers.Matcher[any]) *MockBuilder {
-	b.mock.AfterExpectations = append(
-		b.mock.AfterExpectations,
+	b.mock.PostExpectations = append(
+		b.mock.PostExpectations,
 		mock.Expectation[any]{
 			Name:        "after",
 			ValuePicker: func(r *matchers.RequestInfo) any { return r.Request },
@@ -299,6 +301,12 @@ func (b *MockBuilder) PostAction(action mock.PostAction) *MockBuilder {
 // Reply defines a response stub to be served if this mock matches to a request.
 func (b *MockBuilder) Reply(reply mock.Reply) *MockBuilder {
 	b.mock.Reply = reply
+	return b
+}
+
+// ReplyFuntion defines a function to will build the response stub.
+func (b *MockBuilder) ReplyFunction(fn func(*http.Request, *mock.Mock, params.Params) (*mock.Response, error)) *MockBuilder {
+	b.mock.Reply = reply.Function(fn)
 	return b
 }
 

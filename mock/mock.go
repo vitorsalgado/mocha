@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/vitorsalgado/mocha/internal/params"
+	"github.com/vitorsalgado/mocha/internal/stylize"
 	"github.com/vitorsalgado/mocha/matchers"
 )
 
@@ -30,9 +31,9 @@ type (
 		// Expectations are a list of Expectation. These will run on every request to find the correct Mock.
 		Expectations []any
 
-		// AfterExpectations are a list of Expectation. They will be executed after the request was matched to a Mock.
+		// PostExpectations are a list of Expectation. They will be executed after the request was matched to a Mock.
 		// This allows stateful matchers whose state data should not be evaluated every match attempt.
-		AfterExpectations []any
+		PostExpectations []any
 
 		// Reply is the responder that will be used to serve the HTTP response stub, once matched against an
 		// HTTP request.
@@ -137,6 +138,12 @@ type (
 		// IsMatch indicates whether it matched or not.
 		IsMatch bool
 	}
+
+	T interface {
+		Cleanup(func())
+		Helper()
+		Errorf(string, ...any)
+	}
 )
 
 type autoID struct {
@@ -153,11 +160,11 @@ var id = autoID{}
 // New returns a new Mock with default values set.
 func New() *Mock {
 	return &Mock{
-		ID:                id.next(),
-		Enabled:           true,
-		Expectations:      make([]any, 0),
-		AfterExpectations: make([]any, 0),
-		PostActions:       make([]PostAction, 0),
+		ID:               id.next(),
+		Enabled:          true,
+		Expectations:     make([]any, 0),
+		PostExpectations: make([]any, 0),
+		PostActions:      make([]PostAction, 0),
 
 		mu: &sync.Mutex{},
 	}
@@ -200,7 +207,9 @@ func (m *Mock) Disable() {
 
 // Matches checks if current Mock matches against a list of expectations.
 // Will iterate through all expectations even if it doesn't match early.
-func (m *Mock) Matches(params matchers.Args, expectations []any) (MatchResult, error) {
+func (m *Mock) Matches(params matchers.Args, expectations []any, t T) (MatchResult, error) {
+	t.Helper()
+
 	weight := 0
 	finalMatched := true
 
@@ -215,30 +224,30 @@ func (m *Mock) Matches(params matchers.Args, expectations []any) (MatchResult, e
 				fmt.Errorf("unhandled matcher type %s", reflect.TypeOf(e))
 
 		case Expectation[any]:
-			matched, w, err = matches(e, params)
+			matched, w, err = matches(e, params, t)
 		case Expectation[string]:
-			matched, w, err = matches(e, params)
+			matched, w, err = matches(e, params, t)
 		case Expectation[float64]:
-			matched, w, err = matches(e, params)
+			matched, w, err = matches(e, params, t)
 		case Expectation[bool]:
-			matched, w, err = matches(e, params)
+			matched, w, err = matches(e, params, t)
 		case Expectation[map[string]any]:
-			matched, w, err = matches(e, params)
+			matched, w, err = matches(e, params, t)
 		case Expectation[map[string]string]:
-			matched, w, err = matches(e, params)
+			matched, w, err = matches(e, params, t)
 		case Expectation[map[string][]string]:
-			matched, w, err = matches(e, params)
+			matched, w, err = matches(e, params, t)
 		case Expectation[[]any]:
-			matched, w, err = matches(e, params)
+			matched, w, err = matches(e, params, t)
 		case Expectation[url.URL]:
-			matched, w, err = matches(e, params)
+			matched, w, err = matches(e, params, t)
 		case Expectation[*http.Request]:
-			matched, w, err = matches(e, params)
+			matched, w, err = matches(e, params, t)
 		case Expectation[url.Values]:
-			matched, w, err = matches(e, params)
+			matched, w, err = matches(e, params, t)
 		}
 
-		// Fail fast when any error occurs
+		// fail fast if an error occurs
 		if err != nil {
 			return MatchResult{IsMatch: false, Weight: weight}, err
 		}
@@ -253,7 +262,27 @@ func (m *Mock) Matches(params matchers.Args, expectations []any) (MatchResult, e
 	return MatchResult{IsMatch: finalMatched, Weight: weight}, nil
 }
 
-func matches[V any](e Expectation[V], params matchers.Args) (bool, int, error) {
-	res, err := e.Matcher.Matches(e.ValuePicker(params.RequestInfo), params)
+func matches[V any](e Expectation[V], params matchers.Args, t T) (bool, int, error) {
+	t.Helper()
+
+	val := e.ValuePicker(params.RequestInfo)
+	res, err := e.Matcher.Matches(val, params)
+
+	if !res {
+		if err != nil {
+			t.Errorf("\n%s\nError: %s\nContext: %s",
+				stylize.Red(fmt.Sprintf("Matcher %s returned an error", stylize.Bold(e.Matcher.Name))),
+				stylize.Red(err.Error()),
+				e.Name)
+		} else {
+			if e.Matcher.DescribeMismatch != nil {
+				t.Errorf("\n%s\n%s\n%s",
+					stylize.Red(fmt.Sprintf("Matcher %s dit not match.", stylize.Bold(e.Matcher.Name))),
+					"applied to: "+e.Name,
+					e.Matcher.DescribeMismatch(e.Name, val))
+			}
+		}
+	}
+
 	return res, e.Weight, err
 }

@@ -20,6 +20,7 @@ type (
 		bodyType bodyType
 		template templating.Template
 		model    any
+		err      error
 	}
 
 	bodyType int
@@ -141,7 +142,8 @@ func (rpl *StdReply) BodyJSON(data any) *StdReply {
 	buf := &bytes.Buffer{}
 	err := json.NewEncoder(buf).Encode(data)
 	if err != nil {
-		panic(err)
+		rpl.err = err
+		return rpl
 	}
 
 	rpl.response.Body = buf
@@ -199,6 +201,10 @@ func (rpl *StdReply) Map(mapper mock.ResponseMapper) *StdReply {
 
 // Build builds a mock.Response based on StdReply definition.
 func (rpl *StdReply) Build(_ *http.Request, _ *mock.Mock, _ params.Params) (*mock.Response, error) {
+	if rpl.err != nil {
+		return nil, rpl.err
+	}
+
 	switch rpl.bodyType {
 	case bodyTemplate:
 		buf := &bytes.Buffer{}

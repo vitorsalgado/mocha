@@ -23,6 +23,8 @@ var forbiddenHeaders = []string{
 	"Upgrade",
 }
 
+type FromTypes interface{ string | *url.URL }
+
 // ProxyReply represents a response stub that will be the response "proxied" from the specified target.
 // Use From or ProxyFrom to init a new ProxyReply.
 type ProxyReply struct {
@@ -43,11 +45,11 @@ func From(target string) *ProxyReply {
 		panic(err)
 	}
 
-	return ProxyFrom(u)
+	return ProxiedFrom(u)
 }
 
-// ProxyFrom inits a ProxyReply with the given target URL.
-func ProxyFrom(target *url.URL) *ProxyReply {
+// ProxiedFrom inits a ProxyReply with the given target URL.
+func ProxiedFrom(target *url.URL) *ProxyReply {
 	return &ProxyReply{
 		target:               target,
 		headers:              make(http.Header),

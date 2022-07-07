@@ -2,8 +2,18 @@ package stylize
 
 import (
 	"fmt"
+	"os"
 	"testing"
 )
+
+func TestMain(m *testing.M) {
+	os.Setenv(_colorEnv, "1")
+
+	code := m.Run()
+	os.Exit(code)
+
+	os.Unsetenv(_colorEnv)
+}
 
 func TestStylize(t *testing.T) {
 	fmt.Println(Black("black"))
