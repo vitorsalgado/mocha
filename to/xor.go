@@ -1,6 +1,6 @@
 package to
 
-// XOR is a exclusive or matcher
+// XOR is an exclusive or matcher
 func XOR[V any](first Matcher[V], second Matcher[V]) Matcher[V] {
 	m := Matcher[V]{}
 	m.Name = "Xor"

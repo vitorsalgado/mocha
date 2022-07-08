@@ -12,7 +12,7 @@ func TestIs(t *testing.T) {
 	var res = false
 	var err error = nil
 
-	res, err = AllOf(EqualTo("TEST"), EqualFold("test")).Matches("TEST", to.Args{})
+	res, err = AllOf(EqualTo("TEST"), EqualFold("test"), Present[string]()).Matches("TEST", to.Args{})
 	assert.Nil(t, err)
 	assert.True(t, res)
 

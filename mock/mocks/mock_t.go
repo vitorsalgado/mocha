@@ -6,7 +6,7 @@ type FakeT struct{ mock.Mock }
 
 func NewT() *FakeT {
 	t := &FakeT{}
-	t.On("Clenup").Return()
+	t.On("Cleanup").Return()
 	t.On("Helper").Return()
 	t.On("Errorf", mock.Anything, mock.Anything).Return()
 

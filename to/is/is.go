@@ -18,7 +18,7 @@ func AnyOf[V any](list ...to.Matcher[V]) to.Matcher[V] {
 	return to.BeAnyOf(list...)
 }
 
-// BothAre matches true when both given matchers evaluates to true.
+// Both BothAre matches true when both given matchers evaluates to true.
 func Both[V any](first to.Matcher[V]) *to.BothMatcherBuilder[V] {
 	return to.Both(first)
 }
@@ -28,7 +28,7 @@ func Either[V any](first to.Matcher[V]) *to.EitherMatcherBuilder[V] {
 	return to.Either(first)
 }
 
-// IsEmpty returns true if matcher value has zero length.
+// Empty IsEmpty returns true if matcher value has zero length.
 func Empty[V any](_ ...V) to.Matcher[V] {
 	return to.BeEmpty[V]()
 }
@@ -44,7 +44,7 @@ func EqualFold(expected string) to.Matcher[string] {
 	return to.EqualFold(expected)
 }
 
-// IsPresent checks if matcher argument contains a value that is not nil or the zero value for the argument type.
+// Present IsPresent checks if matcher argument contains a value that is not nil or the zero value for the argument type.
 func Present[V any]() to.Matcher[V] {
 	return to.BePresent[V]()
 }
@@ -54,7 +54,7 @@ func Not[V any](matcher to.Matcher[V]) to.Matcher[V] {
 	return to.Not(matcher)
 }
 
-// XOR is a exclusive or matcher
+// XOR is an exclusive or matcher
 func XOR[V any](first to.Matcher[V], second to.Matcher[V]) to.Matcher[V] {
 	return to.XOR(first, second)
 }

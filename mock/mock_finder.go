@@ -20,18 +20,18 @@ func FindForRequest(storage Storage, params to.Args, t T) (*FindResult, error) {
 	var w = 0
 
 	for _, m := range mocks {
-		matches, err := m.Matches(params, m.Expectations, t)
+		result, err := m.Matches(params, m.Expectations, t)
 		if err != nil {
 			return nil, err
 		}
 
-		if matches.IsMatch {
+		if result.IsMatch {
 			return &FindResult{Matches: true, Matched: m}, nil
 		}
 
-		if matches.Weight > 0 && matches.Weight > w {
+		if result.Weight > 0 && result.Weight > w {
 			matched = m
-			w = matches.Weight
+			w = result.Weight
 		}
 	}
 

@@ -7,12 +7,13 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	os.Setenv(_colorEnv, "1")
+	_ = os.Setenv(_colorEnv, "1")
 
 	code := m.Run()
-	os.Exit(code)
 
-	os.Unsetenv(_colorEnv)
+	_ = os.Unsetenv(_colorEnv)
+
+	os.Exit(code)
 }
 
 func TestStylize(t *testing.T) {

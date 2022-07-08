@@ -277,7 +277,7 @@ func (b *MockBuilder) ScenarioStateWillBe(newState string) *MockBuilder {
 	return b
 }
 
-// MatchAfter adds a to.Matcher to be run after the standard matchers and before serving the mocked response.
+// MatchAfter adds a to.Matcher that will run after the standard matchers and before serving the mocked response.
 // After matchers are mostly used in special cases, like when they need to keep data that should not be evaluated all the time.
 func (b *MockBuilder) MatchAfter(m to.Matcher[any]) *MockBuilder {
 	b.mock.PostExpectations = append(
@@ -304,7 +304,7 @@ func (b *MockBuilder) Reply(reply mock.Reply) *MockBuilder {
 	return b
 }
 
-// ReplyFuntion defines a function to will build the response stub.
+// ReplyFunction defines a function to will build the response stub.
 func (b *MockBuilder) ReplyFunction(fn func(*http.Request, *mock.Mock, params.Params) (*mock.Response, error)) *MockBuilder {
 	b.mock.Reply = reply.Function(fn)
 	return b

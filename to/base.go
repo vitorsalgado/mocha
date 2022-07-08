@@ -21,7 +21,7 @@ type (
 
 	Matcher[V any] struct {
 		Name             string
-		DescribeMismatch func(plance string, v any) string
+		DescribeMismatch func(p string, v any) string
 		Matches          func(v V, args Args) (bool, error)
 	}
 )
