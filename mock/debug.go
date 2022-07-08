@@ -3,7 +3,7 @@ package mock
 import (
 	"fmt"
 
-	"github.com/vitorsalgado/mocha/internal/stylize"
+	"github.com/vitorsalgado/mocha/internal/colorize"
 	"github.com/vitorsalgado/mocha/to"
 )
 
@@ -16,15 +16,15 @@ func Debug[V any](name string, mk Mock, matcher to.Matcher[V]) to.Matcher[V] {
 	m.Matches = func(v V, params to.Args) (bool, error) {
 		result, err := matcher.Matches(v, params)
 
-		fmt.Printf("\"%s\" received %v\n", name, stylize.Gray(fmt.Sprintf("%v", v)))
+		fmt.Printf("\"%s\" received %v\n", name, colorize.Gray(fmt.Sprintf("%v", v)))
 
 		if err != nil {
-			fmt.Print(stylize.RedBright(
-				fmt.Sprintf("%s - an error ocurred. reason: %s\n", stylize.Bold(fmt.Sprintf("\"%s\"", name)), err.Error())))
+			fmt.Print(colorize.RedBright(
+				fmt.Sprintf("%s - an error ocurred. reason: %s\n", colorize.Bold(fmt.Sprintf("\"%s\"", name)), err.Error())))
 			fmt.Printf("mock %d %s\n", mk.ID, mk.Name)
 		} else if !result {
-			fmt.Print(stylize.RedBright(
-				fmt.Sprintf("%s - did not match\n", stylize.Bold(fmt.Sprintf("\"%s\"", name)))))
+			fmt.Print(colorize.RedBright(
+				fmt.Sprintf("%s - did not match\n", colorize.Bold(fmt.Sprintf("\"%s\"", name)))))
 			fmt.Printf("mock %d %s\n", mk.ID, mk.Name)
 		}
 

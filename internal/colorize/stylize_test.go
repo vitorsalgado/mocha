@@ -1,4 +1,4 @@
-package stylize
+package colorize
 
 import (
 	"fmt"

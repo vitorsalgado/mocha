@@ -10,8 +10,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/vitorsalgado/mocha/internal/colorize"
 	"github.com/vitorsalgado/mocha/internal/params"
-	"github.com/vitorsalgado/mocha/internal/stylize"
 	"github.com/vitorsalgado/mocha/to"
 )
 
@@ -271,13 +271,13 @@ func matches[V any](e Expectation[V], params to.Args, t T) (bool, int, error) {
 	if !res {
 		if err != nil {
 			t.Errorf("\n%s\nError: %s\nContext: %s",
-				stylize.Red(fmt.Sprintf("Matcher %s returned an error", stylize.Bold(e.Matcher.Name))),
-				stylize.Red(err.Error()),
+				colorize.Red(fmt.Sprintf("Matcher %s returned an error", colorize.Bold(e.Matcher.Name))),
+				colorize.Red(err.Error()),
 				e.Name)
 		} else {
 			if e.Matcher.DescribeMismatch != nil {
 				t.Errorf("\n%s\n%s\n%s",
-					stylize.Red(fmt.Sprintf("Matcher %s dit not match.", stylize.Bold(e.Matcher.Name))),
+					colorize.Red(fmt.Sprintf("Matcher %s dit not match.", colorize.Bold(e.Matcher.Name))),
 					"applied to: "+e.Name,
 					e.Matcher.DescribeMismatch(e.Name, val))
 			}

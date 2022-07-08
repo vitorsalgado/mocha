@@ -1,5 +1,5 @@
-// Package stylize contains functions to colorize and stylize texts for terminal.
-package stylize
+// Package colorize contains functions to stylize texts for terminal.
+package colorize
 
 import (
 	"fmt"
