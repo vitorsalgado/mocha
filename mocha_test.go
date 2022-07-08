@@ -207,6 +207,8 @@ func TestErrors(t *testing.T) {
 	m := ForTest(fake)
 	m.Start()
 
+	defer m.Close()
+
 	t.Run("should log errors on reply", func(t *testing.T) {
 		scoped := m.Mock(Get(to.HaveURLPath("/test1")).
 			ReplyFunction(func(r *http.Request, m *mock.Mock, p params.Params) (*mock.Response, error) {

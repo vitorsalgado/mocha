@@ -21,7 +21,7 @@ func TestForward(t *testing.T) {
 	dest := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "ok", r.Header.Get("x-test"))
 		assert.Equal(t, "", r.Header.Get("x-del"))
-		assert.Equal(t, mime.ContentTypeTextPlain, r.Header.Get(header.ContentType))
+		assert.Equal(t, mime.TextPlain, r.Header.Get(header.ContentType))
 
 		w.WriteHeader(http.StatusOK)
 
@@ -49,7 +49,7 @@ func TestForward(t *testing.T) {
 		data := strings.NewReader("hello world")
 		req, _ := http.NewRequest(http.MethodPost, m.Server.URL+"/test", data)
 		req.Header.Add("x-del", "to-delete")
-		req.Header.Add(header.ContentType, mime.ContentTypeTextPlain)
+		req.Header.Add(header.ContentType, mime.TextPlain)
 
 		res, err := http.DefaultClient.Do(req)
 		if err != nil {

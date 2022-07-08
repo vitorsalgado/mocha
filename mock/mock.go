@@ -72,7 +72,6 @@ type (
 		Cookies []*http.Cookie
 		Body    io.Reader
 		Delay   time.Duration
-		Err     error
 		Mappers []ResponseMapper
 	}
 
@@ -132,13 +131,14 @@ type (
 		// NonMatched is the list of Mock they were matched.
 		NonMatched []string
 
-		// Weight for the to.Matcher
+		// Weight for the to.Matcher. It helps determine the closest match.
 		Weight int
 
 		// IsMatch indicates whether it matched or not.
 		IsMatch bool
 	}
 
+	// T simple abstracts testing.T
 	T interface {
 		Cleanup(func())
 		Helper()
@@ -217,6 +217,7 @@ func (m *Mock) Matches(params to.Args, expectations []any, t T) (MatchResult, er
 		var matched bool
 		var err error
 		var w int
+		var nm string
 
 		switch e := expect.(type) {
 		default:
@@ -224,32 +225,33 @@ func (m *Mock) Matches(params to.Args, expectations []any, t T) (MatchResult, er
 				fmt.Errorf("unhandled matcher type %s", reflect.TypeOf(e))
 
 		case Expectation[any]:
-			matched, w, err = matches(e, params, t)
+			matched, w, nm, err = matches(e, params, t)
 		case Expectation[string]:
-			matched, w, err = matches(e, params, t)
+			matched, w, nm, err = matches(e, params, t)
 		case Expectation[float64]:
-			matched, w, err = matches(e, params, t)
+			matched, w, nm, err = matches(e, params, t)
 		case Expectation[bool]:
-			matched, w, err = matches(e, params, t)
+			matched, w, nm, err = matches(e, params, t)
 		case Expectation[map[string]any]:
-			matched, w, err = matches(e, params, t)
+			matched, w, nm, err = matches(e, params, t)
 		case Expectation[map[string]string]:
-			matched, w, err = matches(e, params, t)
+			matched, w, nm, err = matches(e, params, t)
 		case Expectation[map[string][]string]:
-			matched, w, err = matches(e, params, t)
+			matched, w, nm, err = matches(e, params, t)
 		case Expectation[[]any]:
-			matched, w, err = matches(e, params, t)
+			matched, w, nm, err = matches(e, params, t)
 		case Expectation[url.URL]:
-			matched, w, err = matches(e, params, t)
+			matched, w, nm, err = matches(e, params, t)
 		case Expectation[*http.Request]:
-			matched, w, err = matches(e, params, t)
+			matched, w, nm, err = matches(e, params, t)
 		case Expectation[url.Values]:
-			matched, w, err = matches(e, params, t)
+			matched, w, nm, err = matches(e, params, t)
 		}
 
 		// fail fast if an error occurs
 		if err != nil {
-			return MatchResult{IsMatch: false, Weight: weight}, err
+			return MatchResult{IsMatch: false, Weight: weight},
+				fmt.Errorf("matcher %s returned an error: %w", nm, err)
 		}
 
 		if !matched {
@@ -262,7 +264,7 @@ func (m *Mock) Matches(params to.Args, expectations []any, t T) (MatchResult, er
 	return MatchResult{IsMatch: finalMatched, Weight: weight}, nil
 }
 
-func matches[V any](e Expectation[V], params to.Args, t T) (bool, int, error) {
+func matches[V any](e Expectation[V], params to.Args, t T) (bool, int, string, error) {
 	t.Helper()
 
 	val := e.ValuePicker(params.RequestInfo)
@@ -284,5 +286,5 @@ func matches[V any](e Expectation[V], params to.Args, t T) (bool, int, error) {
 		}
 	}
 
-	return res, e.Weight, err
+	return res, e.Weight, e.Name, err
 }

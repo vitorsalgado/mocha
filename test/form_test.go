@@ -29,7 +29,7 @@ func TestFormUrlEncoded(t *testing.T) {
 
 	req, _ := http.NewRequest(http.MethodPost, m.Server.URL+"/test", strings.NewReader(data.Encode()))
 	req.Header.Add("test", "hello")
-	req.Header.Add(header.ContentType, mime.ContentTypeFormURLEncoded)
+	req.Header.Add(header.ContentType, mime.ContentType)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {

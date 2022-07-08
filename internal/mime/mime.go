@@ -1,8 +1,9 @@
 // Package mime contains common mime types used internally by Mocha.
 package mime
 
+// Mime types used internally by Mocha.
 const (
-	ContentTypeJSON           = "application/json"
-	ContentTypeTextPlain      = "text/plain"
-	ContentTypeFormURLEncoded = "application/x-www-form-urlencoded"
+	JSON        = "application/json"
+	TextPlain   = "text/plain"
+	ContentType = "application/x-www-form-urlencoded"
 )

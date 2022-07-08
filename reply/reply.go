@@ -167,10 +167,7 @@ func (rpl *StdReply) BodyTemplate(template any) *StdReply {
 	case templating.Template:
 		err := e.Compile()
 		rpl.template = e
-
-		if err != nil {
-			panic(err)
-		}
+		rpl.err = err
 	case *templating.Template:
 		rpl.template = *e
 

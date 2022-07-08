@@ -45,7 +45,7 @@ func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (any, error)
 type jsonBodyParser struct{}
 
 func (parser jsonBodyParser) CanParse(content string, _ *http.Request) bool {
-	return strings.Contains(content, mime.ContentTypeJSON)
+	return strings.Contains(content, mime.JSON)
 }
 
 func (parser jsonBodyParser) Parse(r *http.Request) (data any, err error) {
@@ -57,7 +57,7 @@ func (parser jsonBodyParser) Parse(r *http.Request) (data any, err error) {
 type formURLEncodedParser struct{}
 
 func (parser formURLEncodedParser) CanParse(content string, _ *http.Request) bool {
-	return strings.Contains(content, mime.ContentTypeFormURLEncoded)
+	return strings.Contains(content, mime.ContentType)
 }
 
 func (parser *formURLEncodedParser) Parse(r *http.Request) (any, error) {
@@ -73,7 +73,7 @@ func (parser *formURLEncodedParser) Parse(r *http.Request) (any, error) {
 type plainTextParser struct{}
 
 func (parser *plainTextParser) CanParse(content string, _ *http.Request) bool {
-	return strings.Contains(content, mime.ContentTypeTextPlain)
+	return strings.Contains(content, mime.TextPlain)
 }
 
 func (parser *plainTextParser) Parse(r *http.Request) (any, error) {
@@ -89,7 +89,7 @@ func (parser *plainTextParser) Parse(r *http.Request) (any, error) {
 type bytesParser struct{}
 
 func (parser *bytesParser) CanParse(content string, _ *http.Request) bool {
-	return strings.Contains(content, mime.ContentTypeTextPlain)
+	return strings.Contains(content, mime.TextPlain)
 }
 
 func (parser *bytesParser) Parse(r *http.Request) (any, error) {

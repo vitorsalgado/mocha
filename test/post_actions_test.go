@@ -11,6 +11,7 @@ import (
 	"github.com/vitorsalgado/mocha"
 	"github.com/vitorsalgado/mocha/internal/testutil"
 	mok "github.com/vitorsalgado/mocha/mock"
+	"github.com/vitorsalgado/mocha/mock/mocks"
 	"github.com/vitorsalgado/mocha/reply"
 	"github.com/vitorsalgado/mocha/to"
 )
@@ -50,9 +51,11 @@ func TestPostAction(t *testing.T) {
 	})
 
 	t.Run("should not be affected by errors on registered post actions", func(t *testing.T) {
-
-		m := mocha.ForTest(t)
+		fakeT := mocks.NewT()
+		m := mocha.ForTest(fakeT)
 		m.Start()
+
+		defer m.Close()
 
 		act := &action{}
 		act.On("Run", mock.Anything).Return(fmt.Errorf("failed to run post action"))

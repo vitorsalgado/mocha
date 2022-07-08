@@ -2,10 +2,12 @@ package mocha
 
 import (
 	"bufio"
-	"log"
+	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/vitorsalgado/mocha/internal/header"
+	"github.com/vitorsalgado/mocha/internal/mime"
 	"github.com/vitorsalgado/mocha/internal/params"
 	"github.com/vitorsalgado/mocha/mock"
 	"github.com/vitorsalgado/mocha/to"
@@ -99,35 +101,36 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if scanner.Err() != nil {
-			panic(scanner.Err())
+			h.t.Errorf("error writing response body: %w", scanner.Err())
 		}
 	}
 
 	// Run post actions.
 	// Errors that happens here will only be logged.
 	args := mock.PostActionArgs{Request: r, Response: res, Mock: m, Params: h.params}
-	for _, action := range m.PostActions {
+	for i, action := range m.PostActions {
 		err = action.Run(args)
 		if err != nil {
-			log.Println(err)
+			h.t.Errorf("an error occurred running post action %d: %w", i, err)
 		}
 	}
 }
 
 func respondNonMatched(w http.ResponseWriter, result *mock.FindResult) {
+	w.Header().Add(header.ContentType, mime.TextPlain)
 	w.WriteHeader(http.StatusTeapot)
-	w.Write([]byte("Request was not matched."))
+	w.Write([]byte("Request did not match.\n"))
 
 	if result.ClosestMatch != nil {
-		w.Write([]byte("\n"))
-		w.Write([]byte("\n"))
+		w.Write([]byte("Closest Match:\n"))
+		w.Write([]byte(fmt.Sprintf("ID: %d\n", result.ClosestMatch.ID)))
+		w.Write([]byte(fmt.Sprintf("Name: %s", result.ClosestMatch.Name)))
 	}
 }
 
 func respondError(w http.ResponseWriter, err error) {
+	w.Header().Add(header.ContentType, mime.TextPlain)
 	w.WriteHeader(http.StatusTeapot)
-	w.Write([]byte("Request was not matched."))
+	w.Write([]byte("Request did not match. An error occurred.\n"))
 	w.Write([]byte(err.Error()))
-
-	log.Printf("Reason: %v", err)
 }
