@@ -13,7 +13,7 @@ func TestAllOf(t *testing.T) {
 		result, err := BeAllOf(
 			Equal("test"),
 			EqualFold("TEST"),
-			ToUpperCase(Equal("TEST")),
+			UpperCase(Equal("TEST")),
 			Contains("tes")).
 			Matches("test", emptyArgs())
 		assert.Nil(t, err)
@@ -24,7 +24,7 @@ func TestAllOf(t *testing.T) {
 		result, err := BeAllOf(
 			Equal("test"),
 			EqualFold("dev"),
-			ToUpperCase(Equal("TEST")),
+			UpperCase(Equal("TEST")),
 			Contains("tes")).
 			Matches("test", emptyArgs())
 		assert.Nil(t, err)
@@ -35,7 +35,7 @@ func TestAllOf(t *testing.T) {
 		result, err := BeAllOf(
 			Equal("dev"),
 			EqualFold("qa"),
-			ToUpperCase(Equal("none")),
+			UpperCase(Equal("none")),
 			Contains("blah")).
 			Matches("test", emptyArgs())
 		assert.Nil(t, err)

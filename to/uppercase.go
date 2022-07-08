@@ -2,8 +2,8 @@ package to
 
 import "strings"
 
-// ToUpperCase upper case matcher string argument before submitting it to provided matcher.
-func ToUpperCase(matcher Matcher[string]) Matcher[string] {
+// UpperCase upper case matcher string argument before submitting it to provided matcher.
+func UpperCase(matcher Matcher[string]) Matcher[string] {
 	m := Matcher[string]{}
 	m.Name = "ToUpperCase"
 	m.Matches =

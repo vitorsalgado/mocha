@@ -11,7 +11,7 @@ func TestAnyOf(t *testing.T) {
 		result, err := BeAnyOf(
 			Equal("test"),
 			EqualFold("dev"),
-			ToLowerCase(Equal("TEST")),
+			LowerCase(Equal("TEST")),
 			Contains("qa")).
 			Matches("test", emptyArgs())
 		assert.Nil(t, err)
@@ -22,7 +22,7 @@ func TestAnyOf(t *testing.T) {
 		result, err := BeAnyOf(
 			Equal("abc"),
 			EqualFold("def"),
-			ToLowerCase(Equal("TEST")),
+			LowerCase(Equal("TEST")),
 			Contains("dev")).
 			Matches("test", emptyArgs())
 		assert.Nil(t, err)

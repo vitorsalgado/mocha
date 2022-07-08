@@ -7,7 +7,7 @@ import (
 )
 
 func TestToUpperCase(t *testing.T) {
-	result, err := ToUpperCase(Equal("TEST")).Matches("tesT", Args{})
+	result, err := UpperCase(Equal("TEST")).Matches("tesT", Args{})
 
 	assert.Nil(t, err)
 	assert.True(t, result)

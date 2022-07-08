@@ -2,8 +2,8 @@ package to
 
 import "strings"
 
-// ToLowerCase lower case matcher string argument before submitting it to provided matcher.
-func ToLowerCase(matcher Matcher[string]) Matcher[string] {
+// LowerCase lower case matcher string argument before submitting it to provided matcher.
+func LowerCase(matcher Matcher[string]) Matcher[string] {
 	m := Matcher[string]{}
 	m.Name = "ToLowerCase"
 	m.Matches = func(v string, params Args) (bool, error) {
