@@ -5,8 +5,8 @@ import (
 	"net/http/httptest"
 
 	"github.com/vitorsalgado/mocha/internal/params"
-	"github.com/vitorsalgado/mocha/internal/scenario"
 	"github.com/vitorsalgado/mocha/mock"
+	"github.com/vitorsalgado/mocha/to/scenario"
 )
 
 type (

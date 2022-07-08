@@ -5,10 +5,10 @@ import (
 	"net/url"
 
 	"github.com/vitorsalgado/mocha/internal/params"
-	"github.com/vitorsalgado/mocha/internal/scenario"
 	"github.com/vitorsalgado/mocha/mock"
 	"github.com/vitorsalgado/mocha/reply"
 	"github.com/vitorsalgado/mocha/to"
+	"github.com/vitorsalgado/mocha/to/scenario"
 )
 
 type (
