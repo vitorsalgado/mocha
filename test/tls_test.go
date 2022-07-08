@@ -10,8 +10,8 @@ import (
 
 	"github.com/vitorsalgado/mocha"
 	"github.com/vitorsalgado/mocha/internal/testutil"
-	"github.com/vitorsalgado/mocha/matchers"
 	"github.com/vitorsalgado/mocha/reply"
+	"github.com/vitorsalgado/mocha/to"
 )
 
 func TestTLS(t *testing.T) {
@@ -21,8 +21,8 @@ func TestTLS(t *testing.T) {
 	// allow insecure https request
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
-	scoped := m.Mock(mocha.Get(matchers.URLPath("/test")).
-		Header("test", matchers.EqualTo("hello")).
+	scoped := m.Mock(mocha.Get(to.HaveURLPath("/test")).
+		Header("test", to.Equal("hello")).
 		Reply(reply.OK()))
 
 	req := testutil.Get(m.Server.URL + "/test")

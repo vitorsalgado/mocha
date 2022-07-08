@@ -88,9 +88,9 @@ func (m *Mocha) StartTLS() ServerInfo {
 //
 // Example:
 // 	scoped := m.Mock(
-// 		Get(matchers.URLPath("/test")).
-// 			Header("test", matchers.EqualTo("hello")).
-// 			Query("filter", matchers.EqualTo("all")).
+// 		Get(to.URLPath("/test")).
+// 			Header("test", to.EqualTo("hello")).
+// 			Query("filter", to.EqualTo("all")).
 // 			Reply(reply.
 // 				Created().
 // 				BodyString("hello world")))

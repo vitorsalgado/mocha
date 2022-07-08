@@ -6,13 +6,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/matchers"
+	"github.com/vitorsalgado/mocha/to"
 )
 
 func TestDebug(t *testing.T) {
 	mk := New()
 	mk.Name = "test"
-	result, err := Debug("equalTo", *mk, matchers.EqualTo("test")).Matches("test", matchers.Args{})
+	result, err := Debug("equalTo", *mk, to.Equal("test")).Matches("test", to.Args{})
 
 	assert.Nil(t, err)
 	assert.True(t, result)
@@ -21,11 +21,11 @@ func TestDebug(t *testing.T) {
 func TestDebugErr(t *testing.T) {
 	mk := New()
 	mk.Name = "test"
-	result, err := Debug("err", *mk, matchers.Fn(
-		func(v string, params matchers.Args) (bool, error) {
+	result, err := Debug("err", *mk, to.Fn(
+		func(v string, params to.Args) (bool, error) {
 			return false, fmt.Errorf("failed")
 		})).
-		Matches("test", matchers.Args{})
+		Matches("test", to.Args{})
 
 	assert.NotNil(t, err)
 	assert.False(t, result)
@@ -34,7 +34,7 @@ func TestDebugErr(t *testing.T) {
 func TestDebugNotMatched(t *testing.T) {
 	mk := New()
 	mk.Name = "test"
-	result, err := Debug("equalTo", *mk, matchers.EqualTo("test")).Matches("dev", matchers.Args{})
+	result, err := Debug("equalTo", *mk, to.Equal("test")).Matches("dev", to.Args{})
 
 	assert.Nil(t, err)
 	assert.False(t, result)

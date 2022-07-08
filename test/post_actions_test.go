@@ -10,9 +10,9 @@ import (
 
 	"github.com/vitorsalgado/mocha"
 	"github.com/vitorsalgado/mocha/internal/testutil"
-	"github.com/vitorsalgado/mocha/matchers"
 	mok "github.com/vitorsalgado/mocha/mock"
 	"github.com/vitorsalgado/mocha/reply"
+	"github.com/vitorsalgado/mocha/to"
 )
 
 type action struct {
@@ -34,7 +34,7 @@ func TestPostAction(t *testing.T) {
 		act := &action{}
 		act.On("Run", mock.Anything).Return(nil)
 
-		scope := m.Mock(mocha.Get(matchers.URLPath("/test")).
+		scope := m.Mock(mocha.Get(to.HaveURLPath("/test")).
 			PostAction(act).
 			Reply(reply.OK()))
 
@@ -57,7 +57,7 @@ func TestPostAction(t *testing.T) {
 		act := &action{}
 		act.On("Run", mock.Anything).Return(fmt.Errorf("failed to run post action"))
 
-		scope := m.Mock(mocha.Get(matchers.URLPath("/test")).
+		scope := m.Mock(mocha.Get(to.HaveURLPath("/test")).
 			PostAction(act).
 			Reply(reply.OK()))
 

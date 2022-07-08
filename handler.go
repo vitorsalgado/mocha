@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/vitorsalgado/mocha/internal/params"
-	"github.com/vitorsalgado/mocha/matchers"
 	"github.com/vitorsalgado/mocha/mock"
+	"github.com/vitorsalgado/mocha/to"
 )
 
 type mockHandler struct {
@@ -37,7 +37,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Match current request with all eligible stored matchers in order to find one mock.
-	parameters := matchers.Args{RequestInfo: &matchers.RequestInfo{Request: r, ParsedBody: parser}, Params: h.params}
+	parameters := to.Args{RequestInfo: &to.RequestInfo{Request: r, ParsedBody: parser}, Params: h.params}
 	result, err := mock.FindForRequest(h.mocks, parameters, h.t)
 	if err != nil {
 		respondError(w, err)

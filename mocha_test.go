@@ -13,9 +13,9 @@ import (
 
 	"github.com/vitorsalgado/mocha/internal/params"
 	"github.com/vitorsalgado/mocha/internal/testutil"
-	"github.com/vitorsalgado/mocha/matchers"
 	"github.com/vitorsalgado/mocha/mock"
 	"github.com/vitorsalgado/mocha/reply"
+	"github.com/vitorsalgado/mocha/to"
 )
 
 type (
@@ -45,9 +45,9 @@ func TestMocha(t *testing.T) {
 		m.Start()
 
 		scoped := m.Mock(
-			Get(matchers.URLPath("/test")).
-				Header("test", matchers.EqualTo("hello")).
-				Query("filter", matchers.EqualTo("all")).
+			Get(to.HaveURLPath("/test")).
+				Header("test", to.Equal("hello")).
+				Query("filter", to.Equal("all")).
 				Reply(reply.
 					Created().
 					BodyString("hello world")))
@@ -73,10 +73,10 @@ func TestPostJSON(t *testing.T) {
 	m := ForTest(t)
 	m.Start()
 
-	scoped := m.Mock(Post(matchers.URLPath("/test")).
-		Header("test", matchers.EqualTo("hello")).
+	scoped := m.Mock(Post(to.HaveURLPath("/test")).
+		Header("test", to.Equal("hello")).
 		Body(
-			matchers.JSONPath("name", matchers.EqualTo("dev")), matchers.JSONPath("ok", matchers.EqualTo(true))).
+			to.JSONPath("name", to.Equal("dev")), to.JSONPath("ok", to.Equal(true))).
 		Reply(reply.OK()))
 
 	req := testutil.PostJSON(m.Server.URL+"/test", &TestModel{Name: "dev", OK: true})
@@ -100,8 +100,8 @@ func TestCustomParameters(t *testing.T) {
 	m.Start()
 	m.Parameters().Set(key, expected)
 
-	scope := m.Mock(Get(matchers.URLPath("/test")).
-		Matches(matchers.Fn(func(v any, params matchers.Args) (bool, error) {
+	scope := m.Mock(Get(to.HaveURLPath("/test")).
+		Matches(to.Fn(func(v any, params to.Args) (bool, error) {
 			p, _ := params.Params.Get(key)
 			return p.(string) == expected, nil
 		})).
@@ -121,7 +121,7 @@ func TestResponseMapper(t *testing.T) {
 	m := ForTest(t)
 	m.Start()
 
-	scoped := m.Mock(Get(matchers.URLPath("/test")).
+	scoped := m.Mock(Get(to.HaveURLPath("/test")).
 		Reply(reply.
 			OK().
 			Map(func(r *mock.Response, rma mock.ResponseMapperArgs) error {
@@ -149,7 +149,7 @@ func TestDelay(t *testing.T) {
 	start := time.Now()
 	delay := time.Duration(1250) * time.Millisecond
 
-	scoped := m.Mock(Get(matchers.URLPath("/test")).
+	scoped := m.Mock(Get(to.HaveURLPath("/test")).
 		Reply(reply.
 			OK().
 			Delay(delay)))
@@ -173,9 +173,9 @@ func TestPostExpectations(t *testing.T) {
 
 	scoped := m.Mock(
 		NewBuilder().
-			MatchAfter(matchers.Repeat(2)).
+			MatchAfter(to.Repeat(2)).
 			Method("GET").
-			URL(matchers.URLPath("/test")).
+			URL(to.HaveURLPath("/test")).
 			Reply(reply.
 				OK()))
 
@@ -208,7 +208,7 @@ func TestErrors(t *testing.T) {
 	m.Start()
 
 	t.Run("should log errors on reply", func(t *testing.T) {
-		scoped := m.Mock(Get(matchers.URLPath("/test1")).
+		scoped := m.Mock(Get(to.HaveURLPath("/test1")).
 			ReplyFunction(func(r *http.Request, m *mock.Mock, p params.Params) (*mock.Response, error) {
 				return nil, fmt.Errorf("failed to build a response")
 			}))
@@ -222,9 +222,9 @@ func TestErrors(t *testing.T) {
 	})
 
 	t.Run("should log errors from matchers", func(t *testing.T) {
-		scoped := m.Mock(Get(matchers.URLPath("/test2")).
-			Header("test", matchers.Fn(
-				func(_ string, _ matchers.Args) (bool, error) {
+		scoped := m.Mock(Get(to.HaveURLPath("/test2")).
+			Header("test", to.Fn(
+				func(_ string, _ to.Args) (bool, error) {
 					return false, fmt.Errorf("failed")
 				})))
 

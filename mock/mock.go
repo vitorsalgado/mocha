@@ -12,7 +12,7 @@ import (
 
 	"github.com/vitorsalgado/mocha/internal/params"
 	"github.com/vitorsalgado/mocha/internal/stylize"
-	"github.com/vitorsalgado/mocha/matchers"
+	"github.com/vitorsalgado/mocha/to"
 )
 
 type (
@@ -110,15 +110,15 @@ type (
 	}
 
 	// ExpectationValuePicker is the function used to extract a specific value from http.Request.
-	ExpectationValuePicker[V any] func(r *matchers.RequestInfo) V
+	ExpectationValuePicker[V any] func(r *to.RequestInfo) V
 
-	// Expectation holds metadata related to one http.Request matchers.Matcher.
+	// Expectation holds metadata related to one http.Request to.Matcher.
 	Expectation[V any] struct {
 		// Name is an optional metadata to help debugging request expectations.
 		Name string
 
 		// Matcher associated with this Expectation.
-		Matcher matchers.Matcher[V]
+		Matcher to.Matcher[V]
 
 		// ValuePicker will extract the http.Request or a portion of it and feed it to the associated Matcher.
 		ValuePicker ExpectationValuePicker[V]
@@ -132,7 +132,7 @@ type (
 		// NonMatched is the list of Mock they were matched.
 		NonMatched []string
 
-		// Weight for the matchers.Matcher
+		// Weight for the to.Matcher
 		Weight int
 
 		// IsMatch indicates whether it matched or not.
@@ -207,7 +207,7 @@ func (m *Mock) Disable() {
 
 // Matches checks if current Mock matches against a list of expectations.
 // Will iterate through all expectations even if it doesn't match early.
-func (m *Mock) Matches(params matchers.Args, expectations []any, t T) (MatchResult, error) {
+func (m *Mock) Matches(params to.Args, expectations []any, t T) (MatchResult, error) {
 	t.Helper()
 
 	weight := 0
@@ -262,7 +262,7 @@ func (m *Mock) Matches(params matchers.Args, expectations []any, t T) (MatchResu
 	return MatchResult{IsMatch: finalMatched, Weight: weight}, nil
 }
 
-func matches[V any](e Expectation[V], params matchers.Args, t T) (bool, int, error) {
+func matches[V any](e Expectation[V], params to.Args, t T) (bool, int, error) {
 	t.Helper()
 
 	val := e.ValuePicker(params.RequestInfo)

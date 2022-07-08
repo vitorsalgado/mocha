@@ -12,15 +12,15 @@ import (
 	"github.com/vitorsalgado/mocha"
 	"github.com/vitorsalgado/mocha/internal/header"
 	"github.com/vitorsalgado/mocha/internal/mime"
-	"github.com/vitorsalgado/mocha/matchers"
 	"github.com/vitorsalgado/mocha/reply"
+	"github.com/vitorsalgado/mocha/to"
 )
 
 func TestFormUrlEncoded(t *testing.T) {
 	m := mocha.ForTest(t)
 	m.Start()
 
-	scoped := m.Mock(mocha.Post(matchers.URLPath("/test")).
+	scoped := m.Mock(mocha.Post(to.HaveURLPath("/test")).
 		Reply(reply.OK()))
 
 	data := url.Values{}

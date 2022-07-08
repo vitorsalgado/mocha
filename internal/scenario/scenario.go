@@ -1,6 +1,6 @@
 package scenario
 
-import "github.com/vitorsalgado/mocha/matchers"
+import "github.com/vitorsalgado/mocha/to"
 
 const (
 	StateStarted      = "STARTED"
@@ -58,10 +58,10 @@ func (store *scenarioStore) Save(scenario scenario) {
 	store.data[scenario.Name] = scenario
 }
 
-func Scenario[V any](name, requiredState, newState string) matchers.Matcher[V] {
-	m := matchers.Matcher[V]{}
+func Scenario[V any](name, requiredState, newState string) to.Matcher[V] {
+	m := to.Matcher[V]{}
 	m.Name = "Scenario"
-	m.Matches = func(_ V, params matchers.Args) (bool, error) {
+	m.Matches = func(_ V, params to.Args) (bool, error) {
 		s, _ := params.Params.Get(BuiltInParamStore)
 		scenarios := s.(Store)
 

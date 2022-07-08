@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/vitorsalgado/mocha"
-	"github.com/vitorsalgado/mocha/matchers"
 	"github.com/vitorsalgado/mocha/reply"
+	"github.com/vitorsalgado/mocha/to"
 )
 
 func TestScenarioMatcher(t *testing.T) {
@@ -17,20 +17,20 @@ func TestScenarioMatcher(t *testing.T) {
 	m.Start()
 	scenario := "test"
 
-	s1 := m.Mock(mocha.Get(matchers.URLPath("/1")).
+	s1 := m.Mock(mocha.Get(to.HaveURLPath("/1")).
 		StartScenario(scenario).
 		ScenarioStateWillBe("step2").
 		Name("step-1").
 		Reply(reply.OK().BodyString("step1")))
 
-	s2 := m.Mock(mocha.Get(matchers.URLPath("/2")).
+	s2 := m.Mock(mocha.Get(to.HaveURLPath("/2")).
 		ScenarioIs(scenario).
 		ScenarioStateIs("step2").
 		ScenarioStateWillBe("step3").
 		Name("step-2").
 		Reply(reply.OK().BodyString("step2")))
 
-	s3 := m.Mock(mocha.Get(matchers.URLPath("/3")).
+	s3 := m.Mock(mocha.Get(to.HaveURLPath("/3")).
 		ScenarioIs(scenario).
 		ScenarioStateIs("step3").
 		ScenarioStateWillBe("step4").
