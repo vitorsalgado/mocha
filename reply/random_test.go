@@ -6,11 +6,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/mock"
+	"github.com/vitorsalgado/mocha/core"
 )
 
 func TestRandomReplies(t *testing.T) {
-	m := mock.Mock{Name: "mock_test"}
+	m := core.Mock{Name: "mock_test"}
 	req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 	statuses := []int{
 		http.StatusOK, http.StatusInternalServerError, http.StatusCreated, http.StatusBadRequest}

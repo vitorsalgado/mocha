@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/vitorsalgado/mocha/internal/header"
+	"github.com/vitorsalgado/mocha/util/headers"
 )
 
 // Options represents the possible options to configure CORS for the mock server.
@@ -36,8 +36,8 @@ func CORS(options Options) func(http.Handler) http.Handler {
 				configureMaxAge(options, w)
 				configureHeaders(options, w, r)
 
-				w.Header().Add(header.Vary, header.AccessControlRequestHeaders)
-				w.Header().Add(header.ContentLength, "0")
+				w.Header().Add(headers.Vary, headers.AccessControlRequestHeaders)
+				w.Header().Add(headers.ContentLength, "0")
 
 				w.WriteHeader(options.SuccessStatusCode)
 			} else {
@@ -55,37 +55,37 @@ func CORS(options Options) func(http.Handler) http.Handler {
 func configureHeaders(options Options, w http.ResponseWriter, r *http.Request) {
 	// when allowed headers aren't specified, use values from header access-control-request-headers
 	if options.AllowedHeaders != "" {
-		w.Header().Add(header.AccessControlAllowHeaders, options.AllowedHeaders)
+		w.Header().Add(headers.AccessControlAllowHeaders, options.AllowedHeaders)
 	} else {
 
-		headers := r.Header.Get(header.AccessControlRequestHeaders)
-		if strings.TrimSpace(headers) != "" {
-			w.Header().Add(header.AccessControlAllowHeaders, headers)
+		hs := r.Header.Get(headers.AccessControlRequestHeaders)
+		if strings.TrimSpace(hs) != "" {
+			w.Header().Add(headers.AccessControlAllowHeaders, hs)
 		}
 	}
 }
 
 func configureMaxAge(options Options, w http.ResponseWriter) {
 	if options.MaxAge > -1 {
-		w.Header().Add(header.AccessControlMaxAge, strconv.Itoa(options.MaxAge))
+		w.Header().Add(headers.AccessControlMaxAge, strconv.Itoa(options.MaxAge))
 	}
 }
 
 func configureMethods(options Options, w http.ResponseWriter) {
 	if len(options.AllowedMethods) > 0 {
-		w.Header().Add(header.AccessControlAllowMethods, options.AllowedMethods)
+		w.Header().Add(headers.AccessControlAllowMethods, options.AllowedMethods)
 	}
 }
 
 func configureExposedHeaders(options Options, w http.ResponseWriter) {
 	if options.ExposeHeaders != "" {
-		w.Header().Add(header.AccessControlExposeHeaders, options.ExposeHeaders)
+		w.Header().Add(headers.AccessControlExposeHeaders, options.ExposeHeaders)
 	}
 }
 
 func configureCredentials(options Options, w http.ResponseWriter) {
 	if options.AllowCredentials != "" {
-		w.Header().Add(header.AccessControlAllowCredentials, options.AllowCredentials)
+		w.Header().Add(headers.AccessControlAllowCredentials, options.AllowCredentials)
 	}
 }
 
@@ -98,8 +98,8 @@ func configureOrigin(options Options, r *http.Request, w http.ResponseWriter) {
 	size := len(origins)
 
 	if size == 1 {
-		w.Header().Add(header.AccessControlAllowOrigin, options.AllowedOrigin)
-		w.Header().Add(header.Vary, header.Origin)
+		w.Header().Add(headers.AccessControlAllowOrigin, options.AllowedOrigin)
+		w.Header().Add(headers.Vary, headers.Origin)
 		return
 	}
 
@@ -116,7 +116,7 @@ func configureOrigin(options Options, r *http.Request, w http.ResponseWriter) {
 	}
 
 	if allowed {
-		w.Header().Add(header.AccessControlAllowOrigin, origin)
-		w.Header().Add(header.Vary, header.Origin)
+		w.Header().Add(headers.AccessControlAllowOrigin, origin)
+		w.Header().Add(headers.Vary, headers.Origin)
 	}
 }

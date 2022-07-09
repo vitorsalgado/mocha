@@ -9,13 +9,13 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	mok "github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/mock"
 
-	"github.com/vitorsalgado/mocha/internal/params"
+	"github.com/vitorsalgado/mocha/core"
+	"github.com/vitorsalgado/mocha/expect"
+	"github.com/vitorsalgado/mocha/internal/parameters"
 	"github.com/vitorsalgado/mocha/internal/testutil"
-	"github.com/vitorsalgado/mocha/mock"
 	"github.com/vitorsalgado/mocha/reply"
-	"github.com/vitorsalgado/mocha/to"
 )
 
 type (
@@ -24,7 +24,7 @@ type (
 		OK   bool   `json:"ok"`
 	}
 
-	FakeT struct{ mok.Mock }
+	FakeT struct{ mock.Mock }
 )
 
 func (m *FakeT) Cleanup(_ func()) {
@@ -45,14 +45,14 @@ func TestMocha(t *testing.T) {
 		m.Start()
 
 		scoped := m.Mock(
-			Get(to.HaveURLPath("/test")).
-				Header("test", to.Equal("hello")).
-				Query("filter", to.Equal("all")).
+			Get(expect.URLPath("/test")).
+				Header("test", expect.ToEqual("hello")).
+				Query("filter", expect.ToEqual("all")).
 				Reply(reply.
 					Created().
 					BodyString("hello world")))
 
-		req, _ := http.NewRequest(http.MethodGet, m.Server.URL+"/test?filter=all", nil)
+		req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test?filter=all", nil)
 		req.Header.Add("test", "hello")
 
 		res, err := http.DefaultClient.Do(req)
@@ -73,13 +73,13 @@ func TestPostJSON(t *testing.T) {
 	m := ForTest(t)
 	m.Start()
 
-	scoped := m.Mock(Post(to.HaveURLPath("/test")).
-		Header("test", to.Equal("hello")).
+	scoped := m.Mock(Post(expect.URLPath("/test")).
+		Header("test", expect.ToEqual("hello")).
 		Body(
-			to.JSONPath("name", to.Equal("dev")), to.JSONPath("ok", to.Equal(true))).
+			expect.JSONPath("name", expect.ToEqual("dev")), expect.JSONPath("ok", expect.ToEqual(true))).
 		Reply(reply.OK()))
 
-	req := testutil.PostJSON(m.Server.URL+"/test", &TestModel{Name: "dev", OK: true})
+	req := testutil.PostJSON(m.URL()+"/test", &TestModel{Name: "dev", OK: true})
 	req.Header("test", "hello")
 
 	res, err := req.Do()
@@ -100,14 +100,14 @@ func TestCustomParameters(t *testing.T) {
 	m.Start()
 	m.Parameters().Set(key, expected)
 
-	scope := m.Mock(Get(to.HaveURLPath("/test")).
-		Matches(to.Fn(func(v any, params to.Args) (bool, error) {
+	scope := m.Mock(Get(expect.URLPath("/test")).
+		Matches(expect.Func(func(v any, params expect.Args) (bool, error) {
 			p, _ := params.Params.Get(key)
 			return p.(string) == expected, nil
 		})).
 		Reply(reply.Accepted()))
 
-	req := testutil.Get(fmt.Sprintf("%s/test", m.Server.URL))
+	req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
 	res, err := req.Do()
 	if err != nil {
 		t.Fatal(err)
@@ -121,15 +121,15 @@ func TestResponseMapper(t *testing.T) {
 	m := ForTest(t)
 	m.Start()
 
-	scoped := m.Mock(Get(to.HaveURLPath("/test")).
+	scoped := m.Mock(Get(expect.URLPath("/test")).
 		Reply(reply.
 			OK().
-			Map(func(r *mock.Response, rma mock.ResponseMapperArgs) error {
+			Map(func(r *core.Response, rma core.ResponseMapperArgs) error {
 				r.Header.Add("x-test", rma.Request.Header.Get("x-param"))
 				return nil
 			})))
 
-	req := testutil.Get(fmt.Sprintf("%s/test", m.Server.URL))
+	req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
 	req.Header("x-param", "dev")
 
 	res, err := req.Do()
@@ -149,12 +149,12 @@ func TestDelay(t *testing.T) {
 	start := time.Now()
 	delay := time.Duration(1250) * time.Millisecond
 
-	scoped := m.Mock(Get(to.HaveURLPath("/test")).
+	scoped := m.Mock(Get(expect.URLPath("/test")).
 		Reply(reply.
 			OK().
 			Delay(delay)))
 
-	req := testutil.Get(fmt.Sprintf("%s/test", m.Server.URL))
+	req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
 	res, err := req.Do()
 	if err != nil {
 		t.Fatal(err)
@@ -173,25 +173,25 @@ func TestPostExpectations(t *testing.T) {
 
 	scoped := m.Mock(
 		NewBuilder().
-			MatchAfter(to.Repeat(2)).
+			MatchAfter(expect.Repeat(2)).
 			Method("GET").
-			URL(to.HaveURLPath("/test")).
+			URL(expect.URLPath("/test")).
 			Reply(reply.
 				OK()))
 
-	testutil.Get(fmt.Sprintf("%s/other", m.Server.URL)).Do()
-	testutil.Get(fmt.Sprintf("%s/other", m.Server.URL)).Do()
+	testutil.Get(fmt.Sprintf("%s/other", m.URL())).Do()
+	testutil.Get(fmt.Sprintf("%s/other", m.URL())).Do()
 
-	res, _ := testutil.Get(fmt.Sprintf("%s/other", m.Server.URL)).Do()
+	res, _ := testutil.Get(fmt.Sprintf("%s/other", m.URL())).Do()
 	assert.Equal(t, res.StatusCode, http.StatusTeapot)
 
-	res, _ = testutil.Get(fmt.Sprintf("%s/test", m.Server.URL)).Do()
+	res, _ = testutil.Get(fmt.Sprintf("%s/test", m.URL())).Do()
 	assert.Equal(t, res.StatusCode, http.StatusOK)
 
-	res, _ = testutil.Get(fmt.Sprintf("%s/test", m.Server.URL)).Do()
+	res, _ = testutil.Get(fmt.Sprintf("%s/test", m.URL())).Do()
 	assert.Equal(t, res.StatusCode, http.StatusOK)
 
-	res, _ = testutil.Get(fmt.Sprintf("%s/test", m.Server.URL)).Do()
+	res, _ = testutil.Get(fmt.Sprintf("%s/test", m.URL())).Do()
 	assert.Equal(t, res.StatusCode, http.StatusTeapot)
 
 	scoped.MustBeDone()
@@ -200,9 +200,9 @@ func TestPostExpectations(t *testing.T) {
 func TestErrors(t *testing.T) {
 	fake := &FakeT{}
 
-	fake.On("Cleanup", mok.Anything).Return()
+	fake.On("Cleanup", mock.Anything).Return()
 	fake.On("Helper").Return()
-	fake.On("Errorf", mok.AnythingOfType("string"), mok.Anything).Return()
+	fake.On("Errorf", mock.AnythingOfType("string"), mock.Anything).Return()
 
 	m := ForTest(fake)
 	m.Start()
@@ -210,12 +210,12 @@ func TestErrors(t *testing.T) {
 	defer m.Close()
 
 	t.Run("should log errors on reply", func(t *testing.T) {
-		scoped := m.Mock(Get(to.HaveURLPath("/test1")).
-			ReplyFunction(func(r *http.Request, m *mock.Mock, p params.Params) (*mock.Response, error) {
+		scoped := m.Mock(Get(expect.URLPath("/test1")).
+			ReplyFunction(func(r *http.Request, m *core.Mock, p parameters.Params) (*core.Response, error) {
 				return nil, fmt.Errorf("failed to build a response")
 			}))
 
-		res, err := testutil.Get(fmt.Sprintf("%s/test1", m.Server.URL)).Do()
+		res, err := testutil.Get(fmt.Sprintf("%s/test1", m.URL())).Do()
 
 		assert.Nil(t, err)
 		assert.True(t, scoped.IsDone())
@@ -224,17 +224,37 @@ func TestErrors(t *testing.T) {
 	})
 
 	t.Run("should log errors from matchers", func(t *testing.T) {
-		scoped := m.Mock(Get(to.HaveURLPath("/test2")).
-			Header("test", to.Fn(
-				func(_ string, _ to.Args) (bool, error) {
+		scoped := m.Mock(Get(expect.URLPath("/test2")).
+			Header("test", expect.Func(
+				func(_ string, _ expect.Args) (bool, error) {
 					return false, fmt.Errorf("failed")
 				})))
 
-		res, err := testutil.Get(fmt.Sprintf("%s/test2", m.Server.URL)).Do()
+		res, err := testutil.Get(fmt.Sprintf("%s/test2", m.URL())).Do()
 
 		assert.Nil(t, err)
 		assert.False(t, scoped.IsDone())
 		assert.Equal(t, http.StatusTeapot, res.StatusCode)
 		fake.AssertExpectations(t)
 	})
+}
+
+func TestExpect(t *testing.T) {
+	m := ForTest(t)
+	m.Start()
+
+	scoped := m.Mock(Get(expect.URLPath("/test")).
+		Then(Expect(Header("hello")).ToEqual("world")).
+		Reply(reply.
+			OK()))
+
+	req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
+	req.Header("hello", "world")
+	res, err := req.Do()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	scoped.MustBeDone()
+	assert.Equal(t, http.StatusOK, res.StatusCode)
 }

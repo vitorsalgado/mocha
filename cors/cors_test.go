@@ -10,8 +10,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/internal/header"
 	"github.com/vitorsalgado/mocha/internal/middleware"
+	"github.com/vitorsalgado/mocha/util/headers"
 )
 
 func TestCORS(t *testing.T) {
@@ -42,11 +42,11 @@ func TestCORS(t *testing.T) {
 		}
 
 		assert.Equal(t, http.StatusNoContent, res.StatusCode)
-		assert.Equal(t, "*", res.Header.Get(header.AccessControlAllowOrigin))
-		assert.Equal(t, "x-expose-this", res.Header.Get(header.AccessControlExposeHeaders))
-		assert.Equal(t, "true", res.Header.Get(header.AccessControlAllowCredentials))
-		assert.Equal(t, "GET,POST", res.Header.Get(header.AccessControlAllowMethods))
-		assert.Equal(t, "x-allow-this,x-allow-that", res.Header.Get(header.AccessControlAllowHeaders))
+		assert.Equal(t, "*", res.Header.Get(headers.AccessControlAllowOrigin))
+		assert.Equal(t, "x-expose-this", res.Header.Get(headers.AccessControlExposeHeaders))
+		assert.Equal(t, "true", res.Header.Get(headers.AccessControlAllowCredentials))
+		assert.Equal(t, "GET,POST", res.Header.Get(headers.AccessControlAllowMethods))
+		assert.Equal(t, "x-allow-this,x-allow-that", res.Header.Get(headers.AccessControlAllowHeaders))
 
 		// check the actual request
 		res, err = http.Get(ts.URL)
@@ -61,9 +61,9 @@ func TestCORS(t *testing.T) {
 
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.True(t, strings.Contains(string(body), msg))
-		assert.Equal(t, "*", res.Header.Get(header.AccessControlAllowOrigin))
-		assert.Equal(t, "x-expose-this", res.Header.Get(header.AccessControlExposeHeaders))
-		assert.Equal(t, "true", res.Header.Get(header.AccessControlAllowCredentials))
+		assert.Equal(t, "*", res.Header.Get(headers.AccessControlAllowOrigin))
+		assert.Equal(t, "x-expose-this", res.Header.Get(headers.AccessControlExposeHeaders))
+		assert.Equal(t, "true", res.Header.Get(headers.AccessControlAllowCredentials))
 		assert.Equal(t, "text/plain", res.Header.Get("content-type"))
 	})
 
@@ -83,8 +83,8 @@ func TestCORS(t *testing.T) {
 		}
 
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-		assert.Equal(t, "*", res.Header.Get(header.AccessControlAllowOrigin))
-		assert.Equal(t, "GET,POST", res.Header.Get(header.AccessControlAllowMethods))
+		assert.Equal(t, "*", res.Header.Get(headers.AccessControlAllowOrigin))
+		assert.Equal(t, "GET,POST", res.Header.Get(headers.AccessControlAllowMethods))
 	})
 
 	t.Run("should check origin from a list when one is provided", func(t *testing.T) {
@@ -102,8 +102,8 @@ func TestCORS(t *testing.T) {
 		}
 
 		assert.Equal(t, http.StatusNoContent, res.StatusCode)
-		assert.Equal(t, "", res.Header.Get(header.AccessControlAllowOrigin))
-		assert.Equal(t, "GET,POST", res.Header.Get(header.AccessControlAllowMethods))
+		assert.Equal(t, "", res.Header.Get(headers.AccessControlAllowOrigin))
+		assert.Equal(t, "GET,POST", res.Header.Get(headers.AccessControlAllowMethods))
 	})
 
 	t.Run("should not consider empty origin", func(t *testing.T) {
@@ -120,6 +120,6 @@ func TestCORS(t *testing.T) {
 		}
 
 		assert.Equal(t, http.StatusNoContent, res.StatusCode)
-		assert.Equal(t, "", res.Header.Get(header.AccessControlAllowOrigin))
+		assert.Equal(t, "", res.Header.Get(headers.AccessControlAllowOrigin))
 	})
 }

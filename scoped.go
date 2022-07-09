@@ -3,13 +3,13 @@ package mocha
 import (
 	"errors"
 
-	"github.com/vitorsalgado/mocha/mock"
+	"github.com/vitorsalgado/mocha/core"
 )
 
 // Scoped holds references to one or more added mocks allowing users perform operations on them, like enabling/disabling.
 type Scoped struct {
-	storage mock.Storage
-	mocks   []*mock.Mock
+	storage core.Storage
+	mocks   []*core.Mock
 }
 
 var (
@@ -17,7 +17,7 @@ var (
 	ErrScopeNotDone = errors.New("there are still mocks that were not called")
 )
 
-func scope(repo mock.Storage, mocks []*mock.Mock) Scoped {
+func scope(repo core.Storage, mocks []*core.Mock) Scoped {
 	return Scoped{storage: repo, mocks: mocks}
 }
 
@@ -33,8 +33,8 @@ func (s *Scoped) IsDone() bool {
 }
 
 // Pending returns all mocks that were not called at least once.
-func (s *Scoped) Pending() []mock.Mock {
-	ret := make([]mock.Mock, 0)
+func (s *Scoped) Pending() []core.Mock {
+	ret := make([]core.Mock, 0)
 	for _, m := range s.mocks {
 		if !m.Called() {
 			ret = append(ret, *m)
@@ -84,7 +84,7 @@ func (s *Scoped) Clean() {
 		s.storage.Delete(id)
 	}
 
-	s.mocks = make([]*mock.Mock, 0)
+	s.mocks = make([]*core.Mock, 0)
 }
 
 // MustBeDone panic if there are still pending mocks.

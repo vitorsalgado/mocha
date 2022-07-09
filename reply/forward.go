@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vitorsalgado/mocha/internal/params"
-	"github.com/vitorsalgado/mocha/mock"
+	"github.com/vitorsalgado/mocha/core"
+	"github.com/vitorsalgado/mocha/internal/parameters"
 )
 
 var forbiddenHeaders = []string{
@@ -88,8 +88,8 @@ func (r *ProxyReply) StripSuffix(suffix string) *ProxyReply {
 	return r
 }
 
-// Build builds a mock.Reply based on the ProxyReply configuration.
-func (r *ProxyReply) Build(req *http.Request, _ *mock.Mock, _ params.Params) (*mock.Response, error) {
+// Build builds a core.Reply based on the ProxyReply configuration.
+func (r *ProxyReply) Build(req *http.Request, _ *core.Mock, _ parameters.Params) (*core.Response, error) {
 	path := req.URL.Path
 
 	if r.trimPrefix != "" {
@@ -122,7 +122,7 @@ func (r *ProxyReply) Build(req *http.Request, _ *mock.Mock, _ params.Params) (*m
 		return nil, err
 	}
 
-	response := &mock.Response{
+	response := &core.Response{
 		Status:  res.StatusCode,
 		Header:  res.Header,
 		Cookies: res.Cookies(),

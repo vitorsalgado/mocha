@@ -7,18 +7,18 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/vitorsalgado/mocha/core"
+	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/internal/testutil"
-	"github.com/vitorsalgado/mocha/mock"
 	"github.com/vitorsalgado/mocha/reply"
-	"github.com/vitorsalgado/mocha/to"
 )
 
 func TestScoped(t *testing.T) {
-	m1 := mock.New()
-	m2 := mock.New()
-	m3 := mock.New()
+	m1 := core.NewMock()
+	m2 := core.NewMock()
+	m3 := core.NewMock()
 
-	repo := mock.NewStorage()
+	repo := core.NewStorage()
 	repo.Save(m1)
 	repo.Save(m2)
 	repo.Save(m3)
@@ -61,25 +61,25 @@ func TestScoped(t *testing.T) {
 		m := ForTest(t)
 		m.Start()
 
-		s1 := m.Mock(Get(to.HaveURLPath("/test1")).Reply(reply.OK()))
+		s1 := m.Mock(Get(expect.URLPath("/test1")).Reply(reply.OK()))
 		s2 := m.Mock(
-			Get(to.HaveURLPath("/test2")).Reply(reply.OK()),
-			Get(to.HaveURLPath("/test3")).Reply(reply.OK()))
+			Get(expect.URLPath("/test2")).Reply(reply.OK()),
+			Get(expect.URLPath("/test3")).Reply(reply.OK()))
 
 		t.Run("initial state (enabled)", func(t *testing.T) {
-			req := testutil.Get(fmt.Sprintf("%s/test1", m.Server.URL))
+			req := testutil.Get(fmt.Sprintf("%s/test1", m.URL()))
 			res, err := req.Do()
 
 			assert.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 
-			req = testutil.Get(fmt.Sprintf("%s/test2", m.Server.URL))
+			req = testutil.Get(fmt.Sprintf("%s/test2", m.URL()))
 			res, err = req.Do()
 
 			assert.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 
-			req = testutil.Get(fmt.Sprintf("%s/test3", m.Server.URL))
+			req = testutil.Get(fmt.Sprintf("%s/test3", m.URL()))
 			res, err = req.Do()
 
 			assert.NoError(t, err)
@@ -92,19 +92,19 @@ func TestScoped(t *testing.T) {
 		t.Run("disabled", func(t *testing.T) {
 			s1.Disable()
 
-			req := testutil.Get(fmt.Sprintf("%s/test1", m.Server.URL))
+			req := testutil.Get(fmt.Sprintf("%s/test1", m.URL()))
 			res, err := req.Do()
 
 			assert.NoError(t, err)
 			assert.Equal(t, http.StatusTeapot, res.StatusCode)
 
-			req = testutil.Get(fmt.Sprintf("%s/test2", m.Server.URL))
+			req = testutil.Get(fmt.Sprintf("%s/test2", m.URL()))
 			res, err = req.Do()
 
 			assert.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 
-			req = testutil.Get(fmt.Sprintf("%s/test3", m.Server.URL))
+			req = testutil.Get(fmt.Sprintf("%s/test3", m.URL()))
 			res, err = req.Do()
 
 			assert.NoError(t, err)
@@ -115,7 +115,7 @@ func TestScoped(t *testing.T) {
 		t.Run("enabling previously disabled", func(t *testing.T) {
 			s1.Enable()
 
-			req := testutil.Get(fmt.Sprintf("%s/test1", m.Server.URL))
+			req := testutil.Get(fmt.Sprintf("%s/test1", m.URL()))
 			res, err := req.Do()
 
 			assert.NoError(t, err)
@@ -126,13 +126,13 @@ func TestScoped(t *testing.T) {
 		t.Run("disabling multiple", func(t *testing.T) {
 			s2.Disable()
 
-			req := testutil.Get(fmt.Sprintf("%s/test2", m.Server.URL))
+			req := testutil.Get(fmt.Sprintf("%s/test2", m.URL()))
 			res, err := req.Do()
 
 			assert.NoError(t, err)
 			assert.Equal(t, http.StatusTeapot, res.StatusCode)
 
-			req = testutil.Get(fmt.Sprintf("%s/test3", m.Server.URL))
+			req = testutil.Get(fmt.Sprintf("%s/test3", m.URL()))
 			res, err = req.Do()
 
 			assert.NoError(t, err)

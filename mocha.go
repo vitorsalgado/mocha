@@ -4,9 +4,9 @@ import (
 	"context"
 	"net/http/httptest"
 
-	"github.com/vitorsalgado/mocha/internal/params"
-	"github.com/vitorsalgado/mocha/mock"
-	"github.com/vitorsalgado/mocha/to/scenario"
+	"github.com/vitorsalgado/mocha/core"
+	"github.com/vitorsalgado/mocha/expect/scenario"
+	"github.com/vitorsalgado/mocha/internal/parameters"
 )
 
 type (
@@ -14,72 +14,69 @@ type (
 
 	// Mocha is the base for the mock server.
 	Mocha struct {
-		Server  *httptest.Server
-		storage mock.Storage
+		server  *httptest.Server
+		storage core.Storage
 		context context.Context
-		params  params.Params
-		t       mock.T
+		params  parameters.Params
+		t       core.T
 	}
 )
 
 // New creates a new Mocha mock server with the given configurations.
 // Parameter config accepts a Config or a Configurer implementation.
-func New[C configT](t mock.T, config C) *Mocha {
-	var parsedConfig *Config
+func New[C configT](t core.T, config C) *Mocha {
+	var cfg *Config
 	switch conf := any(config).(type) {
 	case *Configurer:
-		parsedConfig = conf.Build()
+		cfg = conf.Build()
 	case *Config:
-		parsedConfig = conf
+		cfg = conf
 	}
 
-	if parsedConfig == nil {
-		parsedConfig = Configure().Build()
+	if cfg == nil {
+		cfg = Configure().Build()
 	}
 
-	storage := mock.NewStorage()
+	storage := core.NewStorage()
+
 	parsers := make([]RequestBodyParser, 0)
-	parsers = append(parsers, parsedConfig.BodyParsers...)
+	parsers = append(parsers, cfg.BodyParsers...)
 	parsers = append(parsers, &jsonBodyParser{}, &plainTextParser{}, &formURLEncodedParser{}, &bytesParser{})
-	parameters := params.New()
-	parameters.Set(scenario.BuiltInParamStore, scenario.NewStore())
 
-	server := httptest.NewUnstartedServer(newHandler(storage, parsers, parameters, t))
+	params := parameters.New()
+	params.Set(scenario.BuiltInParamStore, scenario.NewStore())
+
+	server := httptest.NewUnstartedServer(newHandler(storage, parsers, params, t))
 	server.EnableHTTP2 = true
 
-	return &Mocha{
-		Server:  server,
+	m := &Mocha{
+		server:  server,
 		storage: storage,
-		context: parsedConfig.Context,
-		params:  parameters,
+		context: cfg.Context,
+		params:  params,
 		t:       t}
-}
 
-// ConfigureForTest creates a new Mocha mock server with the given configurations.
-// It closes the mock server after the tests finishes, using the testing.T cleanup feature.
-// Parameter config accepts a Config or a Configurer implementation.
-func ConfigureForTest[C configT](t mock.T, options C) *Mocha {
-	m := New(t, options)
 	t.Cleanup(func() { m.Close() })
+
 	return m
 }
 
 // ForTest creates a new Mocha mock server with default configurations.
 // It closes the mock server after the tests finishes, using the testing.T cleanup feature.
-func ForTest(t mock.T) *Mocha {
-	return ConfigureForTest(t, Configure())
+func ForTest(t core.T) *Mocha {
+	return New(t, Configure())
 }
 
 // Start starts the mock server.
 func (m *Mocha) Start() ServerInfo {
-	m.Server.Start()
-	return ServerInfo{URL: m.Server.URL}
+	m.server.Start()
+	return ServerInfo{URL: m.server.URL}
 }
 
 // StartTLS starts TLS from a server.
 func (m *Mocha) StartTLS() ServerInfo {
-	m.Server.StartTLS()
-	return ServerInfo{URL: m.Server.URL}
+	m.server.StartTLS()
+	return ServerInfo{URL: m.server.URL}
 }
 
 // Mock adds one or multiple HTTP request mocks.
@@ -98,7 +95,7 @@ func (m *Mocha) StartTLS() ServerInfo {
 //	assert.True(t, scoped.IsDone())
 func (m *Mocha) Mock(builders ...*MockBuilder) Scoped {
 	size := len(builders)
-	added := make([]*mock.Mock, size)
+	added := make([]*core.Mock, size)
 
 	for i, b := range builders {
 		newMock := b.Build()
@@ -110,11 +107,16 @@ func (m *Mocha) Mock(builders ...*MockBuilder) Scoped {
 }
 
 // Parameters allows managing custom parameters that will be available inside matchers.
-func (m *Mocha) Parameters() params.Params {
+func (m *Mocha) Parameters() parameters.Params {
 	return m.params
+}
+
+// URL returns the base URL string for the mock server.
+func (m *Mocha) URL() string {
+	return m.server.URL
 }
 
 // Close closes the mock server.
 func (m *Mocha) Close() {
-	m.Server.Close()
+	m.server.Close()
 }

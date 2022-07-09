@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/vitorsalgado/mocha/internal/header"
-	"github.com/vitorsalgado/mocha/internal/mime"
+	"github.com/vitorsalgado/mocha/util/headers"
+	"github.com/vitorsalgado/mocha/util/mimetypes"
 )
 
 // RequestBodyParser parses request body if CanParse returns true.
@@ -24,7 +24,7 @@ type RequestBodyParser interface {
 // User provided RequestBodyParser takes precedence.
 func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (any, error) {
 	if r.Body != nil && r.Method != http.MethodGet && r.Method != http.MethodHead {
-		var content = r.Header.Get(header.ContentType)
+		var content = r.Header.Get(headers.ContentType)
 
 		for _, parse := range parsers {
 			if parse.CanParse(content, r) {
@@ -45,7 +45,7 @@ func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (any, error)
 type jsonBodyParser struct{}
 
 func (parser jsonBodyParser) CanParse(content string, _ *http.Request) bool {
-	return strings.Contains(content, mime.JSON)
+	return strings.Contains(content, mimetypes.JSON)
 }
 
 func (parser jsonBodyParser) Parse(r *http.Request) (data any, err error) {
@@ -57,7 +57,7 @@ func (parser jsonBodyParser) Parse(r *http.Request) (data any, err error) {
 type formURLEncodedParser struct{}
 
 func (parser formURLEncodedParser) CanParse(content string, _ *http.Request) bool {
-	return strings.Contains(content, mime.ContentType)
+	return strings.Contains(content, mimetypes.ContentType)
 }
 
 func (parser *formURLEncodedParser) Parse(r *http.Request) (any, error) {
@@ -73,7 +73,7 @@ func (parser *formURLEncodedParser) Parse(r *http.Request) (any, error) {
 type plainTextParser struct{}
 
 func (parser *plainTextParser) CanParse(content string, _ *http.Request) bool {
-	return strings.Contains(content, mime.TextPlain)
+	return strings.Contains(content, mimetypes.TextPlain)
 }
 
 func (parser *plainTextParser) Parse(r *http.Request) (any, error) {
@@ -89,7 +89,7 @@ func (parser *plainTextParser) Parse(r *http.Request) (any, error) {
 type bytesParser struct{}
 
 func (parser *bytesParser) CanParse(content string, _ *http.Request) bool {
-	return strings.Contains(content, mime.TextPlain)
+	return strings.Contains(content, mimetypes.TextPlain)
 }
 
 func (parser *bytesParser) Parse(r *http.Request) (any, error) {

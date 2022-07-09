@@ -1,7 +1,7 @@
 <h1 id="mocha-top" align="center">Mocha</h1>
 
 <div align="center">
-    <a href="#"><img src="docs/logo.png" width="120px" alt="Mocha Logo"></a>
+    <a href="#"><img src="logo.png" width="120px" alt="Mocha Logo"></a>
     <p align="center">
         HTTP Mocking Tool for Go
         <br />
@@ -61,7 +61,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/vitorsalgado/mocha"
-	"github.com/vitorsalgado/mocha/to"
+	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/reply"
 )
 
