@@ -76,7 +76,7 @@ func (parser *formURLEncodedParser) Parse(_ []byte, r *http.Request) (any, error
 		return nil, err
 	}
 
-	return r.Form.Encode(), nil
+	return r.Form, nil
 }
 
 // plainTextParser parses requests with content type header containing "text/plain"
@@ -93,7 +93,7 @@ func (parser *plainTextParser) Parse(body []byte, _ *http.Request) (any, error) 
 // bytesParser is default parser when none can parse.
 type bytesParser struct{}
 
-func (parser *bytesParser) CanParse(content string, _ *http.Request) bool {
+func (parser *bytesParser) CanParse(_ string, _ *http.Request) bool {
 	return true
 }
 

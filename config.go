@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/vitorsalgado/mocha/cors"
+	"github.com/vitorsalgado/mocha/feat/cors"
 )
 
 type (

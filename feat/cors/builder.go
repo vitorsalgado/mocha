@@ -5,27 +5,27 @@ import (
 	"strings"
 )
 
-// OptionsBuilder facilitates building CORS options.
+// OptionsBuilder facilitates building New options.
 type OptionsBuilder struct {
 	options Config
 	origins []string
 }
 
-// Configure inits CORS OptionsBuilder.
+// Configure inits New OptionsBuilder.
 func Configure() *OptionsBuilder {
 	return &OptionsBuilder{
 		origins: make([]string, 0),
 		options: Config{SuccessStatusCode: http.StatusNoContent}}
 }
 
-// SuccessStatusCode sets a custom status code returned on CORS Options request.
+// SuccessStatusCode sets a custom status code returned on New Options request.
 // If none is specified, the default status code is http.StatusNoContent.
 func (b *OptionsBuilder) SuccessStatusCode(code int) *OptionsBuilder {
 	b.options.SuccessStatusCode = code
 	return b
 }
 
-// MaxAge sets CORS max age.
+// MaxAge sets New max age.
 func (b *OptionsBuilder) MaxAge(maxAge int) *OptionsBuilder {
 	b.options.MaxAge = maxAge
 	return b

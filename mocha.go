@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/vitorsalgado/mocha/core"
-	"github.com/vitorsalgado/mocha/cors"
 	"github.com/vitorsalgado/mocha/expect/scenario"
+	"github.com/vitorsalgado/mocha/feat/cors"
 	"github.com/vitorsalgado/mocha/internal/middleware"
 	"github.com/vitorsalgado/mocha/internal/parameters"
 )
@@ -45,7 +45,7 @@ func New(t core.T, config ...Config) *Mocha {
 	middlewares = append(middlewares, middleware.Recover)
 
 	if cfg.corsEnabled {
-		middlewares = append(middlewares, cors.CORS(cfg.CORS))
+		middlewares = append(middlewares, cors.New(cfg.CORS))
 	}
 
 	middlewares = append(middlewares, cfg.Middlewares...)

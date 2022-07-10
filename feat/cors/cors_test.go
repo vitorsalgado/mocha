@@ -24,7 +24,7 @@ func TestCORS(t *testing.T) {
 
 	t.Run("should allow request", func(t *testing.T) {
 		ts := httptest.NewServer(
-			middleware.Compose(CORS(Configure().
+			middleware.Compose(New(Configure().
 				AllowMethods("GET", "POST").
 				AllowedHeaders("x-allow-this", "x-allow-that").
 				ExposeHeaders("x-expose-this").
@@ -69,7 +69,7 @@ func TestCORS(t *testing.T) {
 
 	t.Run("should return custom success status code", func(t *testing.T) {
 		ts := httptest.NewServer(
-			middleware.Compose(CORS(Configure().
+			middleware.Compose(New(Configure().
 				AllowMethods("GET", "POST").
 				AllowOrigin("*").
 				SuccessStatusCode(http.StatusBadRequest).
@@ -89,7 +89,7 @@ func TestCORS(t *testing.T) {
 
 	t.Run("should check origin from a list when one is provided", func(t *testing.T) {
 		ts := httptest.NewServer(
-			middleware.Compose(CORS(Configure().
+			middleware.Compose(New(Configure().
 				AllowMethods("GET", "POST").
 				AllowOrigin("http://localhost:8080", "http://localhost:8081").
 				Build())).Root(http.HandlerFunc(handler)))
@@ -108,7 +108,7 @@ func TestCORS(t *testing.T) {
 
 	t.Run("should not consider empty origin", func(t *testing.T) {
 		ts := httptest.NewServer(
-			middleware.Compose(CORS(Configure().
+			middleware.Compose(New(Configure().
 				AllowOrigin("").
 				Build())).Root(http.HandlerFunc(handler)))
 		defer ts.Close()

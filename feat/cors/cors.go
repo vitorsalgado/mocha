@@ -1,4 +1,4 @@
-// Package cors implements functions to enable CORS support for the mock server.
+// Package cors implements functions to enable New support for the mock server.
 package cors
 
 import (
@@ -9,7 +9,7 @@ import (
 	"github.com/vitorsalgado/mocha/util/headers"
 )
 
-// Config represents the possible options to configure CORS for the mock server.
+// Config represents the possible options to configure New for the mock server.
 type Config struct {
 	AllowedOrigin     string
 	AllowCredentials  bool
@@ -38,11 +38,11 @@ var ConfigDefault = Config{
 	SuccessStatusCode: http.StatusNoContent,
 }
 
-// CORS returns a http.Handler that will be used to handle CORS requests.
+// New returns a http.Handler that will be used to handle New requests.
 // To build options more easily, use the options' builder cors.Configure().
 // Example:
-//	cors.CORS(cors.Configure().AllowOrigin(""))
-func CORS(options Config) func(http.Handler) http.Handler {
+//	cors.New(cors.Configure().AllowOrigin(""))
+func New(options Config) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// preflight request

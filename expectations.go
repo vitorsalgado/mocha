@@ -14,10 +14,10 @@ func Expect[V any](picker expect.ValueSelector[V]) Expectation[V] {
 }
 
 func (e Expectation[V]) ToEqual(v V) core.Expectation[V] {
-	return makeExpectation(e.picker, expect.ToEqual(v))
+	return expectation(e.picker, expect.ToEqual(v))
 }
 
-func makeExpectation[V any](
+func expectation[V any](
 	picker expect.ValueSelector[V],
 	matcher expect.Matcher[V],
 ) core.Expectation[V] {

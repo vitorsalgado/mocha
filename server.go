@@ -4,6 +4,8 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+
+	"github.com/vitorsalgado/mocha/core"
 )
 
 type (
@@ -21,7 +23,7 @@ type (
 		// Start starts a server.
 		Start() (ServerInfo, error)
 
-		// StartsTLS starts a TLS server.
+		// StartTLS starts a TLS server.
 		StartTLS() (ServerInfo, error)
 
 		// Close the server.
@@ -34,6 +36,7 @@ type (
 	testServer struct {
 		server *httptest.Server
 		info   ServerInfo
+		t      core.T
 	}
 )
 
