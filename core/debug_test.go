@@ -1,4 +1,4 @@
-package mocha
+package core
 
 import (
 	"fmt"
@@ -6,23 +6,22 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/core"
 	"github.com/vitorsalgado/mocha/expect"
 )
 
 func TestDebug(t *testing.T) {
-	mk := core.NewMock()
+	mk := NewMock()
 	mk.Name = "test"
-	result, err := Debug(mk, expect.ToEqual("test")).Matches("test", expect.Args{})
+	result, err := debug(mk, expect.ToEqual("test")).Matches("test", expect.Args{})
 
 	assert.Nil(t, err)
 	assert.True(t, result)
 }
 
 func TestDebugErr(t *testing.T) {
-	mk := core.NewMock()
+	mk := NewMock()
 	mk.Name = "test"
-	result, err := Debug(mk, expect.Func(
+	result, err := debug(mk, expect.Func(
 		func(v string, params expect.Args) (bool, error) {
 			return false, fmt.Errorf("failed")
 		})).
@@ -33,9 +32,9 @@ func TestDebugErr(t *testing.T) {
 }
 
 func TestDebugNotMatched(t *testing.T) {
-	mk := core.NewMock()
+	mk := NewMock()
 	mk.Name = "test"
-	result, err := Debug(mk, expect.ToEqual("test")).Matches("dev", expect.Args{})
+	result, err := debug(mk, expect.ToEqual("test")).Matches("dev", expect.Args{})
 
 	assert.Nil(t, err)
 	assert.False(t, result)

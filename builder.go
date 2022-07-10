@@ -296,7 +296,7 @@ func (b *MockBuilder) PostAction(action core.PostAction) *MockBuilder {
 	return b
 }
 
-func (b *MockBuilder) Then(expect any) *MockBuilder {
+func (b *MockBuilder) Cond(expect any) *MockBuilder {
 	b.mock.Expectations = append(b.mock.Expectations, expect)
 	return b
 }

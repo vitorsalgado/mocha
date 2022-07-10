@@ -98,7 +98,6 @@ func Test(t *testing.T) {
 - [ ] CLI
 - [ ] Docker
 - [ ] Proxy and Record
-- [ ] Admin
 
 ## Contributing
 

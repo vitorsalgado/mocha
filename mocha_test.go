@@ -226,7 +226,7 @@ func TestExpect(t *testing.T) {
 	m.Start()
 
 	scoped := m.Mock(Get(expect.URLPath("/test")).
-		Then(Expect(Header("hello")).ToEqual("world")).
+		Cond(Expect(Header("hello")).ToEqual("world")).
 		Reply(reply.
 			OK()))
 

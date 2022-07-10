@@ -75,7 +75,6 @@ func configureHeaders(options Config, w http.ResponseWriter, r *http.Request) {
 	if options.AllowedHeaders != "" {
 		w.Header().Add(headers.AccessControlAllowHeaders, options.AllowedHeaders)
 	} else {
-
 		hs := r.Header.Get(headers.AccessControlRequestHeaders)
 		if strings.TrimSpace(hs) != "" {
 			w.Header().Add(headers.AccessControlAllowHeaders, hs)
