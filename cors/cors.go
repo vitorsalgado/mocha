@@ -9,10 +9,10 @@ import (
 	"github.com/vitorsalgado/mocha/util/headers"
 )
 
-// Options represents the possible options to configure CORS for the mock server.
-type Options struct {
+// Config represents the possible options to configure CORS for the mock server.
+type Config struct {
 	AllowedOrigin     string
-	AllowCredentials  string
+	AllowCredentials  bool
 	AllowedMethods    string
 	AllowedHeaders    string
 	ExposeHeaders     string
@@ -20,11 +20,29 @@ type Options struct {
 	SuccessStatusCode int
 }
 
+// ConfigDefault is the default config.
+var ConfigDefault = Config{
+	AllowedOrigin: "*",
+	AllowedMethods: strings.Join([]string{
+		http.MethodGet,
+		http.MethodPost,
+		http.MethodHead,
+		http.MethodPut,
+		http.MethodDelete,
+		http.MethodPatch,
+	}, ","),
+	AllowedHeaders:    "",
+	AllowCredentials:  false,
+	ExposeHeaders:     "",
+	MaxAge:            0,
+	SuccessStatusCode: http.StatusNoContent,
+}
+
 // CORS returns a http.Handler that will be used to handle CORS requests.
 // To build options more easily, use the options' builder cors.Configure().
 // Example:
 //	cors.CORS(cors.Configure().AllowOrigin(""))
-func CORS(options Options) func(http.Handler) http.Handler {
+func CORS(options Config) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// preflight request
@@ -52,7 +70,7 @@ func CORS(options Options) func(http.Handler) http.Handler {
 	}
 }
 
-func configureHeaders(options Options, w http.ResponseWriter, r *http.Request) {
+func configureHeaders(options Config, w http.ResponseWriter, r *http.Request) {
 	// when allowed headers aren't specified, use values from header access-control-request-headers
 	if options.AllowedHeaders != "" {
 		w.Header().Add(headers.AccessControlAllowHeaders, options.AllowedHeaders)
@@ -65,31 +83,31 @@ func configureHeaders(options Options, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func configureMaxAge(options Options, w http.ResponseWriter) {
+func configureMaxAge(options Config, w http.ResponseWriter) {
 	if options.MaxAge > -1 {
 		w.Header().Add(headers.AccessControlMaxAge, strconv.Itoa(options.MaxAge))
 	}
 }
 
-func configureMethods(options Options, w http.ResponseWriter) {
+func configureMethods(options Config, w http.ResponseWriter) {
 	if len(options.AllowedMethods) > 0 {
 		w.Header().Add(headers.AccessControlAllowMethods, options.AllowedMethods)
 	}
 }
 
-func configureExposedHeaders(options Options, w http.ResponseWriter) {
+func configureExposedHeaders(options Config, w http.ResponseWriter) {
 	if options.ExposeHeaders != "" {
 		w.Header().Add(headers.AccessControlExposeHeaders, options.ExposeHeaders)
 	}
 }
 
-func configureCredentials(options Options, w http.ResponseWriter) {
-	if options.AllowCredentials != "" {
-		w.Header().Add(headers.AccessControlAllowCredentials, options.AllowCredentials)
+func configureCredentials(options Config, w http.ResponseWriter) {
+	if options.AllowCredentials {
+		w.Header().Add(headers.AccessControlAllowCredentials, "true")
 	}
 }
 
-func configureOrigin(options Options, r *http.Request, w http.ResponseWriter) {
+func configureOrigin(options Config, r *http.Request, w http.ResponseWriter) {
 	if options.AllowedOrigin == "" {
 		return
 	}

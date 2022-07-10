@@ -13,7 +13,7 @@ import (
 )
 
 func TestScenarioMatcher(t *testing.T) {
-	m := mocha.ForTest(t)
+	m := mocha.New(t)
 	m.Start()
 	scenario := "test"
 

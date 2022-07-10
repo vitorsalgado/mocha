@@ -15,7 +15,7 @@ import (
 )
 
 func TestTLS(t *testing.T) {
-	m := mocha.ForTest(t)
+	m := mocha.New(t)
 	m.StartTLS()
 
 	// allow insecure https request

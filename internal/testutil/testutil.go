@@ -13,6 +13,15 @@ type Req struct {
 	Request *http.Request
 }
 
+func Request(method, url string) *Req {
+	req, err := http.NewRequest(method, url, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return &Req{Request: req}
+}
+
 func Get(url string) *Req {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {

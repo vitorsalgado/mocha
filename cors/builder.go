@@ -2,13 +2,12 @@ package cors
 
 import (
 	"net/http"
-	"strconv"
 	"strings"
 )
 
 // OptionsBuilder facilitates building CORS options.
 type OptionsBuilder struct {
-	options Options
+	options Config
 	origins []string
 }
 
@@ -16,7 +15,7 @@ type OptionsBuilder struct {
 func Configure() *OptionsBuilder {
 	return &OptionsBuilder{
 		origins: make([]string, 0),
-		options: Options{SuccessStatusCode: http.StatusNoContent}}
+		options: Config{SuccessStatusCode: http.StatusNoContent}}
 }
 
 // SuccessStatusCode sets a custom status code returned on CORS Options request.
@@ -40,7 +39,7 @@ func (b *OptionsBuilder) AllowOrigin(origin ...string) *OptionsBuilder {
 
 // AllowCredentials sets "Access-Control-Allow-Credentials" header.
 func (b *OptionsBuilder) AllowCredentials(allow bool) *OptionsBuilder {
-	b.options.AllowCredentials = strconv.FormatBool(allow)
+	b.options.AllowCredentials = allow
 	return b
 }
 
@@ -65,7 +64,7 @@ func (b *OptionsBuilder) AllowMethods(methods ...string) *OptionsBuilder {
 }
 
 // Build returns an Option with previously configured values.
-func (b *OptionsBuilder) Build() Options {
+func (b *OptionsBuilder) Build() Config {
 	if len(b.origins) > 0 {
 		if len(b.origins) == 1 {
 			b.options.AllowedOrigin = b.origins[0]

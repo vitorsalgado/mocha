@@ -35,7 +35,7 @@ func TestForward(t *testing.T) {
 
 	defer dest.Close()
 
-	m := mocha.ForTest(t)
+	m := mocha.New(t)
 	m.Start()
 
 	t.Run("should forward request and respond using proxied response and mock definition", func(t *testing.T) {

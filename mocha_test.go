@@ -12,31 +12,16 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/vitorsalgado/mocha/core"
+	"github.com/vitorsalgado/mocha/core/mocks"
 	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/internal/parameters"
 	"github.com/vitorsalgado/mocha/internal/testutil"
 	"github.com/vitorsalgado/mocha/reply"
 )
 
-type (
-	TestModel struct {
-		Name string `json:"name"`
-		OK   bool   `json:"ok"`
-	}
-
-	FakeT struct{ mock.Mock }
-)
-
-func (m *FakeT) Cleanup(_ func()) {
-	m.Called()
-}
-
-func (m *FakeT) Helper() {
-	m.Called()
-}
-
-func (m *FakeT) Errorf(format string, args ...any) {
-	m.Called(format, args)
+type TestModel struct {
+	Name string `json:"name"`
+	OK   bool   `json:"ok"`
 }
 
 func TestMocha(t *testing.T) {
@@ -61,8 +46,10 @@ func TestMocha(t *testing.T) {
 		}
 
 		body, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			t.Fatal(err)
+		}
 
-		assert.Nil(t, err)
 		assert.True(t, scoped.Called())
 		assert.Equal(t, 201, res.StatusCode)
 		assert.Equal(t, string(body), "hello world")
@@ -198,7 +185,7 @@ func TestPostExpectations(t *testing.T) {
 }
 
 func TestErrors(t *testing.T) {
-	fake := &FakeT{}
+	fake := mocks.NewT()
 
 	fake.On("Cleanup", mock.Anything).Return()
 	fake.On("Helper").Return()

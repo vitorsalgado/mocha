@@ -14,7 +14,10 @@ type (
 		Addr        string
 		BodyParsers []RequestBodyParser
 		Middlewares []func(http.Handler) http.Handler
-		CORS        cors.Options
+		CORS        cors.Config
+		Server      Server
+
+		corsEnabled bool
 	}
 
 	// Configurer is Config builder,
@@ -29,7 +32,9 @@ var configDefault = Configure().Build()
 // Configure inits a new Configurer.
 // Entrypoint to start a new custom configuration for Mocha mock servers.
 func Configure() *Configurer {
-	return &Configurer{conf: Config{BodyParsers: make([]RequestBodyParser, 0)}}
+	return &Configurer{conf: Config{
+		BodyParsers: make([]RequestBodyParser, 0),
+		Middlewares: make([]func(http.Handler) http.Handler, 0)}}
 }
 
 // Context sets a custom context.
@@ -44,22 +49,35 @@ func (cb *Configurer) Addr(addr string) *Configurer {
 	return cb
 }
 
-// RequestBodyParser adds a custom list of RequestBodyParser.
-func (cb *Configurer) RequestBodyParser(bp ...RequestBodyParser) *Configurer {
+// RequestBodyParsers adds a custom list of RequestBodyParsers.
+func (cb *Configurer) RequestBodyParsers(bp ...RequestBodyParser) *Configurer {
 	cb.conf.BodyParsers = append(cb.conf.BodyParsers, bp...)
 	return cb
 }
 
 // Middlewares adds custom middlewares to the mock server.
 // Use this to add custom request interceptors.
-func (cb *Configurer) Middlewares(fn ...func(next http.Handler) http.Handler) *Configurer {
+func (cb *Configurer) Middlewares(fn ...func(handler http.Handler) http.Handler) *Configurer {
 	cb.conf.Middlewares = append(cb.conf.Middlewares, fn...)
 	return cb
 }
 
 // CORS configures CORS for the mock server.
-func (cb *Configurer) CORS(options *cors.OptionsBuilder) *Configurer {
-	cb.conf.CORS = options.Build()
+func (cb *Configurer) CORS(options ...cors.Config) *Configurer {
+	if len(options) > 0 {
+		cb.conf.CORS = options[0]
+	} else {
+		cb.conf.CORS = cors.ConfigDefault
+	}
+
+	cb.conf.corsEnabled = true
+
+	return cb
+}
+
+// Server configures a custom HTTP mock Server.
+func (cb *Configurer) Server(srv Server) *Configurer {
+	cb.conf.Server = srv
 	return cb
 }
 

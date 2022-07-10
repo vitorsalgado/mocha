@@ -3,9 +3,9 @@ package mocha
 import (
 	"context"
 	"net/http"
-	"net/http/httptest"
 
 	"github.com/vitorsalgado/mocha/core"
+	"github.com/vitorsalgado/mocha/cors"
 	"github.com/vitorsalgado/mocha/expect/scenario"
 	"github.com/vitorsalgado/mocha/internal/middleware"
 	"github.com/vitorsalgado/mocha/internal/parameters"
@@ -14,7 +14,7 @@ import (
 type (
 	// Mocha is the base for the mock server.
 	Mocha struct {
-		server  *httptest.Server
+		server  Server
 		storage core.Storage
 		context context.Context
 		params  parameters.Params
@@ -25,6 +25,8 @@ type (
 // New creates a new Mocha mock server with the given configurations.
 // Parameter config accepts a Config or a Configurer implementation.
 func New(t core.T, config ...Config) *Mocha {
+	t.Helper()
+
 	cfg := configDefault
 	if len(config) > 0 {
 		cfg = config[0]
@@ -40,13 +42,25 @@ func New(t core.T, config ...Config) *Mocha {
 	params.Set(scenario.BuiltInParamStore, scenario.NewStore())
 
 	middlewares := make([]func(handler http.Handler) http.Handler, 0)
+
+	if cfg.corsEnabled {
+		middlewares = append(middlewares, cors.CORS(cfg.CORS))
+	}
+
 	middlewares = append(middlewares, middleware.Recover)
 	middlewares = append(middlewares, cfg.Middlewares...)
 
 	handler := middleware.Compose(middlewares...).Root(newHandler(storage, parsers, params, t))
+	server := cfg.Server
 
-	server := httptest.NewUnstartedServer(handler)
-	server.EnableHTTP2 = true
+	if server == nil {
+		server = newServer()
+	}
+
+	err := server.Configure(cfg, handler)
+	if err != nil {
+		t.Fatalf("failed to configure mock server. reason: %v", err)
+	}
 
 	m := &Mocha{
 		server:  server,
@@ -68,14 +82,26 @@ func NewSimple() *Mocha {
 
 // Start starts the mock server.
 func (m *Mocha) Start() ServerInfo {
-	m.server.Start()
-	return ServerInfo{URL: m.server.URL}
+	m.t.Helper()
+
+	info, err := m.server.Start()
+	if err != nil {
+		m.t.Fatalf("failed to start mock server. reason: %v", err)
+	}
+
+	return info
 }
 
 // StartTLS starts TLS from a server.
 func (m *Mocha) StartTLS() ServerInfo {
-	m.server.StartTLS()
-	return ServerInfo{URL: m.server.URL}
+	m.t.Helper()
+
+	info, err := m.server.StartTLS()
+	if err != nil {
+		m.t.Fatalf("failed to start a TLS mock server. reason: %v", err)
+	}
+
+	return info
 }
 
 // Mock adds one or multiple HTTP request mocks.
@@ -112,10 +138,10 @@ func (m *Mocha) Parameters() parameters.Params {
 
 // URL returns the base URL string for the mock server.
 func (m *Mocha) URL() string {
-	return m.server.URL
+	return m.server.Info().URL
 }
 
 // Close closes the mock server.
-func (m *Mocha) Close() {
-	m.server.Close()
+func (m *Mocha) Close() error {
+	return m.server.Close()
 }

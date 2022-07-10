@@ -17,7 +17,7 @@ import (
 )
 
 func TestFormUrlEncoded(t *testing.T) {
-	m := mocha.ForTest(t)
+	m := mocha.New(t)
 	m.Start()
 
 	scoped := m.Mock(mocha.Post(expect.URLPath("/test")).

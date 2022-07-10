@@ -141,7 +141,9 @@ type (
 	T interface {
 		Cleanup(func())
 		Helper()
+		Logf(string, ...any)
 		Errorf(string, ...any)
+		Fatalf(string, ...any)
 	}
 )
 

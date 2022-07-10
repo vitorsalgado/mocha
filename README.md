@@ -66,7 +66,7 @@ import (
 )
 
 func Test(t *testing.T) {
-	m := mocha.ForTest(t)
+	m := mocha.New(t)
 	m.Start()
 
 	scoped := m.Mock(mocha.Get(matchers.URLPath("/test")).

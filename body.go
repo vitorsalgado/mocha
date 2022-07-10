@@ -14,7 +14,8 @@ import (
 // Multiple implementations of RequestBodyParser can be provided to Mocha using options.
 type RequestBodyParser interface {
 	// CanParse checks if current request body should be parsed by this component.
-	CanParse(content string, r *http.Request) bool
+	// First parameter is the incoming content-type.
+	CanParse(contentType string, r *http.Request) bool
 
 	// Parse parses the request body.
 	Parse(r *http.Request) (any, error)
@@ -77,12 +78,12 @@ func (parser *plainTextParser) CanParse(content string, _ *http.Request) bool {
 }
 
 func (parser *plainTextParser) Parse(r *http.Request) (any, error) {
-	err := r.ParseForm()
+	b, err := ioutil.ReadAll(r.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	return r.Form.Encode(), nil
+	return string(b), nil
 }
 
 // bytesParser is default parser when none can parse.

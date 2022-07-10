@@ -29,7 +29,7 @@ func TestPostAction(t *testing.T) {
 	t.Parallel()
 
 	t.Run("should call registered post action", func(t *testing.T) {
-		m := mocha.ForTest(t)
+		m := mocha.New(t)
 		m.Start()
 
 		act := &action{}
@@ -52,7 +52,7 @@ func TestPostAction(t *testing.T) {
 
 	t.Run("should not be affected by errors on registered post actions", func(t *testing.T) {
 		fakeT := mocks.NewT()
-		m := mocha.ForTest(fakeT)
+		m := mocha.New(fakeT)
 		m.Start()
 
 		defer m.Close()
