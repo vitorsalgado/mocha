@@ -32,15 +32,17 @@ func newHandler(
 func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.t.Helper()
 
-	parser, err := parseRequestBody(r, h.bodyParsers)
+	parsedBody, err := parseRequestBody(r, h.bodyParsers)
 	if err != nil {
 		respondError(w, err)
 		return
 	}
 
 	// match current request with all eligible stored matchers in order to find one mock.
-	args := expect.Args{RequestInfo: &expect.RequestInfo{Request: r, ParsedBody: parser}, Params: h.params}
-	result, err := core.FindForRequest(h.mocks, args, h.t)
+	args := expect.Args{
+		RequestInfo: &expect.RequestInfo{Request: r, ParsedBody: parsedBody},
+		Params:      h.params}
+	result, err := core.FindMockForRequest(h.mocks, args, h.t)
 	if err != nil {
 		respondError(w, err)
 		return

@@ -1,6 +1,7 @@
 package mocha
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -18,18 +19,26 @@ type RequestBodyParser interface {
 	CanParse(contentType string, r *http.Request) bool
 
 	// Parse parses the request body.
-	Parse(r *http.Request) (any, error)
+	Parse(body []byte, r *http.Request) (any, error)
 }
 
 // parseRequestBody tests given parsers until it finds one that can parse the request body.
 // User provided RequestBodyParser takes precedence.
 func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (any, error) {
 	if r.Body != nil && r.Method != http.MethodGet && r.Method != http.MethodHead {
-		var content = r.Header.Get(headers.ContentType)
+		b, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			return nil, err
+		}
+
+		r.Body.Close()
+		r.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+
+		contentType := r.Header.Get(headers.ContentType)
 
 		for _, parse := range parsers {
-			if parse.CanParse(content, r) {
-				body, err := parse.Parse(r)
+			if parse.CanParse(contentType, r) {
+				body, err := parse.Parse(b, r)
 				if err != nil {
 					return nil, err
 				}
@@ -49,8 +58,8 @@ func (parser jsonBodyParser) CanParse(content string, _ *http.Request) bool {
 	return strings.Contains(content, mimetypes.JSON)
 }
 
-func (parser jsonBodyParser) Parse(r *http.Request) (data any, err error) {
-	err = json.NewDecoder(r.Body).Decode(&data)
+func (parser jsonBodyParser) Parse(body []byte, _ *http.Request) (data any, err error) {
+	err = json.Unmarshal(body, &data)
 	return data, err
 }
 
@@ -61,7 +70,7 @@ func (parser formURLEncodedParser) CanParse(content string, _ *http.Request) boo
 	return strings.Contains(content, mimetypes.ContentType)
 }
 
-func (parser *formURLEncodedParser) Parse(r *http.Request) (any, error) {
+func (parser *formURLEncodedParser) Parse(_ []byte, r *http.Request) (any, error) {
 	err := r.ParseForm()
 	if err != nil {
 		return nil, err
@@ -77,22 +86,17 @@ func (parser *plainTextParser) CanParse(content string, _ *http.Request) bool {
 	return strings.Contains(content, mimetypes.TextPlain)
 }
 
-func (parser *plainTextParser) Parse(r *http.Request) (any, error) {
-	b, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return string(b), nil
+func (parser *plainTextParser) Parse(body []byte, _ *http.Request) (any, error) {
+	return string(body), nil
 }
 
 // bytesParser is default parser when none can parse.
 type bytesParser struct{}
 
 func (parser *bytesParser) CanParse(content string, _ *http.Request) bool {
-	return strings.Contains(content, mimetypes.TextPlain)
+	return true
 }
 
-func (parser *bytesParser) Parse(r *http.Request) (any, error) {
-	return ioutil.ReadAll(r.Body)
+func (parser *bytesParser) Parse(body []byte, _ *http.Request) (any, error) {
+	return body, nil
 }

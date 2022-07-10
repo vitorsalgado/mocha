@@ -42,15 +42,18 @@ func New(t core.T, config ...Config) *Mocha {
 	params.Set(scenario.BuiltInParamStore, scenario.NewStore())
 
 	middlewares := make([]func(handler http.Handler) http.Handler, 0)
+	middlewares = append(middlewares, middleware.Recover)
 
 	if cfg.corsEnabled {
 		middlewares = append(middlewares, cors.CORS(cfg.CORS))
 	}
 
-	middlewares = append(middlewares, middleware.Recover)
 	middlewares = append(middlewares, cfg.Middlewares...)
 
-	handler := middleware.Compose(middlewares...).Root(newHandler(storage, parsers, params, t))
+	handler := middleware.
+		Compose(middlewares...).
+		Root(newHandler(storage, parsers, params, t))
+
 	server := cfg.Server
 
 	if server == nil {
@@ -74,7 +77,7 @@ func New(t core.T, config ...Config) *Mocha {
 	return m
 }
 
-// New creates a new Mocha mock server with default configurations.
+// NewSimple creates a new Mocha mock server with default configurations.
 // It closes the mock server after the tests finishes, using the testing.T cleanup feature.
 func NewSimple() *Mocha {
 	return New(&noop{})

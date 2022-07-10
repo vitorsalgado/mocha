@@ -1,7 +1,6 @@
 package mocha
 
 import (
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -10,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/internal/testutil"
 	"github.com/vitorsalgado/mocha/reply"
@@ -23,13 +23,8 @@ func (p testBodyParser) CanParse(content string, r *http.Request) bool {
 	return content == mimetypes.TextPlain && r.Header.Get("x-test") == "num"
 }
 
-func (p testBodyParser) Parse(r *http.Request) (any, error) {
-	b, err := ioutil.ReadAll(r.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	return strconv.Atoi(string(b))
+func (p testBodyParser) Parse(body []byte, _ *http.Request) (any, error) {
+	return strconv.Atoi(string(body))
 }
 
 type customTestServer struct {

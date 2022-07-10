@@ -10,12 +10,24 @@ import (
 type (
 	// Config holds Mocha mock server configurations.
 	Config struct {
-		Context     context.Context
-		Addr        string
+		// Context to be used internally by Mocha.
+		Context context.Context
+
+		// Addr defines a custom server address.
+		Addr string
+
+		// BodyParsers defines request body parsers to be executed before core parsers.
 		BodyParsers []RequestBodyParser
+
+		// Middlewares defines a list of custom middlewares that will be
+		// set after panic recover and before mock handler.
 		Middlewares []func(http.Handler) http.Handler
-		CORS        cors.Config
-		Server      Server
+
+		// CORS defines CORS configurations.
+		CORS cors.Config
+
+		// Server defines a custom mock HTTP server.
+		Server Server
 
 		corsEnabled bool
 	}

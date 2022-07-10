@@ -1,6 +1,7 @@
 package test
 
 import (
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -23,13 +24,12 @@ func TestForward(t *testing.T) {
 		assert.Equal(t, "", r.Header.Get("x-del"))
 		assert.Equal(t, mimetypes.TextPlain, r.Header.Get(headers.ContentType))
 
-		w.WriteHeader(http.StatusOK)
-
 		b, err := ioutil.ReadAll(r.Body)
-		if err != nil {
+		if err != nil && err != io.EOF {
 			t.Fatal(err)
 		}
 
+		w.WriteHeader(http.StatusOK)
 		w.Write(b)
 	}))
 
@@ -40,6 +40,7 @@ func TestForward(t *testing.T) {
 
 	t.Run("should forward request and respond using proxied response and mock definition", func(t *testing.T) {
 		scoped := m.Mock(mocha.Post(expect.URLPath("/test")).
+			Body(expect.ToEqualAny("hello world")).
 			Reply(reply.
 				From(dest.URL).
 				ProxyHeader("x-test", "ok").

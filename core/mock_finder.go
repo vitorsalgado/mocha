@@ -11,10 +11,10 @@ type FindResult struct {
 	ClosestMatch *Mock
 }
 
-// FindForRequest tries to find a mock to the incoming HTTP request.
+// FindMockForRequest tries to find a mock to the incoming HTTP request.
 // It runs all matchers of all eligible mocks on request until it finds one that matches every one of then.
 // It returns a FindResult with the find result, along with a possible closest match.
-func FindForRequest(storage Storage, params expect.Args, t T) (*FindResult, error) {
+func FindMockForRequest(storage Storage, params expect.Args, t T) (*FindResult, error) {
 	var mocks = storage.FetchEligible()
 	var matched *Mock
 	var w = 0

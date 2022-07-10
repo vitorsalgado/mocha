@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 
 	"github.com/vitorsalgado/mocha/core"
 	"github.com/vitorsalgado/mocha/core/mocks"
@@ -71,7 +70,7 @@ func TestPostJSON(t *testing.T) {
 
 	res, err := req.Do()
 	if err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 
 	defer res.Body.Close()
@@ -187,10 +186,6 @@ func TestPostExpectations(t *testing.T) {
 func TestErrors(t *testing.T) {
 	fake := mocks.NewT()
 
-	fake.On("Cleanup", mock.Anything).Return()
-	fake.On("Helper").Return()
-	fake.On("Errorf", mock.AnythingOfType("string"), mock.Anything).Return()
-
 	m := New(fake)
 	m.Start()
 
@@ -207,7 +202,7 @@ func TestErrors(t *testing.T) {
 		assert.Nil(t, err)
 		assert.True(t, scoped.Called())
 		assert.Equal(t, http.StatusTeapot, res.StatusCode)
-		fake.AssertExpectations(t)
+		fake.AssertNumberOfCalls(t, "Errorf", 1)
 	})
 
 	t.Run("should log errors from matchers", func(t *testing.T) {
@@ -222,7 +217,7 @@ func TestErrors(t *testing.T) {
 		assert.Nil(t, err)
 		assert.False(t, scoped.Called())
 		assert.Equal(t, http.StatusTeapot, res.StatusCode)
-		fake.AssertExpectations(t)
+		fake.AssertNumberOfCalls(t, "Errorf", 2)
 	})
 }
 
