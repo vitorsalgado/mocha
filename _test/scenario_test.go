@@ -41,7 +41,7 @@ func TestScenarioMatcher(t *testing.T) {
 	res, _ := http.DefaultClient.Do(req)
 	body, _ := ioutil.ReadAll(res.Body)
 
-	assert.True(t, s1.IsDone())
+	assert.True(t, s1.Called())
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.Equal(t, "step1", string(body))
 
@@ -49,7 +49,7 @@ func TestScenarioMatcher(t *testing.T) {
 	res, _ = http.DefaultClient.Do(req)
 	body, _ = ioutil.ReadAll(res.Body)
 
-	assert.True(t, s2.IsDone())
+	assert.True(t, s2.Called())
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.Equal(t, "step2", string(body))
 
@@ -57,7 +57,7 @@ func TestScenarioMatcher(t *testing.T) {
 	res, _ = http.DefaultClient.Do(req)
 	body, _ = ioutil.ReadAll(res.Body)
 
-	assert.True(t, s3.IsDone())
+	assert.True(t, s3.Called())
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.Equal(t, "step3", string(body))
 }

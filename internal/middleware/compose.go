@@ -2,14 +2,12 @@ package middleware
 
 import "net/http"
 
-type Handler func(handler http.Handler) http.Handler
-
 type Middlewares struct {
-	handlers []Handler
+	handlers []func(handler http.Handler) http.Handler
 }
 
-func Compose(handlers ...Handler) Middlewares {
-	return Middlewares{handlers: append(([]Handler)(nil), handlers...)}
+func Compose(handlers ...func(handler http.Handler) http.Handler) Middlewares {
+	return Middlewares{handlers: append(([]func(handler http.Handler) http.Handler)(nil), handlers...)}
 }
 
 func (m Middlewares) Root(root http.Handler) http.Handler {

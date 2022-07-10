@@ -2,10 +2,12 @@ package mocha
 
 import (
 	"context"
+	"net/http"
 	"net/http/httptest"
 
 	"github.com/vitorsalgado/mocha/core"
 	"github.com/vitorsalgado/mocha/expect/scenario"
+	"github.com/vitorsalgado/mocha/internal/middleware"
 	"github.com/vitorsalgado/mocha/internal/parameters"
 )
 
@@ -46,7 +48,13 @@ func New[C configT](t core.T, config C) *Mocha {
 	params := parameters.New()
 	params.Set(scenario.BuiltInParamStore, scenario.NewStore())
 
-	server := httptest.NewUnstartedServer(newHandler(storage, parsers, params, t))
+	middlewares := make([]func(handler http.Handler) http.Handler, 0)
+	middlewares = append(middlewares, middleware.Recover)
+	middlewares = append(middlewares, cfg.Middlewares...)
+
+	handler := middleware.Compose(middlewares...).Root(newHandler(storage, parsers, params, t))
+
+	server := httptest.NewUnstartedServer(handler)
 	server.EnableHTTP2 = true
 
 	m := &Mocha{
@@ -92,7 +100,7 @@ func (m *Mocha) StartTLS() ServerInfo {
 // 				Created().
 // 				BodyString("hello world")))
 //
-//	assert.True(t, scoped.IsDone())
+//	assert.True(t, scoped.Called())
 func (m *Mocha) Mock(builders ...*MockBuilder) Scoped {
 	size := len(builders)
 	added := make([]*core.Mock, size)

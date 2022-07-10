@@ -35,5 +35,5 @@ func TestTLS(t *testing.T) {
 
 	defer res.Body.Close()
 
-	assert.True(t, scoped.IsDone())
+	assert.True(t, scoped.Called())
 }

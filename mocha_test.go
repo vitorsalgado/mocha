@@ -63,7 +63,7 @@ func TestMocha(t *testing.T) {
 		body, err := ioutil.ReadAll(res.Body)
 
 		assert.Nil(t, err)
-		assert.True(t, scoped.IsDone())
+		assert.True(t, scoped.Called())
 		assert.Equal(t, 201, res.StatusCode)
 		assert.Equal(t, string(body), "hello world")
 	})
@@ -89,7 +89,7 @@ func TestPostJSON(t *testing.T) {
 
 	defer res.Body.Close()
 
-	assert.True(t, scoped.IsDone())
+	assert.True(t, scoped.Called())
 }
 
 func TestCustomParameters(t *testing.T) {
@@ -113,7 +113,7 @@ func TestCustomParameters(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	scope.MustBeDone()
+	scope.MustHaveBeenCalled(t)
 	assert.Equal(t, http.StatusAccepted, res.StatusCode)
 }
 
@@ -137,7 +137,7 @@ func TestResponseMapper(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	scoped.MustBeDone()
+	scoped.MustHaveBeenCalled(t)
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.Equal(t, "dev", res.Header.Get("x-test"))
 }
@@ -162,7 +162,7 @@ func TestDelay(t *testing.T) {
 
 	elapsed := time.Since(start)
 
-	scoped.MustBeDone()
+	scoped.MustHaveBeenCalled(t)
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.GreaterOrEqual(t, elapsed, delay)
 }
@@ -194,7 +194,7 @@ func TestPostExpectations(t *testing.T) {
 	res, _ = testutil.Get(fmt.Sprintf("%s/test", m.URL())).Do()
 	assert.Equal(t, res.StatusCode, http.StatusTeapot)
 
-	scoped.MustBeDone()
+	scoped.MustHaveBeenCalled(t)
 }
 
 func TestErrors(t *testing.T) {
@@ -218,7 +218,7 @@ func TestErrors(t *testing.T) {
 		res, err := testutil.Get(fmt.Sprintf("%s/test1", m.URL())).Do()
 
 		assert.Nil(t, err)
-		assert.True(t, scoped.IsDone())
+		assert.True(t, scoped.Called())
 		assert.Equal(t, http.StatusTeapot, res.StatusCode)
 		fake.AssertExpectations(t)
 	})
@@ -233,7 +233,7 @@ func TestErrors(t *testing.T) {
 		res, err := testutil.Get(fmt.Sprintf("%s/test2", m.URL())).Do()
 
 		assert.Nil(t, err)
-		assert.False(t, scoped.IsDone())
+		assert.False(t, scoped.Called())
 		assert.Equal(t, http.StatusTeapot, res.StatusCode)
 		fake.AssertExpectations(t)
 	})
@@ -255,6 +255,6 @@ func TestExpect(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	scoped.MustBeDone()
+	scoped.MustHaveBeenCalled(t)
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 }

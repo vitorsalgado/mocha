@@ -1,7 +1,8 @@
 package mocha
 
 import (
-	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/vitorsalgado/mocha/core"
 )
@@ -12,17 +13,12 @@ type Scoped struct {
 	mocks   []*core.Mock
 }
 
-var (
-	// ErrScopeNotDone is returned when scope was not called.
-	ErrScopeNotDone = errors.New("there are still mocks that were not called")
-)
-
 func scope(repo core.Storage, mocks []*core.Mock) Scoped {
 	return Scoped{storage: repo, mocks: mocks}
 }
 
-// IsDone returns true if all scoped mocks were called at least once.
-func (s *Scoped) IsDone() bool {
+// Called returns true if all scoped mocks were called at least once.
+func (s *Scoped) Called() bool {
 	for _, m := range s.mocks {
 		if !m.Called() {
 			return false
@@ -32,8 +28,8 @@ func (s *Scoped) IsDone() bool {
 	return true
 }
 
-// Pending returns all mocks that were not called at least once.
-func (s *Scoped) Pending() []core.Mock {
+// ListPending returns all mocks that were not called at least once.
+func (s *Scoped) ListPending() []core.Mock {
 	ret := make([]core.Mock, 0)
 	for _, m := range s.mocks {
 		if !m.Called() {
@@ -87,10 +83,20 @@ func (s *Scoped) Clean() {
 	s.mocks = make([]*core.Mock, 0)
 }
 
-// MustBeDone panic if there are still pending mocks.
-func (s *Scoped) MustBeDone() {
+// MustHaveBeenCalled reports a failure if there are still pending mocks.
+func (s *Scoped) MustHaveBeenCalled(t core.T) {
+	t.Helper()
+
 	if s.IsPending() {
-		panic(ErrScopeNotDone)
+		b := strings.Builder{}
+		pending := s.ListPending()
+		size := len(pending)
+
+		for _, p := range pending {
+			b.WriteString(fmt.Sprintf("	mock: %d %s\n", p.ID, p.Name))
+		}
+
+		t.Errorf("\nthere are still %d mocks that were not called.\npending:\n%s", size, b.String())
 	}
 }
 

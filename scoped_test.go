@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/vitorsalgado/mocha/core"
+	"github.com/vitorsalgado/mocha/core/mocks"
 	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/internal/testutil"
 	"github.com/vitorsalgado/mocha/reply"
@@ -26,24 +27,31 @@ func TestScoped(t *testing.T) {
 	scoped := scope(repo, repo.FetchAll())
 
 	t.Run("should not return done when there is still pending mocks", func(t *testing.T) {
-		assert.False(t, scoped.IsDone())
-		assert.Equal(t, 3, len(scoped.Pending()))
+		fakeT := mocks.NewT()
+
+		assert.False(t, scoped.Called())
+		assert.Equal(t, 3, len(scoped.ListPending()))
 		assert.True(t, scoped.IsPending())
-		assert.Panics(t, func() { scoped.MustBeDone() })
+
+		scoped.MustHaveBeenCalled(fakeT)
+		fakeT.AssertNumberOfCalls(t, "Errorf", 1)
 	})
 
 	t.Run("should return done when all mocks were called", func(t *testing.T) {
+		fakeT := mocks.NewT()
+
 		m1.Hit()
 
-		assert.False(t, scoped.IsDone())
-		assert.Panics(t, func() { scoped.MustBeDone() })
+		assert.False(t, scoped.Called())
+		scoped.MustHaveBeenCalled(fakeT)
 
 		m2.Hit()
 		m3.Hit()
 
-		assert.True(t, scoped.IsDone())
-		scoped.MustBeDone()
-		assert.Equal(t, 0, len(scoped.Pending()))
+		fakeT.AssertNumberOfCalls(t, "Errorf", 1)
+		scoped.MustHaveBeenCalled(t)
+		assert.True(t, scoped.Called())
+		assert.Equal(t, 0, len(scoped.ListPending()))
 		assert.False(t, scoped.IsPending())
 	})
 
@@ -53,7 +61,7 @@ func TestScoped(t *testing.T) {
 
 	t.Run("should clean all mocks associated with scope when calling .Clean()", func(t *testing.T) {
 		scoped.Clean()
-		assert.Equal(t, 0, len(scoped.Pending()))
+		assert.Equal(t, 0, len(scoped.ListPending()))
 		assert.False(t, scoped.IsPending())
 	})
 
@@ -85,8 +93,8 @@ func TestScoped(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 
-			assert.True(t, s1.IsDone())
-			assert.True(t, s2.IsDone())
+			assert.True(t, s1.Called())
+			assert.True(t, s2.Called())
 		})
 
 		t.Run("disabled", func(t *testing.T) {
