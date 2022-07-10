@@ -12,8 +12,6 @@ import (
 )
 
 type (
-	configT interface{ *Config | *Configurer }
-
 	// Mocha is the base for the mock server.
 	Mocha struct {
 		server  *httptest.Server
@@ -26,17 +24,10 @@ type (
 
 // New creates a new Mocha mock server with the given configurations.
 // Parameter config accepts a Config or a Configurer implementation.
-func New[C configT](t core.T, config C) *Mocha {
-	var cfg *Config
-	switch conf := any(config).(type) {
-	case *Configurer:
-		cfg = conf.Build()
-	case *Config:
-		cfg = conf
-	}
-
-	if cfg == nil {
-		cfg = Configure().Build()
+func New(t core.T, config ...Config) *Mocha {
+	cfg := configDefault
+	if len(config) > 0 {
+		cfg = config[0]
 	}
 
 	storage := core.NewStorage()
@@ -72,7 +63,7 @@ func New[C configT](t core.T, config C) *Mocha {
 // ForTest creates a new Mocha mock server with default configurations.
 // It closes the mock server after the tests finishes, using the testing.T cleanup feature.
 func ForTest(t core.T) *Mocha {
-	return New(t, Configure())
+	return New(t, Configure().Build())
 }
 
 // Start starts the mock server.
