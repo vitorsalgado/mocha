@@ -66,7 +66,7 @@ func TestScoped(t *testing.T) {
 	})
 
 	t.Run("should only consider enabled mocks", func(t *testing.T) {
-		m := ForTest(t)
+		m := New(t)
 		m.Start()
 
 		s1 := m.Mock(Get(expect.URLPath("/test1")).Reply(reply.OK()))

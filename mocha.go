@@ -60,10 +60,10 @@ func New(t core.T, config ...Config) *Mocha {
 	return m
 }
 
-// ForTest creates a new Mocha mock server with default configurations.
+// New creates a new Mocha mock server with default configurations.
 // It closes the mock server after the tests finishes, using the testing.T cleanup feature.
-func ForTest(t core.T) *Mocha {
-	return New(t, Configure().Build())
+func NewSimple() *Mocha {
+	return New(&noop{})
 }
 
 // Start starts the mock server.

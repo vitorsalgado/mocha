@@ -41,7 +41,7 @@ func (m *FakeT) Errorf(format string, args ...any) {
 
 func TestMocha(t *testing.T) {
 	t.Run("should mock request", func(t *testing.T) {
-		m := ForTest(t)
+		m := New(t)
 		m.Start()
 
 		scoped := m.Mock(
@@ -70,7 +70,7 @@ func TestMocha(t *testing.T) {
 }
 
 func TestPostJSON(t *testing.T) {
-	m := ForTest(t)
+	m := New(t)
 	m.Start()
 
 	scoped := m.Mock(Post(expect.URLPath("/test")).
@@ -96,7 +96,7 @@ func TestCustomParameters(t *testing.T) {
 	key := "k"
 	expected := "test"
 
-	m := ForTest(t)
+	m := New(t)
 	m.Start()
 	m.Parameters().Set(key, expected)
 
@@ -118,7 +118,7 @@ func TestCustomParameters(t *testing.T) {
 }
 
 func TestResponseMapper(t *testing.T) {
-	m := ForTest(t)
+	m := New(t)
 	m.Start()
 
 	scoped := m.Mock(Get(expect.URLPath("/test")).
@@ -143,7 +143,7 @@ func TestResponseMapper(t *testing.T) {
 }
 
 func TestDelay(t *testing.T) {
-	m := ForTest(t)
+	m := New(t)
 	m.Start()
 
 	start := time.Now()
@@ -168,7 +168,7 @@ func TestDelay(t *testing.T) {
 }
 
 func TestPostExpectations(t *testing.T) {
-	m := ForTest(t)
+	m := New(t)
 	m.Start()
 
 	scoped := m.Mock(
@@ -204,7 +204,7 @@ func TestErrors(t *testing.T) {
 	fake.On("Helper").Return()
 	fake.On("Errorf", mock.AnythingOfType("string"), mock.Anything).Return()
 
-	m := ForTest(fake)
+	m := New(fake)
 	m.Start()
 
 	defer m.Close()
@@ -240,7 +240,7 @@ func TestErrors(t *testing.T) {
 }
 
 func TestExpect(t *testing.T) {
-	m := ForTest(t)
+	m := New(t)
 	m.Start()
 
 	scoped := m.Mock(Get(expect.URLPath("/test")).
