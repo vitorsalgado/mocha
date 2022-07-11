@@ -3,6 +3,7 @@ package mocha
 import (
 	"context"
 	"net/http"
+	"sync"
 
 	"github.com/vitorsalgado/mocha/core"
 	"github.com/vitorsalgado/mocha/expect/scenario"
@@ -18,6 +19,8 @@ type (
 		storage core.Storage
 		context context.Context
 		params  parameters.Params
+		scopes  []*Scoped
+		mu      *sync.Mutex
 		t       core.T
 	}
 )
@@ -65,14 +68,38 @@ func New(t core.T, config ...Config) *Mocha {
 		t.Fatalf("failed to configure mock server. reason: %v", err)
 	}
 
+	parent := cfg.Context
+	if parent == nil {
+		parent = context.Background()
+	}
+	ctx, cancel := context.WithCancel(parent)
+
 	m := &Mocha{
 		server:  server,
 		storage: storage,
-		context: cfg.Context,
+		context: ctx,
 		params:  params,
+		scopes:  make([]*Scoped, 0),
+		mu:      &sync.Mutex{},
 		t:       t}
 
-	t.Cleanup(func() { m.Close() })
+	closeSrv := func() {
+		e := m.Close()
+
+		if e != nil {
+			t.Logf("\nerror closing mocha http server. error=%v", e)
+		}
+	}
+
+	t.Cleanup(func() {
+		defer cancel()
+		closeSrv()
+	})
+
+	go func() {
+		<-ctx.Done()
+		closeSrv()
+	}()
 
 	return m
 }
@@ -121,7 +148,10 @@ func (m *Mocha) StartTLS() ServerInfo {
 // 				BodyString("hello world")))
 //
 //	assert.True(t, scoped.Called())
-func (m *Mocha) Mock(builders ...*MockBuilder) Scoped {
+func (m *Mocha) Mock(builders ...*MockBuilder) *Scoped {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	size := len(builders)
 	added := make([]*core.Mock, size)
 
@@ -131,7 +161,10 @@ func (m *Mocha) Mock(builders ...*MockBuilder) Scoped {
 		added[i] = newMock
 	}
 
-	return scope(m.storage, added)
+	scoped := scope(m.storage, added)
+	m.scopes = append(m.scopes, scoped)
+
+	return scoped
 }
 
 // Parameters allows managing custom parameters that will be available inside matchers.
@@ -147,4 +180,78 @@ func (m *Mocha) URL() string {
 // Close closes the mock server.
 func (m *Mocha) Close() error {
 	return m.server.Close()
+}
+
+// Hits returns the total request hits.
+func (m *Mocha) Hits() int {
+	hits := 0
+
+	for _, s := range m.scopes {
+		hits += s.Hits()
+	}
+
+	return hits
+}
+
+// Disable disables all mocks.
+func (m *Mocha) Disable() {
+	for _, scoped := range m.scopes {
+		scoped.Disable()
+	}
+}
+
+// Enable disables all mocks.
+func (m *Mocha) Enable() {
+	for _, scoped := range m.scopes {
+		scoped.Enable()
+	}
+}
+
+// AssertCalled asserts that all mocks associated with this instance were called at least once.
+func (m *Mocha) AssertCalled(t core.T) bool {
+	t.Helper()
+
+	result := true
+
+	for i, s := range m.scopes {
+		if s.IsPending() {
+			t.Logf("\nscope #%d\n", i)
+			s.AssertCalled(t)
+			result = false
+		}
+	}
+
+	return result
+}
+
+// AssertNotCalled asserts that all mocks associated with this instance were called at least once.
+func (m *Mocha) AssertNotCalled(t core.T) bool {
+	t.Helper()
+
+	result := true
+
+	for i, s := range m.scopes {
+		if !s.IsPending() {
+			t.Logf("\nscope #%d\n", i)
+			s.AssertNotCalled(t)
+			result = false
+		}
+	}
+
+	return result
+}
+
+// AssertHits asserts that the sum of request hits for mocks
+// is equal to the given expected value.
+func (m *Mocha) AssertHits(t core.T, expected int) bool {
+	t.Helper()
+
+	hits := m.Hits()
+
+	if hits < expected {
+		t.Errorf("\nexpected %d request hits. got %d", expected, hits)
+		return false
+	}
+
+	return true
 }

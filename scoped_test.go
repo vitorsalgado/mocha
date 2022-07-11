@@ -26,6 +26,9 @@ func TestScoped(t *testing.T) {
 
 	scoped := scope(repo, repo.FetchAll())
 
+	assert.Equal(t, 3, len(scoped.ListAll()))
+	assert.Equal(t, m1, scoped.Get(1))
+
 	t.Run("should not return done when there is still pending mocks", func(t *testing.T) {
 		fakeT := mocks.NewT()
 
@@ -33,7 +36,7 @@ func TestScoped(t *testing.T) {
 		assert.Equal(t, 3, len(scoped.ListPending()))
 		assert.True(t, scoped.IsPending())
 
-		scoped.MustHaveBeenCalled(fakeT)
+		scoped.AssertCalled(fakeT)
 		fakeT.AssertNumberOfCalls(t, "Errorf", 1)
 	})
 
@@ -43,13 +46,13 @@ func TestScoped(t *testing.T) {
 		m1.Hit()
 
 		assert.False(t, scoped.Called())
-		scoped.MustHaveBeenCalled(fakeT)
+		scoped.AssertCalled(fakeT)
 
 		m2.Hit()
 		m3.Hit()
 
 		fakeT.AssertNumberOfCalls(t, "Errorf", 1)
-		scoped.MustHaveBeenCalled(t)
+		assert.True(t, scoped.AssertCalled(t))
 		assert.True(t, scoped.Called())
 		assert.Equal(t, 0, len(scoped.ListPending()))
 		assert.False(t, scoped.IsPending())

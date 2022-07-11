@@ -19,7 +19,7 @@ func TestCORS(t *testing.T) {
 	m.Mock(mocha.Get(expect.URLPath("/test")).
 		Reply(reply.OK()))
 
-	corsReq := testutil.Request(http.MethodOptions, m.URL()+"/test")
+	corsReq := testutil.NewRequest(http.MethodOptions, m.URL()+"/test", nil)
 	res, err := corsReq.Do()
 	if err != nil {
 		log.Fatal(err)
@@ -27,7 +27,7 @@ func TestCORS(t *testing.T) {
 
 	assert.Equal(t, http.StatusNoContent, res.StatusCode)
 
-	req := testutil.Request(http.MethodGet, m.URL()+"/test")
+	req := testutil.NewRequest(http.MethodGet, m.URL()+"/test", nil)
 	res, err = req.Do()
 	if err != nil {
 		log.Fatal(err)

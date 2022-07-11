@@ -13,8 +13,24 @@ type Scoped struct {
 	mocks   []*core.Mock
 }
 
-func scope(repo core.Storage, mocks []*core.Mock) Scoped {
-	return Scoped{storage: repo, mocks: mocks}
+func scope(repo core.Storage, mocks []*core.Mock) *Scoped {
+	return &Scoped{storage: repo, mocks: mocks}
+}
+
+// Get returns a mock with the provided id.
+func (s *Scoped) Get(id int) *core.Mock {
+	for _, mock := range s.mocks {
+		if mock.ID == id {
+			return mock
+		}
+	}
+
+	return nil
+}
+
+// ListAll returns all mocks scoped in this instance.
+func (s *Scoped) ListAll() []*core.Mock {
+	return s.mocks
 }
 
 // Called returns true if all scoped mocks were called at least once.
@@ -29,11 +45,23 @@ func (s *Scoped) Called() bool {
 }
 
 // ListPending returns all mocks that were not called at least once.
-func (s *Scoped) ListPending() []core.Mock {
-	ret := make([]core.Mock, 0)
+func (s *Scoped) ListPending() []*core.Mock {
+	ret := make([]*core.Mock, 0)
 	for _, m := range s.mocks {
 		if !m.Called() {
-			ret = append(ret, *m)
+			ret = append(ret, m)
+		}
+	}
+
+	return ret
+}
+
+// ListCalled returns all mocks that were called.
+func (s *Scoped) ListCalled() []*core.Mock {
+	ret := make([]*core.Mock, 0)
+	for _, m := range s.mocks {
+		if m.Called() {
+			ret = append(ret, m)
 		}
 	}
 
@@ -83,8 +111,8 @@ func (s *Scoped) Clean() {
 	s.mocks = make([]*core.Mock, 0)
 }
 
-// MustHaveBeenCalled reports a failure if there are still pending mocks.
-func (s *Scoped) MustHaveBeenCalled(t core.T) {
+// AssertCalled reports an error if there are still pending mocks.
+func (s *Scoped) AssertCalled(t core.T) bool {
 	t.Helper()
 
 	if s.IsPending() {
@@ -97,7 +125,32 @@ func (s *Scoped) MustHaveBeenCalled(t core.T) {
 		}
 
 		t.Errorf("\nthere are still %d mocks that were not called.\npending:\n%s", size, b.String())
+
+		return false
 	}
+
+	return true
+}
+
+// AssertNotCalled reports a error if any mock was called.
+func (s *Scoped) AssertNotCalled(t core.T) bool {
+	t.Helper()
+
+	if !s.IsPending() {
+		b := strings.Builder{}
+		called := s.ListCalled()
+		size := len(called)
+
+		for _, p := range called {
+			b.WriteString(fmt.Sprintf("	mock: %d %s\n", p.ID, p.Name))
+		}
+
+		t.Errorf("\nthere are %d mocks that were called at least once.\ncalled:\n%s", size, b.String())
+
+		return false
+	}
+
+	return true
 }
 
 // Hits returns the sum of the scoped mocks calls.

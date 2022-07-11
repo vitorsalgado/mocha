@@ -45,7 +45,7 @@ func TestPostAction(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		scope.MustHaveBeenCalled(t)
+		scope.AssertCalled(t)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		act.AssertExpectations(t)
 	})
@@ -70,7 +70,7 @@ func TestPostAction(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		scope.MustHaveBeenCalled(t)
+		scope.AssertCalled(t)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		act.AssertExpectations(t)
 	})

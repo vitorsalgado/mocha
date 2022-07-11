@@ -64,7 +64,7 @@ func TestForward(t *testing.T) {
 
 		defer res.Body.Close()
 
-		scoped.MustHaveBeenCalled(t)
+		scoped.AssertCalled(t)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Equal(t, "example", res.Header.Get("x-res"))
 		assert.Equal(t, "hello world", string(b))
