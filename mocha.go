@@ -6,8 +6,8 @@ import (
 	"sync"
 
 	"github.com/vitorsalgado/mocha/core"
-	"github.com/vitorsalgado/mocha/expect/scenario"
 	"github.com/vitorsalgado/mocha/feat/cors"
+	"github.com/vitorsalgado/mocha/feat/scenario"
 	"github.com/vitorsalgado/mocha/internal/middleware"
 	"github.com/vitorsalgado/mocha/internal/parameters"
 )

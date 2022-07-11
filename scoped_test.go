@@ -27,7 +27,7 @@ func TestScoped(t *testing.T) {
 	scoped := scope(repo, repo.FetchAll())
 
 	assert.Equal(t, 3, len(scoped.ListAll()))
-	assert.Equal(t, m1, scoped.Get(1))
+	assert.Equal(t, m1, scoped.Get(m1.ID))
 
 	t.Run("should not return done when there is still pending mocks", func(t *testing.T) {
 		fakeT := mocks.NewT()

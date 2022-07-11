@@ -6,7 +6,7 @@ import (
 
 	"github.com/vitorsalgado/mocha/core"
 	"github.com/vitorsalgado/mocha/expect"
-	"github.com/vitorsalgado/mocha/expect/scenario"
+	"github.com/vitorsalgado/mocha/feat/scenario"
 	"github.com/vitorsalgado/mocha/internal/parameters"
 	"github.com/vitorsalgado/mocha/reply"
 )
