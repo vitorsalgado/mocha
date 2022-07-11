@@ -17,6 +17,10 @@ func (e Expectation[V]) ToEqual(v V) core.Expectation[V] {
 	return expectation(e.picker, expect.ToEqual(v))
 }
 
+func (e Expectation[V]) ToContain(v V) core.Expectation[V] {
+	return expectation(e.picker, expect.ToContain[V](v))
+}
+
 func expectation[V any](
 	picker expect.ValueSelector[V],
 	matcher expect.Matcher[V],

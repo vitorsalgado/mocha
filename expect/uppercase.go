@@ -5,7 +5,7 @@ import "strings"
 // UpperCase upper case matcher string argument before submitting it to provided matcher.
 func UpperCase(matcher Matcher[string]) Matcher[string] {
 	m := Matcher[string]{}
-	m.Name = "ToUpperCase"
+	m.Name = "UpperCase"
 	m.Matches =
 		func(v string, params Args) (bool, error) {
 			return matcher.Matches(strings.ToUpper(v), params)

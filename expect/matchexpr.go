@@ -14,7 +14,7 @@ type RegExpMatcherTypes interface {
 // ToMatchExpr accepts a string or a regexp.Regexp.
 func ToMatchExpr[V any, T RegExpMatcherTypes](re T) Matcher[V] {
 	m := Matcher[V]{}
-	m.Name = "ToMatchExpr"
+	m.Name = "MatchExpr"
 	m.Matches = func(v V, params Args) (bool, error) {
 		var err error
 		var result bool

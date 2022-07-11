@@ -6,7 +6,7 @@ import "strings"
 // ToEqualFold uses strings.EqualFold function.
 func ToEqualFold(expected string) Matcher[string] {
 	m := Matcher[string]{}
-	m.Name = "ToEqualFold"
+	m.Name = "EqualFold"
 	m.Matches = func(v string, args Args) (bool, error) {
 		return strings.EqualFold(expected, v), nil
 	}

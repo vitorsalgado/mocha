@@ -1,15 +1,15 @@
 package expect
 
 import (
-	"github.com/vitorsalgado/mocha/util/jsonx"
+	"github.com/vitorsalgado/mocha/x/jsonx"
 )
 
-// ToHaveProperty returns true if the JSON key in the given path is present.
+// ToHaveKey returns true if the JSON key in the given path is present.
 // Example:
 //	JSON: { "name": "test" }
-//	ToHaveProperty("name") will return true
-//	ToHaveProperty("address.street") will return false.
-func ToHaveProperty[V any](path string) Matcher[any] {
+//	ToHaveKey("name") will return true
+//	ToHaveKey("address.street") will return false.
+func ToHaveKey[V any](path string) Matcher[any] {
 	m := Matcher[any]{}
 	m.Name = "HasKey"
 	m.Matches = func(v any, args Args) (bool, error) {

@@ -5,7 +5,7 @@ import "reflect"
 // ToBePresent checks if matcher argument contains a value that is not nil or the zero value for the argument type.
 func ToBePresent[V any]() Matcher[V] {
 	m := Matcher[V]{}
-	m.Name = "IsPresent"
+	m.Name = "Present"
 	m.Matches = func(v V, args Args) (bool, error) {
 		val := reflect.ValueOf(v)
 

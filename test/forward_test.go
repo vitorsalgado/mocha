@@ -14,8 +14,8 @@ import (
 	"github.com/vitorsalgado/mocha"
 	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/reply"
-	"github.com/vitorsalgado/mocha/util/headers"
-	"github.com/vitorsalgado/mocha/util/mimetypes"
+	"github.com/vitorsalgado/mocha/x/headers"
+	"github.com/vitorsalgado/mocha/x/mimetypes"
 )
 
 func TestForward(t *testing.T) {

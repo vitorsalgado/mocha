@@ -12,8 +12,8 @@ import (
 	"github.com/vitorsalgado/mocha"
 	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/reply"
-	"github.com/vitorsalgado/mocha/util/headers"
-	"github.com/vitorsalgado/mocha/util/mimetypes"
+	"github.com/vitorsalgado/mocha/x/headers"
+	"github.com/vitorsalgado/mocha/x/mimetypes"
 )
 
 func TestFormUrlEncoded(t *testing.T) {
@@ -22,7 +22,7 @@ func TestFormUrlEncoded(t *testing.T) {
 
 	scoped := m.Mock(mocha.Post(expect.URLPath("/test")).
 		FormField("var1", expect.ToEqual("dev")).
-		FormField("var2", expect.ToContain("q")).
+		FormField("var2", expect.ToContain[string]("q")).
 		Reply(reply.OK()))
 
 	data := url.Values{}

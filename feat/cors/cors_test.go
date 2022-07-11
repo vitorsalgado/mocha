@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/vitorsalgado/mocha/internal/middleware"
-	"github.com/vitorsalgado/mocha/util/headers"
+	"github.com/vitorsalgado/mocha/x/headers"
 )
 
 func TestCORS(t *testing.T) {

@@ -8,7 +8,7 @@ import (
 )
 
 func TestXor(t *testing.T) {
-	m := XOR(ToContain("dev"), ToContain("test"))
+	m := XOR(ToContain[string]("dev"), ToContain[string]("test"))
 
 	t.Run("should return true when left condition matches", func(t *testing.T) {
 		res, err := m.Matches("dev", Args{})
@@ -31,7 +31,7 @@ func TestXor(t *testing.T) {
 
 func TestXorError(t *testing.T) {
 	t.Run("should return error from right matcher and return false", func(t *testing.T) {
-		m := XOR(ToContain("dev"), Func(func(_ string, _ Args) (bool, error) {
+		m := XOR(ToContain[string]("dev"), Func(func(_ string, _ Args) (bool, error) {
 			return false, fmt.Errorf("fail")
 		}))
 
@@ -46,7 +46,7 @@ func TestXorError(t *testing.T) {
 			Func(func(_ string, _ Args) (bool, error) {
 				return false, fmt.Errorf("fail")
 			}),
-			ToContain("dev"))
+			ToContain[string]("dev"))
 
 		res, err := m.Matches("dev", Args{})
 

@@ -19,31 +19,31 @@ func TestHasKey(t *testing.T) {
 		"zero":    0,
 	}
 
-	result, err := ToHaveProperty[any]("name").Matches(m, emptyArgs())
+	result, err := ToHaveKey[any]("name").Matches(m, emptyArgs())
 	assert.True(t, result)
 	assert.Nil(t, err)
 
-	result, err = ToHaveProperty[any]("age").Matches(m, emptyArgs())
+	result, err = ToHaveKey[any]("age").Matches(m, emptyArgs())
 	assert.True(t, result)
 	assert.Nil(t, err)
 
-	result, err = ToHaveProperty[any]("address").Matches(m, emptyArgs())
+	result, err = ToHaveKey[any]("address").Matches(m, emptyArgs())
 	assert.True(t, result)
 	assert.Nil(t, err)
 
-	result, err = ToHaveProperty[any]("active").Matches(m, emptyArgs())
+	result, err = ToHaveKey[any]("active").Matches(m, emptyArgs())
 	assert.True(t, result)
 	assert.Nil(t, err)
 
-	result, err = ToHaveProperty[any]("zero").Matches(m, emptyArgs())
+	result, err = ToHaveKey[any]("zero").Matches(m, emptyArgs())
 	assert.True(t, result)
 	assert.Nil(t, err)
 
-	result, err = ToHaveProperty[any]("options").Matches(m, emptyArgs())
+	result, err = ToHaveKey[any]("options").Matches(m, emptyArgs())
 	assert.True(t, result)
 	assert.Nil(t, err)
 
-	result, err = ToHaveProperty[any]("none").Matches(m, emptyArgs())
+	result, err = ToHaveKey[any]("none").Matches(m, emptyArgs())
 	assert.False(t, result)
 	assert.Nil(t, err)
 }

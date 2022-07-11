@@ -1,7 +1,7 @@
 package expect
 
 import (
-	"github.com/vitorsalgado/mocha/util/jsonx"
+	"github.com/vitorsalgado/mocha/x/jsonx"
 )
 
 // JSONPath applies the provided matcher to the JSON field value in the given path.

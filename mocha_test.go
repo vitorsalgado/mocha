@@ -158,7 +158,7 @@ func TestPostJSON(t *testing.T) {
 	assert.True(t, scoped.Called())
 }
 
-func TestCustomParameters(t *testing.T) {
+func TestMocha_Parameters(t *testing.T) {
 	key := "k"
 	expected := "test"
 
@@ -166,7 +166,7 @@ func TestCustomParameters(t *testing.T) {
 	m.Start()
 	m.Parameters().Set(key, expected)
 
-	scope := m.Mock(Get(expect.URLPath("/test")).
+	scoped := m.Mock(Get(expect.URLPath("/test")).
 		Matches(expect.Func(func(v any, params expect.Args) (bool, error) {
 			p, _ := params.Params.Get(key)
 			return p.(string) == expected, nil
@@ -179,7 +179,7 @@ func TestCustomParameters(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	scope.AssertCalled(t)
+	scoped.AssertCalled(t)
 	assert.Equal(t, http.StatusAccepted, res.StatusCode)
 }
 
@@ -299,26 +299,6 @@ func TestErrors(t *testing.T) {
 		assert.Equal(t, http.StatusTeapot, res.StatusCode)
 		fake.AssertNumberOfCalls(t, "Errorf", 2)
 	})
-}
-
-func TestExpect(t *testing.T) {
-	m := New(t)
-	m.Start()
-
-	scoped := m.Mock(Get(expect.URLPath("/test")).
-		Cond(Expect(Header("hello")).ToEqual("world")).
-		Reply(reply.
-			OK()))
-
-	req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
-	req.Header("hello", "world")
-	res, err := req.Do()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	scoped.AssertCalled(t)
-	assert.Equal(t, http.StatusOK, res.StatusCode)
 }
 
 func TestMocha_Assertions(t *testing.T) {
