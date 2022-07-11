@@ -3,8 +3,8 @@ package mimetypes
 
 // Common mime types.
 const (
-	JSON        = "application/json"
-	TextPlain   = "text/plain"
-	TextHTML    = "text/html"
-	ContentType = "application/x-www-form-urlencoded"
+	JSON           = "application/json"
+	TextPlain      = "text/plain"
+	TextHTML       = "text/html"
+	FormURLEncoded = "application/x-www-form-urlencoded"
 )

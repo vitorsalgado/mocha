@@ -67,7 +67,7 @@ func (parser jsonBodyParser) Parse(body []byte, _ *http.Request) (data any, err 
 type formURLEncodedParser struct{}
 
 func (parser formURLEncodedParser) CanParse(content string, _ *http.Request) bool {
-	return strings.Contains(content, mimetypes.ContentType)
+	return strings.Contains(content, mimetypes.FormURLEncoded)
 }
 
 func (parser *formURLEncodedParser) Parse(_ []byte, r *http.Request) (any, error) {

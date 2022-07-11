@@ -21,6 +21,8 @@ func TestFormUrlEncoded(t *testing.T) {
 	m.Start()
 
 	scoped := m.Mock(mocha.Post(expect.URLPath("/test")).
+		FormField("var1", expect.ToEqual("dev")).
+		FormField("var2", expect.ToContain("q")).
 		Reply(reply.OK()))
 
 	data := url.Values{}
@@ -29,7 +31,7 @@ func TestFormUrlEncoded(t *testing.T) {
 
 	req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", strings.NewReader(data.Encode()))
 	req.Header.Add("test", "hello")
-	req.Header.Add(headers.ContentType, mimetypes.ContentType)
+	req.Header.Add(headers.ContentType, mimetypes.FormURLEncoded)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
