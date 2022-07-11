@@ -1,5 +1,3 @@
-PROJECT := mocha
-MAIN := cmd/hello/main.go
 MOCHA_COLOR := 1
 
 .ONESHELL:
@@ -14,12 +12,9 @@ export
 help: ## show help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-run: ## run application
-	@go run $(MAIN)
-
 .PHONY: test
 test: ## run tests
-	@go test -race -v ./... -race -args color
+	@go test -race -v ./... -race
 
 .PHONY: bench
 bench: ## run benchmarks
@@ -38,9 +33,6 @@ fmt: ## run gofmt in all project files
 
 check: vet ## check source code
 	@staticcheck ./...
-
-build: ## build application
-	@go build -o bin/hello $(MAIN)
 
 deps: ## check dependencies
 	@go mod verify
