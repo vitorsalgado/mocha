@@ -71,7 +71,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// get the reply for the mock, after running all possible matchers.
 	res, err := result.Matched.Reply.Build(r, m, h.params)
 	if err != nil {
-		h.t.Errorf(err.Error())
+		h.t.Logf(err.Error())
 		respondError(w, err)
 		return
 	}
@@ -103,17 +103,16 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if scanner.Err() != nil {
-			h.t.Errorf("error writing response body: %w", scanner.Err())
+			h.t.Logf("error writing response body: error=%v", scanner.Err())
 		}
 	}
 
 	// run post actions.
-	// errors that happen here will only be logged.
 	paArgs := core.PostActionArgs{Request: r, Response: res, Mock: m, Params: h.params}
 	for i, action := range m.PostActions {
 		err = action.Run(paArgs)
 		if err != nil {
-			h.t.Errorf("an error occurred running post action %d: %w", i, err)
+			h.t.Logf("\nan error occurred running post action %d. error=%v", i, err)
 		}
 	}
 }

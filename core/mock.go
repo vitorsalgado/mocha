@@ -108,8 +108,6 @@ type (
 		Flush()
 	}
 
-	// ValueSelector is the function used to extract a specific value from http.Request.
-
 	// Expectation holds metadata related to one http.Request expect.Matcher.
 	Expectation[V any] struct {
 		// Name is an optional metadata to help debugging request expectations.
@@ -273,13 +271,13 @@ func matches[V any](e Expectation[V], params expect.Args, t T) (bool, int, strin
 
 	if !res {
 		if err != nil {
-			t.Errorf("\n%s\nError: %s\nContext: %s",
+			t.Logf("\n%s\nError: %s\nContext: %s",
 				colorize.Red(fmt.Sprintf("Matcher %s returned an error", colorize.Bold(e.Matcher.Name))),
 				colorize.Red(err.Error()),
 				e.Name)
 		} else {
 			if e.Matcher.DescribeMismatch != nil {
-				t.Errorf("\n%s\n%s\n%s",
+				t.Logf("\n%s\n%s\n%s",
 					colorize.Red(fmt.Sprintf("Matcher %s dit not match.", colorize.Bold(e.Matcher.Name))),
 					"applied to: "+e.Name,
 					e.Matcher.DescribeMismatch(e.Name, val))
