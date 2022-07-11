@@ -54,7 +54,7 @@ func TestReply(t *testing.T) {
 		Header("test", "qa").
 		Header("hello", "world").
 		Cookie(http.Cookie{Name: "cookie_test"}).
-		RemoveCookie(http.Cookie{Name: "cookie_test_remove"}).
+		ExpireCookie(http.Cookie{Name: "cookie_test_remove"}).
 		Body([]byte("hi")).
 		Delay(5*time.Second).
 		Build(req, &testMock, nil)

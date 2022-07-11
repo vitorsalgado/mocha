@@ -10,7 +10,6 @@ import (
 
 	"github.com/vitorsalgado/mocha/core"
 	"github.com/vitorsalgado/mocha/internal/parameters"
-	"github.com/vitorsalgado/mocha/reply/templating"
 )
 
 type (
@@ -18,7 +17,7 @@ type (
 	StdReply struct {
 		response *core.Response
 		bodyType bodyType
-		template templating.Template
+		template Template
 		model    any
 		err      error
 	}
@@ -27,8 +26,8 @@ type (
 )
 
 const (
-	bodyDefault bodyType = iota
-	bodyTemplate
+	_bodyDefault bodyType = iota
+	_bodyTemplate
 )
 
 // New creates a new StdReply. Prefer to use factory functions for each status code.
@@ -39,7 +38,7 @@ func New() *StdReply {
 			Header:  make(http.Header),
 			Mappers: make([]core.ResponseMapper, 0),
 		},
-		bodyType: bodyDefault,
+		bodyType: _bodyDefault,
 	}
 }
 
@@ -121,8 +120,8 @@ func (rpl *StdReply) Cookie(cookie http.Cookie) *StdReply {
 	return rpl
 }
 
-// RemoveCookie expires a cookie.
-func (rpl *StdReply) RemoveCookie(cookie http.Cookie) *StdReply {
+// ExpireCookie expires a cookie.
+func (rpl *StdReply) ExpireCookie(cookie http.Cookie) *StdReply {
 	cookie.MaxAge = -1
 	rpl.response.Cookies = append(rpl.response.Cookies, &cookie)
 	return rpl
@@ -161,21 +160,20 @@ func (rpl *StdReply) BodyReader(reader io.Reader) *StdReply {
 }
 
 // BodyTemplate defines the response body using a template.
-// It accepts a string or a templating.Template implementation. If a different type is provided, it panics.
-// It panics if template .Compile() returns any error.
+// It accepts a string or a reply.Template implementation. If a different type is provided, it panics.
 func (rpl *StdReply) BodyTemplate(template any) *StdReply {
 	switch e := template.(type) {
 	case string:
-		rpl.template = templating.New().Template(e)
-	case templating.Template:
+		rpl.template = NewTextTemplate().Template(e)
+	case Template:
 		rpl.err = e.Compile()
 		rpl.template = e
-	case *templating.Template:
-		rpl.template = *e
 
 	default:
-		panic(".bodyTemplate() parameter must be: string | templating.Template")
+		panic(".BodyTemplate() parameter must be: string | reply.Template")
 	}
+
+	rpl.bodyType = _bodyTemplate
 
 	return rpl
 }
@@ -205,9 +203,9 @@ func (rpl *StdReply) Build(r *http.Request, _ *core.Mock, _ parameters.Params) (
 	}
 
 	switch rpl.bodyType {
-	case bodyTemplate:
+	case _bodyTemplate:
 		buf := &bytes.Buffer{}
-		model := &templating.Model{Request: r, Data: rpl.model}
+		model := &TemplateData{Request: r, Data: rpl.model}
 		err := rpl.template.Parse(buf, model)
 		if err != nil {
 			return nil, err

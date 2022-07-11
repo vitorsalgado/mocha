@@ -25,6 +25,6 @@ func expectation[V any](
 		Name:          "any",
 		ValueSelector: picker,
 		Matcher:       matcher,
-		Weight:        weightNone,
+		Weight:        _weightNone,
 	}
 }

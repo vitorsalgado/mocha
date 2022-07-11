@@ -1,8 +1,9 @@
-package templating
+package reply
 
 import (
 	"bytes"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -26,7 +27,7 @@ func TestGoTemplating(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	tmpl := New()
+	tmpl := NewTextTemplate()
 	err = tmpl.Template(string(tpl)).FuncMap(template.FuncMap{"trim": strings.TrimSpace}).Compile()
 	if err != nil {
 		t.Fatal(err)
@@ -43,8 +44,43 @@ func TestGoTemplating(t *testing.T) {
 }
 
 func TestTemplatingError(t *testing.T) {
-	tmpl := New()
+	tmpl := NewTextTemplate()
 	err := tmpl.Name("fail").Template("invalid {{ .hi }").Compile()
 
 	assert.NotNil(t, err)
+}
+
+func TestReplyWithTemplate(t *testing.T) {
+	req, _ = http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
+	req.Header.Add("x-test", "dev")
+
+	wd, _ := os.Getwd()
+	f, _ := os.Open(path.Join(wd, "_testdata/test_req.tmpl"))
+	b, _ := ioutil.ReadAll(f)
+
+	data := struct {
+		Name string
+	}{
+		Name: " test  ",
+	}
+
+	res, err := New().
+		Status(http.StatusOK).
+		BodyTemplate(NewTextTemplate().
+			FuncMap(template.FuncMap{"trim": strings.TrimSpace}).
+			Template(string(b))).
+		Model(data).
+		Build(req, &testMock, nil)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	b, err = ioutil.ReadAll(res.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.Equal(t, http.StatusOK, res.Status)
+	assert.Equal(t, "test\ndev\n", string(b))
 }

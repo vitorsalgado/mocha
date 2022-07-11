@@ -4,8 +4,6 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
-
-	"github.com/vitorsalgado/mocha/core"
 )
 
 type (
@@ -36,7 +34,6 @@ type (
 	testServer struct {
 		server *httptest.Server
 		info   ServerInfo
-		t      core.T
 	}
 )
 

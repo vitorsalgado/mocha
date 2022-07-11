@@ -1,4 +1,4 @@
-package templating
+package reply
 
 import (
 	"io"
@@ -16,14 +16,18 @@ type (
 		Parse(io.Writer, any) error
 	}
 
-	Model struct {
+	// TemplateData is the data model used to render the templates.
+	TemplateData struct {
+		// Request is HTTP request ref.
 		Request *http.Request
-		Data    any
+
+		// Data is the field using the .Model(any) method from StdReply.
+		Data any
 	}
 
-	// BuiltInTemplate is the built-in implementation for Template interface.
+	// TextTemplate is the built-in text Template interface.
 	// It uses Go templates.
-	BuiltInTemplate struct {
+	TextTemplate struct {
 		name     string
 		funcMap  template.FuncMap
 		template string
@@ -31,30 +35,30 @@ type (
 	}
 )
 
-// New creates a new BuiltInTemplate.
-func New() *BuiltInTemplate {
-	return &BuiltInTemplate{funcMap: make(template.FuncMap)}
+// NewTextTemplate creates a new BuiltInTemplate.
+func NewTextTemplate() *TextTemplate {
+	return &TextTemplate{funcMap: make(template.FuncMap)}
 }
 
 // Name sets the name of the template.
-func (gt *BuiltInTemplate) Name(name string) *BuiltInTemplate {
+func (gt *TextTemplate) Name(name string) *TextTemplate {
 	gt.name = name
 	return gt
 }
 
 // FuncMap adds a new function to be used inside the Go template.
-func (gt *BuiltInTemplate) FuncMap(fn template.FuncMap) *BuiltInTemplate {
+func (gt *TextTemplate) FuncMap(fn template.FuncMap) *TextTemplate {
 	gt.funcMap = fn
 	return gt
 }
 
 // Template sets the actual template.
-func (gt *BuiltInTemplate) Template(tmpl string) *BuiltInTemplate {
+func (gt *TextTemplate) Template(tmpl string) *TextTemplate {
 	gt.template = tmpl
 	return gt
 }
 
-func (gt *BuiltInTemplate) Compile() error {
+func (gt *TextTemplate) Compile() error {
 	t, err := template.New(gt.name).Funcs(gt.funcMap).Parse(gt.template)
 	if err != nil {
 		return err
@@ -65,6 +69,6 @@ func (gt *BuiltInTemplate) Compile() error {
 	return nil
 }
 
-func (gt *BuiltInTemplate) Parse(w io.Writer, data any) error {
+func (gt *TextTemplate) Parse(w io.Writer, data any) error {
 	return gt.t.Execute(w, data)
 }

@@ -158,7 +158,7 @@ func TestPostExpectations(t *testing.T) {
 	m.Start()
 
 	scoped := m.Mock(
-		NewBuilder().
+		Request().
 			MatchAfter(expect.Repeat(2)).
 			Method("GET").
 			URL(expect.URLPath("/test")).
