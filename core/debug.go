@@ -11,10 +11,10 @@ import (
 // debug wraps an expect.Matcher adding debugging logs.
 // The return value will be the same of the provided expect.Matcher.
 // debug is used internally by Mocha.
-func debug[V any](mk *Mock, matcher expect.Matcher[V]) expect.Matcher[V] {
-	m := expect.Matcher[V]{}
+func debug(mk *Mock, matcher expect.Matcher) expect.Matcher {
+	m := expect.Matcher{}
 	m.Name = "debug"
-	m.Matches = func(v V, params expect.Args) (bool, error) {
+	m.Matches = func(v any, params expect.Args) (bool, error) {
 		result, err := matcher.Matches(v, params)
 		desc := fmt.Sprintf("mock: %d", mk.ID)
 		if mk.Name != "" {

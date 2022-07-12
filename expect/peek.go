@@ -2,10 +2,10 @@ package expect
 
 // Peek will return the result of the given matcher, after executing the provided function.
 // Peek can be used to check the matcher argument.
-func Peek[V any](matcher Matcher[V], action func(v V) error) Matcher[V] {
-	m := Matcher[V]{}
+func Peek(matcher Matcher, action func(v any) error) Matcher {
+	m := Matcher{}
 	m.Name = "Peek"
-	m.Matches = func(v V, params Args) (bool, error) {
+	m.Matches = func(v any, params Args) (bool, error) {
 		err := action(v)
 		if err != nil {
 			return false, err

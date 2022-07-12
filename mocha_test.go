@@ -288,7 +288,7 @@ func TestErrors(t *testing.T) {
 	t.Run("should log errors from matchers", func(t *testing.T) {
 		scoped := m.Mock(Get(expect.URLPath("/test2")).
 			Header("test", expect.Func(
-				func(_ string, _ expect.Args) (bool, error) {
+				func(_ any, _ expect.Args) (bool, error) {
 					return false, fmt.Errorf("failed")
 				})))
 

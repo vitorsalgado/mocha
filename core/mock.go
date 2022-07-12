@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
-	"reflect"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -29,11 +27,11 @@ type (
 		Priority int
 
 		// Expectations are a list of Expectation. These will run on every request to find the correct Mock.
-		Expectations []any
+		Expectations []Expectation
 
 		// PostExpectations are a list of Expectation. They will be executed after the request was matched to a Mock.
 		// This allows stateful matchers whose state data should not be evaluated every match attempt.
-		PostExpectations []any
+		PostExpectations []Expectation
 
 		// Reply is the responder that will be used to serve the HTTP response stub, once matched against an
 		// HTTP request.
@@ -108,16 +106,16 @@ type (
 		Flush()
 	}
 
-	// Expectation holds metadata related to one http.Request expect.Matcher.
-	Expectation[V any] struct {
+	// Expectation holds metadata related to one http.Request Matcher.
+	Expectation struct {
 		// Name is an optional metadata to help debugging request expectations.
 		Name string
 
 		// Matcher associated with this Expectation.
-		Matcher expect.Matcher[V]
+		Matcher expect.Matcher
 
 		// ValueSelector will extract the http.Request or a portion of it and feed it to the associated Matcher.
-		ValueSelector expect.ValueSelector[V]
+		ValueSelector expect.ValueSelector
 
 		// Weight of this Expectation.
 		Weight int
@@ -128,7 +126,7 @@ type (
 		// NonMatched is the list of Mock they were matched.
 		NonMatched []string
 
-		// Weight for the expect.Matcher. It helps determine the closest match.
+		// Weight for the Matcher. It helps determine the closest match.
 		Weight int
 
 		// IsMatch indicates whether it matched or not.
@@ -161,8 +159,8 @@ func NewMock() *Mock {
 	return &Mock{
 		ID:               id.next(),
 		Enabled:          true,
-		Expectations:     make([]any, 0),
-		PostExpectations: make([]any, 0),
+		Expectations:     make([]Expectation, 0),
+		PostExpectations: make([]Expectation, 0),
 		PostActions:      make([]PostAction, 0),
 
 		mu: &sync.Mutex{},
@@ -206,7 +204,7 @@ func (m *Mock) Disable() {
 
 // Matches checks if current Mock matches against a list of expectations.
 // Will iterate through all expectations even if it doesn't match early.
-func (m *Mock) Matches(params expect.Args, expectations []any, t T) (MatchResult, error) {
+func (m *Mock) Matches(params expect.Args, expectations []Expectation, t T) (MatchResult, error) {
 	t.Helper()
 
 	weight := 0
@@ -218,34 +216,7 @@ func (m *Mock) Matches(params expect.Args, expectations []any, t T) (MatchResult
 		var w int
 		var nm string
 
-		switch e := exp.(type) {
-		default:
-			return MatchResult{IsMatch: false, Weight: weight},
-				fmt.Errorf("unhandled matcher type %s", reflect.TypeOf(e).String())
-
-		case Expectation[any]:
-			matched, w, nm, err = matches(e, params, t)
-		case Expectation[string]:
-			matched, w, nm, err = matches(e, params, t)
-		case Expectation[float64]:
-			matched, w, nm, err = matches(e, params, t)
-		case Expectation[bool]:
-			matched, w, nm, err = matches(e, params, t)
-		case Expectation[map[string]any]:
-			matched, w, nm, err = matches(e, params, t)
-		case Expectation[map[string]string]:
-			matched, w, nm, err = matches(e, params, t)
-		case Expectation[map[string][]string]:
-			matched, w, nm, err = matches(e, params, t)
-		case Expectation[[]any]:
-			matched, w, nm, err = matches(e, params, t)
-		case Expectation[url.URL]:
-			matched, w, nm, err = matches(e, params, t)
-		case Expectation[*http.Request]:
-			matched, w, nm, err = matches(e, params, t)
-		case Expectation[url.Values]:
-			matched, w, nm, err = matches(e, params, t)
-		}
+		matched, w, nm, err = matches(exp, params, t)
 
 		// fail fast if an error occurs
 		if err != nil {
@@ -263,7 +234,7 @@ func (m *Mock) Matches(params expect.Args, expectations []any, t T) (MatchResult
 	return MatchResult{IsMatch: finalMatched, Weight: weight}, nil
 }
 
-func matches[V any](e Expectation[V], params expect.Args, t T) (bool, int, string, error) {
+func matches(e Expectation, params expect.Args, t T) (bool, int, string, error) {
 	t.Helper()
 
 	val := e.ValueSelector(params.RequestInfo)

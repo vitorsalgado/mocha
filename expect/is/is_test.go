@@ -12,7 +12,7 @@ func TestIs(t *testing.T) {
 	var res = false
 	var err error = nil
 
-	res, err = AllOf(EqualTo("TEST"), EqualFold("test"), Present[string]()).Matches("TEST", expect.Args{})
+	res, err = AllOf(EqualTo("TEST"), EqualFold("test"), Present()).Matches("TEST", expect.Args{})
 	assert.Nil(t, err)
 	assert.True(t, res)
 
@@ -20,7 +20,7 @@ func TestIs(t *testing.T) {
 	assert.Nil(t, err)
 	assert.True(t, res)
 
-	res, err = Both(EqualTo("dev-test")).And(Not(Empty[string]())).Matches("dev-test", expect.Args{})
+	res, err = Both(EqualTo("dev-test")).And(Not(Empty())).Matches("dev-test", expect.Args{})
 	assert.Nil(t, err)
 	assert.True(t, res)
 

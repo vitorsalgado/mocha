@@ -3,10 +3,10 @@ package expect
 // AllOf matches when all the given matchers returns true.
 // Example:
 //	AllOf(EqualTo("test"),ToEqualFold("test"),ToContains("tes"))
-func AllOf[V any](matchers ...Matcher[V]) Matcher[V] {
-	m := Matcher[V]{}
+func AllOf(matchers ...Matcher) Matcher {
+	m := Matcher{}
 	m.Name = "AllOf"
-	m.Matches = func(v V, args Args) (bool, error) {
+	m.Matches = func(v any, args Args) (bool, error) {
 		for _, matcher := range matchers {
 			if result, err := matcher.Matches(v, args); !result || err != nil {
 				return result, err

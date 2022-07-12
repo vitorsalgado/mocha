@@ -58,10 +58,10 @@ func (store *scenarioStore) Save(scenario scenario) {
 	store.data[scenario.Name] = scenario
 }
 
-func Scenario[V any](name, requiredState, newState string) expect.Matcher[V] {
-	m := expect.Matcher[V]{}
+func Scenario(name, requiredState, newState string) expect.Matcher {
+	m := expect.Matcher{}
 	m.Name = "Scenario"
-	m.Matches = func(_ V, params expect.Args) (bool, error) {
+	m.Matches = func(_ any, params expect.Args) (bool, error) {
 		s, _ := params.Params.Get(BuiltInParamStore)
 		scenarios := s.(Store)
 

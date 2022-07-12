@@ -19,23 +19,23 @@ type (
 		Params      Params
 	}
 
-	Matcher[V any] struct {
+	Matcher struct {
 		Name             string
 		DescribeMismatch func(p string, v any) string
-		Matches          func(v V, args Args) (bool, error)
+		Matches          func(v any, args Args) (bool, error)
 	}
 
-	ValueSelector[V any] func(r *RequestInfo) V
+	ValueSelector func(r *RequestInfo) any
 )
 
-func (m Matcher[V]) And(and Matcher[V]) Matcher[V] {
+func (m Matcher) And(and Matcher) Matcher {
 	return AllOf(m, and)
 }
 
-func (m Matcher[V]) Or(or Matcher[V]) Matcher[V] {
+func (m Matcher) Or(or Matcher) Matcher {
 	return AnyOf(m, or)
 }
 
-func (m Matcher[V]) Xor(and Matcher[V]) Matcher[V] {
+func (m Matcher) Xor(and Matcher) Matcher {
 	return XOR(m, and)
 }

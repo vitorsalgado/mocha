@@ -6,10 +6,10 @@ import (
 )
 
 // ToContain returns true when the expected value is contained in the matcher argument.
-func ToContain[V any](expectation any) Matcher[V] {
-	m := Matcher[V]{}
+func ToContain(expectation any) Matcher {
+	m := Matcher{}
 	m.Name = "Contain"
-	m.Matches = func(list V, args Args) (bool, error) {
+	m.Matches = func(list any, args Args) (bool, error) {
 		listValue := reflect.ValueOf(list)
 		sub := reflect.ValueOf(expectation)
 		listType := reflect.TypeOf(list)

@@ -41,7 +41,7 @@ func TestScenarioConditions(t *testing.T) {
 	args := expect.Args{Params: p}
 
 	t.Run("should return true when scenario is not started and also not found", func(t *testing.T) {
-		m := Scenario[any]("test", "required", "newScenario")
+		m := Scenario("test", "required", "newScenario")
 		res, err := m.Matches(nil, args)
 
 		assert.Nil(t, err)
@@ -51,7 +51,7 @@ func TestScenarioConditions(t *testing.T) {
 	t.Run("should return false when scenario exists but it is not in the required state", func(t *testing.T) {
 		store.CreateNewIfNeeded("hi")
 
-		m := Scenario[any]("hi", "required", "newScenario")
+		m := Scenario("hi", "required", "newScenario")
 		res, err := m.Matches(nil, args)
 
 		assert.Nil(t, err)

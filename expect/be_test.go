@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestTo(t *testing.T) {
+func TestToBe(t *testing.T) {
 	result, err := ToBe(ToEqual("test")).Matches("test", emptyArgs())
 
 	assert.Nil(t, err)

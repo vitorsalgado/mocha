@@ -85,7 +85,7 @@ func TestConfig(t *testing.T) {
 		m.Start()
 
 		scoped := m.Mock(Post(expect.URLPath("/test")).
-			Body(expect.ToEqual[any](10)).
+			Body(expect.ToEqual(10)).
 			Reply(reply.OK()))
 
 		req := testutil.Post(m.URL()+"/test", strings.NewReader("10"))

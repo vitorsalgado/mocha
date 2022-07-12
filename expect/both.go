@@ -2,22 +2,22 @@ package expect
 
 // BothMatcherBuilder is a builder for Both matcher.
 // Use .Both() function to create a new Both matcher.
-type BothMatcherBuilder[V any] struct {
-	first Matcher[V]
+type BothMatcherBuilder struct {
+	first Matcher
 }
 
 // Both matches true when both given matchers evaluates to true.
-func Both[V any](first Matcher[V]) *BothMatcherBuilder[V] {
-	m := &BothMatcherBuilder[V]{first: first}
+func Both(first Matcher) *BothMatcherBuilder {
+	m := &BothMatcherBuilder{first: first}
 
 	return m
 }
 
 // And sets the second matcher.
-func (ba *BothMatcherBuilder[E]) And(second Matcher[E]) Matcher[E] {
-	m := Matcher[E]{}
+func (ba *BothMatcherBuilder) And(second Matcher) Matcher {
+	m := Matcher{}
 	m.Name = "Both"
-	m.Matches = func(v E, args Args) (bool, error) {
+	m.Matches = func(v any, args Args) (bool, error) {
 		r1, err := ba.first.Matches(v, args)
 		if err != nil {
 			return false, err

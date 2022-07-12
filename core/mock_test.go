@@ -72,16 +72,10 @@ func TestMock_Matches(t *testing.T) {
 	m := NewMock()
 	params := expect.Args{}
 
-	t.Run("should return error when unable to cast the given expectation", func(t *testing.T) {
-		res, err := m.Matches(params, []any{Expectation[int32]{}}, fakeT)
-		assert.False(t, res.IsMatch)
-		assert.Error(t, err)
-	})
-
 	t.Run("should match when generic type is known and matcher returns true without errors", func(t *testing.T) {
 		// any
-		res, err := m.Matches(params, []any{Expectation[any]{
-			Matcher: expect.ToEqual[any]("test"),
+		res, err := m.Matches(params, []Expectation{{
+			Matcher: expect.ToEqual("test"),
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return "test"
 			},
@@ -90,9 +84,9 @@ func TestMock_Matches(t *testing.T) {
 		assert.Nil(t, err)
 
 		// string
-		res, err = m.Matches(params, []any{Expectation[string]{
+		res, err = m.Matches(params, []Expectation{{
 			Matcher: expect.ToEqual("test"),
-			ValueSelector: func(r *expect.RequestInfo) string {
+			ValueSelector: func(r *expect.RequestInfo) any {
 				return "test"
 			},
 		}}, fakeT)
@@ -100,9 +94,9 @@ func TestMock_Matches(t *testing.T) {
 		assert.Nil(t, err)
 
 		// float64
-		res, err = m.Matches(params, []any{Expectation[float64]{
+		res, err = m.Matches(params, []Expectation{{
 			Matcher: expect.ToEqual(10.0),
-			ValueSelector: func(r *expect.RequestInfo) float64 {
+			ValueSelector: func(r *expect.RequestInfo) any {
 				return 10.0
 			},
 		}}, fakeT)
@@ -110,9 +104,9 @@ func TestMock_Matches(t *testing.T) {
 		assert.Nil(t, err)
 
 		// bool
-		res, err = m.Matches(params, []any{Expectation[bool]{
+		res, err = m.Matches(params, []Expectation{{
 			Matcher: expect.ToEqual(true),
-			ValueSelector: func(r *expect.RequestInfo) bool {
+			ValueSelector: func(r *expect.RequestInfo) any {
 				return true
 			},
 		}}, fakeT)
@@ -120,9 +114,9 @@ func TestMock_Matches(t *testing.T) {
 		assert.Nil(t, err)
 
 		// map[string]any
-		res, err = m.Matches(params, []any{Expectation[map[string]any]{
+		res, err = m.Matches(params, []Expectation{{
 			Matcher: expect.ToEqual(map[string]any{"key": "value"}),
-			ValueSelector: func(r *expect.RequestInfo) map[string]any {
+			ValueSelector: func(r *expect.RequestInfo) any {
 				return map[string]any{"key": "value"}
 			},
 		}}, fakeT)
@@ -130,9 +124,9 @@ func TestMock_Matches(t *testing.T) {
 		assert.Nil(t, err)
 
 		// map[string]any
-		res, err = m.Matches(params, []any{Expectation[map[string][]string]{
+		res, err = m.Matches(params, []Expectation{{
 			Matcher: expect.ToEqual(map[string][]string{"key": {"value1", "value2"}}),
-			ValueSelector: func(r *expect.RequestInfo) map[string][]string {
+			ValueSelector: func(r *expect.RequestInfo) any {
 				return map[string][]string{"key": {"value1", "value2"}}
 			},
 		}}, fakeT)
@@ -140,9 +134,9 @@ func TestMock_Matches(t *testing.T) {
 		assert.Nil(t, err)
 
 		// []any]
-		res, err = m.Matches(params, []any{Expectation[[]any]{
+		res, err = m.Matches(params, []Expectation{{
 			Matcher: expect.ToEqual([]any{"test"}),
-			ValueSelector: func(r *expect.RequestInfo) []any {
+			ValueSelector: func(r *expect.RequestInfo) any {
 				return []any{"test"}
 			},
 		}}, fakeT)
@@ -151,9 +145,9 @@ func TestMock_Matches(t *testing.T) {
 
 		// url.URL
 		u, _ := url.Parse("http://localhost:8080")
-		res, err = m.Matches(params, []any{Expectation[url.URL]{
+		res, err = m.Matches(params, []Expectation{{
 			Matcher: expect.ToEqual(*u),
-			ValueSelector: func(r *expect.RequestInfo) url.URL {
+			ValueSelector: func(r *expect.RequestInfo) any {
 				return *u
 			},
 		}}, fakeT)
@@ -161,9 +155,9 @@ func TestMock_Matches(t *testing.T) {
 		assert.Nil(t, err)
 
 		// url.Value
-		res, err = m.Matches(params, []any{Expectation[url.Values]{
+		res, err = m.Matches(params, []Expectation{{
 			Matcher: expect.ToEqual(url.Values{}),
-			ValueSelector: func(r *expect.RequestInfo) url.Values {
+			ValueSelector: func(r *expect.RequestInfo) any {
 				return url.Values{}
 			},
 		}}, fakeT)
@@ -172,9 +166,9 @@ func TestMock_Matches(t *testing.T) {
 
 		// http.Request
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
-		res, err = m.Matches(params, []any{Expectation[*http.Request]{
+		res, err = m.Matches(params, []Expectation{{
 			Matcher: expect.ToEqual(req),
-			ValueSelector: func(r *expect.RequestInfo) *http.Request {
+			ValueSelector: func(r *expect.RequestInfo) any {
 				return req
 			},
 		}}, fakeT)
@@ -184,9 +178,9 @@ func TestMock_Matches(t *testing.T) {
 
 	t.Run("should return not matched result when one of expectations returns false", func(t *testing.T) {
 		// string
-		res, err := m.Matches(params, []any{Expectation[string]{
+		res, err := m.Matches(params, []Expectation{{
 			Matcher: expect.ToEqual("test"),
-			ValueSelector: func(r *expect.RequestInfo) string {
+			ValueSelector: func(r *expect.RequestInfo) any {
 				return "dev"
 			},
 		}}, fakeT)
@@ -196,11 +190,11 @@ func TestMock_Matches(t *testing.T) {
 
 	t.Run("should return not matched and error when one of expectations returns error", func(t *testing.T) {
 		// string
-		res, err := m.Matches(params, []any{Expectation[string]{
-			Matcher: expect.Func(func(_ string, p expect.Args) (bool, error) {
+		res, err := m.Matches(params, []Expectation{{
+			Matcher: expect.Func(func(_ any, p expect.Args) (bool, error) {
 				return false, fmt.Errorf("fail")
 			}),
-			ValueSelector: func(r *expect.RequestInfo) string {
+			ValueSelector: func(r *expect.RequestInfo) any {
 				return "dev"
 			},
 		}}, fakeT)
@@ -210,24 +204,24 @@ func TestMock_Matches(t *testing.T) {
 
 	t.Run("should return the sum of the matchers weight when it matches", func(t *testing.T) {
 		// any
-		res, err := m.Matches(params, []any{
-			Expectation[any]{
-				Matcher: expect.ToEqualAny("test"),
+		res, err := m.Matches(params, []Expectation{
+			{
+				Matcher: expect.ToEqual("test"),
 				ValueSelector: func(r *expect.RequestInfo) any {
 					return "test"
 				},
 				Weight: 2,
 			},
-			Expectation[string]{
+			{
 				Matcher: expect.ToEqual("test"),
-				ValueSelector: func(r *expect.RequestInfo) string {
+				ValueSelector: func(r *expect.RequestInfo) any {
 					return "test"
 				},
 				Weight: 1,
 			},
-			Expectation[float64]{
+			{
 				Matcher: expect.ToEqual(10.0),
-				ValueSelector: func(r *expect.RequestInfo) float64 {
+				ValueSelector: func(r *expect.RequestInfo) any {
 					return 10.0
 				},
 				Weight: 2,
@@ -240,24 +234,24 @@ func TestMock_Matches(t *testing.T) {
 
 	t.Run("should return the sum of the matchers weight when one of then doesnt matches", func(t *testing.T) {
 		// any
-		res, err := m.Matches(params, []any{
-			Expectation[any]{
-				Matcher: expect.ToEqualAny("test"),
+		res, err := m.Matches(params, []Expectation{
+			{
+				Matcher: expect.ToEqual("test"),
 				ValueSelector: func(r *expect.RequestInfo) any {
 					return "test"
 				},
 				Weight: 2,
 			},
-			Expectation[string]{
+			{
 				Matcher: expect.ToEqual("test"),
-				ValueSelector: func(r *expect.RequestInfo) string {
+				ValueSelector: func(r *expect.RequestInfo) any {
 					return "dev"
 				},
 				Weight: 1,
 			},
-			Expectation[float64]{
+			{
 				Matcher: expect.ToEqual(10.0),
-				ValueSelector: func(r *expect.RequestInfo) float64 {
+				ValueSelector: func(r *expect.RequestInfo) any {
 					return 10.0
 				},
 				Weight: 2,

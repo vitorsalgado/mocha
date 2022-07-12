@@ -22,7 +22,7 @@ func TestFormUrlEncoded(t *testing.T) {
 
 	scoped := m.Mock(mocha.Post(expect.URLPath("/test")).
 		FormField("var1", expect.ToEqual("dev")).
-		FormField("var2", expect.ToContain[string]("q")).
+		FormField("var2", expect.ToContain("q")).
 		Reply(reply.OK()))
 
 	data := url.Values{}

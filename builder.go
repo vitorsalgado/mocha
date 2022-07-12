@@ -2,7 +2,6 @@ package mocha
 
 import (
 	"net/http"
-	"net/url"
 
 	"github.com/vitorsalgado/mocha/core"
 	"github.com/vitorsalgado/mocha/expect"
@@ -19,6 +18,7 @@ type MockBuilder struct {
 	mock                  *core.Mock
 }
 
+// Weights helps to detect the closest mock match.
 const (
 	_weightNone    = 0
 	_weightVeryLow = 1
@@ -33,37 +33,37 @@ func Request() *MockBuilder {
 }
 
 // Get inits a mock for GET method.
-func Get(m expect.Matcher[url.URL]) *MockBuilder {
+func Get(m expect.Matcher) *MockBuilder {
 	return Request().URL(m).Method(http.MethodGet)
 }
 
 // Post inits a mock for Post method.
-func Post(m expect.Matcher[url.URL]) *MockBuilder {
+func Post(m expect.Matcher) *MockBuilder {
 	return Request().URL(m).Method(http.MethodPost)
 }
 
 // Put inits a mock for Put method.
-func Put(m expect.Matcher[url.URL]) *MockBuilder {
+func Put(m expect.Matcher) *MockBuilder {
 	return Request().URL(m).Method(http.MethodPut)
 }
 
 // Patch inits a mock for Patch method.
-func Patch(u expect.Matcher[url.URL]) *MockBuilder {
+func Patch(u expect.Matcher) *MockBuilder {
 	return Request().URL(u).Method(http.MethodPatch)
 }
 
 // Delete inits a mock for Delete method.
-func Delete(m expect.Matcher[url.URL]) *MockBuilder {
+func Delete(m expect.Matcher) *MockBuilder {
 	return Request().URL(m).Method(http.MethodDelete)
 }
 
 // Head inits a mock for Head method.
-func Head(m expect.Matcher[url.URL]) *MockBuilder {
+func Head(m expect.Matcher) *MockBuilder {
 	return Request().URL(m).Method(http.MethodHead)
 }
 
 // Options inits a mock for Options method.
-func Options(m expect.Matcher[url.URL]) *MockBuilder {
+func Options(m expect.Matcher) *MockBuilder {
 	return Request().URL(m).Method(http.MethodOptions)
 }
 
@@ -85,9 +85,9 @@ func (b *MockBuilder) Priority(p int) *MockBuilder {
 func (b *MockBuilder) Method(method string) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
-		core.Expectation[string]{
+		core.Expectation{
 			Name:          "method",
-			ValueSelector: func(r *expect.RequestInfo) string { return r.Request.Method },
+			ValueSelector: func(r *expect.RequestInfo) any { return r.Request.Method },
 			Matcher:       expect.ToEqualFold(method),
 			Weight:        _weightVeryLow,
 		})
@@ -96,12 +96,12 @@ func (b *MockBuilder) Method(method string) *MockBuilder {
 }
 
 // URL defines a matcher to be applied to the http.Request url.URL.
-func (b *MockBuilder) URL(m expect.Matcher[url.URL]) *MockBuilder {
+func (b *MockBuilder) URL(m expect.Matcher) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
-		core.Expectation[url.URL]{
+		core.Expectation{
 			Name:          "url",
-			ValueSelector: func(r *expect.RequestInfo) url.URL { return *r.Request.URL },
+			ValueSelector: func(r *expect.RequestInfo) any { return r.Request.URL },
 			Matcher:       m,
 			Weight:        _weightRegular,
 		})
@@ -110,12 +110,12 @@ func (b *MockBuilder) URL(m expect.Matcher[url.URL]) *MockBuilder {
 }
 
 // Header adds a matcher to a specific http.Header key.
-func (b *MockBuilder) Header(key string, m expect.Matcher[string]) *MockBuilder {
+func (b *MockBuilder) Header(key string, m expect.Matcher) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
-		core.Expectation[string]{
+		core.Expectation{
 			Name:          "header",
-			ValueSelector: func(r *expect.RequestInfo) string { return r.Request.Header.Get(key) },
+			ValueSelector: func(r *expect.RequestInfo) any { return r.Request.Header.Get(key) },
 			Matcher:       m,
 			Weight:        _weightVeryLow,
 		})
@@ -124,12 +124,12 @@ func (b *MockBuilder) Header(key string, m expect.Matcher[string]) *MockBuilder 
 }
 
 // Query defines a matcher to a specific query.
-func (b *MockBuilder) Query(key string, m expect.Matcher[string]) *MockBuilder {
+func (b *MockBuilder) Query(key string, m expect.Matcher) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
-		core.Expectation[string]{
+		core.Expectation{
 			Name:          "query",
-			ValueSelector: func(r *expect.RequestInfo) string { return r.Request.URL.Query().Get(key) },
+			ValueSelector: func(r *expect.RequestInfo) any { return r.Request.URL.Query().Get(key) },
 			Matcher:       m,
 			Weight:        _weightVeryLow,
 		})
@@ -141,10 +141,10 @@ func (b *MockBuilder) Query(key string, m expect.Matcher[string]) *MockBuilder {
 // If request contains a JSON body, you can provide multiple matchers to several fields.
 // Example:
 //	m.Body(JSONPath("name", EqualTo("test")), JSONPath("address.street", ToContains("nowhere")))
-func (b *MockBuilder) Body(matcherList ...expect.Matcher[any]) *MockBuilder {
+func (b *MockBuilder) Body(matcherList ...expect.Matcher) *MockBuilder {
 	for _, m := range matcherList {
 		b.mock.Expectations = append(b.mock.Expectations,
-			core.Expectation[any]{
+			core.Expectation{
 				Name:          "body",
 				ValueSelector: func(r *expect.RequestInfo) any { return r.ParsedBody },
 				Matcher:       m,
@@ -156,11 +156,11 @@ func (b *MockBuilder) Body(matcherList ...expect.Matcher[any]) *MockBuilder {
 }
 
 // FormField defines a matcher for a specific form field by its key.
-func (b *MockBuilder) FormField(field string, m expect.Matcher[string]) *MockBuilder {
+func (b *MockBuilder) FormField(field string, m expect.Matcher) *MockBuilder {
 	b.mock.Expectations = append(b.mock.Expectations,
-		core.Expectation[string]{
+		core.Expectation{
 			Name:          "form_field",
-			ValueSelector: func(r *expect.RequestInfo) string { return r.Request.Form.Get(field) },
+			ValueSelector: func(r *expect.RequestInfo) any { return r.Request.Form.Get(field) },
 			Matcher:       m,
 			Weight:        _weightVeryLow,
 		})
@@ -172,7 +172,7 @@ func (b *MockBuilder) FormField(field string, m expect.Matcher[string]) *MockBui
 func (b *MockBuilder) Repeat(times int) *MockBuilder {
 	b.mock.PostExpectations = append(
 		b.mock.PostExpectations,
-		core.Expectation[any]{
+		core.Expectation{
 			Name:          "repeat",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request },
 			Matcher:       expect.Repeat(times),
@@ -183,10 +183,10 @@ func (b *MockBuilder) Repeat(times int) *MockBuilder {
 }
 
 // Matches sets a custom matcher, not necessary tied to a specific request parameter.
-func (b *MockBuilder) Matches(m expect.Matcher[any]) *MockBuilder {
+func (b *MockBuilder) Matches(m expect.Matcher) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
-		core.Expectation[any]{
+		core.Expectation{
 			Name:          "any",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request },
 			Matcher:       m,
@@ -197,12 +197,12 @@ func (b *MockBuilder) Matches(m expect.Matcher[any]) *MockBuilder {
 }
 
 // RequestMatches defines expect.Matcher to be applied to a http.Request.
-func (b *MockBuilder) RequestMatches(m expect.Matcher[*http.Request]) *MockBuilder {
+func (b *MockBuilder) RequestMatches(m expect.Matcher) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
-		core.Expectation[*http.Request]{
+		core.Expectation{
 			Name:          "request",
-			ValueSelector: func(r *expect.RequestInfo) *http.Request { return r.Request },
+			ValueSelector: func(r *expect.RequestInfo) any { return r.Request },
 			Matcher:       m,
 			Weight:        _weightLow,
 		})
@@ -237,10 +237,10 @@ func (b *MockBuilder) ScenarioStateWillBe(newState string) *MockBuilder {
 
 // MatchAfter adds a expect.Matcher that will run after the standard matchers and before serving the mocked response.
 // After matchers are mostly used in special cases, like when they need to keep data that should not be evaluated all the time.
-func (b *MockBuilder) MatchAfter(m expect.Matcher[any]) *MockBuilder {
+func (b *MockBuilder) MatchAfter(m expect.Matcher) *MockBuilder {
 	b.mock.PostExpectations = append(
 		b.mock.PostExpectations,
-		core.Expectation[any]{
+		core.Expectation{
 			Name:          "after",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request },
 			Matcher:       m,
@@ -256,7 +256,7 @@ func (b *MockBuilder) PostAction(action core.PostAction) *MockBuilder {
 	return b
 }
 
-func (b *MockBuilder) Cond(expect any) *MockBuilder {
+func (b *MockBuilder) Cond(expect core.Expectation) *MockBuilder {
 	b.mock.Expectations = append(b.mock.Expectations, expect)
 	return b
 }
@@ -293,7 +293,7 @@ func (b *MockBuilder) ReplyJust(status int, r ...reply.StdReply) *MockBuilder {
 // Used internally by Mocha.
 func (b *MockBuilder) Build() *core.Mock {
 	if b.scenario != "" {
-		b.RequestMatches(scenario.Scenario[*http.Request](b.scenario, b.scenarioRequiredState, b.scenarioNewState))
+		b.RequestMatches(scenario.Scenario(b.scenario, b.scenarioRequiredState, b.scenarioNewState))
 	}
 
 	return b.mock

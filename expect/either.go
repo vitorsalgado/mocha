@@ -2,20 +2,20 @@ package expect
 
 // EitherMatcherBuilder is a builder for Either matcher.
 // Prefer to use the Either() function.
-type EitherMatcherBuilder[V any] struct {
-	first Matcher[V]
+type EitherMatcherBuilder struct {
+	first Matcher
 }
 
 // Either matches true when any of the two given matchers returns true.
-func Either[V any](first Matcher[V]) *EitherMatcherBuilder[V] {
-	return &EitherMatcherBuilder[V]{first}
+func Either(first Matcher) *EitherMatcherBuilder {
+	return &EitherMatcherBuilder{first}
 }
 
 // Or sets the second matcher
-func (e *EitherMatcherBuilder[V]) Or(second Matcher[V]) Matcher[V] {
-	m := Matcher[V]{}
+func (e *EitherMatcherBuilder) Or(second Matcher) Matcher {
+	m := Matcher{}
 	m.Name = "Either"
-	m.Matches = func(v V, args Args) (bool, error) {
+	m.Matches = func(v any, args Args) (bool, error) {
 		r1, err := e.first.Matches(v, args)
 		if err != nil {
 			return false, err

@@ -12,10 +12,10 @@ type RegExpMatcherTypes interface {
 
 // ToMatchExpr returns true then the given regular expression matches matcher argument.
 // ToMatchExpr accepts a string or a regexp.Regexp.
-func ToMatchExpr[V any, T RegExpMatcherTypes](re T) Matcher[V] {
-	m := Matcher[V]{}
+func ToMatchExpr[T RegExpMatcherTypes](re T) Matcher {
+	m := Matcher{}
 	m.Name = "MatchExpr"
-	m.Matches = func(v V, params Args) (bool, error) {
+	m.Matches = func(v any, params Args) (bool, error) {
 		var err error
 		var result bool
 

@@ -7,8 +7,8 @@ import (
 // JSONPath applies the provided matcher to the JSON field value in the given path.
 // Example:
 //	JSONPath("address.city", EqualTo("Santiago"))
-func JSONPath[V any](p string, matcher Matcher[V]) Matcher[any] {
-	m := Matcher[any]{}
+func JSONPath(p string, matcher Matcher) Matcher {
+	m := Matcher{}
 	m.Name = "JSONPath"
 	m.Matches = func(v any, args Args) (bool, error) {
 		value, err := jsonx.Reach(p, v)
@@ -16,7 +16,7 @@ func JSONPath[V any](p string, matcher Matcher[V]) Matcher[any] {
 			return false, err
 		}
 
-		return matcher.Matches(value.(V), args)
+		return matcher.Matches(value, args)
 	}
 
 	return m

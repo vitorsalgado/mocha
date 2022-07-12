@@ -16,9 +16,10 @@ func TestExpectations(t *testing.T) {
 	m := New(t)
 	m.Start()
 
-	scoped := m.Mock(Get(expect.URLPath("/test")).
-		Cond(Expect(Header("hello")).ToEqual("world")).
-		Reply(reply.OK()))
+	scoped := m.Mock(
+		Get(expect.URLPath("/test")).
+			Cond(Expect(Header("hello")).ToEqual("world")).
+			Reply(reply.OK()))
 
 	req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
 	req.Header("hello", "world")

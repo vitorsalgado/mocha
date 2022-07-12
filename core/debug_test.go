@@ -22,7 +22,7 @@ func TestDebugErr(t *testing.T) {
 	mk := NewMock()
 	mk.Name = "test"
 	result, err := debug(mk, expect.Func(
-		func(v string, params expect.Args) (bool, error) {
+		func(v any, params expect.Args) (bool, error) {
 			return false, fmt.Errorf("failed")
 		})).
 		Matches("test", expect.Args{})

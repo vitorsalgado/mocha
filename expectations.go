@@ -5,27 +5,27 @@ import (
 	"github.com/vitorsalgado/mocha/expect"
 )
 
-type Expectation[V any] struct {
-	picker expect.ValueSelector[V]
+type Expectation struct {
+	picker expect.ValueSelector
 }
 
-func Expect[V any](picker expect.ValueSelector[V]) Expectation[V] {
-	return Expectation[V]{picker: picker}
+func Expect(picker expect.ValueSelector) Expectation {
+	return Expectation{picker: picker}
 }
 
-func (e Expectation[V]) ToEqual(v V) core.Expectation[V] {
+func (e Expectation) ToEqual(v any) core.Expectation {
 	return expectation(e.picker, expect.ToEqual(v))
 }
 
-func (e Expectation[V]) ToContain(v V) core.Expectation[V] {
-	return expectation(e.picker, expect.ToContain[V](v))
+func (e Expectation) ToContain(v any) core.Expectation {
+	return expectation(e.picker, expect.ToContain(v))
 }
 
-func expectation[V any](
-	picker expect.ValueSelector[V],
-	matcher expect.Matcher[V],
-) core.Expectation[V] {
-	return core.Expectation[V]{
+func expectation(
+	picker expect.ValueSelector,
+	matcher expect.Matcher,
+) core.Expectation {
+	return core.Expectation{
 		Name:          "any",
 		ValueSelector: picker,
 		Matcher:       matcher,

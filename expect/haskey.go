@@ -9,8 +9,8 @@ import (
 //	JSON: { "name": "test" }
 //	ToHaveKey("name") will return true
 //	ToHaveKey("address.street") will return false.
-func ToHaveKey[V any](path string) Matcher[any] {
-	m := Matcher[any]{}
+func ToHaveKey(path string) Matcher {
+	m := Matcher{}
 	m.Name = "HasKey"
 	m.Matches = func(v any, args Args) (bool, error) {
 		value, err := jsonx.Reach(path, v)
