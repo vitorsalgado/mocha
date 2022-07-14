@@ -71,17 +71,15 @@ func TestPostJSON(t *testing.T) {
 		m := mocha.New(t)
 		m.Start()
 
-		data := map[string]interface{}{
-			"ok":   true,
-			"name": "dev",
-		}
+		data1 := map[string]interface{}{"ok": true, "name": "dev"}
+		data2 := map[string]interface{}{"ok": true, "name": "dev"}
 
 		scoped := m.Mock(mocha.Post(expect.URLPath("/test")).
 			Header("test", expect.ToEqual("hello")).
-			Body(expect.ToEqualJSON(data)).
+			Body(expect.ToEqualJSON(data1)).
 			Reply(reply.OK()))
 
-		req := testutil.PostJSON(m.URL()+"/test", data)
+		req := testutil.PostJSON(m.URL()+"/test", data2)
 		req.Header("test", "hello")
 
 		res, err := req.Do()
@@ -99,11 +97,7 @@ func TestPostJSON(t *testing.T) {
 		m := mocha.New(t)
 		m.Start()
 
-		toMatch := map[string]interface{}{
-			"name": "dev",
-			"ok":   true,
-		}
-
+		toMatch := map[string]interface{}{"name": "dev", "ok": true}
 		data := jsonTestModel{Name: "dev", OK: true}
 
 		scoped := m.Mock(mocha.Post(expect.URLPath("/test")).
@@ -123,5 +117,31 @@ func TestPostJSON(t *testing.T) {
 
 		assert.True(t, scoped.Called())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
+	})
+
+	t.Run("should not match when the given json is different than the incoming request body", func(t *testing.T) {
+		m := mocha.New(t)
+		m.Start()
+
+		body := map[string]interface{}{"ok": true, "name": "dev"}
+		exp := map[string]interface{}{"ok": false, "name": "qa"}
+
+		scoped := m.Mock(mocha.Post(expect.URLPath("/test")).
+			Header("test", expect.ToEqual("hello")).
+			Body(expect.ToEqualJSON(exp)).
+			Reply(reply.OK()))
+
+		req := testutil.PostJSON(m.URL()+"/test", body)
+		req.Header("test", "hello")
+
+		res, err := req.Do()
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		defer res.Body.Close()
+
+		assert.False(t, scoped.Called())
+		assert.Equal(t, http.StatusTeapot, res.StatusCode)
 	})
 }

@@ -25,3 +25,14 @@ func TestEqual(t *testing.T) {
 		assert.True(t, res)
 	})
 }
+
+func TestToEqualJSON(t *testing.T) {
+	t.Run("should return matcher error", func(t *testing.T) {
+		c := make(chan bool, 1)
+		body := map[string]interface{}{"ok": true, "name": "dev"}
+		res, err := ToEqualJSON(c).Matches(body, emptyArgs())
+
+		assert.Error(t, err)
+		assert.False(t, res)
+	})
+}

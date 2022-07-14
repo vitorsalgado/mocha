@@ -77,7 +77,7 @@ func (b *MockBuilder) Method(method string) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
 		core.Expectation{
-			Name:          "method",
+			Target:        "method",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request.Method },
 			Matcher:       expect.ToEqualFold(method),
 			Weight:        core.WeightNone,
@@ -91,7 +91,7 @@ func (b *MockBuilder) URL(m expect.Matcher) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
 		core.Expectation{
-			Name:          "url",
+			Target:        "url",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request.URL },
 			Matcher:       m,
 			Weight:        core.WeightRegular,
@@ -105,7 +105,7 @@ func (b *MockBuilder) Header(key string, m expect.Matcher) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
 		core.Expectation{
-			Name:          "header",
+			Target:        "header",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request.Header.Get(key) },
 			Matcher:       m,
 			Weight:        core.WeightLow,
@@ -119,7 +119,7 @@ func (b *MockBuilder) Query(key string, m expect.Matcher) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
 		core.Expectation{
-			Name:          "query",
+			Target:        "query",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request.URL.Query().Get(key) },
 			Matcher:       m,
 			Weight:        core.WeightVeryLow,
@@ -136,7 +136,7 @@ func (b *MockBuilder) Body(matcherList ...expect.Matcher) *MockBuilder {
 	for _, m := range matcherList {
 		b.mock.Expectations = append(b.mock.Expectations,
 			core.Expectation{
-				Name:          "body",
+				Target:        "body",
 				ValueSelector: func(r *expect.RequestInfo) any { return r.ParsedBody },
 				Matcher:       m,
 				Weight:        core.WeightHigh,
@@ -150,7 +150,7 @@ func (b *MockBuilder) Body(matcherList ...expect.Matcher) *MockBuilder {
 func (b *MockBuilder) FormField(field string, m expect.Matcher) *MockBuilder {
 	b.mock.Expectations = append(b.mock.Expectations,
 		core.Expectation{
-			Name:          "form",
+			Target:        "form",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request.Form.Get(field) },
 			Matcher:       m,
 			Weight:        core.WeightVeryLow,
@@ -164,7 +164,7 @@ func (b *MockBuilder) Repeat(times int) *MockBuilder {
 	b.mock.PostExpectations = append(
 		b.mock.PostExpectations,
 		core.Expectation{
-			Name:          "repeat",
+			Target:        "repeat",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request },
 			Matcher:       expect.Repeat(times),
 			Weight:        core.WeightNone,
@@ -178,7 +178,7 @@ func (b *MockBuilder) RequestMatches(m expect.Matcher) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
 		core.Expectation{
-			Name:          "request",
+			Target:        "request",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request },
 			Matcher:       m,
 			Weight:        core.WeightLow,
@@ -218,7 +218,7 @@ func (b *MockBuilder) MatchAfter(m expect.Matcher) *MockBuilder {
 	b.mock.PostExpectations = append(
 		b.mock.PostExpectations,
 		core.Expectation{
-			Name:          "after",
+			Target:        "after",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request },
 			Matcher:       m,
 			Weight:        core.WeightNone,

@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/vitorsalgado/mocha/expect"
-	"github.com/vitorsalgado/mocha/internal/colorize"
 	"github.com/vitorsalgado/mocha/internal/parameters"
 )
 
@@ -45,7 +44,18 @@ type (
 		// PostActions holds PostAction list to be executed after the Mock was matched and served.
 		PostActions []PostAction
 
+		// Description better describes a mock.
+		Description Description
+
 		mu *sync.Mutex
+	}
+
+	// Description holds metadata used only to better describe mocks, specially the closest matched mocks.
+	Description struct {
+		// Method is the http.Request method.
+		Method string
+		// URL can be the complete URL or just the path.
+		URL string
 	}
 
 	// PostActionArgs represents the arguments that will be passed to every PostAction implementation
@@ -110,8 +120,9 @@ type (
 
 	// Expectation holds metadata related to one http.Request Matcher.
 	Expectation struct {
-		// Name is an optional metadata to help debugging request expectations.
-		Name string
+		// Target is an optional metadata that describes the target of the matcher.
+		// Example: the target could have the "header", meaning that the matcher will be applied to one request header.
+		Target string
 
 		// Matcher associated with this Expectation.
 		Matcher expect.Matcher
@@ -125,8 +136,8 @@ type (
 
 	// MatchResult holds information related to a matching operation.
 	MatchResult struct {
-		// NonMatched is the list of Mock they were matched.
-		NonMatched []string
+		// MismatchDetails is the list of non matches messages.
+		MismatchDetails []MismatchDetail
 
 		// Weight for the Matcher. It helps determine the closest match.
 		Weight int
@@ -135,13 +146,18 @@ type (
 		IsMatch bool
 	}
 
+	MismatchDetail struct {
+		Name        string
+		Target      string
+		Description string
+	}
+
 	// T is based on testing.T and allow mocha components to log information and errors.
 	T interface {
-		Cleanup(func())
 		Helper()
 		Logf(string, ...any)
 		Errorf(string, ...any)
-		Fatalf(string, ...any)
+		FailNow()
 	}
 )
 
@@ -162,6 +178,7 @@ func NewMock() *Mock {
 		Expectations:     make([]Expectation, 0),
 		PostExpectations: make([]Expectation, 0),
 		PostActions:      make([]PostAction, 0),
+		Description:      Description{},
 
 		mu: &sync.Mutex{},
 	}
@@ -204,62 +221,50 @@ func (m *Mock) Disable() {
 
 // Matches checks if current Mock matches against a list of expectations.
 // Will iterate through all expectations even if it doesn't match early.
-func (m *Mock) Matches(params expect.Args, expectations []Expectation, t T) (MatchResult, error) {
-	t.Helper()
-
+func (m *Mock) Matches(params expect.Args, expectations []Expectation) (MatchResult, error) {
 	weight := 0
 	finalMatched := true
+	details := make([]MismatchDetail, 0)
 
 	for _, exp := range expectations {
-		var matched bool
-		var err error
-
-		matched, err = matches(exp, params, t)
+		matched, detail, err := matches(exp, params)
 
 		// fail fast if an error occurs
 		if err != nil {
-			msg := fmt.Sprintf("matcher %s returned an error: %v", exp.Name, err)
-			t.Logf(msg)
-
-			return MatchResult{IsMatch: false, Weight: weight}, fmt.Errorf(msg)
+			return MatchResult{IsMatch: false, Weight: weight},
+				fmt.Errorf("matcher %s returned an error: %v", exp.Target, err)
 		}
 
 		if !matched {
+			details = append(details, detail)
 			finalMatched = matched
 		}
 
 		weight += int(exp.Weight)
 	}
 
-	return MatchResult{IsMatch: finalMatched, Weight: weight}, nil
+	return MatchResult{IsMatch: finalMatched, Weight: weight, MismatchDetails: details}, nil
 }
 
-func matches(e Expectation, params expect.Args, t T) (bool, error) {
-	t.Helper()
-
+func matches(e Expectation, params expect.Args) (bool, MismatchDetail, error) {
 	val := e.ValueSelector(params.RequestInfo)
 	res, err := e.Matcher.Matches(val, params)
 
 	if err != nil {
-		t.Logf("\n%s\nError: %s\nContext: %s",
-			colorize.Yellow(fmt.Sprintf("Matcher %s returned an error", colorize.Bold(e.Matcher.Name))),
-			colorize.Yellow(err.Error()),
-			e.Name)
-
-		return false, err
+		return false,
+			MismatchDetail{Name: e.Matcher.Name, Target: e.Target},
+			err
 	}
 
 	if !res {
 		desc := ""
+
 		if e.Matcher.DescribeMismatch != nil {
-			desc = e.Matcher.DescribeMismatch(e.Name, val)
+			desc = e.Matcher.DescribeMismatch(e.Target, val)
 		}
 
-		t.Logf("\n%s\n%s\n%s",
-			colorize.Yellow(fmt.Sprintf("Matcher %s dit not match.", colorize.Bold(e.Matcher.Name))),
-			"applied to: "+e.Name,
-			desc)
+		return res, MismatchDetail{Name: e.Matcher.Name, Target: e.Target, Description: desc}, err
 	}
 
-	return res, err
+	return res, MismatchDetail{}, err
 }

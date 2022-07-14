@@ -16,8 +16,8 @@ func ToEqual(expected any) Matcher {
 	matcher.Name = "Equal"
 	matcher.DescribeMismatch = func(p string, v any) string {
 		return fmt.Sprintf("%s\n%s",
-			fmt.Sprintf("expected: %v", colorize.Green(misc.ToString(expected))),
-			fmt.Sprintf("got: %s", colorize.Yellow(misc.ToString(v))),
+			fmt.Sprintf("expected: %v", colorize.Green(misc.Stringify(expected))),
+			fmt.Sprintf("got: %s", colorize.Yellow(misc.Stringify(v))),
 		)
 	}
 	matcher.Matches = func(v any, args Args) (bool, error) {
@@ -33,8 +33,8 @@ func ToEqualJSON(expected any) Matcher {
 	matcher.Name = "EqualJSON"
 	matcher.DescribeMismatch = func(p string, v any) string {
 		return fmt.Sprintf("%s\n%s",
-			fmt.Sprintf("expected: %v", colorize.Green(misc.ToString(expected))),
-			fmt.Sprintf("got: %s", colorize.Yellow(misc.ToString(v))),
+			fmt.Sprintf("expected: %v", colorize.Green(misc.Stringify(expected))),
+			fmt.Sprintf("got: %s", colorize.Yellow(misc.Stringify(v))),
 		)
 	}
 	matcher.Matches = func(v any, args Args) (bool, error) {

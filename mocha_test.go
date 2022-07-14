@@ -155,9 +155,7 @@ func TestPostExpectations(t *testing.T) {
 }
 
 func TestErrors(t *testing.T) {
-	fake := mocks.NewT()
-
-	m := New(fake)
+	m := New(t)
 	m.Start()
 
 	defer m.Close()
@@ -173,7 +171,6 @@ func TestErrors(t *testing.T) {
 		assert.Nil(t, err)
 		assert.True(t, scoped.Called())
 		assert.Equal(t, http.StatusTeapot, res.StatusCode)
-		fake.AssertNumberOfCalls(t, "Logf", 1)
 	})
 
 	t.Run("should log errors from matchers", func(t *testing.T) {
@@ -188,7 +185,6 @@ func TestErrors(t *testing.T) {
 		assert.Nil(t, err)
 		assert.False(t, scoped.Called())
 		assert.Equal(t, http.StatusTeapot, res.StatusCode)
-		fake.AssertNumberOfCalls(t, "Logf", 4)
 	})
 }
 

@@ -18,10 +18,16 @@ type (
 		server  Server
 		storage core.Storage
 		context context.Context
+		cancel  context.CancelFunc
 		params  parameters.Params
 		scopes  []*Scoped
 		mu      *sync.Mutex
 		t       core.T
+	}
+
+	// Cleanable allows marking mocha instance to be closed on test cleanup.
+	Cleanable interface {
+		Cleanup(func())
 	}
 )
 
@@ -65,7 +71,8 @@ func New(t core.T, config ...Config) *Mocha {
 
 	err := server.Configure(cfg, handler)
 	if err != nil {
-		t.Fatalf("failed to configure mock server. reason: %v", err)
+		t.Errorf("failed to configure mock server. reason: %v", err)
+		t.FailNow()
 	}
 
 	parent := cfg.Context
@@ -78,27 +85,18 @@ func New(t core.T, config ...Config) *Mocha {
 		server:  server,
 		storage: storage,
 		context: ctx,
+		cancel:  cancel,
 		params:  params,
 		scopes:  make([]*Scoped, 0),
 		mu:      &sync.Mutex{},
 		t:       t}
 
-	closeSrv := func() {
-		e := m.Close()
-
-		if e != nil {
-			t.Logf("\nerror closing mocha http server. error=%v", e)
-		}
-	}
-
-	t.Cleanup(func() {
-		defer cancel()
-		closeSrv()
-	})
-
 	go func() {
 		<-ctx.Done()
-		closeSrv()
+		e := m.Close()
+		if e != nil {
+			m.t.Logf("\nerror closing mocha http server. error=%v", e)
+		}
 	}()
 
 	return m
@@ -116,7 +114,8 @@ func (m *Mocha) Start() ServerInfo {
 
 	info, err := m.server.Start()
 	if err != nil {
-		m.t.Fatalf("failed to start mock server. reason: %v", err)
+		m.t.Errorf("failed to start mock server. reason: %v", err)
+		m.t.FailNow()
 	}
 
 	return info
@@ -128,7 +127,8 @@ func (m *Mocha) StartTLS() ServerInfo {
 
 	info, err := m.server.StartTLS()
 	if err != nil {
-		m.t.Fatalf("failed to start a TLS mock server. reason: %v", err)
+		m.t.Errorf("failed to start a TLS mock server. reason: %v", err)
+		m.t.FailNow()
 	}
 
 	return info
@@ -205,6 +205,23 @@ func (m *Mocha) Enable() {
 	for _, scoped := range m.scopes {
 		scoped.Enable()
 	}
+}
+
+// CloseOnCleanup adds mocha server Close to the Cleanup.
+func (m *Mocha) CloseOnCleanup(t Cleanable) *Mocha {
+	closeSrv := func() {
+		e := m.Close()
+		if e != nil {
+			m.t.Logf("\nerror closing mocha http server. error=%v", e)
+		}
+	}
+
+	t.Cleanup(func() {
+		defer m.cancel()
+		closeSrv()
+	})
+
+	return m
 }
 
 // AssertCalled asserts that all mocks associated with this instance were called at least once.

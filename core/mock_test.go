@@ -10,11 +10,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/core/mocks"
 	"github.com/vitorsalgado/mocha/expect"
 )
-
-var fakeT = mocks.NewT()
 
 func TestRace(t *testing.T) {
 	m := NewMock()
@@ -79,7 +76,7 @@ func TestMock_Matches(t *testing.T) {
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return "test"
 			},
-		}}, fakeT)
+		}})
 		assert.True(t, res.IsMatch)
 		assert.Nil(t, err)
 
@@ -89,7 +86,7 @@ func TestMock_Matches(t *testing.T) {
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return "test"
 			},
-		}}, fakeT)
+		}})
 		assert.True(t, res.IsMatch)
 		assert.Nil(t, err)
 
@@ -99,7 +96,7 @@ func TestMock_Matches(t *testing.T) {
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return 10.0
 			},
-		}}, fakeT)
+		}})
 		assert.True(t, res.IsMatch)
 		assert.Nil(t, err)
 
@@ -109,7 +106,7 @@ func TestMock_Matches(t *testing.T) {
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return true
 			},
-		}}, fakeT)
+		}})
 		assert.True(t, res.IsMatch)
 		assert.Nil(t, err)
 
@@ -119,7 +116,7 @@ func TestMock_Matches(t *testing.T) {
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return map[string]any{"key": "value"}
 			},
-		}}, fakeT)
+		}})
 		assert.True(t, res.IsMatch)
 		assert.Nil(t, err)
 
@@ -129,7 +126,7 @@ func TestMock_Matches(t *testing.T) {
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return map[string][]string{"key": {"value1", "value2"}}
 			},
-		}}, fakeT)
+		}})
 		assert.True(t, res.IsMatch)
 		assert.Nil(t, err)
 
@@ -139,7 +136,7 @@ func TestMock_Matches(t *testing.T) {
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return []any{"test"}
 			},
-		}}, fakeT)
+		}})
 		assert.True(t, res.IsMatch)
 		assert.Nil(t, err)
 
@@ -150,7 +147,7 @@ func TestMock_Matches(t *testing.T) {
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return *u
 			},
-		}}, fakeT)
+		}})
 		assert.True(t, res.IsMatch)
 		assert.Nil(t, err)
 
@@ -160,7 +157,7 @@ func TestMock_Matches(t *testing.T) {
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return url.Values{}
 			},
-		}}, fakeT)
+		}})
 		assert.True(t, res.IsMatch)
 		assert.Nil(t, err)
 
@@ -171,7 +168,7 @@ func TestMock_Matches(t *testing.T) {
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return req
 			},
-		}}, fakeT)
+		}})
 		assert.True(t, res.IsMatch)
 		assert.Nil(t, err)
 	})
@@ -183,7 +180,7 @@ func TestMock_Matches(t *testing.T) {
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return "dev"
 			},
-		}}, fakeT)
+		}})
 		assert.False(t, res.IsMatch)
 		assert.Nil(t, err)
 	})
@@ -197,7 +194,7 @@ func TestMock_Matches(t *testing.T) {
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return "dev"
 			},
-		}}, fakeT)
+		}})
 		assert.False(t, res.IsMatch)
 		assert.NotNil(t, err)
 	})
@@ -226,7 +223,7 @@ func TestMock_Matches(t *testing.T) {
 				},
 				Weight: 2,
 			},
-		}, fakeT)
+		})
 		assert.True(t, res.IsMatch)
 		assert.Nil(t, err)
 		assert.Equal(t, 5, res.Weight)
@@ -256,7 +253,7 @@ func TestMock_Matches(t *testing.T) {
 				},
 				Weight: 2,
 			},
-		}, fakeT)
+		})
 		assert.False(t, res.IsMatch)
 		assert.Nil(t, err)
 		assert.Equal(t, 5, res.Weight)

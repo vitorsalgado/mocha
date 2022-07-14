@@ -60,7 +60,8 @@ func TestConfig(t *testing.T) {
 
 		m := New(t, Configure().
 			Addr(addr).
-			Build())
+			Build()).
+			CloseOnCleanup(t)
 		m.Start()
 
 		scoped := m.Mock(

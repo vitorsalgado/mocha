@@ -9,16 +9,16 @@ import (
 
 	"github.com/vitorsalgado/mocha"
 	"github.com/vitorsalgado/mocha/expect"
-	"github.com/vitorsalgado/mocha/internal/headers"
-	"github.com/vitorsalgado/mocha/internal/mimetypes"
 	"github.com/vitorsalgado/mocha/reply"
+	"github.com/vitorsalgado/mocha/x/headers"
+	"github.com/vitorsalgado/mocha/x/mimetypes"
 )
 
 func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	m := mocha.New(mocha.Noop(), mocha.Configure().Context(ctx))
+	m := mocha.New(mocha.StdoutNotifier(), mocha.Configure().Context(ctx).Build())
 	m.Start()
 
 	m.Mock(mocha.
@@ -26,7 +26,8 @@ func main() {
 		Header(headers.Accept,
 			expect.ToContain(mimetypes.TextHTML)).
 		Reply(reply.OK().
-			BodyString("hello world")))
+			BodyString("hello world").
+			Header("x-basic", "true")))
 
 	go func() {
 		exit := make(chan os.Signal, 1)
