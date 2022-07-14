@@ -19,143 +19,34 @@ import (
 	"github.com/vitorsalgado/mocha/reply"
 )
 
-type TestModel struct {
-	Name string `json:"name"`
-	OK   bool   `json:"ok"`
-}
-
 func TestMocha(t *testing.T) {
-	t.Run("should mock request", func(t *testing.T) {
-		m := New(t)
-		m.Start()
-
-		scoped := m.Mock(
-			Get(expect.URLPath("/test")).
-				Header("test", expect.ToEqual("hello")).
-				Query("filter", expect.ToEqual("all")).
-				Reply(reply.
-					Created().
-					BodyString("hello world")))
-
-		req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test?filter=all", nil)
-		req.Header.Add("test", "hello")
-
-		res, err := http.DefaultClient.Do(req)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		body, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		assert.True(t, scoped.Called())
-		assert.Equal(t, 201, res.StatusCode)
-		assert.Equal(t, string(body), "hello world")
-	})
-}
-
-func TestHTTPMethods(t *testing.T) {
 	m := New(t)
 	m.Start()
 
-	t.Run("should mock GET", func(t *testing.T) {
-		scoped := m.Mock(
-			Get(expect.URLPath("/test")).
-				Reply(reply.OK()))
+	scoped := m.Mock(
+		Get(expect.URLPath("/test")).
+			Header("test", expect.ToEqual("hello")).
+			Query("filter", expect.ToEqual("all")).
+			Reply(reply.
+				Created().
+				BodyString("hello world")))
 
-		defer scoped.Clean()
+	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test?filter=all", nil)
+	req.Header.Add("test", "hello")
 
-		res, err := testutil.Get(m.URL() + "/test").Do()
-		if err != nil {
-			log.Fatal(err)
-		}
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-		assert.Equal(t, http.StatusOK, res.StatusCode)
-		assert.Equal(t, 1, scoped.Hits())
-
-		other, err := testutil.Post(m.URL()+"/test", nil).Do()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		assert.Equal(t, http.StatusTeapot, other.StatusCode)
-		assert.Equal(t, 1, scoped.Hits())
-	})
-
-	t.Run("should mock POST", func(t *testing.T) {
-		scoped := m.Mock(
-			Post(expect.URLPath("/test")).
-				Reply(reply.OK()))
-
-		defer scoped.Clean()
-
-		res, err := testutil.Get(m.URL() + "/test").Do()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		assert.Equal(t, http.StatusTeapot, res.StatusCode)
-		assert.False(t, scoped.Called())
-
-		other, err := testutil.Post(m.URL()+"/test", nil).Do()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		assert.Equal(t, http.StatusOK, other.StatusCode)
-		assert.Equal(t, 1, scoped.Hits())
-		assert.True(t, scoped.Called())
-	})
-
-	t.Run("should mock PUT", func(t *testing.T) {
-		scoped := m.Mock(
-			Put(expect.URLPath("/test")).
-				Reply(reply.OK()))
-
-		defer scoped.Clean()
-
-		res, err := testutil.Get(m.URL() + "/test").Do()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		assert.Equal(t, http.StatusTeapot, res.StatusCode)
-		assert.False(t, scoped.Called())
-
-		other, err := testutil.NewRequest(http.MethodPut, m.URL()+"/test", nil).Do()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		assert.Equal(t, http.StatusOK, other.StatusCode)
-		assert.Equal(t, 1, scoped.Hits())
-		assert.True(t, scoped.Called())
-	})
-}
-
-func TestPostJSON(t *testing.T) {
-	m := New(t)
-	m.Start()
-
-	scoped := m.Mock(Post(expect.URLPath("/test")).
-		Header("test", expect.ToEqual("hello")).
-		Body(
-			expect.JSONPath("name", expect.ToEqual("dev")), expect.JSONPath("ok", expect.ToEqual(true))).
-		Reply(reply.OK()))
-
-	req := testutil.PostJSON(m.URL()+"/test", &TestModel{Name: "dev", OK: true})
-	req.Header("test", "hello")
-
-	res, err := req.Do()
+	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	defer res.Body.Close()
-
 	assert.True(t, scoped.Called())
+	assert.Equal(t, 201, res.StatusCode)
+	assert.Equal(t, string(body), "hello world")
 }
 
 func TestMocha_Parameters(t *testing.T) {
@@ -167,7 +58,7 @@ func TestMocha_Parameters(t *testing.T) {
 	m.Parameters().Set(key, expected)
 
 	scoped := m.Mock(Get(expect.URLPath("/test")).
-		Matches(expect.Func(func(v any, params expect.Args) (bool, error) {
+		RequestMatches(expect.Func(func(v any, params expect.Args) (bool, error) {
 			p, _ := params.Params.Get(key)
 			return p.(string) == expected, nil
 		})).
@@ -208,7 +99,7 @@ func TestResponseMapper(t *testing.T) {
 	assert.Equal(t, "dev", res.Header.Get("x-test"))
 }
 
-func TestDelay(t *testing.T) {
+func TestResponseDelay(t *testing.T) {
 	m := New(t)
 	m.Start()
 
@@ -297,7 +188,7 @@ func TestErrors(t *testing.T) {
 		assert.Nil(t, err)
 		assert.False(t, scoped.Called())
 		assert.Equal(t, http.StatusTeapot, res.StatusCode)
-		fake.AssertNumberOfCalls(t, "Logf", 2)
+		fake.AssertNumberOfCalls(t, "Logf", 4)
 	})
 }
 

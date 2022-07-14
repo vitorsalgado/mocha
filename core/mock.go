@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/vitorsalgado/mocha/expect"
@@ -106,6 +105,9 @@ type (
 		Flush()
 	}
 
+	// Weight helps to detect the closest mock match.
+	Weight int
+
 	// Expectation holds metadata related to one http.Request Matcher.
 	Expectation struct {
 		// Name is an optional metadata to help debugging request expectations.
@@ -118,7 +120,7 @@ type (
 		ValueSelector expect.ValueSelector
 
 		// Weight of this Expectation.
-		Weight int
+		Weight Weight
 	}
 
 	// MatchResult holds information related to a matching operation.
@@ -133,7 +135,7 @@ type (
 		IsMatch bool
 	}
 
-	// T simple abstracts testing.T
+	// T is based on testing.T and allow mocha components to log information and errors.
 	T interface {
 		Cleanup(func())
 		Helper()
@@ -143,16 +145,14 @@ type (
 	}
 )
 
-type autoID struct {
-	id int32
-}
-
-func (i *autoID) next() int {
-	atomic.AddInt32(&i.id, 1)
-	return int(i.id)
-}
-
-var id = autoID{}
+// Enums of Weight.
+const (
+	WeightNone Weight = iota
+	WeightVeryLow
+	WeightLow
+	WeightRegular
+	WeightHigh
+)
 
 // NewMock returns a new Mock with default values set.
 func NewMock() *Mock {
@@ -213,48 +213,53 @@ func (m *Mock) Matches(params expect.Args, expectations []Expectation, t T) (Mat
 	for _, exp := range expectations {
 		var matched bool
 		var err error
-		var w int
-		var nm string
 
-		matched, w, nm, err = matches(exp, params, t)
+		matched, err = matches(exp, params, t)
 
 		// fail fast if an error occurs
 		if err != nil {
-			return MatchResult{IsMatch: false, Weight: weight},
-				fmt.Errorf("matcher %s returned an error: %w", nm, err)
+			msg := fmt.Sprintf("matcher %s returned an error: %v", exp.Name, err)
+			t.Logf(msg)
+
+			return MatchResult{IsMatch: false, Weight: weight}, fmt.Errorf(msg)
 		}
 
 		if !matched {
 			finalMatched = matched
 		}
 
-		weight += w
+		weight += int(exp.Weight)
 	}
 
 	return MatchResult{IsMatch: finalMatched, Weight: weight}, nil
 }
 
-func matches(e Expectation, params expect.Args, t T) (bool, int, string, error) {
+func matches(e Expectation, params expect.Args, t T) (bool, error) {
 	t.Helper()
 
 	val := e.ValueSelector(params.RequestInfo)
 	res, err := e.Matcher.Matches(val, params)
 
-	if !res {
-		if err != nil {
-			t.Logf("\n%s\nError: %s\nContext: %s",
-				colorize.Red(fmt.Sprintf("Matcher %s returned an error", colorize.Bold(e.Matcher.Name))),
-				colorize.Red(err.Error()),
-				e.Name)
-		} else {
-			if e.Matcher.DescribeMismatch != nil {
-				t.Logf("\n%s\n%s\n%s",
-					colorize.Red(fmt.Sprintf("Matcher %s dit not match.", colorize.Bold(e.Matcher.Name))),
-					"applied to: "+e.Name,
-					e.Matcher.DescribeMismatch(e.Name, val))
-			}
-		}
+	if err != nil {
+		t.Logf("\n%s\nError: %s\nContext: %s",
+			colorize.Yellow(fmt.Sprintf("Matcher %s returned an error", colorize.Bold(e.Matcher.Name))),
+			colorize.Yellow(err.Error()),
+			e.Name)
+
+		return false, err
 	}
 
-	return res, e.Weight, e.Name, err
+	if !res {
+		desc := ""
+		if e.Matcher.DescribeMismatch != nil {
+			desc = e.Matcher.DescribeMismatch(e.Name, val)
+		}
+
+		t.Logf("\n%s\n%s\n%s",
+			colorize.Yellow(fmt.Sprintf("Matcher %s dit not match.", colorize.Bold(e.Matcher.Name))),
+			"applied to: "+e.Name,
+			desc)
+	}
+
+	return res, err
 }

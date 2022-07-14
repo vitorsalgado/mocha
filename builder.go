@@ -18,15 +18,6 @@ type MockBuilder struct {
 	mock                  *core.Mock
 }
 
-// Weights helps to detect the closest mock match.
-const (
-	_weightNone    = 0
-	_weightVeryLow = 1
-	_weightLow     = 3
-	_weightRegular = 5
-	_weightHigh    = 7
-)
-
 // Request creates a new empty MockBuilder.
 func Request() *MockBuilder {
 	return &MockBuilder{mock: core.NewMock()}
@@ -89,7 +80,7 @@ func (b *MockBuilder) Method(method string) *MockBuilder {
 			Name:          "method",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request.Method },
 			Matcher:       expect.ToEqualFold(method),
-			Weight:        _weightVeryLow,
+			Weight:        core.WeightNone,
 		})
 
 	return b
@@ -103,7 +94,7 @@ func (b *MockBuilder) URL(m expect.Matcher) *MockBuilder {
 			Name:          "url",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request.URL },
 			Matcher:       m,
-			Weight:        _weightRegular,
+			Weight:        core.WeightRegular,
 		})
 
 	return b
@@ -117,7 +108,7 @@ func (b *MockBuilder) Header(key string, m expect.Matcher) *MockBuilder {
 			Name:          "header",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request.Header.Get(key) },
 			Matcher:       m,
-			Weight:        _weightVeryLow,
+			Weight:        core.WeightLow,
 		})
 
 	return b
@@ -131,7 +122,7 @@ func (b *MockBuilder) Query(key string, m expect.Matcher) *MockBuilder {
 			Name:          "query",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request.URL.Query().Get(key) },
 			Matcher:       m,
-			Weight:        _weightVeryLow,
+			Weight:        core.WeightVeryLow,
 		})
 
 	return b
@@ -148,7 +139,7 @@ func (b *MockBuilder) Body(matcherList ...expect.Matcher) *MockBuilder {
 				Name:          "body",
 				ValueSelector: func(r *expect.RequestInfo) any { return r.ParsedBody },
 				Matcher:       m,
-				Weight:        _weightHigh,
+				Weight:        core.WeightHigh,
 			})
 	}
 
@@ -159,10 +150,10 @@ func (b *MockBuilder) Body(matcherList ...expect.Matcher) *MockBuilder {
 func (b *MockBuilder) FormField(field string, m expect.Matcher) *MockBuilder {
 	b.mock.Expectations = append(b.mock.Expectations,
 		core.Expectation{
-			Name:          "form_field",
+			Name:          "form",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request.Form.Get(field) },
 			Matcher:       m,
-			Weight:        _weightVeryLow,
+			Weight:        core.WeightVeryLow,
 		})
 
 	return b
@@ -176,21 +167,7 @@ func (b *MockBuilder) Repeat(times int) *MockBuilder {
 			Name:          "repeat",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request },
 			Matcher:       expect.Repeat(times),
-			Weight:        _weightNone,
-		})
-
-	return b
-}
-
-// Matches sets a custom matcher, not necessary tied to a specific request parameter.
-func (b *MockBuilder) Matches(m expect.Matcher) *MockBuilder {
-	b.mock.Expectations = append(
-		b.mock.Expectations,
-		core.Expectation{
-			Name:          "any",
-			ValueSelector: func(r *expect.RequestInfo) any { return r.Request },
-			Matcher:       m,
-			Weight:        _weightLow,
+			Weight:        core.WeightNone,
 		})
 
 	return b
@@ -204,7 +181,7 @@ func (b *MockBuilder) RequestMatches(m expect.Matcher) *MockBuilder {
 			Name:          "request",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request },
 			Matcher:       m,
-			Weight:        _weightLow,
+			Weight:        core.WeightLow,
 		})
 
 	return b
@@ -244,7 +221,7 @@ func (b *MockBuilder) MatchAfter(m expect.Matcher) *MockBuilder {
 			Name:          "after",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request },
 			Matcher:       m,
-			Weight:        _weightNone,
+			Weight:        core.WeightNone,
 		})
 
 	return b
@@ -253,11 +230,6 @@ func (b *MockBuilder) MatchAfter(m expect.Matcher) *MockBuilder {
 // PostAction adds a post action to be executed after the mocked response is served.
 func (b *MockBuilder) PostAction(action core.PostAction) *MockBuilder {
 	b.mock.PostActions = append(b.mock.PostActions, action)
-	return b
-}
-
-func (b *MockBuilder) Cond(expect core.Expectation) *MockBuilder {
-	b.mock.Expectations = append(b.mock.Expectations, expect)
 	return b
 }
 
