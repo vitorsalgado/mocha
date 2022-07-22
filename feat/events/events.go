@@ -41,8 +41,9 @@ type (
 
 	// Result defines matching result to be logged.
 	Result struct {
-		ClosestMatch *Mock
-		Details      []ResultDetail
+		HasClosestMatch bool
+		ClosestMatch    Mock
+		Details         []ResultDetail
 	}
 )
 

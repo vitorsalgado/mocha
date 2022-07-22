@@ -65,7 +65,7 @@ func (h *InternalEvents) OnRequestNotMatched(e OnRequestNotMatched) {
 		e.Request.Method,
 		fullURL(e.Request.Host, e.Request.RequestURI)))
 
-	if e.Result.ClosestMatch != nil {
+	if e.Result.HasClosestMatch {
 		builder.WriteString("Closest Match:\n")
 		builder.WriteString(
 			fmt.Sprintf("id: %d\nname: %s\n\n", e.Result.ClosestMatch.ID, e.Result.ClosestMatch.Name))

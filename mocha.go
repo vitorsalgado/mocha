@@ -10,6 +10,7 @@ import (
 	"github.com/vitorsalgado/mocha/feat/events"
 	"github.com/vitorsalgado/mocha/feat/scenario"
 	"github.com/vitorsalgado/mocha/internal/middleware"
+	recover2 "github.com/vitorsalgado/mocha/internal/middleware/recover"
 	"github.com/vitorsalgado/mocha/internal/parameters"
 )
 
@@ -59,7 +60,7 @@ func New(t core.T, config ...Config) *Mocha {
 	params.Set(scenario.BuiltInParamStore, scenario.NewStore())
 
 	middlewares := make([]func(handler http.Handler) http.Handler, 0)
-	middlewares = append(middlewares, middleware.Recover)
+	middlewares = append(middlewares, recover2.Recover)
 
 	evt := events.NewEmitter(ctx)
 	evt.Start()

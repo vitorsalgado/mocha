@@ -133,7 +133,8 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func respondNonMatched(w http.ResponseWriter, r *http.Request, result *core.FindResult, evt *events.Emitter) {
 	e := events.OnRequestNotMatched{Request: events.FromRequest(r), Result: events.Result{Details: make([]events.ResultDetail, 0)}}
 	if result.ClosestMatch != nil {
-		e.Result.ClosestMatch = &events.Mock{ID: result.ClosestMatch.ID, Name: result.ClosestMatch.Name}
+		e.Result.HasClosestMatch = true
+		e.Result.ClosestMatch = events.Mock{ID: result.ClosestMatch.ID, Name: result.ClosestMatch.Name}
 	}
 
 	for _, detail := range result.MismatchDetails {

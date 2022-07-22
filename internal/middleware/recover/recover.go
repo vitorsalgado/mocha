@@ -1,4 +1,4 @@
-package middleware
+package recover
 
 import (
 	"fmt"
@@ -19,7 +19,7 @@ func Recover(next http.Handler) http.Handler {
 
 				msg := fmt.Sprintf("panic: %v\n%s\n", recovery, buf)
 
-				log.Printf(msg)
+				log.Print(msg)
 
 				w.Header().Set(headers.ContentType, mimetypes.TextPlain)
 				w.WriteHeader(http.StatusTeapot)

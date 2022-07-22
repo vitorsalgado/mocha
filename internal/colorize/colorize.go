@@ -50,7 +50,7 @@ const (
 )
 
 var (
-	_, useColor = os.LookupEnv(_colorEnv)
+	color, useColor = os.LookupEnv(_colorEnv)
 )
 
 func Black(s string) string         { return stylize(s, ColorBlack, 39) }

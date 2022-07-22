@@ -1,4 +1,4 @@
-package middleware
+package recover
 
 import (
 	"io/ioutil"

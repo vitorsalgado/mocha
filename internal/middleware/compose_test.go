@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	recover2 "github.com/vitorsalgado/mocha/internal/middleware/recover"
 )
 
 func TestMiddlewaresComposition(t *testing.T) {
@@ -21,7 +23,7 @@ func TestMiddlewaresComposition(t *testing.T) {
 		w.Write([]byte(msg))
 	}
 
-	ts := httptest.NewServer(Compose(one, two, Recover).Root(http.HandlerFunc(fn)))
+	ts := httptest.NewServer(Compose(one, two, recover2.Recover).Root(http.HandlerFunc(fn)))
 	defer ts.Close()
 
 	res, err := http.Get(ts.URL)
