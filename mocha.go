@@ -112,10 +112,9 @@ func New(t core.T, config ...Config) *Mocha {
 	return m
 }
 
-// NewSimple creates a new Mocha mock server with default configurations.
-// It closes the mock server after the tests finishes, using the testing.T cleanup feature.
-func NewSimple() *Mocha {
-	return New(&noop{})
+// NewBasic creates a new Mocha mock server with default configurations.
+func NewBasic() *Mocha {
+	return New(NewStdoutNotifier())
 }
 
 // Start starts the mock server.

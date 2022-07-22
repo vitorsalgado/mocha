@@ -31,17 +31,17 @@ type (
 		Info() ServerInfo
 	}
 
-	testServer struct {
+	httpTestServer struct {
 		server *httptest.Server
 		info   ServerInfo
 	}
 )
 
 func newServer() Server {
-	return &testServer{info: ServerInfo{}}
+	return &httpTestServer{info: ServerInfo{}}
 }
 
-func (s *testServer) Configure(config Config, handler http.Handler) error {
+func (s *httpTestServer) Configure(config Config, handler http.Handler) error {
 	s.server = httptest.NewUnstartedServer(handler)
 	s.server.EnableHTTP2 = true
 
@@ -62,25 +62,25 @@ func (s *testServer) Configure(config Config, handler http.Handler) error {
 	return nil
 }
 
-func (s *testServer) Start() (ServerInfo, error) {
+func (s *httpTestServer) Start() (ServerInfo, error) {
 	s.server.Start()
 	s.info.URL = s.server.URL
 
 	return s.info, nil
 }
 
-func (s *testServer) StartTLS() (ServerInfo, error) {
+func (s *httpTestServer) StartTLS() (ServerInfo, error) {
 	s.server.StartTLS()
 	s.info.URL = s.server.URL
 
 	return s.info, nil
 }
 
-func (s *testServer) Close() error {
+func (s *httpTestServer) Close() error {
 	s.server.Close()
 	return nil
 }
 
-func (s *testServer) Info() ServerInfo {
+func (s *httpTestServer) Info() ServerInfo {
 	return s.info
 }

@@ -2,7 +2,7 @@ package events
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"net/http"
 	"reflect"
 	"sync"
@@ -11,6 +11,7 @@ import (
 
 // Event data transfer objects
 type (
+	// Request defines information from http.Request to be logged.
 	Request struct {
 		Method     string
 		Path       string
@@ -19,22 +20,26 @@ type (
 		Header     http.Header
 	}
 
+	// Response defines HTTP Response information to be logged.
 	Response struct {
 		Status int
 		Header http.Header
 	}
 
+	// Mock defines core.Mock information to be logged.
 	Mock struct {
 		ID   int
 		Name string
 	}
 
+	// ResultDetail defines matching result details to be logged.
 	ResultDetail struct {
 		Name        string
 		Target      string
 		Description string
 	}
 
+	// Result defines matching result to be logged.
 	Result struct {
 		ClosestMatch *Mock
 		Details      []ResultDetail
@@ -43,11 +48,13 @@ type (
 
 // Events
 type (
+	// OnRequest event is triggered every time a request arrives at the mock handler.
 	OnRequest struct {
 		Request   Request
 		StartedAt time.Time
 	}
 
+	// OnRequestMatch event is triggered when a mock is found for a request.
 	OnRequestMatch struct {
 		Request            Request
 		ResponseDefinition Response
@@ -55,11 +62,13 @@ type (
 		Elapsed            time.Duration
 	}
 
+	// OnRequestNotMatched event is triggered when no mocks are found for a request.
 	OnRequestNotMatched struct {
 		Request Request
 		Result  Result
 	}
 
+	// OnError event is triggered when an error occurs during request matching.
 	OnError struct {
 		Request Request
 		Err     error
@@ -67,6 +76,7 @@ type (
 )
 
 type (
+	// Events interface defines available event handlers.
 	Events interface {
 		OnRequest(OnRequest)
 		OnRequestMatch(OnRequestMatch)
@@ -74,6 +84,7 @@ type (
 		OnError(OnError)
 	}
 
+	// Emitter implements a event listener, subscriber and emitter.
 	Emitter struct {
 		ctx      context.Context
 		events   []Events
@@ -82,10 +93,17 @@ type (
 	}
 )
 
+// NewEmitter creates an Emitter instance.
 func NewEmitter(ctx context.Context) *Emitter {
 	return &Emitter{ctx: ctx, events: make([]Events, 0), listener: make(chan any)}
 }
 
+// Emit dispatches a new event.
+// Parameter data must be:
+// - OnRequest
+// - OnRequestMatch
+// - OnRequestNotMatched
+// - OnError
 func (h *Emitter) Emit(data any) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -93,6 +111,7 @@ func (h *Emitter) Emit(data any) {
 	go func(data any, listener chan any) { listener <- data }(data, h.listener)
 }
 
+// Subscribe subscribes new event handlers.
 func (h *Emitter) Subscribe(evt Events) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -100,6 +119,7 @@ func (h *Emitter) Subscribe(evt Events) {
 	h.events = append(h.events, evt)
 }
 
+// Start starts event listener on another go routine.
 func (h *Emitter) Start() {
 	go func() {
 		for {
@@ -124,7 +144,7 @@ func (h *Emitter) Start() {
 						hook.OnError(evt)
 
 					default:
-						panic(fmt.Errorf("event type %s is invalid", reflect.TypeOf(data).Name()))
+						log.Printf("event type %s is invalid\n", reflect.TypeOf(data).Name())
 					}
 				}
 			}

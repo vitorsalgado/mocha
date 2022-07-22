@@ -1,3 +1,7 @@
+// Package scenario implements a stateful matcher that works like a stateful machine were states can be assigned during
+// mock configuration.
+// Mocks can be configured to be returned on certain state values and also,
+// mocks can define new state values on they are served.
 package scenario
 
 import "github.com/vitorsalgado/mocha/expect"

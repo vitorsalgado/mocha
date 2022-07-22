@@ -9,10 +9,12 @@ import (
 	"github.com/vitorsalgado/mocha/internal/colorize"
 )
 
+// NewInternalEvents creates an internal event handlers.
 func NewInternalEvents(t core.T) *InternalEvents {
 	return &InternalEvents{t: t}
 }
 
+// InternalEvents implements default event handlers that logs event information.
 type InternalEvents struct {
 	t core.T
 }

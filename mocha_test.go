@@ -51,6 +51,34 @@ func TestMocha(t *testing.T) {
 	assert.Equal(t, string(body), "hello world")
 }
 
+func TestMocha_NewBasic(t *testing.T) {
+	m := NewBasic()
+	m.Start()
+
+	defer m.Close()
+
+	scoped := m.Mock(
+		Get(expect.URLPath("/test")).
+			Reply(reply.
+				Created().
+				BodyString("hello world")))
+
+	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.True(t, scoped.Called())
+	assert.Equal(t, 201, res.StatusCode)
+	assert.Equal(t, string(body), "hello world")
+}
+
 func TestMocha_Parameters(t *testing.T) {
 	key := "k"
 	expected := "test"
