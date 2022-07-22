@@ -155,13 +155,16 @@ m.AddMocks(mocha.Post(expect.URLPath("/test")).
 ## Replies
 
 You can define a response that should be served once a request is matched.  
-**Mocha** provides several ways to configure a reply. The built-in replies are:
+**Mocha** provides several ways to configure a reply.  
+The built-in reply features are:
 
-- single reply
-- random replies
-- sequence replies
-- reply from a function
-- reply from a proxied request
+- [Basic](#basic-reply)
+- [Random Replies](#random-replies)
+- [Sequence Replies](#replies-in-sequence)
+- [Function](#reply-function)
+- [Reply From Proxied Forwarded Request](#reply-from-forwarded-request)
+- [Specify Headers](#specifying-headers)
+- [Delay Responses](#delay-responses)
 
 Replies are based on the `core.Reply` interface.  
 It's also possible to configure response bodies from templates. **Mocha** uses Go Templates.
@@ -175,7 +178,7 @@ m.AddMocks(mocha.Get(expect.URLPath("/test")).
     Reply(reply.OK())
 ```
 
-### Sequence
+### Replies In Sequence
 
 ```
 m := mocha.New(t)
@@ -203,7 +206,7 @@ m.AddMocks(mocha.Get(expect.URLPath("/test")).
     }))
 ```
 
-### Proxied From
+### Reply From Forwarded Request
 
 **reply.From** will forward the request to the given destination and serve the response from the forwarded server.  
 It`s possible to add extra headers to the request and the response and also remove unwanted headers.
@@ -244,7 +247,7 @@ m.AddMocks(mocha.Get(expect.URLPath("/test")).
     Reply(reply.OK().Header("test", "test-value"))
 ```
 
-## Delay Responses
+### Delay Responses
 
 You can configure a delay to responses to simulate timeouts, slow requests and any other timing related scenarios.  
 See the example below:
@@ -280,7 +283,7 @@ See below the available test assertions:
 - AssertCalled: asserts that all associated mocks were called at least once.
 - AssertNotCalled: asserts that associated mocks were **not** called.
 
-### Matchers
+## Matchers
 
 Mocha provides several matcher functions to facilitate request matching and verification.
 See the package `expect` for more details.  
@@ -289,6 +292,36 @@ You can create custom matchers using these two approaches:
 - create a `expect.Matcher` struct
 - use the function `expect.Func` providing a function with the following
   signature: `func(v any, a expect.Args) (bool, error)`
+
+### BuiltIn Matchers
+
+| Matcher      | Description                                                                                              |
+| ------------ | -------------------------------------------------------------------------------------------------------- |
+| AllOf        | Returns true when all given matchers returns true                                                        |
+| AnyOf        | Returns true when any given matchers returns true                                                        |
+| Both         | Returns true when both matchers returns true                                                             |
+| ToContain    | Returns true when expected value is contained on the request value                                       |
+| Either       | Returns true when any matcher returns true                                                               |
+| ToBeEmpty    | Returns true when request value is empty                                                                 |
+| ToEqual      | Returns true when values are equal                                                                       |
+| ToEqualFold  | Returns true when string values are equal, ignoring case                                                 |
+| ToEqualJSON  | Returns true when the expected struct represents a JSON value                                            |
+| Func         | Wraps a function to create a inline matcher                                                              |
+| ToHaveKey    | Returns true if the JSON key in the given path is present                                                |
+| ToHavePrefix | Returns true if the matcher argument starts with the given prefix                                        |
+| ToHaveSuffix | Returns true when matcher argument ends with the given suffix                                            |
+| JSONPath     | Applies the provided matcher to the JSON field value in the given path                                   |
+| ToHaveLen    | Returns true when matcher argument length is equal to the expected value                                 |
+| LowerCase    | Lower case matcher string argument before submitting it to provided matcher.                             |
+| UpperCase    | Upper case matcher string argument before submitting it to provided matcher                              |
+| ToMatchExpr  | Returns true then the given regular expression matches matcher argument                                  |
+| Not          | Negates the provided matcher                                                                             |
+| Peek         | Will return the result of the given matcher, after executing the provided function                       |
+| ToBePresent  | Checks if matcher argument contains a value that is not nil or the zero value for the argument type      |
+| Repeat       | Returns true if total request hits for current mock is equal or lower total the provided max call times. |
+| Trim         | Trims' spaces of matcher argument before submitting it to the given matcher                              |
+| URLPath      | Returns true if request URL path is equal to the expected path, ignoring case                            |
+| XOR          | Exclusive "or" matcher                                                                                   |
 
 ---
 

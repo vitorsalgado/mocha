@@ -10,7 +10,6 @@ import (
 
 	"github.com/vitorsalgado/mocha"
 	"github.com/vitorsalgado/mocha/core"
-	"github.com/vitorsalgado/mocha/core/_mocks"
 	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/internal/testutil"
 	"github.com/vitorsalgado/mocha/reply"
@@ -51,8 +50,7 @@ func TestPostAction(t *testing.T) {
 	})
 
 	t.Run("should not be affected by errors on registered post actions", func(t *testing.T) {
-		fakeT := mocks.NewFakeNotifier()
-		m := mocha.New(fakeT)
+		m := mocha.New(t)
 		m.Start()
 
 		defer m.Close()

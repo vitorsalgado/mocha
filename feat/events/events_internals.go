@@ -38,14 +38,14 @@ func (h *InternalEvents) OnRequest(e OnRequest) {
 }
 
 func (h *InternalEvents) OnRequestMatch(e OnRequestMatch) {
-	h.l.Logf("\n%s %s <--- %s %s\n%s %s\n\n%s%d - %s\n\n%s: %dms\n%s:\n %s: %d\n %s: %v\n",
+	h.l.Logf("\n%s %s <--- %s %s\n%s %s\n\n%s%d %s\n\n%s: %dms\n%s:\n %s: %d\n %s: %v\n",
 		colorize.GreenBright(colorize.Bold("REQUEST DID MATCH")),
 		time.Now().Format(time.RFC3339),
 		colorize.Green(e.Request.Method),
 		colorize.Green(e.Request.Path),
 		e.Request.Method,
 		fullURL(e.Request.Host, e.Request.RequestURI),
-		colorize.Bold("AddMocks: "),
+		colorize.Bold("Mock: "),
 		e.Mock.ID,
 		e.Mock.Name,
 		colorize.Green("Took"),
