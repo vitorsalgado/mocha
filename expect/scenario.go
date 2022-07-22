@@ -1,14 +1,8 @@
-// Package scenario implements a stateful matcher that works like a stateful machine were states can be assigned during
-// mock configuration.
-// Mocks can be configured to be returned on certain state values and also,
-// mocks can define new state values on they are served.
-package scenario
-
-import "github.com/vitorsalgado/mocha/expect"
+package expect
 
 const (
-	StateStarted      = "STARTED"
-	BuiltInParamStore = "__mocha:scenarios"
+	ScenarioStateStarted      = "STARTED"
+	ScenarioBuiltInParamStore = "@@mocha:scenarios"
 )
 
 type scenario struct {
@@ -17,12 +11,12 @@ type scenario struct {
 }
 
 func newScenario(name string) scenario {
-	return scenario{Name: name, State: StateStarted}
+	return scenario{Name: name, State: ScenarioStateStarted}
 }
 
 // HasStarted returns true when Scenario state is equal to "STARTED"
 func (s scenario) HasStarted() bool {
-	return s.State == StateStarted
+	return s.State == ScenarioStateStarted
 }
 
 type (
@@ -37,7 +31,7 @@ type (
 	}
 )
 
-func NewStore() Store {
+func NewScenarioStore() Store {
 	return &scenarioStore{data: make(map[string]scenario)}
 }
 
@@ -62,14 +56,14 @@ func (store *scenarioStore) Save(scenario scenario) {
 	store.data[scenario.Name] = scenario
 }
 
-func Scenario(name, requiredState, newState string) expect.Matcher {
-	m := expect.Matcher{}
+func Scenario(name, requiredState, newState string) Matcher {
+	m := Matcher{}
 	m.Name = "Scenario"
-	m.Matches = func(_ any, params expect.Args) (bool, error) {
-		s, _ := params.Params.Get(BuiltInParamStore)
+	m.Matches = func(_ any, params Args) (bool, error) {
+		s, _ := params.Params.Get(ScenarioBuiltInParamStore)
 		scenarios := s.(Store)
 
-		if requiredState == StateStarted {
+		if requiredState == ScenarioStateStarted {
 			scenarios.CreateNewIfNeeded(name)
 		}
 

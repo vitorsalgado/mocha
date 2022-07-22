@@ -1,11 +1,10 @@
-package scenario
+package expect
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/internal/parameters"
 )
 
@@ -15,7 +14,7 @@ func TestScenario(t *testing.T) {
 	})
 
 	t.Run("should only create scenario if needed", func(t *testing.T) {
-		store := NewStore()
+		store := NewScenarioStore()
 		store.CreateNewIfNeeded("scenario-1")
 
 		s, ok := store.FetchByName("scenario-1")
@@ -35,10 +34,10 @@ func TestScenario(t *testing.T) {
 }
 
 func TestScenarioConditions(t *testing.T) {
-	store := NewStore()
+	store := NewScenarioStore()
 	p := parameters.New()
-	p.Set(BuiltInParamStore, store)
-	args := expect.Args{Params: p}
+	p.Set(ScenarioBuiltInParamStore, store)
+	args := Args{Params: p}
 
 	t.Run("should return true when scenario is not started and also not found", func(t *testing.T) {
 		m := Scenario("test", "required", "newScenario")

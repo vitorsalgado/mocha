@@ -5,7 +5,6 @@ import (
 
 	"github.com/vitorsalgado/mocha/core"
 	"github.com/vitorsalgado/mocha/expect"
-	"github.com/vitorsalgado/mocha/feat/scenario"
 	"github.com/vitorsalgado/mocha/internal/parameters"
 	"github.com/vitorsalgado/mocha/reply"
 )
@@ -190,7 +189,7 @@ func (b *MockBuilder) RequestMatches(m expect.Matcher) *MockBuilder {
 // StartScenario sets that this mock will start a new scenario with the given name.
 func (b *MockBuilder) StartScenario(name string) *MockBuilder {
 	b.scenario = name
-	b.scenarioRequiredState = scenario.StateStarted
+	b.scenarioRequiredState = expect.ScenarioStateStarted
 	return b
 }
 
@@ -265,7 +264,7 @@ func (b *MockBuilder) ReplyJust(status int, r ...reply.StdReply) *MockBuilder {
 // Used internally by Mocha.
 func (b *MockBuilder) Build() *core.Mock {
 	if b.scenario != "" {
-		b.RequestMatches(scenario.Scenario(b.scenario, b.scenarioRequiredState, b.scenarioNewState))
+		b.RequestMatches(expect.Scenario(b.scenario, b.scenarioRequiredState, b.scenarioNewState))
 	}
 
 	return b.mock

@@ -44,18 +44,7 @@ type (
 		// PostActions holds PostAction list to be executed after the Mock was matched and served.
 		PostActions []PostAction
 
-		// Description better describes a mock.
-		Description Description
-
 		mu *sync.Mutex
-	}
-
-	// Description holds metadata used only to better describe mocks, specially the closest matched mocks.
-	Description struct {
-		// Method is the http.Request method.
-		Method string
-		// URL can be the complete URL or just the path.
-		URL string
 	}
 
 	// PostActionArgs represents the arguments that will be passed to every PostAction implementation
@@ -178,7 +167,6 @@ func NewMock() *Mock {
 		Expectations:     make([]Expectation, 0),
 		PostExpectations: make([]Expectation, 0),
 		PostActions:      make([]PostAction, 0),
-		Description:      Description{},
 
 		mu: &sync.Mutex{},
 	}

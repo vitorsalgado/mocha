@@ -1,6 +1,9 @@
 package events
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+)
 
 // FromRequest is a helper function that creates a new Request from a http.Request.
 func FromRequest(r *http.Request) Request {
@@ -11,4 +14,8 @@ func FromRequest(r *http.Request) Request {
 		Host:       r.Host,
 		Header:     r.Header.Clone(),
 	}
+}
+
+func fullURL(host, uri string) string {
+	return fmt.Sprintf("%s%s", host, uri)
 }

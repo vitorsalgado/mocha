@@ -5,22 +5,26 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vitorsalgado/mocha/core"
 	"github.com/vitorsalgado/mocha/internal/colorize"
 )
 
-// NewInternalEvents creates an internal event handlers.
-func NewInternalEvents(t core.T) *InternalEvents {
-	return &InternalEvents{t: t}
+// Logger defines internal events logger contract.
+type Logger interface {
+	Logf(string, ...any)
 }
 
 // InternalEvents implements default event handlers that logs event information.
 type InternalEvents struct {
-	t core.T
+	l Logger
+}
+
+// NewInternalEvents creates an internal event handlers.
+func NewInternalEvents(l Logger) *InternalEvents {
+	return &InternalEvents{l: l}
 }
 
 func (h *InternalEvents) OnRequest(e OnRequest) {
-	h.t.Logf("\n%s %s ---> %s %s\n%s %s\n\n%s:\n %s: %v\n",
+	h.l.Logf("\n%s %s ---> %s %s\n%s %s\n\n%s:\n %s: %v\n",
 		colorize.BlueBright(colorize.Bold("REQUEST RECEIVED")),
 		e.StartedAt.Format(time.RFC3339),
 		colorize.Blue(e.Request.Method),
@@ -34,7 +38,7 @@ func (h *InternalEvents) OnRequest(e OnRequest) {
 }
 
 func (h *InternalEvents) OnRequestMatch(e OnRequestMatch) {
-	h.t.Logf("\n%s %s <--- %s %s\n%s %s\n\n%s%d - %s\n\n%s: %dms\n%s:\n %s: %d\n %s: %v\n",
+	h.l.Logf("\n%s %s <--- %s %s\n%s %s\n\n%s%d - %s\n\n%s: %dms\n%s:\n %s: %d\n %s: %v\n",
 		colorize.GreenBright(colorize.Bold("REQUEST DID MATCH")),
 		time.Now().Format(time.RFC3339),
 		colorize.Green(e.Request.Method),
@@ -80,11 +84,11 @@ func (h *InternalEvents) OnRequestNotMatched(e OnRequestNotMatched) {
 			detail.Description))
 	}
 
-	h.t.Logf(builder.String())
+	h.l.Logf(builder.String())
 }
 
 func (h *InternalEvents) OnError(e OnError) {
-	h.t.Logf("\n%s %s <--- %s %s\n%s %s\n\n%s: %v",
+	h.l.Logf("\n%s %s <--- %s %s\n%s %s\n\n%s: %v",
 		colorize.RedBright(colorize.Bold("REQUEST DID NOT MATCH")),
 		time.Now().Format(time.RFC3339),
 		colorize.Red(e.Request.Method),
@@ -94,8 +98,4 @@ func (h *InternalEvents) OnError(e OnError) {
 		colorize.Red(colorize.Bold("Error: ")),
 		e.Err,
 	)
-}
-
-func fullURL(host, uri string) string {
-	return fmt.Sprintf("%s%s", host, uri)
 }
