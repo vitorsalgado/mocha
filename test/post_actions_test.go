@@ -35,7 +35,7 @@ func TestPostAction(t *testing.T) {
 		act := &action{}
 		act.On("Run", mock.Anything).Return(nil)
 
-		scope := m.Mock(mocha.Get(expect.URLPath("/test")).
+		scope := m.AddMocks(mocha.Get(expect.URLPath("/test")).
 			PostAction(act).
 			Reply(reply.OK()))
 
@@ -60,7 +60,7 @@ func TestPostAction(t *testing.T) {
 		act := &action{}
 		act.On("Run", mock.Anything).Return(fmt.Errorf("failed to run post action"))
 
-		scope := m.Mock(mocha.Get(expect.URLPath("/test")).
+		scope := m.AddMocks(mocha.Get(expect.URLPath("/test")).
 			PostAction(act).
 			Reply(reply.OK()))
 

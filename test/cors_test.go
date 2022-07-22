@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/vitorsalgado/mocha"
 	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/internal/testutil"
@@ -16,7 +17,7 @@ func TestCORS(t *testing.T) {
 	m := mocha.New(t, mocha.Configure().CORS().Build())
 	m.Start()
 
-	m.Mock(mocha.Get(expect.URLPath("/test")).
+	m.AddMocks(mocha.Get(expect.URLPath("/test")).
 		Reply(reply.OK()))
 
 	corsReq := testutil.NewRequest(http.MethodOptions, m.URL()+"/test", nil)

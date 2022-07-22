@@ -25,18 +25,17 @@
 ## Overview
 
 HTTP server mocking tool for Go.  
-**Mocha** creates a real HTTP server and lets you configure response stubs for specific requests based on a set of
-criteria. It provides a functional like API that allows you to match any part of a request against a set of matching
-functions.
+**Mocha** creates a real HTTP server and lets you configure response stubs for HTTP Requests when it matches a set of
+matchers.
+It provides a functional like API that allows you to match any part of a request against a set of matching
+functions that can be composed.
 
 Inspired by [WireMock](https://github.com/wiremock/wiremock) and [Nock](https://github.com/nock/nock).
-
-> Work In Progress
 
 ## Installation
 
 ```bash
-go get -u github.com/vitorsalgado/mocha
+go get github.com/vitorsalgado/mocha
 ```
 
 ## Features
@@ -48,33 +47,38 @@ go get -u github.com/vitorsalgado/mocha
 - Response delays.
 - Run in your automated tests.
 
+## How It Works
+
+**Mocha** works by creating a real HTTP Server that you can configure response stubs for HTTP requests when they match a
+set request matchers. Mock definitions are stored in memory in the server and response will continue to be served as
+long as the requests keep passing the configured matchers.  
+The basic is workflow for a request is:
+
+- run configured middlewares
+- mocha parses the request body based on:
+  - custom `RequestBodyParser` configured
+  - request content-type
+- mock http handler tries to find a mock for the incoming request were all matchers evaluates to true
+  - if a mock is found, it will run **post matchers**.
+  - if all matchers passes, it will use mock reply implementation to build a response
+  - if no mock is found, **it returns an HTTP Status Code 418 (teapot)**.
+- after serving a mock response, it will run any `core.PostAction` configured.
+
 ## Getting Started
 
-```go
-package main
+Usage typically looks like the example below:
 
-import (
-	"io/ioutil"
-	"net/http"
-	"testing"
-
-	"github.com/stretchr/testify/assert"
-
-	"github.com/vitorsalgado/mocha"
-	"github.com/vitorsalgado/mocha/expect"
-	"github.com/vitorsalgado/mocha/reply"
-)
-
-func Test(t *testing.T) {
+```
+func Test_Example(t *testing.T) {
 	m := mocha.New(t)
 	m.Start()
 
-	scoped := m.Mock(mocha.Get(matchers.URLPath("/test")).
-		Header("test", matchers.EqualTo("hello")).
-		Query("filter", matchers.EqualTo("all")).
+	scoped := m.AddMocks(mocha.Get(expect.URLPath("/test")).
+		Header("test", expect.ToEqual("hello")).
+		Query("filter", expect.ToEqual("all")).
 		Reply(reply.Created().BodyString("hello world")))
 
-	req, _ := http.NewRequest(http.MethodGet, m.Server.URL+"/test?filter=all", nil)
+	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test?filter=all", nil)
 	req.Header.Add("test", "hello")
 
 	res, err := http.DefaultClient.Do(req)
@@ -85,14 +89,210 @@ func Test(t *testing.T) {
 	body, err := ioutil.ReadAll(res.Body)
 
 	assert.Nil(t, err)
-	assert.True(t, scoped.IsDone())
+	assert.True(t, scoped.Called())
 	assert.Equal(t, 201, res.StatusCode)
 	assert.Equal(t, string(body), "hello world")
 }
-
 ```
 
-## Todo
+## Configuration
+
+Mocha has two ways to create an instance: `mocha.New()` and `mocha.NewSimple()`.  
+`mocha.NewSimple()` creates a new instance with default values for everything.  
+`mocha.New(t, ...config)` needs a `core.T` implementation and allows to configure the mock server.
+You use `testing.T` implementation. Mocha will use this to log useful information for each request match attempt.
+Use `mocha.Configure()` or provide a `mocha.Config` to configure the mock server.
+
+## Request Matching
+
+Matchers can be applied to any part of a Request and **Mocha** provides a fluent API to make your life easier.  
+See usage examples below:
+
+### Method and URL
+
+```
+m := mocha.New(t)
+m.AddMocks(mocha.Request().Method(http.MethodGet).URL(expect.URLPath("/test"))
+```
+
+### Header
+
+```
+m := mocha.New(t)
+m.AddMocks(mocha.Get(expect.URLPath("/test")).
+    Header("test", expect.ToEqual("hello")))
+```
+
+### Query
+
+```
+m := mocha.New(t)
+m.AddMocks(mocha.Get(expect.URLPath("/test")).
+    Query("filter", expect.ToEqual("all")))
+```
+
+### Body
+
+**Matching JSON Fields**
+
+```
+m := mocha.New(t)
+m.AddMocks(mocha.Post(expect.URLPath("/test")).
+    Body(
+        expect.JSONPath("name", expect.ToEqual("dev")), expect.JSONPath("ok", expect.ToEqual(true))).
+    Reply(reply.OK()))
+```
+
+### Form URL Encoded Fields
+
+```
+m.AddMocks(mocha.Post(expect.URLPath("/test")).
+    FormField("field1", expect.ToEqual("dev")).
+    FormField("field2", expect.ToContain("qa")).
+    Reply(reply.OK()))
+```
+
+## Replies
+
+You can define a response that should be served once a request is matched.  
+**Mocha** provides several ways to configure a reply. The built-in replies are:
+
+- single reply
+- random replies
+- sequence replies
+- reply from a function
+- reply from a proxied request
+
+Replies are based on the `core.Reply` interface.  
+It's also possible to configure response bodies from templates. **Mocha** uses Go Templates.
+Replies usage examples:
+
+### Basic Reply
+
+```
+m := mocha.New(t)
+m.AddMocks(mocha.Get(expect.URLPath("/test")).
+    Reply(reply.OK())
+```
+
+### Sequence
+
+```
+m := mocha.New(t)
+m.AddMocks(mocha.Get(expect.URLPath("/test")).
+    Reply(reply.Seq().
+	    Add(InternalServerError(), BadRequest(), OK(), NotFound())))
+```
+
+### Random Replies
+
+```
+m := mocha.New(t)
+m.AddMocks(mocha.Get(expect.URLPath("/test")).
+    Reply(reply.Rand().
+		Add(BadRequest(), OK(), Created(), InternalServerError())))
+```
+
+### Reply Function
+
+```
+m := mocha.New(t)
+m.AddMocks(mocha.Get(expect.URLPath("/test")).
+    ReplyFunction(func(r *http.Request, m *core.Mock, p parameters.Params) (*core.Response, error) {
+        return &core.Response{Status: http.StatusAccepted}, nil
+    }))
+```
+
+### Proxied From
+
+**reply.From** will forward the request to the given destination and serve the response from the forwarded server.  
+It`s possible to add extra headers to the request and the response and also remove unwanted headers.
+
+```
+m := mocha.New(t)
+m.AddMocks(mocha.Get(expect.URLPath("/test")).
+    Reply(reply.From("http://example.org").
+		ProxyHeader("x-proxy", "proxied").
+		RemoveProxyHeader("x-to-be-removed").
+		Header("x-res", "response"))
+```
+
+### Body Template
+
+**Mocha** comes with a built-in template parser based on Go Templates.  
+To serve a response body from a template, follow the example below:
+
+```
+templateFile, _ := os.Open("template.tmpl"))
+content, _ := ioutil.ReadAll(templateFile)
+
+m := mocha.New(t)
+m.AddMocks(mocha.Get(expect.URLPath("/test")).
+    Reply(reply.
+        OK().
+        BodyTemplate(reply.NewTextTemplate().
+            FuncMap(template.FuncMap{"trim": strings.TrimSpace}).
+            Template(string(content))).
+        Model(data))
+```
+
+### Specifying Headers
+
+```
+m := mocha.New(t)
+m.AddMocks(mocha.Get(expect.URLPath("/test")).
+    Reply(reply.OK().Header("test", "test-value"))
+```
+
+## Delay Responses
+
+You can configure a delay to responses to simulate timeouts, slow requests and any other timing related scenarios.  
+See the example below:
+
+```
+delay := time.Duration(1250) * time.Millisecond
+
+m.AddMocks(Get(expect.URLPath("/test")).
+    Reply(reply.
+        OK().
+        Delay(delay)))
+```
+
+## Assertions
+
+### Mocha Instance
+
+Mocha instance provides methods to assert if associated mocks were called or not, how many times they were called,
+allows you to enable/disable then and so on.  
+The available assertion methods on mocha instance are:
+
+- AssertCalled: asserts that all associated mocks were called at least once.
+- AssertNotCalled: asserts that associated mocks were **not** called.
+- AssertHits: asserts that the sum of calls is equal to the expected value.
+
+### Scope
+
+Mocha instance method `AddMocks` returns a `Scoped` instance that holds all mocks created.  
+`Scopes` allows you control related mocks, enabling/disabling, checking if they were called or not. Scoped instance also
+provides **assertions** to facility **tests** verification.
+See below the available test assertions:
+
+- AssertCalled: asserts that all associated mocks were called at least once.
+- AssertNotCalled: asserts that associated mocks were **not** called.
+
+### Matchers
+
+Mocha provides several matcher functions to facilitate request matching and verification.
+See the package `expect` for more details.  
+You can create custom matchers using these two approaches:
+
+- create a `expect.Matcher` struct
+- use the function `expect.Func` providing a function with the following
+  signature: `func(v any, a expect.Args) (bool, error)`
+
+---
+
+## Future Plans
 
 - [ ] Configure mocks with JSON/YAML files
 - [ ] CLI

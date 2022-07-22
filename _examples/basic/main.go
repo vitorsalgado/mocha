@@ -21,7 +21,7 @@ func main() {
 	m := mocha.New(mocha.NewStdoutNotifier(), mocha.Configure().Context(ctx).Build())
 	m.Start()
 
-	m.Mock(mocha.
+	m.AddMocks(mocha.
 		Get(expect.URLPath("/test")).
 		Header(headers.Accept,
 			expect.ToContain(mimetypes.TextHTML)).

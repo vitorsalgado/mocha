@@ -144,12 +144,12 @@ func (m *Mocha) StartTLS() ServerInfo {
 	return info
 }
 
-// Mock adds one or multiple HTTP request mocks.
+// AddMocks adds one or multiple HTTP request mocks.
 // It returns a Scoped instance that allows control of the added mocks and also checking if they were called or not.
 // The returned Scoped is useful for tests.
 //
 // Example:
-// 	scoped := m.Mock(
+// 	scoped := m.AddMocks(
 // 		Get(to.URLPath("/test")).
 // 			Header("test", to.EqualTo("hello")).
 // 			Query("filter", to.EqualTo("all")).
@@ -158,7 +158,7 @@ func (m *Mocha) StartTLS() ServerInfo {
 // 				BodyString("hello world")))
 //
 //	assert.True(t, scoped.Called())
-func (m *Mocha) Mock(builders ...*MockBuilder) *Scoped {
+func (m *Mocha) AddMocks(builders ...*MockBuilder) *Scoped {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 

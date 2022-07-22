@@ -41,7 +41,7 @@ func (h *InternalEvents) OnRequestMatch(e OnRequestMatch) {
 		colorize.Green(e.Request.Path),
 		e.Request.Method,
 		fullURL(e.Request.Host, e.Request.RequestURI),
-		colorize.Bold("Mock: "),
+		colorize.Bold("AddMocks: "),
 		e.Mock.ID,
 		e.Mock.Name,
 		colorize.Green("Took"),

@@ -22,7 +22,7 @@ func TestPostJSON(t *testing.T) {
 		m := mocha.New(t)
 		m.Start()
 
-		scoped := m.Mock(mocha.Post(expect.URLPath("/test")).
+		scoped := m.AddMocks(mocha.Post(expect.URLPath("/test")).
 			Header("test", expect.ToEqual("hello")).
 			Body(
 				expect.JSONPath("name", expect.ToEqual("dev")), expect.JSONPath("ok", expect.ToEqual(true))).
@@ -48,7 +48,7 @@ func TestPostJSON(t *testing.T) {
 
 		data := &jsonTestModel{OK: true, Name: "dev"}
 
-		scoped := m.Mock(mocha.Post(expect.URLPath("/test")).
+		scoped := m.AddMocks(mocha.Post(expect.URLPath("/test")).
 			Header("test", expect.ToEqual("hello")).
 			Body(expect.ToEqualJSON(data)).
 			Reply(reply.OK()))
@@ -74,7 +74,7 @@ func TestPostJSON(t *testing.T) {
 		data1 := map[string]interface{}{"ok": true, "name": "dev"}
 		data2 := map[string]interface{}{"ok": true, "name": "dev"}
 
-		scoped := m.Mock(mocha.Post(expect.URLPath("/test")).
+		scoped := m.AddMocks(mocha.Post(expect.URLPath("/test")).
 			Header("test", expect.ToEqual("hello")).
 			Body(expect.ToEqualJSON(data1)).
 			Reply(reply.OK()))
@@ -100,7 +100,7 @@ func TestPostJSON(t *testing.T) {
 		toMatch := map[string]interface{}{"name": "dev", "ok": true}
 		data := jsonTestModel{Name: "dev", OK: true}
 
-		scoped := m.Mock(mocha.Post(expect.URLPath("/test")).
+		scoped := m.AddMocks(mocha.Post(expect.URLPath("/test")).
 			Header("test", expect.ToEqual("hello")).
 			Body(expect.ToEqualJSON(toMatch)).
 			Reply(reply.OK()))
@@ -126,7 +126,7 @@ func TestPostJSON(t *testing.T) {
 		body := map[string]interface{}{"ok": true, "name": "dev"}
 		exp := map[string]interface{}{"ok": false, "name": "qa"}
 
-		scoped := m.Mock(mocha.Post(expect.URLPath("/test")).
+		scoped := m.AddMocks(mocha.Post(expect.URLPath("/test")).
 			Header("test", expect.ToEqual("hello")).
 			Body(expect.ToEqualJSON(exp)).
 			Reply(reply.OK()))

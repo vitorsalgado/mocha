@@ -64,7 +64,7 @@ func TestConfig(t *testing.T) {
 			CloseOnCleanup(t)
 		m.Start()
 
-		scoped := m.Mock(
+		scoped := m.AddMocks(
 			Get(expect.URLPath("/test")).
 				Reply(reply.OK()))
 
@@ -85,7 +85,7 @@ func TestConfig(t *testing.T) {
 			Build())
 		m.Start()
 
-		scoped := m.Mock(Post(expect.URLPath("/test")).
+		scoped := m.AddMocks(Post(expect.URLPath("/test")).
 			Body(expect.ToEqual(10)).
 			Reply(reply.OK()))
 
@@ -119,7 +119,7 @@ func TestConfig(t *testing.T) {
 			Build())
 		m.Start()
 
-		scoped := m.Mock(
+		scoped := m.AddMocks(
 			Get(expect.URLPath("/test")).
 				Reply(reply.OK()))
 
@@ -140,7 +140,7 @@ func TestConfig(t *testing.T) {
 			Build())
 		m.Start()
 
-		scoped := m.Mock(
+		scoped := m.AddMocks(
 			Get(expect.URLPath("/test")).
 				Reply(reply.OK()))
 

@@ -21,7 +21,7 @@ func TestTLS(t *testing.T) {
 	// allow insecure https request
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
-	scoped := m.Mock(mocha.Get(expect.URLPath("/test")).
+	scoped := m.AddMocks(mocha.Get(expect.URLPath("/test")).
 		Header("test", expect.ToEqual("hello")).
 		Reply(reply.OK()))
 

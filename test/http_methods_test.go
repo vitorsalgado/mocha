@@ -18,7 +18,7 @@ func TestHTTPMethods(t *testing.T) {
 	m.Start()
 
 	t.Run("should mock GET", func(t *testing.T) {
-		scoped := m.Mock(
+		scoped := m.AddMocks(
 			mocha.Get(expect.URLPath("/test")).
 				Reply(reply.OK()))
 
@@ -42,7 +42,7 @@ func TestHTTPMethods(t *testing.T) {
 	})
 
 	t.Run("should mock POST", func(t *testing.T) {
-		scoped := m.Mock(
+		scoped := m.AddMocks(
 			mocha.Post(expect.URLPath("/test")).
 				Reply(reply.OK()))
 
@@ -67,7 +67,7 @@ func TestHTTPMethods(t *testing.T) {
 	})
 
 	t.Run("should mock PUT", func(t *testing.T) {
-		scoped := m.Mock(
+		scoped := m.AddMocks(
 			mocha.Put(expect.URLPath("/test")).
 				Reply(reply.OK()))
 
@@ -92,7 +92,7 @@ func TestHTTPMethods(t *testing.T) {
 	})
 
 	t.Run("should mock DELETE", func(t *testing.T) {
-		scoped := m.Mock(
+		scoped := m.AddMocks(
 			mocha.Delete(expect.URLPath("/test")).
 				Reply(reply.OK()))
 
@@ -117,7 +117,7 @@ func TestHTTPMethods(t *testing.T) {
 	})
 
 	t.Run("should mock PATCH", func(t *testing.T) {
-		scoped := m.Mock(
+		scoped := m.AddMocks(
 			mocha.Patch(expect.URLPath("/test")).
 				Reply(reply.OK()))
 
@@ -142,7 +142,7 @@ func TestHTTPMethods(t *testing.T) {
 	})
 
 	t.Run("should mock HEAD", func(t *testing.T) {
-		scoped := m.Mock(
+		scoped := m.AddMocks(
 			mocha.Head(expect.URLPath("/test")).
 				Reply(reply.OK()))
 
@@ -167,7 +167,7 @@ func TestHTTPMethods(t *testing.T) {
 	})
 
 	t.Run("should mock OPTIONS", func(t *testing.T) {
-		scoped := m.Mock(
+		scoped := m.AddMocks(
 			mocha.Options(expect.URLPath("/test")).
 				Reply(reply.OK()))
 

@@ -25,7 +25,7 @@ func TestMocha(t *testing.T) {
 	m := New(t)
 	m.Start()
 
-	scoped := m.Mock(
+	scoped := m.AddMocks(
 		Get(expect.URLPath("/test")).
 			Header("test", expect.ToEqual("hello")).
 			Query("filter", expect.ToEqual("all")).
@@ -57,7 +57,7 @@ func TestMocha_NewBasic(t *testing.T) {
 
 	defer m.Close()
 
-	scoped := m.Mock(
+	scoped := m.AddMocks(
 		Get(expect.URLPath("/test")).
 			Reply(reply.
 				Created().
@@ -87,7 +87,7 @@ func TestMocha_Parameters(t *testing.T) {
 	m.Start()
 	m.Parameters().Set(key, expected)
 
-	scoped := m.Mock(Get(expect.URLPath("/test")).
+	scoped := m.AddMocks(Get(expect.URLPath("/test")).
 		RequestMatches(expect.Func(func(v any, params expect.Args) (bool, error) {
 			p, _ := params.Params.Get(key)
 			return p.(string) == expected, nil
@@ -108,7 +108,7 @@ func TestResponseMapper(t *testing.T) {
 	m := New(t)
 	m.Start()
 
-	scoped := m.Mock(Get(expect.URLPath("/test")).
+	scoped := m.AddMocks(Get(expect.URLPath("/test")).
 		Reply(reply.
 			OK().
 			Map(func(r *core.Response, rma core.ResponseMapperArgs) error {
@@ -136,7 +136,7 @@ func TestResponseDelay(t *testing.T) {
 	start := time.Now()
 	delay := time.Duration(1250) * time.Millisecond
 
-	scoped := m.Mock(Get(expect.URLPath("/test")).
+	scoped := m.AddMocks(Get(expect.URLPath("/test")).
 		Reply(reply.
 			OK().
 			Delay(delay)))
@@ -158,7 +158,7 @@ func TestPostExpectations(t *testing.T) {
 	m := New(t)
 	m.Start()
 
-	scoped := m.Mock(
+	scoped := m.AddMocks(
 		Request().
 			MatchAfter(expect.Repeat(2)).
 			Method("GET").
@@ -191,7 +191,7 @@ func TestErrors(t *testing.T) {
 	defer m.Close()
 
 	t.Run("should log errors on reply", func(t *testing.T) {
-		scoped := m.Mock(Get(expect.URLPath("/test1")).
+		scoped := m.AddMocks(Get(expect.URLPath("/test1")).
 			ReplyFunction(func(r *http.Request, m *core.Mock, p parameters.Params) (*core.Response, error) {
 				return nil, fmt.Errorf("failed to build a response")
 			}))
@@ -204,7 +204,7 @@ func TestErrors(t *testing.T) {
 	})
 
 	t.Run("should log errors from matchers", func(t *testing.T) {
-		scoped := m.Mock(Get(expect.URLPath("/test2")).
+		scoped := m.AddMocks(Get(expect.URLPath("/test2")).
 			Header("test", expect.Func(
 				func(_ any, _ expect.Args) (bool, error) {
 					return false, fmt.Errorf("failed")
@@ -224,7 +224,7 @@ func TestMocha_Assertions(t *testing.T) {
 
 	fakeT := mocks.NewFakeNotifier()
 
-	scoped := m.Mock(
+	scoped := m.AddMocks(
 		Get(expect.URLPath("/test-ok")).
 			Reply(reply.OK()))
 
@@ -251,7 +251,7 @@ func TestMocha_Enable_Disable(t *testing.T) {
 	m := New(t)
 	m.Start()
 
-	m.Mock(
+	m.AddMocks(
 		Get(expect.URLPath("/test-1")).
 			Reply(reply.OK()),
 		Get(expect.URLPath("/test-2")).
@@ -305,7 +305,7 @@ func TestMocha_Context(t *testing.T) {
 	m := New(Noop(), Configure().Context(ctx).Build())
 	m.Start()
 
-	scoped := m.Mock(
+	scoped := m.AddMocks(
 		Get(expect.URLPath("/test")).
 			Reply(reply.OK()))
 
@@ -352,7 +352,7 @@ func TestMocha_Subscribe(t *testing.T) {
 	m.Subscribe(f)
 	m.Start()
 
-	scoped := m.Mock(
+	scoped := m.AddMocks(
 		Get(expect.URLPath("/test")).
 			Reply(reply.OK()))
 
@@ -373,7 +373,7 @@ func TestMocha_Silently(t *testing.T) {
 	m := New(t, Configure().LogVerbosity(LogSilently).Build())
 	m.Start()
 
-	scoped := m.Mock(
+	scoped := m.AddMocks(
 		Get(expect.URLPath("/test")).
 			Reply(reply.
 				Created().
