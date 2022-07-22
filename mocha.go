@@ -7,6 +7,7 @@ import (
 
 	"github.com/vitorsalgado/mocha/core"
 	"github.com/vitorsalgado/mocha/feat/cors"
+	"github.com/vitorsalgado/mocha/feat/events"
 	"github.com/vitorsalgado/mocha/feat/scenario"
 	"github.com/vitorsalgado/mocha/internal/middleware"
 	"github.com/vitorsalgado/mocha/internal/parameters"
@@ -20,6 +21,7 @@ type (
 		context context.Context
 		cancel  context.CancelFunc
 		params  parameters.Params
+		events  *events.Emitter
 		scopes  []*Scoped
 		mu      *sync.Mutex
 		t       core.T
@@ -41,6 +43,12 @@ func New(t core.T, config ...Config) *Mocha {
 		cfg = config[0]
 	}
 
+	parent := cfg.Context
+	if parent == nil {
+		parent = context.Background()
+	}
+	ctx, cancel := context.WithCancel(parent)
+
 	storage := core.NewStorage()
 
 	parsers := make([]RequestBodyParser, 0)
@@ -53,6 +61,13 @@ func New(t core.T, config ...Config) *Mocha {
 	middlewares := make([]func(handler http.Handler) http.Handler, 0)
 	middlewares = append(middlewares, middleware.Recover)
 
+	evt := events.NewEmitter(ctx)
+	evt.Start()
+
+	if cfg.LogVerbosity != LogSilently {
+		evt.Subscribe(events.NewInternalEvents(t))
+	}
+
 	if cfg.corsEnabled {
 		middlewares = append(middlewares, cors.New(cfg.CORS))
 	}
@@ -61,7 +76,7 @@ func New(t core.T, config ...Config) *Mocha {
 
 	handler := middleware.
 		Compose(middlewares...).
-		Root(newHandler(storage, parsers, params, t))
+		Root(newHandler(storage, parsers, params, evt, t))
 
 	server := cfg.Server
 
@@ -75,12 +90,6 @@ func New(t core.T, config ...Config) *Mocha {
 		t.FailNow()
 	}
 
-	parent := cfg.Context
-	if parent == nil {
-		parent = context.Background()
-	}
-	ctx, cancel := context.WithCancel(parent)
-
 	m := &Mocha{
 		server:  server,
 		storage: storage,
@@ -88,6 +97,7 @@ func New(t core.T, config ...Config) *Mocha {
 		cancel:  cancel,
 		params:  params,
 		scopes:  make([]*Scoped, 0),
+		events:  evt,
 		mu:      &sync.Mutex{},
 		t:       t}
 
@@ -175,6 +185,11 @@ func (m *Mocha) Parameters() parameters.Params {
 // URL returns the base URL string for the mock server.
 func (m *Mocha) URL() string {
 	return m.server.Info().URL
+}
+
+// Subscribe add a new event listener.
+func (m *Mocha) Subscribe(evt events.Events) {
+	m.events.Subscribe(evt)
 }
 
 // Close closes the mock server.

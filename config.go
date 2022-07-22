@@ -7,6 +7,14 @@ import (
 	"github.com/vitorsalgado/mocha/feat/cors"
 )
 
+type LogVerbosity int
+
+// Log verbosity enum
+const (
+	LogSilently LogVerbosity = iota
+	LogVerbose
+)
+
 type (
 	// Config holds Mocha mock server configurations.
 	Config struct {
@@ -29,6 +37,9 @@ type (
 		// Server defines a custom mock HTTP server.
 		Server Server
 
+		// LogVerbosity defines the level of logs
+		LogVerbosity LogVerbosity
+
 		corsEnabled bool
 	}
 
@@ -39,7 +50,7 @@ type (
 	}
 )
 
-var configDefault = Configure().Build()
+var configDefault = Configure().LogVerbosity(LogVerbose).Build()
 
 // Configure inits a new Configurer.
 // Entrypoint to start a new custom configuration for Mocha mock servers.
@@ -90,6 +101,13 @@ func (cb *Configurer) CORS(options ...cors.Config) *Configurer {
 // Server configures a custom HTTP mock Server.
 func (cb *Configurer) Server(srv Server) *Configurer {
 	cb.conf.Server = srv
+	return cb
+}
+
+// LogVerbosity configure the verbosity of informative logs.
+// Defaults to LogVerbose.
+func (cb *Configurer) LogVerbosity(l LogVerbosity) *Configurer {
+	cb.conf.LogVerbosity = l
 	return cb
 }
 

@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/vitorsalgado/mocha"
-	mok "github.com/vitorsalgado/mocha/core"
-	"github.com/vitorsalgado/mocha/core/mocks"
+	"github.com/vitorsalgado/mocha/core"
+	"github.com/vitorsalgado/mocha/core/_mocks"
 	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/internal/testutil"
 	"github.com/vitorsalgado/mocha/reply"
@@ -20,7 +20,7 @@ type action struct {
 	mock.Mock
 }
 
-func (act *action) Run(a mok.PostActionArgs) error {
+func (act *action) Run(a core.PostActionArgs) error {
 	args := act.Called(a)
 	return args.Error(0)
 }
@@ -51,7 +51,7 @@ func TestPostAction(t *testing.T) {
 	})
 
 	t.Run("should not be affected by errors on registered post actions", func(t *testing.T) {
-		fakeT := mocks.NewT()
+		fakeT := mocks.NewFakeNotifier()
 		m := mocha.New(fakeT)
 		m.Start()
 

@@ -10,10 +10,12 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 
 	"github.com/vitorsalgado/mocha/core"
-	"github.com/vitorsalgado/mocha/core/mocks"
+	"github.com/vitorsalgado/mocha/core/_mocks"
 	"github.com/vitorsalgado/mocha/expect"
+	"github.com/vitorsalgado/mocha/feat/events"
 	"github.com/vitorsalgado/mocha/internal/parameters"
 	"github.com/vitorsalgado/mocha/internal/testutil"
 	"github.com/vitorsalgado/mocha/reply"
@@ -192,7 +194,7 @@ func TestMocha_Assertions(t *testing.T) {
 	m := New(t)
 	m.Start()
 
-	fakeT := mocks.NewT()
+	fakeT := mocks.NewFakeNotifier()
 
 	scoped := m.Mock(
 		Get(expect.URLPath("/test-ok")).
@@ -293,4 +295,75 @@ func TestMocha_Context(t *testing.T) {
 
 	assert.NotNil(t, err, "server was supposed to be closed")
 	assert.Nil(t, res)
+}
+
+type FakeEvents struct{ mock.Mock }
+
+func (h *FakeEvents) OnRequest(e events.OnRequest) {
+	h.Called(e)
+}
+
+func (h *FakeEvents) OnRequestMatch(e events.OnRequestMatch) {
+	h.Called(e)
+}
+
+func (h *FakeEvents) OnRequestNotMatched(e events.OnRequestNotMatched) {
+	h.Called(e)
+}
+
+func (h *FakeEvents) OnError(e events.OnError) {
+	h.Called(e)
+}
+
+func TestMocha_Subscribe(t *testing.T) {
+	f := &FakeEvents{}
+	f.On("OnRequest", mock.AnythingOfType("OnRequest")).Return()
+	f.On("OnRequestMatch", mock.Anything).Return()
+
+	m := New(t, Configure().Build())
+	m.Subscribe(f)
+	m.Start()
+
+	scoped := m.Mock(
+		Get(expect.URLPath("/test")).
+			Reply(reply.OK()))
+
+	res, err := testutil.Get(m.URL() + "/test").Do()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	time.Sleep(2 * time.Second)
+
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+	assert.True(t, scoped.Called())
+
+	f.AssertExpectations(t)
+}
+
+func TestMocha_Silently(t *testing.T) {
+	m := New(t, Configure().LogVerbosity(LogSilently).Build())
+	m.Start()
+
+	scoped := m.Mock(
+		Get(expect.URLPath("/test")).
+			Reply(reply.
+				Created().
+				BodyString("hello world")))
+
+	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test?filter=all", nil)
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.True(t, scoped.Called())
+	assert.Equal(t, 201, res.StatusCode)
+	assert.Equal(t, string(body), "hello world")
 }

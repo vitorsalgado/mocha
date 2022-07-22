@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/vitorsalgado/mocha/core"
-	"github.com/vitorsalgado/mocha/core/mocks"
+	"github.com/vitorsalgado/mocha/core/_mocks"
 	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/internal/testutil"
 	"github.com/vitorsalgado/mocha/reply"
@@ -30,7 +30,7 @@ func TestScoped(t *testing.T) {
 	assert.Equal(t, m1, scoped.Get(m1.ID))
 
 	t.Run("should not return done when there is still pending mocks", func(t *testing.T) {
-		fakeT := mocks.NewT()
+		fakeT := mocks.NewFakeNotifier()
 
 		assert.False(t, scoped.Called())
 		assert.Equal(t, 3, len(scoped.ListPending()))
@@ -41,7 +41,7 @@ func TestScoped(t *testing.T) {
 	})
 
 	t.Run("should return done when all mocks were called", func(t *testing.T) {
-		fakeT := mocks.NewT()
+		fakeT := mocks.NewFakeNotifier()
 
 		m1.Hit()
 

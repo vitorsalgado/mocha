@@ -2,10 +2,10 @@ package mocks
 
 import "github.com/stretchr/testify/mock"
 
-type FakeT struct{ mock.Mock }
+type FakeNotifier struct{ mock.Mock }
 
-func NewT() *FakeT {
-	t := &FakeT{}
+func NewFakeNotifier() *FakeNotifier {
+	t := &FakeNotifier{}
 	t.On("Helper").Return()
 	t.On("Logf", mock.Anything, mock.Anything).Return()
 	t.On("Errorf", mock.Anything, mock.Anything).Return()
@@ -14,18 +14,18 @@ func NewT() *FakeT {
 	return t
 }
 
-func (m *FakeT) Helper() {
+func (m *FakeNotifier) Helper() {
 	m.Called()
 }
 
-func (m *FakeT) Logf(format string, args ...any) {
+func (m *FakeNotifier) Logf(format string, args ...any) {
 	m.Called(format, args)
 }
 
-func (m *FakeT) Errorf(format string, args ...any) {
+func (m *FakeNotifier) Errorf(format string, args ...any) {
 	m.Called(format, args)
 }
 
-func (m *FakeT) FailNow() {
+func (m *FakeNotifier) FailNow() {
 	m.Called()
 }
