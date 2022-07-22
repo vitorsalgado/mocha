@@ -64,7 +64,7 @@ func New(t core.T, config ...Config) *Mocha {
 	evt := events.NewEmitter(ctx)
 	evt.Start()
 
-	if cfg.LogVerbosity != LogSilently {
+	if cfg.LogVerbosity == LogVerbose {
 		evt.Subscribe(events.NewInternalEvents(t))
 	}
 
