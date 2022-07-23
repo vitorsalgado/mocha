@@ -7,11 +7,11 @@ import (
 )
 
 func TestMain(m *testing.M) {
-	_ = os.Setenv(_colorEnv, "1")
+	_ = os.Setenv(_noColorEnv, "1")
 
 	code := m.Run()
 
-	_ = os.Unsetenv(_colorEnv)
+	_ = os.Unsetenv(_noColorEnv)
 
 	os.Exit(code)
 }
