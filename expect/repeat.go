@@ -10,7 +10,7 @@ func Repeat(times int) Matcher {
 	m := Matcher{}
 	m.Name = "Repeat"
 	m.DescribeMismatch = func(p string, v any) string {
-		return fmt.Sprintf("")
+		return fmt.Sprintf("should repeat only %d. count is: %d", times, count)
 	}
 	m.Matches = func(_ any, params Args) (bool, error) {
 		count++

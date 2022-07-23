@@ -16,7 +16,7 @@ func ToMatchExpr[T RegExpMatcherTypes](re T) Matcher {
 	m := Matcher{}
 	m.Name = "MatchExpr"
 	m.DescribeMismatch = func(p string, v any) string {
-		return fmt.Sprintf("given regular expression dit not match")
+		return "given regular expression dit not match"
 	}
 	m.Matches = func(v any, params Args) (bool, error) {
 		var err error

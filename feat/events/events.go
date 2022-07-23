@@ -80,7 +80,7 @@ type (
 	// Events interface defines available event handlers.
 	Events interface {
 		OnRequest(OnRequest)
-		OnRequestMatch(OnRequestMatch)
+		OnRequestMatched(OnRequestMatch)
 		OnRequestNotMatched(OnRequestNotMatched)
 		OnError(OnError)
 	}
@@ -109,7 +109,21 @@ func (h *Emitter) Emit(data any) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	go func(data any, listener chan any) { listener <- data }(data, h.listener)
+	for _, hook := range h.events {
+		switch evt := data.(type) {
+		case OnRequest:
+			hook.OnRequest(evt)
+		case OnRequestMatch:
+			hook.OnRequestMatched(evt)
+		case OnRequestNotMatched:
+			hook.OnRequestNotMatched(evt)
+		case OnError:
+			hook.OnError(evt)
+
+		default:
+			log.Printf("event type %s is invalid\n", reflect.TypeOf(data).Name())
+		}
+	}
 }
 
 // Subscribe subscribes new event handlers.
@@ -118,37 +132,4 @@ func (h *Emitter) Subscribe(evt Events) {
 	defer h.mu.Unlock()
 
 	h.events = append(h.events, evt)
-}
-
-// Start starts event listener on another go routine.
-func (h *Emitter) Start() {
-	go func() {
-		for {
-			select {
-			case <-h.ctx.Done():
-				return
-
-			case data, ok := <-h.listener:
-				if !ok {
-					return
-				}
-
-				for _, hook := range h.events {
-					switch evt := data.(type) {
-					case OnRequest:
-						hook.OnRequest(evt)
-					case OnRequestMatch:
-						hook.OnRequestMatch(evt)
-					case OnRequestNotMatched:
-						hook.OnRequestNotMatched(evt)
-					case OnError:
-						hook.OnError(evt)
-
-					default:
-						log.Printf("event type %s is invalid\n", reflect.TypeOf(data).Name())
-					}
-				}
-			}
-		}
-	}()
 }

@@ -63,7 +63,6 @@ func New(t core.T, config ...Config) *Mocha {
 	middlewares = append(middlewares, recover.Recover)
 
 	evt := events.NewEmitter(ctx)
-	evt.Start()
 
 	if cfg.LogVerbosity == LogVerbose {
 		evt.Subscribe(events.NewInternalEvents(t))

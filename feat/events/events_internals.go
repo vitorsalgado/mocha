@@ -37,7 +37,7 @@ func (h *InternalEvents) OnRequest(e OnRequest) {
 	)
 }
 
-func (h *InternalEvents) OnRequestMatch(e OnRequestMatch) {
+func (h *InternalEvents) OnRequestMatched(e OnRequestMatch) {
 	h.l.Logf("\n%s %s <--- %s %s\n%s %s\n\n%s%d %s\n\n%s: %dms\n%s:\n %s: %d\n %s: %v\n",
 		colorize.GreenBright(colorize.Bold("REQUEST DID MATCH")),
 		time.Now().Format(time.RFC3339),
@@ -70,18 +70,15 @@ func (h *InternalEvents) OnRequestNotMatched(e OnRequestNotMatched) {
 		fullURL(e.Request.Host, e.Request.RequestURI)))
 
 	if e.Result.HasClosestMatch {
-		builder.WriteString("Closest Match:\n")
-		builder.WriteString(
-			fmt.Sprintf("id: %d\nname: %s\n\n", e.Result.ClosestMatch.ID, e.Result.ClosestMatch.Name))
+		builder.WriteString(fmt.Sprintf("%s: %d %s\n\n",
+			colorize.Bold("Closest Match"), e.Result.ClosestMatch.ID, e.Result.ClosestMatch.Name))
 	}
 
-	builder.WriteString("Mismatches:\n")
+	builder.WriteString(fmt.Sprintf("%s:\n", colorize.Bold("Mismatches")))
 
 	for _, detail := range e.Result.Details {
-		builder.WriteString(fmt.Sprintf("%s\n%s\n%s",
-			fmt.Sprintf("Matcher \"%s\"", colorize.Bold(detail.Name)),
-			"Target: "+detail.Target,
-			detail.Description))
+		builder.WriteString(fmt.Sprintf("%s, reason=%s, applied-to=%s\n",
+			colorize.Bold(detail.Name), detail.Description, detail.Target))
 	}
 
 	h.l.Logf(builder.String())

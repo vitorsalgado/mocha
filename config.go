@@ -56,8 +56,9 @@ var configDefault = Configure().LogVerbosity(LogVerbose).Build()
 // Entrypoint to start a new custom configuration for Mocha mock servers.
 func Configure() *Configurer {
 	return &Configurer{conf: Config{
-		BodyParsers: make([]RequestBodyParser, 0),
-		Middlewares: make([]func(http.Handler) http.Handler, 0)}}
+		LogVerbosity: LogVerbose,
+		BodyParsers:  make([]RequestBodyParser, 0),
+		Middlewares:  make([]func(http.Handler) http.Handler, 0)}}
 }
 
 // Context sets a custom context.

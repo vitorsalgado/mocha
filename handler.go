@@ -148,17 +148,15 @@ func respondNonMatched(w http.ResponseWriter, r *http.Request, result *core.Find
 	builder.WriteString("REQUEST DID NOT MATCH.\n")
 
 	if result.ClosestMatch != nil {
-		builder.WriteString("Closest Match:\n")
 		builder.WriteString(
-			fmt.Sprintf("id: %d\nname: %s\n\n", result.ClosestMatch.ID, result.ClosestMatch.Name))
+			fmt.Sprintf("Closest Match: %d %s\n\n", result.ClosestMatch.ID, result.ClosestMatch.Name))
 	}
 
 	builder.WriteString("Mismatches:\n")
 
 	for _, detail := range result.MismatchDetails {
-		builder.WriteString(
-			fmt.Sprintf("Matcher: %s\nTarget: %s\nReason: %s\n\n",
-				detail.Name, detail.Target, detail.Description))
+		builder.WriteString(fmt.Sprintf("%s, reason=%s, applied-to=%s\n",
+			detail.Name, detail.Description, detail.Target))
 	}
 
 	w.Header().Add(headers.ContentType, mimetypes.TextPlain)

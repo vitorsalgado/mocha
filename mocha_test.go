@@ -331,7 +331,7 @@ func (h *FakeEvents) OnRequest(e events.OnRequest) {
 	h.Called(e)
 }
 
-func (h *FakeEvents) OnRequestMatch(e events.OnRequestMatch) {
+func (h *FakeEvents) OnRequestMatched(e events.OnRequestMatch) {
 	h.Called(e)
 }
 
@@ -346,7 +346,7 @@ func (h *FakeEvents) OnError(e events.OnError) {
 func TestMocha_Subscribe(t *testing.T) {
 	f := &FakeEvents{}
 	f.On("OnRequest", mock.AnythingOfType("OnRequest")).Return()
-	f.On("OnRequestMatch", mock.Anything).Return()
+	f.On("OnRequestMatched", mock.Anything).Return()
 
 	m := New(t, Configure().Build())
 	m.Subscribe(f)
