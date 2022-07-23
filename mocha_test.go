@@ -302,7 +302,7 @@ func TestMocha_Enable_Disable(t *testing.T) {
 
 func TestMocha_Context(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
-	m := New(Noop(), Configure().Context(ctx).Build())
+	m := New(t, Configure().Context(ctx).Build())
 	m.Start()
 
 	scoped := m.AddMocks(
