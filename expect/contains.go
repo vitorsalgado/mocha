@@ -1,6 +1,7 @@
 package expect
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -9,6 +10,9 @@ import (
 func ToContain(expectation any) Matcher {
 	m := Matcher{}
 	m.Name = "Contain"
+	m.DescribeMismatch = func(p string, v any) string {
+		return fmt.Sprintf("value %v is not contained on %v", expectation, v)
+	}
 	m.Matches = func(list any, args Args) (bool, error) {
 		listValue := reflect.ValueOf(list)
 		sub := reflect.ValueOf(expectation)

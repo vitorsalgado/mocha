@@ -1,11 +1,14 @@
 package expect
 
-import "strings"
+import (
+	"strings"
+)
 
 // LowerCase lower case matcher string argument before submitting it to provided matcher.
 func LowerCase(matcher Matcher) Matcher {
 	m := Matcher{}
 	m.Name = "LowerCase"
+	m.DescribeMismatch = matcher.DescribeMismatch
 	m.Matches = func(v any, params Args) (bool, error) {
 		return matcher.Matches(strings.ToLower(v.(string)), params)
 	}

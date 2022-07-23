@@ -6,10 +6,10 @@ import "strings"
 func UpperCase(matcher Matcher) Matcher {
 	m := Matcher{}
 	m.Name = "UpperCase"
-	m.Matches =
-		func(v any, params Args) (bool, error) {
-			return matcher.Matches(strings.ToUpper(v.(string)), params)
-		}
+	m.DescribeMismatch = matcher.DescribeMismatch
+	m.Matches = func(v any, params Args) (bool, error) {
+		return matcher.Matches(strings.ToUpper(v.(string)), params)
+	}
 
 	return m
 }

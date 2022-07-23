@@ -1,5 +1,9 @@
 package expect
 
+import (
+	"fmt"
+)
+
 // EitherMatcherBuilder is a builder for Either matcher.
 // Prefer to use the Either() function.
 type EitherMatcherBuilder struct {
@@ -15,6 +19,9 @@ func Either(first Matcher) *EitherMatcherBuilder {
 func (e *EitherMatcherBuilder) Or(second Matcher) Matcher {
 	m := Matcher{}
 	m.Name = "Either"
+	m.DescribeMismatch = func(p string, v any) string {
+		return fmt.Sprintf("none of the matchers \"%s, %s\" matched.", e.first.Name, second.Name)
+	}
 	m.Matches = func(v any, args Args) (bool, error) {
 		r1, err := e.first.Matches(v, args)
 		if err != nil {

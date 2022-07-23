@@ -1,6 +1,8 @@
 package expect
 
 import (
+	"fmt"
+
 	"github.com/vitorsalgado/mocha/x/jsonx"
 )
 
@@ -12,6 +14,9 @@ import (
 func ToHaveKey(path string) Matcher {
 	m := Matcher{}
 	m.Name = "HasKey"
+	m.DescribeMismatch = func(p string, v any) string {
+		return fmt.Sprintf("json doest not have a key on path: %s", path)
+	}
 	m.Matches = func(v any, args Args) (bool, error) {
 		value, err := jsonx.Reach(path, v)
 		if err != nil || value == nil {

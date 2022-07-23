@@ -5,6 +5,7 @@ package expect
 func Peek(matcher Matcher, action func(v any) error) Matcher {
 	m := Matcher{}
 	m.Name = "Peek"
+	m.DescribeMismatch = matcher.DescribeMismatch
 	m.Matches = func(v any, params Args) (bool, error) {
 		err := action(v)
 		if err != nil {

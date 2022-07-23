@@ -6,6 +6,7 @@ import "strings"
 func Trim(matcher Matcher) Matcher {
 	m := Matcher{}
 	m.Name = "Trim"
+	m.DescribeMismatch = matcher.DescribeMismatch
 	m.Matches = func(v any, params Args) (bool, error) {
 		return matcher.Matches(strings.TrimSpace(v.(string)), params)
 	}

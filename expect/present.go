@@ -1,11 +1,17 @@
 package expect
 
-import "reflect"
+import (
+	"fmt"
+	"reflect"
+)
 
 // ToBePresent checks if matcher argument contains a value that is not nil or the zero value for the argument type.
 func ToBePresent() Matcher {
 	m := Matcher{}
 	m.Name = "Present"
+	m.DescribeMismatch = func(p string, v any) string {
+		return fmt.Sprintf("%v is not present", v)
+	}
 	m.Matches = func(v any, args Args) (bool, error) {
 		if v == nil {
 			return false, nil
