@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://github.com/vitorsalgado/mocha/compare/v1.0.0...v1.1.0) (2022-07-24)
+
+### Refactor
+
+- add missing mismatch descriptions for matchers ([fc888a3](https://github.com/vitorsalgado/mocha/commit/fc888a34dac86cf0830017c725402276c8d8fd0c))
+- change colorize no-color setup ([309cfbf](https://github.com/vitorsalgado/mocha/commit/309cfbf16318b28bcd47742022cddda80e171888))
+- internal events sync + default config + better msgs ([a27dbd9](https://github.com/vitorsalgado/mocha/commit/a27dbd9a69267802ebd1ce76958c628e4a4fdcae))
+- remove noop ([4d5d4db](https://github.com/vitorsalgado/mocha/commit/4d5d4db07904e3a6b58efc4847c0f1df1bf1003c))
+
 ## 1.0.0 (2022-07-22)
 
 ### Features
