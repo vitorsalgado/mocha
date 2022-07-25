@@ -17,13 +17,12 @@ func Recover(next http.Handler) http.Handler {
 				buf := make([]byte, 1024)
 				buf = buf[:runtime.Stack(buf, false)]
 
-				msg := fmt.Sprintf("panic: %v\n%s\n", recovery, buf)
-
-				log.Print(msg)
+				log.Printf("panic: %v\n%s\n", recovery, buf)
 
 				w.Header().Set(headers.ContentType, mimetypes.TextPlain)
 				w.WriteHeader(http.StatusTeapot)
-				w.Write([]byte(fmt.Sprintf("%s - %s", http.StatusText(http.StatusTeapot), msg)))
+				w.Write([]byte(fmt.Sprintf("%s - an unexpected error has ocurred", http.StatusText(http.StatusTeapot))))
+				w.Write([]byte(fmt.Sprintf("%v", recovery)))
 			}
 		}()
 
