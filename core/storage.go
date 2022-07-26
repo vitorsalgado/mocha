@@ -5,6 +5,24 @@ import (
 	"sync"
 )
 
+// Storage is the definition for Mock repository.
+type Storage interface {
+	// Save saves the Mock.
+	Save(mock *Mock)
+
+	// FetchEligible returns mocks that can be matched against requests.
+	FetchEligible() []*Mock
+
+	// FetchAll returns all stored Mock instances.
+	FetchAll() []*Mock
+
+	// Delete removes a Mock by its ID.
+	Delete(id int)
+
+	// Flush removes all stored mocks.
+	Flush()
+}
+
 type builtInStorage struct {
 	data []*Mock
 	mu   sync.Mutex

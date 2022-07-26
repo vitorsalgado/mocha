@@ -13,10 +13,10 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/vitorsalgado/mocha/core"
-	"github.com/vitorsalgado/mocha/core/_mocks"
 	"github.com/vitorsalgado/mocha/expect"
-	"github.com/vitorsalgado/mocha/feat/events"
+	"github.com/vitorsalgado/mocha/hooks"
 	"github.com/vitorsalgado/mocha/internal/parameters"
+	"github.com/vitorsalgado/mocha/internal/testmocks"
 	"github.com/vitorsalgado/mocha/internal/testutil"
 	"github.com/vitorsalgado/mocha/reply"
 )
@@ -222,7 +222,7 @@ func TestMocha_Assertions(t *testing.T) {
 	m := New(t)
 	m.Start()
 
-	fakeT := mocks.NewFakeNotifier()
+	fakeT := testmocks.NewFakeNotifier()
 
 	scoped := m.AddMocks(
 		Get(expect.URLPath("/test-ok")).
@@ -327,19 +327,19 @@ func TestMocha_Context(t *testing.T) {
 
 type FakeEvents struct{ mock.Mock }
 
-func (h *FakeEvents) OnRequest(e events.OnRequest) {
+func (h *FakeEvents) OnRequest(e hooks.OnRequest) {
 	h.Called(e)
 }
 
-func (h *FakeEvents) OnRequestMatched(e events.OnRequestMatch) {
+func (h *FakeEvents) OnRequestMatched(e hooks.OnRequestMatch) {
 	h.Called(e)
 }
 
-func (h *FakeEvents) OnRequestNotMatched(e events.OnRequestNotMatched) {
+func (h *FakeEvents) OnRequestNotMatched(e hooks.OnRequestNotMatched) {
 	h.Called(e)
 }
 
-func (h *FakeEvents) OnError(e events.OnError) {
+func (h *FakeEvents) OnError(e hooks.OnError) {
 	h.Called(e)
 }
 

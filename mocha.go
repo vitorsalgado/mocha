@@ -6,9 +6,9 @@ import (
 	"sync"
 
 	"github.com/vitorsalgado/mocha/core"
+	"github.com/vitorsalgado/mocha/cors"
 	"github.com/vitorsalgado/mocha/expect"
-	"github.com/vitorsalgado/mocha/feat/cors"
-	"github.com/vitorsalgado/mocha/feat/events"
+	"github.com/vitorsalgado/mocha/hooks"
 	"github.com/vitorsalgado/mocha/internal/middleware"
 	"github.com/vitorsalgado/mocha/internal/middleware/recover"
 	"github.com/vitorsalgado/mocha/internal/parameters"
@@ -22,7 +22,7 @@ type (
 		context context.Context
 		cancel  context.CancelFunc
 		params  parameters.Params
-		events  *events.Emitter
+		events  *hooks.Emitter
 		scopes  []*Scoped
 		mu      *sync.Mutex
 		t       core.T
@@ -62,10 +62,10 @@ func New(t core.T, config ...Config) *Mocha {
 	middlewares := make([]func(handler http.Handler) http.Handler, 0)
 	middlewares = append(middlewares, recover.Recover)
 
-	evt := events.NewEmitter(ctx)
+	evt := hooks.NewEmitter(ctx)
 
 	if cfg.LogVerbosity == LogVerbose {
-		evt.Subscribe(events.NewInternalEvents(t))
+		evt.Subscribe(hooks.NewInternalEvents(t))
 	}
 
 	if cfg.corsEnabled {
@@ -185,7 +185,7 @@ func (m *Mocha) URL() string {
 }
 
 // Subscribe add a new event listener.
-func (m *Mocha) Subscribe(evt events.Events) {
+func (m *Mocha) Subscribe(evt hooks.Events) {
 	m.events.Subscribe(evt)
 }
 

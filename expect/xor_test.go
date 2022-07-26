@@ -57,7 +57,7 @@ func TestXorError(t *testing.T) {
 	t.Run("should return error when both matchers fails", func(t *testing.T) {
 		m := XOR(
 			Func(func(_ any, _ Args) (bool, error) {
-				return false, fmt.Errorf("fail firts")
+				return false, fmt.Errorf("fail first")
 			}),
 			Func(func(_ any, _ Args) (bool, error) {
 				return false, fmt.Errorf("fail second")

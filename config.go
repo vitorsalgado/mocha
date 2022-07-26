@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/vitorsalgado/mocha/feat/cors"
+	"github.com/vitorsalgado/mocha/cors"
 )
 
 type LogVerbosity int

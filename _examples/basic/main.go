@@ -9,9 +9,9 @@ import (
 
 	"github.com/vitorsalgado/mocha"
 	"github.com/vitorsalgado/mocha/expect"
+	"github.com/vitorsalgado/mocha/internal/headers"
+	"github.com/vitorsalgado/mocha/internal/mimetypes"
 	"github.com/vitorsalgado/mocha/reply"
-	"github.com/vitorsalgado/mocha/x/headers"
-	"github.com/vitorsalgado/mocha/x/mimetypes"
 )
 
 func main() {

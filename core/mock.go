@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/vitorsalgado/mocha/expect"
+	"github.com/vitorsalgado/mocha/internal/autoid"
 	"github.com/vitorsalgado/mocha/internal/parameters"
 )
 
@@ -86,24 +87,6 @@ type (
 	// ResponseMapper is the function definition to be used to map Mock Response before serving it.
 	ResponseMapper func(res *Response, args ResponseMapperArgs) error
 
-	// Storage is the definition for Mock repository.
-	Storage interface {
-		// Save saves the Mock.
-		Save(mock *Mock)
-
-		// FetchEligible returns mocks that can be matched against requests.
-		FetchEligible() []*Mock
-
-		// FetchAll returns all stored Mock instances.
-		FetchAll() []*Mock
-
-		// Delete removes a Mock by its ID.
-		Delete(id int)
-
-		// Flush removes all stored mocks.
-		Flush()
-	}
-
 	// Weight helps to detect the closest mock match.
 	Weight int
 
@@ -162,7 +145,7 @@ const (
 // NewMock returns a new Mock with default values set.
 func NewMock() *Mock {
 	return &Mock{
-		ID:               id.next(),
+		ID:               autoid.Next(),
 		Enabled:          true,
 		Expectations:     make([]Expectation, 0),
 		PostExpectations: make([]Expectation, 0),

@@ -16,8 +16,14 @@
       <a href="#">
         <img alt="GitHub go.mod Go version" src="https://img.shields.io/github/go-mod/go-version/vitorsalgado/mocha">
       </a>
+      <a href="https://github.com/vitorsalgado/mocha/releases">
+        <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/vitorsalgado/mocha">
+      </a>
       <a href="https://pkg.go.dev/github.com/vitorsalgado/mocha">
         <img src="https://pkg.go.dev/badge/github.com/vitorsalgado/mocha.svg" alt="Go Reference">
+      </a>
+      <a href="https://goreportcard.com/report/github.com/vitorsalgado/mocha">
+        <img src="https://goreportcard.com/badge/github.com/vitorsalgado/mocha" alt="Go Report" />
       </a>
     </div>
 </div>
@@ -56,12 +62,12 @@ The basic is workflow for a request is:
 
 - run configured middlewares
 - mocha parses the request body based on:
-  - custom `RequestBodyParser` configured
-  - request content-type
+    - custom `RequestBodyParser` configured
+    - request content-type
 - mock http handler tries to find a mock for the incoming request were all matchers evaluates to true
-  - if a mock is found, it will run **post matchers**.
-  - if all matchers passes, it will use mock reply implementation to build a response
-  - if no mock is found, **it returns an HTTP Status Code 418 (teapot)**.
+    - if a mock is found, it will run **post matchers**.
+    - if all matchers passes, it will use mock reply implementation to build a response
+    - if no mock is found, **it returns an HTTP Status Code 418 (teapot)**.
 - after serving a mock response, it will run any `core.PostAction` configured.
 
 ## Getting Started

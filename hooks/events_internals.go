@@ -1,4 +1,4 @@
-package events
+package hooks
 
 import (
 	"fmt"

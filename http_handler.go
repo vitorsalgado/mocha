@@ -9,17 +9,17 @@ import (
 
 	"github.com/vitorsalgado/mocha/core"
 	"github.com/vitorsalgado/mocha/expect"
-	"github.com/vitorsalgado/mocha/feat/events"
+	"github.com/vitorsalgado/mocha/hooks"
+	"github.com/vitorsalgado/mocha/internal/headers"
+	"github.com/vitorsalgado/mocha/internal/mimetypes"
 	"github.com/vitorsalgado/mocha/internal/parameters"
-	"github.com/vitorsalgado/mocha/x/headers"
-	"github.com/vitorsalgado/mocha/x/mimetypes"
 )
 
 type mockHandler struct {
 	mocks       core.Storage
 	bodyParsers []RequestBodyParser
 	params      parameters.Params
-	evt         *events.Emitter
+	evt         *hooks.Emitter
 	t           core.T
 }
 
@@ -27,7 +27,7 @@ func newHandler(
 	storage core.Storage,
 	bodyParsers []RequestBodyParser,
 	params parameters.Params,
-	evt *events.Emitter,
+	evt *hooks.Emitter,
 	t core.T,
 ) *mockHandler {
 	return &mockHandler{mocks: storage, bodyParsers: bodyParsers, params: params, evt: evt, t: t}
@@ -35,9 +35,9 @@ func newHandler(
 
 func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	er := events.FromRequest(r)
+	er := hooks.FromRequest(r)
 
-	h.evt.Emit(events.OnRequest{Request: er, StartedAt: start})
+	h.evt.Emit(hooks.OnRequest{Request: er, StartedAt: start})
 
 	parsedBody, err := parseRequestBody(r, h.bodyParsers)
 	if err != nil {
@@ -123,23 +123,24 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	h.evt.Emit(events.OnRequestMatch{
+	h.evt.Emit(hooks.OnRequestMatch{
 		Request:            er,
-		ResponseDefinition: events.Response{Status: res.Status, Header: res.Header.Clone()},
-		Mock:               events.Mock{ID: m.ID, Name: m.Name},
+		ResponseDefinition: hooks.Response{Status: res.Status, Header: res.Header.Clone()},
+		Mock:               hooks.Mock{ID: m.ID, Name: m.Name},
 		Elapsed:            time.Since(start)})
 }
 
-func respondNonMatched(w http.ResponseWriter, r *http.Request, result *core.FindResult, evt *events.Emitter) {
-	e := events.OnRequestNotMatched{Request: events.FromRequest(r), Result: events.Result{Details: make([]events.ResultDetail, 0)}}
+func respondNonMatched(w http.ResponseWriter, r *http.Request, result *core.FindResult, evt *hooks.Emitter) {
+	e := hooks.OnRequestNotMatched{Request: hooks.FromRequest(r), Result: hooks.Result{Details: make([]hooks.ResultDetail, 0)}}
+
 	if result.ClosestMatch != nil {
 		e.Result.HasClosestMatch = true
-		e.Result.ClosestMatch = events.Mock{ID: result.ClosestMatch.ID, Name: result.ClosestMatch.Name}
+		e.Result.ClosestMatch = hooks.Mock{ID: result.ClosestMatch.ID, Name: result.ClosestMatch.Name}
 	}
 
 	for _, detail := range result.MismatchDetails {
 		e.Result.Details = append(e.Result.Details,
-			events.ResultDetail{Name: detail.Name, Description: detail.Description, Target: detail.Target})
+			hooks.ResultDetail{Name: detail.Name, Description: detail.Description, Target: detail.Target})
 	}
 
 	evt.Emit(e)
@@ -164,8 +165,8 @@ func respondNonMatched(w http.ResponseWriter, r *http.Request, result *core.Find
 	w.Write([]byte(builder.String()))
 }
 
-func respondError(w http.ResponseWriter, r *http.Request, evt *events.Emitter, err error) {
-	evt.Emit(events.OnError{Request: events.FromRequest(r), Err: err})
+func respondError(w http.ResponseWriter, r *http.Request, evt *hooks.Emitter, err error) {
+	evt.Emit(hooks.OnError{Request: hooks.FromRequest(r), Err: err})
 
 	w.Header().Add(headers.ContentType, mimetypes.TextPlain)
 	w.WriteHeader(http.StatusTeapot)
