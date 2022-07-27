@@ -2,6 +2,25 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.0.0](https://github.com/vitorsalgado/mocha/compare/v1.1.0...v2.0.0) (2022-07-27)
+
+### Bug Fixes
+
+- reply just ([3dcbb17](https://github.com/vitorsalgado/mocha/commit/3dcbb17ffe5dcdfbc0a8264745101031d07af3ec))
+
+### Refactor
+
+- improve org ([cd150b5](https://github.com/vitorsalgado/mocha/commit/cd150b59ee1ad58a032be1dc7a5d62f461d175da))
+- move and expose params ([95e2523](https://github.com/vitorsalgado/mocha/commit/95e2523b98263abf4942b3450f36ca56c9c1a106))
+- move core pkg to root ([18f01b6](https://github.com/vitorsalgado/mocha/commit/18f01b673a9ebecc1fd5d9633a21c8526471d099))
+- remove stacktrace from http response ([cec4714](https://github.com/vitorsalgado/mocha/commit/cec47144ba68b47293991eb79677410caad4636f))
+- reply ([b1f64b1](https://github.com/vitorsalgado/mocha/commit/b1f64b1357bf8aca143e7969be86831ab104252b))
+- restructure ([6ced47f](https://github.com/vitorsalgado/mocha/commit/6ced47ffc002f4338fbb2839f0b17f5d0473a5fd))
+
+### Docs
+
+- add more docs ([e9bea0b](https://github.com/vitorsalgado/mocha/commit/e9bea0bd33eec97d2b572f01149fbcf2b59fab83))
+
 ## [1.1.0](https://github.com/vitorsalgado/mocha/compare/v1.0.0...v1.1.0) (2022-07-24)
 
 ### Refactor
