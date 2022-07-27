@@ -12,28 +12,28 @@ type T interface {
 	FailNow()
 }
 
-// StdoutNotifier implements core.T outputting logs to the stdout.
-type StdoutNotifier struct {
+// ConsoleNotifier implements core.T outputting logs to the stdout.
+type ConsoleNotifier struct {
 }
 
-func (n *StdoutNotifier) Logf(format string, args ...any) {
+func (n *ConsoleNotifier) Logf(format string, args ...any) {
 	fmt.Printf(format, args...)
 }
 
-func (n *StdoutNotifier) Errorf(format string, args ...any) {
+func (n *ConsoleNotifier) Errorf(format string, args ...any) {
 	n.Logf(format, args...)
 }
 
 // FailNow do nothing.
-func (n *StdoutNotifier) FailNow() {
+func (n *ConsoleNotifier) FailNow() {
 }
 
 // Helper do nothing.
-func (n *StdoutNotifier) Helper() {
+func (n *ConsoleNotifier) Helper() {
 }
 
-// NewStdoutNotifier returns a core.T implementation that logs to the stdout.
+// NewConsoleNotifier returns a core.T implementation that logs to the stdout.
 // FailNow() and Helper() will do nothing.
-func NewStdoutNotifier() T {
-	return &StdoutNotifier{}
+func NewConsoleNotifier() T {
+	return &ConsoleNotifier{}
 }

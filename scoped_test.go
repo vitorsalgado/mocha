@@ -14,9 +14,9 @@ import (
 )
 
 func TestScoped(t *testing.T) {
-	m1 := NewMock()
-	m2 := NewMock()
-	m3 := NewMock()
+	m1 := newMock()
+	m2 := newMock()
+	m3 := newMock()
 
 	repo := newStorage()
 	repo.Save(m1)

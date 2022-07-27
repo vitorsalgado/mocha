@@ -14,7 +14,7 @@ import (
 
 	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/hooks"
-	"github.com/vitorsalgado/mocha/internal/parameters"
+	"github.com/vitorsalgado/mocha/internal/params"
 	"github.com/vitorsalgado/mocha/internal/testmocks"
 	"github.com/vitorsalgado/mocha/internal/testutil"
 	"github.com/vitorsalgado/mocha/reply"
@@ -160,13 +160,13 @@ func TestPostExpectations(t *testing.T) {
 	scoped := m.AddMocks(
 		Request().
 			MatchAfter(expect.Repeat(2)).
-			Method("GET").
+			Method(http.MethodGet).
 			URL(expect.URLPath("/test")).
 			Reply(reply.
 				OK()))
 
-	testutil.Get(fmt.Sprintf("%s/other", m.URL())).Do()
-	testutil.Get(fmt.Sprintf("%s/other", m.URL())).Do()
+	_, _ = testutil.Get(fmt.Sprintf("%s/other", m.URL())).Do()
+	_, _ = testutil.Get(fmt.Sprintf("%s/other", m.URL())).Do()
 
 	res, _ := testutil.Get(fmt.Sprintf("%s/other", m.URL())).Do()
 	assert.Equal(t, res.StatusCode, http.StatusTeapot)
@@ -191,7 +191,7 @@ func TestErrors(t *testing.T) {
 
 	t.Run("should log errors on reply", func(t *testing.T) {
 		scoped := m.AddMocks(Get(expect.URLPath("/test1")).
-			ReplyFunction(func(r *http.Request, m reply.M, p parameters.Params) (*reply.Response, error) {
+			ReplyFunction(func(r *http.Request, m reply.M, p params.P) (*reply.Response, error) {
 				return nil, fmt.Errorf("failed to build a response")
 			}))
 

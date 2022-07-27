@@ -14,7 +14,7 @@ import (
 )
 
 func TestRace(t *testing.T) {
-	m := NewMock()
+	m := newMock()
 	jobs := 10
 	wg := sync.WaitGroup{}
 
@@ -41,7 +41,7 @@ func TestRace(t *testing.T) {
 }
 
 func TestMock(t *testing.T) {
-	m := NewMock()
+	m := newMock()
 
 	t.Run("should init enabled", func(t *testing.T) {
 		assert.True(t, m.Enabled)
@@ -66,7 +66,7 @@ func TestMock(t *testing.T) {
 }
 
 func TestMock_Matches(t *testing.T) {
-	m := NewMock()
+	m := newMock()
 	params := expect.Args{}
 
 	t.Run("should match when generic type is known and matcher returns true without errors", func(t *testing.T) {

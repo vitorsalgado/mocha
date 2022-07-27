@@ -7,11 +7,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/internal/parameters"
+	"github.com/vitorsalgado/mocha/internal/params"
 )
 
 func TestFunctionReply(t *testing.T) {
-	fn := func(*http.Request, M, parameters.Params) (*Response, error) {
+	fn := func(*http.Request, M, params.P) (*Response, error) {
 		return &Response{Status: http.StatusAccepted}, nil
 	}
 

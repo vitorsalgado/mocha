@@ -18,7 +18,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	m := mocha.New(mocha.NewStdoutNotifier(), mocha.Configure().Context(ctx).Build())
+	m := mocha.New(mocha.NewConsoleNotifier(), mocha.Configure().Context(ctx).Build())
 	m.Start()
 
 	m.AddMocks(mocha.

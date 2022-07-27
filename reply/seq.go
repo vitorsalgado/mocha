@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/vitorsalgado/mocha/internal/parameters"
+	"github.com/vitorsalgado/mocha/internal/params"
 )
 
 // SequentialReply configures a sequence of replies to be used after a mock.Mock is matched to a http.Request.
@@ -32,7 +32,7 @@ func (mr *SequentialReply) Add(reply ...Reply) *SequentialReply {
 
 // Build builds a new response based on current mock.Mock call sequence.
 // When the sequence is over, it will return an error or a previously configured reply for this scenario.
-func (mr *SequentialReply) Build(r *http.Request, m M, p parameters.Params) (*Response, error) {
+func (mr *SequentialReply) Build(r *http.Request, m M, p params.P) (*Response, error) {
 	size := len(mr.replies)
 	hits := m.Hits()
 	if size == 0 {

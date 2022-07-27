@@ -10,7 +10,7 @@ import (
 	"github.com/vitorsalgado/mocha/hooks"
 	"github.com/vitorsalgado/mocha/internal/middleware"
 	"github.com/vitorsalgado/mocha/internal/middleware/recover"
-	"github.com/vitorsalgado/mocha/internal/parameters"
+	"github.com/vitorsalgado/mocha/internal/params"
 )
 
 type (
@@ -20,7 +20,7 @@ type (
 		storage storage
 		context context.Context
 		cancel  context.CancelFunc
-		params  parameters.Params
+		params  params.P
 		events  *hooks.Emitter
 		scopes  []*Scoped
 		mu      *sync.Mutex
@@ -55,8 +55,8 @@ func New(t T, config ...Config) *Mocha {
 	parsers = append(parsers, cfg.BodyParsers...)
 	parsers = append(parsers, &jsonBodyParser{}, &plainTextParser{}, &formURLEncodedParser{}, &bytesParser{})
 
-	params := parameters.New()
-	params.Set(expect.ScenarioBuiltInParamStore, expect.NewScenarioStore())
+	p := params.New()
+	p.Set(expect.ScenarioBuiltInParamStore, expect.NewScenarioStore())
 
 	middlewares := make([]func(handler http.Handler) http.Handler, 0)
 	middlewares = append(middlewares, recover.Recover)
@@ -75,7 +75,7 @@ func New(t T, config ...Config) *Mocha {
 
 	handler := middleware.
 		Compose(middlewares...).
-		Root(newHandler(mockStorage, parsers, params, evt, t))
+		Root(newHandler(mockStorage, parsers, p, evt, t))
 
 	server := cfg.Server
 
@@ -94,7 +94,7 @@ func New(t T, config ...Config) *Mocha {
 		storage: mockStorage,
 		context: ctx,
 		cancel:  cancel,
-		params:  params,
+		params:  p,
 		scopes:  make([]*Scoped, 0),
 		events:  evt,
 		mu:      &sync.Mutex{},
@@ -113,7 +113,7 @@ func New(t T, config ...Config) *Mocha {
 
 // NewBasic creates a new Mocha mock server with default configurations.
 func NewBasic() *Mocha {
-	return New(NewStdoutNotifier())
+	return New(NewConsoleNotifier())
 }
 
 // Start starts the mock server.
@@ -174,7 +174,7 @@ func (m *Mocha) AddMocks(builders ...*MockBuilder) *Scoped {
 }
 
 // Parameters allows managing custom parameters that will be available inside matchers.
-func (m *Mocha) Parameters() parameters.Params {
+func (m *Mocha) Parameters() params.P {
 	return m.params
 }
 

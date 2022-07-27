@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/vitorsalgado/mocha/expect"
-	"github.com/vitorsalgado/mocha/internal/parameters"
+	"github.com/vitorsalgado/mocha/internal/params"
 	"github.com/vitorsalgado/mocha/reply"
 )
 
@@ -18,7 +18,7 @@ type MockBuilder struct {
 
 // Request creates a new empty MockBuilder.
 func Request() *MockBuilder {
-	return &MockBuilder{mock: NewMock()}
+	return &MockBuilder{mock: newMock()}
 }
 
 // Get inits a mock for GET method.
@@ -238,7 +238,7 @@ func (b *MockBuilder) Reply(rep reply.Reply) *MockBuilder {
 }
 
 // ReplyFunction defines a function to will build the response mock.
-func (b *MockBuilder) ReplyFunction(fn func(*http.Request, reply.M, parameters.Params) (*reply.Response, error)) *MockBuilder {
+func (b *MockBuilder) ReplyFunction(fn func(*http.Request, reply.M, params.P) (*reply.Response, error)) *MockBuilder {
 	b.mock.Reply = reply.Function(fn)
 	return b
 }

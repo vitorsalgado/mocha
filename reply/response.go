@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/vitorsalgado/mocha/internal/parameters"
+	"github.com/vitorsalgado/mocha/internal/params"
 )
 
 type (
@@ -22,7 +22,7 @@ type (
 	// ResponseMapperArgs represents the expected arguments for every ResponseMapper.
 	ResponseMapperArgs struct {
 		Request    *http.Request
-		Parameters parameters.Params
+		Parameters params.P
 	}
 
 	// ResponseMapper is the function definition to be used to map Mock Response before serving it.

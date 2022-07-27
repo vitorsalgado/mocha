@@ -36,9 +36,6 @@ type (
 		// Matches is the function that does the actual matching logic.
 		Matches func(v any, args Args) (bool, error)
 	}
-
-	// ValueSelector defines a function that will be used to extract RequestInfo value and provide it to Matcher instances.
-	ValueSelector func(r *RequestInfo) any
 )
 
 // And compose the current Matcher with another one using the "and" operator.

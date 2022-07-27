@@ -130,7 +130,7 @@ func (s *Scoped) AssertCalled(t T) bool {
 	return true
 }
 
-// AssertNotCalled reports a error if any mock was called.
+// AssertNotCalled reports an error if any mock was called.
 func (s *Scoped) AssertNotCalled(t T) bool {
 	t.Helper()
 

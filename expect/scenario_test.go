@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/internal/parameters"
+	"github.com/vitorsalgado/mocha/internal/params"
 )
 
 func TestScenario(t *testing.T) {
@@ -35,7 +35,7 @@ func TestScenario(t *testing.T) {
 
 func TestScenarioConditions(t *testing.T) {
 	store := NewScenarioStore()
-	p := parameters.New()
+	p := params.New()
 	p.Set(ScenarioBuiltInParamStore, store)
 	args := Args{Params: p}
 

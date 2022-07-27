@@ -7,7 +7,7 @@ import (
 
 	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/internal/autoid"
-	"github.com/vitorsalgado/mocha/internal/parameters"
+	"github.com/vitorsalgado/mocha/internal/params"
 	"github.com/vitorsalgado/mocha/reply"
 )
 
@@ -50,7 +50,7 @@ type (
 		Request  *http.Request
 		Response *reply.Response
 		Mock     *Mock
-		Params   parameters.Params
+		Params   params.P
 	}
 
 	// PostAction defines the contract for an action that will be executed after serving a mocked HTTP response.
@@ -58,6 +58,9 @@ type (
 		// Run runs the PostAction implementation.
 		Run(args PostActionArgs) error
 	}
+
+	// ValueSelector defines a function that will be used to extract RequestInfo value and provide it to Matcher instances.
+	ValueSelector func(r *expect.RequestInfo) any
 
 	// Expectation holds metadata related to one http.Request Matcher.
 	Expectation struct {
@@ -69,7 +72,7 @@ type (
 		Matcher expect.Matcher
 
 		// ValueSelector will extract the http.Request or a portion of it and feed it to the associated Matcher.
-		ValueSelector expect.ValueSelector
+		ValueSelector ValueSelector
 
 		// Weight of this Expectation.
 		Weight weight
@@ -109,8 +112,8 @@ const (
 	_weightHigh
 )
 
-// NewMock returns a new Mock with default values set.
-func NewMock() *Mock {
+// newMock returns a new Mock with default values set.
+func newMock() *Mock {
 	return &Mock{
 		ID:               autoid.Next(),
 		Enabled:          true,

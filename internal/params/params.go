@@ -1,9 +1,9 @@
-// Package parameters implements a simple in-memory key/value store, used internally by Mocha.
-package parameters
+// Package params implements a simple in-memory key/value store, used internally by Mocha.
+package params
 
 type (
-	// Params defines the contract to an in-memory storage for generic parameters.
-	Params interface {
+	// P defines a contract for a generic parameters repository.
+	P interface {
 		// Get returns the parameter by its key.
 		Get(key string) (any, bool)
 
@@ -25,8 +25,8 @@ type (
 	}
 )
 
-// New returns a Params concrete implementation.
-func New() Params {
+// New returns a P concrete implementation.
+func New() P {
 	return &inMemoryParams{data: make(map[string]any)}
 }
 

@@ -1,2 +1,2 @@
-// Package events implements event listeners for mocha internal actions.
+// Package hooks implements event listeners for mocha internal actions.
 package hooks

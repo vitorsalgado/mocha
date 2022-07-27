@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vitorsalgado/mocha/internal/parameters"
+	"github.com/vitorsalgado/mocha/internal/params"
 )
 
 type (
@@ -21,7 +21,7 @@ type (
 	// Reply defines the contract to configure an HTTP responder.
 	Reply interface {
 		// Build returns a Response stub to be served.
-		Build(*http.Request, M, parameters.Params) (*Response, error)
+		Build(*http.Request, M, params.P) (*Response, error)
 	}
 
 	// StdReply holds the configuration on how the Response should be built.
@@ -208,7 +208,7 @@ func (rpl *StdReply) Map(mapper ResponseMapper) *StdReply {
 }
 
 // Build builds a Response based on StdReply definition.
-func (rpl *StdReply) Build(r *http.Request, _ M, _ parameters.Params) (*Response, error) {
+func (rpl *StdReply) Build(r *http.Request, _ M, _ params.P) (*Response, error) {
 	if rpl.err != nil {
 		return nil, rpl.err
 	}
