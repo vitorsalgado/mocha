@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/vitorsalgado/mocha"
-	"github.com/vitorsalgado/mocha/core"
 	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/internal/testutil"
 	"github.com/vitorsalgado/mocha/reply"
@@ -19,7 +18,7 @@ type action struct {
 	mock.Mock
 }
 
-func (act *action) Run(a core.PostActionArgs) error {
+func (act *action) Run(a mocha.PostActionArgs) error {
 	args := act.Called(a)
 	return args.Error(0)
 }

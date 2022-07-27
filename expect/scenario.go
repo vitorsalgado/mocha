@@ -44,9 +44,9 @@ func (store *scenarioStore) CreateNewIfNeeded(name string) scenario {
 	s, ok := store.FetchByName(name)
 
 	if !ok {
-		scenario := newScenario(name)
-		store.Save(scenario)
-		return scenario
+		sc := newScenario(name)
+		store.Save(sc)
+		return sc
 	}
 
 	return s

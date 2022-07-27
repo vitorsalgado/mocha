@@ -51,8 +51,8 @@ func TestTemplatingError(t *testing.T) {
 }
 
 func TestReplyWithTemplate(t *testing.T) {
-	req, _ = http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
-	req.Header.Add("x-test", "dev")
+	_req, _ = http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
+	_req.Header.Add("x-test", "dev")
 
 	wd, _ := os.Getwd()
 	f, _ := os.Open(path.Join(wd, "_testdata/test_req.tmpl"))
@@ -70,7 +70,7 @@ func TestReplyWithTemplate(t *testing.T) {
 			FuncMap(template.FuncMap{"trim": strings.TrimSpace}).
 			Template(string(b))).
 		Model(data).
-		Build(req, testMock, nil)
+		Build(_req, _testMock, nil)
 
 	if err != nil {
 		t.Fatal(err)

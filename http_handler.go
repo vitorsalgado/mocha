@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vitorsalgado/mocha/core"
 	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/hooks"
 	"github.com/vitorsalgado/mocha/internal/headers"
@@ -17,19 +16,19 @@ import (
 )
 
 type mockHandler struct {
-	mocks       core.Storage
+	mocks       storage
 	bodyParsers []RequestBodyParser
 	params      parameters.Params
 	evt         *hooks.Emitter
-	t           core.T
+	t           T
 }
 
 func newHandler(
-	storage core.Storage,
+	storage storage,
 	bodyParsers []RequestBodyParser,
 	params parameters.Params,
 	evt *hooks.Emitter,
-	t core.T,
+	t T,
 ) *mockHandler {
 	return &mockHandler{mocks: storage, bodyParsers: bodyParsers, params: params, evt: evt, t: t}
 }
@@ -50,7 +49,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	args := expect.Args{
 		RequestInfo: &expect.RequestInfo{Request: r, ParsedBody: parsedBody},
 		Params:      h.params}
-	result, err := core.FindMockForRequest(h.mocks, args)
+	result, err := findMockForRequest(h.mocks, args)
 	if err != nil {
 		respondError(w, r, h.evt, err)
 		return
@@ -65,7 +64,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	m.Hit()
 
 	// run post matchers, after standard ones and after marking the mock as called.
-	afterResult, err := m.Matches(args, m.PostExpectations)
+	afterResult, err := m.matches(args, m.PostExpectations)
 	if err != nil {
 		respondError(w, r, h.evt, err)
 		return
@@ -116,7 +115,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// run post actions.
-	paArgs := core.PostActionArgs{Request: r, Response: res, Mock: m, Params: h.params}
+	paArgs := PostActionArgs{Request: r, Response: res, Mock: m, Params: h.params}
 	for i, action := range m.PostActions {
 		err = action.Run(paArgs)
 		if err != nil {
@@ -131,7 +130,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Elapsed:            time.Since(start)})
 }
 
-func respondNonMatched(w http.ResponseWriter, r *http.Request, result *core.FindResult, evt *hooks.Emitter) {
+func respondNonMatched(w http.ResponseWriter, r *http.Request, result *findResult, evt *hooks.Emitter) {
 	e := hooks.OnRequestNotMatched{Request: hooks.FromRequest(r), Result: hooks.Result{Details: make([]hooks.ResultDetail, 0)}}
 
 	if result.ClosestMatch != nil {

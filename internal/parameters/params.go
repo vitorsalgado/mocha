@@ -20,34 +20,34 @@ type (
 		Has(key string) bool
 	}
 
-	params struct {
+	inMemoryParams struct {
 		data map[string]any
 	}
 )
 
 // New returns a Params concrete implementation.
 func New() Params {
-	return &params{data: make(map[string]any)}
+	return &inMemoryParams{data: make(map[string]any)}
 }
 
-func (p params) Get(key string) (any, bool) {
+func (p inMemoryParams) Get(key string) (any, bool) {
 	val, ok := p.data[key]
 	return val, ok
 }
 
-func (p params) GetAll() map[string]any {
+func (p inMemoryParams) GetAll() map[string]any {
 	return p.data
 }
 
-func (p params) Set(key string, dep any) {
+func (p inMemoryParams) Set(key string, dep any) {
 	p.data[key] = dep
 }
 
-func (p params) Remove(key string) {
+func (p inMemoryParams) Remove(key string) {
 	delete(p.data, key)
 }
 
-func (p params) Has(key string) bool {
+func (p inMemoryParams) Has(key string) bool {
 	_, ok := p.data[key]
 
 	return ok

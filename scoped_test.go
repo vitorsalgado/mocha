@@ -7,7 +7,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/core"
 	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/internal/testmocks"
 	"github.com/vitorsalgado/mocha/internal/testutil"
@@ -15,11 +14,11 @@ import (
 )
 
 func TestScoped(t *testing.T) {
-	m1 := core.NewMock()
-	m2 := core.NewMock()
-	m3 := core.NewMock()
+	m1 := NewMock()
+	m2 := NewMock()
+	m3 := NewMock()
 
-	repo := core.NewStorage()
+	repo := newStorage()
 	repo.Save(m1)
 	repo.Save(m2)
 	repo.Save(m3)

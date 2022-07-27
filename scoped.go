@@ -3,22 +3,20 @@ package mocha
 import (
 	"fmt"
 	"strings"
-
-	"github.com/vitorsalgado/mocha/core"
 )
 
 // Scoped holds references to one or more added mocks allowing users perform operations on them, like enabling/disabling.
 type Scoped struct {
-	storage core.Storage
-	mocks   []*core.Mock
+	storage storage
+	mocks   []*Mock
 }
 
-func scope(repo core.Storage, mocks []*core.Mock) *Scoped {
+func scope(repo storage, mocks []*Mock) *Scoped {
 	return &Scoped{storage: repo, mocks: mocks}
 }
 
 // Get returns a mock with the provided id.
-func (s *Scoped) Get(id int) *core.Mock {
+func (s *Scoped) Get(id int) *Mock {
 	for _, mock := range s.mocks {
 		if mock.ID == id {
 			return mock
@@ -29,7 +27,7 @@ func (s *Scoped) Get(id int) *core.Mock {
 }
 
 // ListAll returns all mocks scoped in this instance.
-func (s *Scoped) ListAll() []*core.Mock {
+func (s *Scoped) ListAll() []*Mock {
 	return s.mocks
 }
 
@@ -45,8 +43,8 @@ func (s *Scoped) Called() bool {
 }
 
 // ListPending returns all mocks that were not called at least once.
-func (s *Scoped) ListPending() []*core.Mock {
-	ret := make([]*core.Mock, 0)
+func (s *Scoped) ListPending() []*Mock {
+	ret := make([]*Mock, 0)
 	for _, m := range s.mocks {
 		if !m.Called() {
 			ret = append(ret, m)
@@ -57,8 +55,8 @@ func (s *Scoped) ListPending() []*core.Mock {
 }
 
 // ListCalled returns all mocks that were called.
-func (s *Scoped) ListCalled() []*core.Mock {
-	ret := make([]*core.Mock, 0)
+func (s *Scoped) ListCalled() []*Mock {
+	ret := make([]*Mock, 0)
 	for _, m := range s.mocks {
 		if m.Called() {
 			ret = append(ret, m)
@@ -108,11 +106,11 @@ func (s *Scoped) Clean() {
 		s.storage.Delete(id)
 	}
 
-	s.mocks = make([]*core.Mock, 0)
+	s.mocks = make([]*Mock, 0)
 }
 
 // AssertCalled reports an error if there are still pending mocks.
-func (s *Scoped) AssertCalled(t core.T) bool {
+func (s *Scoped) AssertCalled(t T) bool {
 	t.Helper()
 
 	if s.IsPending() {
@@ -133,7 +131,7 @@ func (s *Scoped) AssertCalled(t core.T) bool {
 }
 
 // AssertNotCalled reports a error if any mock was called.
-func (s *Scoped) AssertNotCalled(t core.T) bool {
+func (s *Scoped) AssertNotCalled(t T) bool {
 	t.Helper()
 
 	if !s.IsPending() {

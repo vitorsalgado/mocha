@@ -3,7 +3,6 @@ package mocha
 import (
 	"net/http"
 
-	"github.com/vitorsalgado/mocha/core"
 	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/internal/parameters"
 	"github.com/vitorsalgado/mocha/reply"
@@ -14,12 +13,12 @@ type MockBuilder struct {
 	scenario              string
 	scenarioRequiredState string
 	scenarioNewState      string
-	mock                  *core.Mock
+	mock                  *Mock
 }
 
 // Request creates a new empty MockBuilder.
 func Request() *MockBuilder {
-	return &MockBuilder{mock: core.NewMock()}
+	return &MockBuilder{mock: NewMock()}
 }
 
 // Get inits a mock for GET method.
@@ -75,11 +74,11 @@ func (b *MockBuilder) Priority(p int) *MockBuilder {
 func (b *MockBuilder) Method(method string) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
-		core.Expectation{
+		Expectation{
 			Target:        "method",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request.Method },
 			Matcher:       expect.ToEqualFold(method),
-			Weight:        core.WeightNone,
+			Weight:        _weightNone,
 		})
 
 	return b
@@ -89,11 +88,11 @@ func (b *MockBuilder) Method(method string) *MockBuilder {
 func (b *MockBuilder) URL(m expect.Matcher) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
-		core.Expectation{
+		Expectation{
 			Target:        "url",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request.URL },
 			Matcher:       m,
-			Weight:        core.WeightRegular,
+			Weight:        _weightRegular,
 		})
 
 	return b
@@ -103,11 +102,11 @@ func (b *MockBuilder) URL(m expect.Matcher) *MockBuilder {
 func (b *MockBuilder) Header(key string, m expect.Matcher) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
-		core.Expectation{
+		Expectation{
 			Target:        "header",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request.Header.Get(key) },
 			Matcher:       m,
-			Weight:        core.WeightLow,
+			Weight:        _weightLow,
 		})
 
 	return b
@@ -117,11 +116,11 @@ func (b *MockBuilder) Header(key string, m expect.Matcher) *MockBuilder {
 func (b *MockBuilder) Query(key string, m expect.Matcher) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
-		core.Expectation{
+		Expectation{
 			Target:        "query",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request.URL.Query().Get(key) },
 			Matcher:       m,
-			Weight:        core.WeightVeryLow,
+			Weight:        _weightVeryLow,
 		})
 
 	return b
@@ -134,11 +133,11 @@ func (b *MockBuilder) Query(key string, m expect.Matcher) *MockBuilder {
 func (b *MockBuilder) Body(matcherList ...expect.Matcher) *MockBuilder {
 	for _, m := range matcherList {
 		b.mock.Expectations = append(b.mock.Expectations,
-			core.Expectation{
+			Expectation{
 				Target:        "body",
 				ValueSelector: func(r *expect.RequestInfo) any { return r.ParsedBody },
 				Matcher:       m,
-				Weight:        core.WeightHigh,
+				Weight:        _weightHigh,
 			})
 	}
 
@@ -148,11 +147,11 @@ func (b *MockBuilder) Body(matcherList ...expect.Matcher) *MockBuilder {
 // FormField defines a matcher for a specific form field by its key.
 func (b *MockBuilder) FormField(field string, m expect.Matcher) *MockBuilder {
 	b.mock.Expectations = append(b.mock.Expectations,
-		core.Expectation{
+		Expectation{
 			Target:        "form",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request.Form.Get(field) },
 			Matcher:       m,
-			Weight:        core.WeightVeryLow,
+			Weight:        _weightVeryLow,
 		})
 
 	return b
@@ -162,11 +161,11 @@ func (b *MockBuilder) FormField(field string, m expect.Matcher) *MockBuilder {
 func (b *MockBuilder) Repeat(times int) *MockBuilder {
 	b.mock.PostExpectations = append(
 		b.mock.PostExpectations,
-		core.Expectation{
+		Expectation{
 			Target:        "repeat",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request },
 			Matcher:       expect.Repeat(times),
-			Weight:        core.WeightNone,
+			Weight:        _weightNone,
 		})
 
 	return b
@@ -176,11 +175,11 @@ func (b *MockBuilder) Repeat(times int) *MockBuilder {
 func (b *MockBuilder) RequestMatches(m expect.Matcher) *MockBuilder {
 	b.mock.Expectations = append(
 		b.mock.Expectations,
-		core.Expectation{
+		Expectation{
 			Target:        "request",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request },
 			Matcher:       m,
-			Weight:        core.WeightLow,
+			Weight:        _weightLow,
 		})
 
 	return b
@@ -216,18 +215,18 @@ func (b *MockBuilder) ScenarioStateWillBe(newState string) *MockBuilder {
 func (b *MockBuilder) MatchAfter(m expect.Matcher) *MockBuilder {
 	b.mock.PostExpectations = append(
 		b.mock.PostExpectations,
-		core.Expectation{
+		Expectation{
 			Target:        "after",
 			ValueSelector: func(r *expect.RequestInfo) any { return r.Request },
 			Matcher:       m,
-			Weight:        core.WeightNone,
+			Weight:        _weightNone,
 		})
 
 	return b
 }
 
 // PostAction adds a post action to be executed after the mocked response is served.
-func (b *MockBuilder) PostAction(action core.PostAction) *MockBuilder {
+func (b *MockBuilder) PostAction(action PostAction) *MockBuilder {
 	b.mock.PostActions = append(b.mock.PostActions, action)
 	return b
 }
@@ -262,7 +261,7 @@ func (b *MockBuilder) ReplyJust(status int, r ...reply.StdReply) *MockBuilder {
 
 // Build builds a mock.Mock with previously configured parameters.
 // Used internally by Mocha.
-func (b *MockBuilder) Build() *core.Mock {
+func (b *MockBuilder) Build() *Mock {
 	if b.scenario != "" {
 		b.RequestMatches(expect.Scenario(b.scenario, b.scenarioRequiredState, b.scenarioNewState))
 	}

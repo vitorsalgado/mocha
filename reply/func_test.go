@@ -15,11 +15,11 @@ func TestFunctionReply(t *testing.T) {
 		return &Response{Status: http.StatusAccepted}, nil
 	}
 
-	req := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+	r := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
 	replier := Function(fn)
 	m := &mmock{}
 	m.On("Hits").Return(0)
-	res, err := replier.Build(req, m, nil)
+	res, err := replier.Build(r, m, nil)
 
 	assert.Nil(t, err)
 	assert.Equal(t, res.Status, http.StatusAccepted)

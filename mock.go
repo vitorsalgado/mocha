@@ -1,4 +1,4 @@
-package core
+package mocha
 
 import (
 	"fmt"
@@ -59,9 +59,6 @@ type (
 		Run(args PostActionArgs) error
 	}
 
-	// Weight helps to detect the closest mock match.
-	Weight int
-
 	// Expectation holds metadata related to one http.Request Matcher.
 	Expectation struct {
 		// Target is an optional metadata that describes the target of the matcher.
@@ -75,13 +72,18 @@ type (
 		ValueSelector expect.ValueSelector
 
 		// Weight of this Expectation.
-		Weight Weight
+		Weight weight
 	}
+)
 
-	// MatchResult holds information related to a matching operation.
-	MatchResult struct {
+type (
+	// weight helps to detect the closest mock match.
+	weight int
+
+	// matchResult holds information related to a matching operation.
+	matchResult struct {
 		// MismatchDetails is the list of non matches messages.
-		MismatchDetails []MismatchDetail
+		MismatchDetails []mismatchDetail
 
 		// Weight for the Matcher. It helps determine the closest match.
 		Weight int
@@ -90,28 +92,21 @@ type (
 		IsMatch bool
 	}
 
-	MismatchDetail struct {
+	// mismatchDetail gives more context about why a matcher did not match.
+	mismatchDetail struct {
 		Name        string
 		Target      string
 		Description string
 	}
-
-	// T is based on testing.T and allow mocha components to log information and errors.
-	T interface {
-		Helper()
-		Logf(string, ...any)
-		Errorf(string, ...any)
-		FailNow()
-	}
 )
 
-// Enums of Weight.
+// Enums of weight.
 const (
-	WeightNone Weight = iota
-	WeightVeryLow
-	WeightLow
-	WeightRegular
-	WeightHigh
+	_weightNone weight = iota
+	_weightVeryLow
+	_weightLow
+	_weightRegular
+	_weightHigh
 )
 
 // NewMock returns a new Mock with default values set.
@@ -167,40 +162,40 @@ func (m *Mock) Disable() {
 	m.Enabled = false
 }
 
-// Matches checks if current Mock matches against a list of expectations.
+// matches checks if current Mock matches against a list of expectations.
 // Will iterate through all expectations even if it doesn't match early.
-func (m *Mock) Matches(params expect.Args, expectations []Expectation) (MatchResult, error) {
-	weight := 0
-	finalMatched := true
-	details := make([]MismatchDetail, 0)
+func (m *Mock) matches(params expect.Args, expectations []Expectation) (matchResult, error) {
+	w := 0
+	hasMatched := true
+	details := make([]mismatchDetail, 0)
 
 	for _, exp := range expectations {
 		matched, detail, err := matches(exp, params)
 
 		// fail fast if an error occurs
 		if err != nil {
-			return MatchResult{IsMatch: false, Weight: weight},
+			return matchResult{IsMatch: false, Weight: w},
 				fmt.Errorf("matcher %s returned an error: %v", exp.Target, err)
 		}
 
 		if !matched {
 			details = append(details, detail)
-			finalMatched = matched
+			hasMatched = matched
 		}
 
-		weight += int(exp.Weight)
+		w += int(exp.Weight)
 	}
 
-	return MatchResult{IsMatch: finalMatched, Weight: weight, MismatchDetails: details}, nil
+	return matchResult{IsMatch: hasMatched, Weight: w, MismatchDetails: details}, nil
 }
 
-func matches(e Expectation, params expect.Args) (bool, MismatchDetail, error) {
+func matches(e Expectation, params expect.Args) (bool, mismatchDetail, error) {
 	val := e.ValueSelector(params.RequestInfo)
 	res, err := e.Matcher.Matches(val, params)
 
 	if err != nil {
 		return false,
-			MismatchDetail{Name: e.Matcher.Name, Target: e.Target},
+			mismatchDetail{Name: e.Matcher.Name, Target: e.Target},
 			err
 	}
 
@@ -211,8 +206,8 @@ func matches(e Expectation, params expect.Args) (bool, MismatchDetail, error) {
 			desc = e.Matcher.DescribeMismatch(e.Target, val)
 		}
 
-		return res, MismatchDetail{Name: e.Matcher.Name, Target: e.Target, Description: desc}, err
+		return res, mismatchDetail{Name: e.Matcher.Name, Target: e.Target, Description: desc}, err
 	}
 
-	return res, MismatchDetail{}, err
+	return res, mismatchDetail{}, err
 }

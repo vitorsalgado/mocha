@@ -1,12 +1,12 @@
-package core
+package mocha
 
 import (
 	"sort"
 	"sync"
 )
 
-// Storage is the definition for Mock repository.
-type Storage interface {
+// storage is the definition for Mock repository.
+type storage interface {
 	// Save saves the Mock.
 	Save(mock *Mock)
 
@@ -28,8 +28,8 @@ type builtInStorage struct {
 	mu   sync.Mutex
 }
 
-// NewStorage returns Mock storage implementation.
-func NewStorage() Storage {
+// newStorage returns Mock storage implementation.
+func newStorage() storage {
 	return &builtInStorage{data: make([]*Mock, 0)}
 }
 

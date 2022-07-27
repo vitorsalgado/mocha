@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/vitorsalgado/mocha/core"
 	"github.com/vitorsalgado/mocha/cors"
 	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/hooks"
@@ -18,14 +17,14 @@ type (
 	// Mocha is the base for the mock server.
 	Mocha struct {
 		server  Server
-		storage core.Storage
+		storage storage
 		context context.Context
 		cancel  context.CancelFunc
 		params  parameters.Params
 		events  *hooks.Emitter
 		scopes  []*Scoped
 		mu      *sync.Mutex
-		t       core.T
+		t       T
 	}
 
 	// Cleanable allows marking mocha instance to be closed on test cleanup.
@@ -36,7 +35,7 @@ type (
 
 // New creates a new Mocha mock server with the given configurations.
 // Parameter config accepts a Config or a Configurer implementation.
-func New(t core.T, config ...Config) *Mocha {
+func New(t T, config ...Config) *Mocha {
 	t.Helper()
 
 	cfg := configDefault
@@ -50,7 +49,7 @@ func New(t core.T, config ...Config) *Mocha {
 	}
 	ctx, cancel := context.WithCancel(parent)
 
-	storage := core.NewStorage()
+	mockStorage := newStorage()
 
 	parsers := make([]RequestBodyParser, 0)
 	parsers = append(parsers, cfg.BodyParsers...)
@@ -76,7 +75,7 @@ func New(t core.T, config ...Config) *Mocha {
 
 	handler := middleware.
 		Compose(middlewares...).
-		Root(newHandler(storage, parsers, params, evt, t))
+		Root(newHandler(mockStorage, parsers, params, evt, t))
 
 	server := cfg.Server
 
@@ -92,7 +91,7 @@ func New(t core.T, config ...Config) *Mocha {
 
 	m := &Mocha{
 		server:  server,
-		storage: storage,
+		storage: mockStorage,
 		context: ctx,
 		cancel:  cancel,
 		params:  params,
@@ -160,7 +159,7 @@ func (m *Mocha) AddMocks(builders ...*MockBuilder) *Scoped {
 	defer m.mu.Unlock()
 
 	size := len(builders)
-	added := make([]*core.Mock, size)
+	added := make([]*Mock, size)
 
 	for i, b := range builders {
 		newMock := b.Build()
@@ -237,7 +236,7 @@ func (m *Mocha) CloseOnCleanup(t Cleanable) *Mocha {
 }
 
 // AssertCalled asserts that all mocks associated with this instance were called at least once.
-func (m *Mocha) AssertCalled(t core.T) bool {
+func (m *Mocha) AssertCalled(t T) bool {
 	t.Helper()
 
 	result := true
@@ -254,7 +253,7 @@ func (m *Mocha) AssertCalled(t core.T) bool {
 }
 
 // AssertNotCalled asserts that all mocks associated with this instance were called at least once.
-func (m *Mocha) AssertNotCalled(t core.T) bool {
+func (m *Mocha) AssertNotCalled(t T) bool {
 	t.Helper()
 
 	result := true
@@ -272,7 +271,7 @@ func (m *Mocha) AssertNotCalled(t core.T) bool {
 
 // AssertHits asserts that the sum of request hits for mocks
 // is equal to the given expected value.
-func (m *Mocha) AssertHits(t core.T, expected int) bool {
+func (m *Mocha) AssertHits(t T, expected int) bool {
 	t.Helper()
 
 	hits := m.Hits()
