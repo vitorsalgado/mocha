@@ -4,46 +4,46 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/vitorsalgado/mocha/core"
 	"github.com/vitorsalgado/mocha/internal/parameters"
 )
 
 // SequentialReply configures a sequence of replies to be used after a mock.Mock is matched to a http.Request.
 type SequentialReply struct {
-	replyOnNotFound core.Reply
-	replies         []core.Reply
+	replyOnNotFound Reply
+	replies         []Reply
 }
 
 // Seq creates a new SequentialReply.
 func Seq() *SequentialReply {
-	return &SequentialReply{replies: make([]core.Reply, 0)}
+	return &SequentialReply{replies: make([]Reply, 0)}
 }
 
 // AfterEnded sets a response to be used once the sequence is over.
-func (mr *SequentialReply) AfterEnded(reply core.Reply) *SequentialReply {
+func (mr *SequentialReply) AfterEnded(reply Reply) *SequentialReply {
 	mr.replyOnNotFound = reply
 	return mr
 }
 
 // Add adds a new response to the sequence.
-func (mr *SequentialReply) Add(reply ...core.Reply) *SequentialReply {
+func (mr *SequentialReply) Add(reply ...Reply) *SequentialReply {
 	mr.replies = append(mr.replies, reply...)
 	return mr
 }
 
 // Build builds a new response based on current mock.Mock call sequence.
 // When the sequence is over, it will return an error or a previously configured reply for this scenario.
-func (mr *SequentialReply) Build(r *http.Request, m *core.Mock, p parameters.Params) (*core.Response, error) {
+func (mr *SequentialReply) Build(r *http.Request, m M, p parameters.Params) (*Response, error) {
 	size := len(mr.replies)
+	hits := m.Hits()
 	if size == 0 {
 		return nil,
 			fmt.Errorf("you need to set at least one response when using multiple response builder")
 	}
 
-	var reply core.Reply
+	var reply Reply
 
-	if m.Hits <= size {
-		reply = mr.replies[m.Hits-1]
+	if hits <= size {
+		reply = mr.replies[hits-1]
 	}
 
 	if reply == nil {
@@ -54,7 +54,7 @@ func (mr *SequentialReply) Build(r *http.Request, m *core.Mock, p parameters.Par
 		return nil,
 			fmt.Errorf(
 				"unable to obtain a response and no default response was set. request number: %d - sequence size: %d",
-				m.Hits,
+				hits,
 				size)
 	}
 

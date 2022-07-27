@@ -5,12 +5,11 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/vitorsalgado/mocha/core"
 )
 
 func TestRandomReplies(t *testing.T) {
-	m := core.Mock{Name: "mock_test"}
+	m := &mmock{}
+
 	req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 	statuses := []int{
 		http.StatusOK, http.StatusInternalServerError, http.StatusCreated, http.StatusBadRequest}
@@ -18,7 +17,7 @@ func TestRandomReplies(t *testing.T) {
 	for i := 0; i < 5000; i++ {
 		res, err := Rand().
 			Add(BadRequest(), OK(), Created(), InternalServerError()).
-			Build(req, &m, nil)
+			Build(req, m, nil)
 
 		contains := false
 		for _, status := range statuses {

@@ -2,14 +2,13 @@ package core
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"sync"
-	"time"
 
 	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/internal/autoid"
 	"github.com/vitorsalgado/mocha/internal/parameters"
+	"github.com/vitorsalgado/mocha/reply"
 )
 
 type (
@@ -34,10 +33,7 @@ type (
 
 		// Reply is the responder that will be used to serve the HTTP response stub, once matched against an
 		// HTTP request.
-		Reply Reply
-
-		// Hits holds the amount of time this Mock was called and served.
-		Hits int
+		Reply reply.Reply
 
 		// Enabled indicates if the Mock is enabled or disabled. Only enabled mocks are matched.
 		Enabled bool
@@ -45,13 +41,14 @@ type (
 		// PostActions holds PostAction list to be executed after the Mock was matched and served.
 		PostActions []PostAction
 
-		mu *sync.Mutex
+		mu   *sync.Mutex
+		hits int
 	}
 
 	// PostActionArgs represents the arguments that will be passed to every PostAction implementation
 	PostActionArgs struct {
 		Request  *http.Request
-		Response *Response
+		Response *reply.Response
 		Mock     *Mock
 		Params   parameters.Params
 	}
@@ -61,31 +58,6 @@ type (
 		// Run runs the PostAction implementation.
 		Run(args PostActionArgs) error
 	}
-
-	// Response defines the HTTP response that will be served once a Mock is matched for an HTTP Request.
-	Response struct {
-		Status  int
-		Header  http.Header
-		Cookies []*http.Cookie
-		Body    io.Reader
-		Delay   time.Duration
-		Mappers []ResponseMapper
-	}
-
-	// Reply defines the contract to configure an HTTP responder.
-	Reply interface {
-		// Build returns a Response stub to be served.
-		Build(*http.Request, *Mock, parameters.Params) (*Response, error)
-	}
-
-	// ResponseMapperArgs represents the expected arguments for every ResponseMapper.
-	ResponseMapperArgs struct {
-		Request    *http.Request
-		Parameters parameters.Params
-	}
-
-	// ResponseMapper is the function definition to be used to map Mock Response before serving it.
-	ResponseMapper func(res *Response, args ResponseMapperArgs) error
 
 	// Weight helps to detect the closest mock match.
 	Weight int
@@ -159,19 +131,24 @@ func NewMock() *Mock {
 func (m *Mock) Hit() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.Hits++
+	m.hits++
+}
+
+// Hits returns the amount of time this Mock was matched to a request and served.
+func (m *Mock) Hits() int {
+	return m.hits
 }
 
 // Dec reduce one Mock call.
 func (m *Mock) Dec() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	m.Hits--
+	m.hits--
 }
 
 // Called checks if the Mock was called at least once.
 func (m *Mock) Called() bool {
-	return m.Hits > 0
+	return m.hits > 0
 }
 
 // Enable enables the Mock.

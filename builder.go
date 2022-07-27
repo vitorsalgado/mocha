@@ -233,13 +233,13 @@ func (b *MockBuilder) PostAction(action core.PostAction) *MockBuilder {
 }
 
 // Reply defines a response mock to be served if this mock matches to a request.
-func (b *MockBuilder) Reply(rep core.Reply) *MockBuilder {
+func (b *MockBuilder) Reply(rep reply.Reply) *MockBuilder {
 	b.mock.Reply = rep
 	return b
 }
 
 // ReplyFunction defines a function to will build the response mock.
-func (b *MockBuilder) ReplyFunction(fn func(*http.Request, *core.Mock, parameters.Params) (*core.Response, error)) *MockBuilder {
+func (b *MockBuilder) ReplyFunction(fn func(*http.Request, reply.M, parameters.Params) (*reply.Response, error)) *MockBuilder {
 	b.mock.Reply = reply.Function(fn)
 	return b
 }

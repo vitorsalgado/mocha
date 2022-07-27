@@ -157,7 +157,7 @@ func (s *Scoped) AssertNotCalled(t core.T) bool {
 func (s *Scoped) Hits() int {
 	total := 0
 	for _, m := range s.mocks {
-		total += m.Hits
+		total += m.Hits()
 	}
 
 	return total

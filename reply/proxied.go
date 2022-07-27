@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vitorsalgado/mocha/core"
 	"github.com/vitorsalgado/mocha/internal/parameters"
 )
 
@@ -88,8 +87,8 @@ func (r *ProxyReply) StripSuffix(suffix string) *ProxyReply {
 	return r
 }
 
-// Build builds a core.Reply based on the ProxyReply configuration.
-func (r *ProxyReply) Build(req *http.Request, _ *core.Mock, _ parameters.Params) (*core.Response, error) {
+// Build builds a Reply based on the ProxyReply configuration.
+func (r *ProxyReply) Build(req *http.Request, _ M, _ parameters.Params) (*Response, error) {
 	path := req.URL.Path
 
 	if r.trimPrefix != "" {
@@ -122,7 +121,7 @@ func (r *ProxyReply) Build(req *http.Request, _ *core.Mock, _ parameters.Params)
 		return nil, err
 	}
 
-	response := &core.Response{
+	response := &Response{
 		Status:  res.StatusCode,
 		Header:  res.Header,
 		Cookies: res.Cookies(),

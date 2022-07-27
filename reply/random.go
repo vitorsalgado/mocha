@@ -5,26 +5,25 @@ import (
 	"math/rand"
 	"net/http"
 
-	"github.com/vitorsalgado/mocha/core"
 	"github.com/vitorsalgado/mocha/internal/parameters"
 )
 
-// RandomReply configures a core.Reply that serves random HTTP responses.
+// RandomReply configures a Reply that serves random HTTP responses.
 type RandomReply struct {
-	replies []core.Reply
+	replies []Reply
 }
 
 // Rand inits a new RandomReply.
-func Rand() *RandomReply { return &RandomReply{replies: make([]core.Reply, 0)} }
+func Rand() *RandomReply { return &RandomReply{replies: make([]Reply, 0)} }
 
-// Add adds a new core.Reply to the random list.
-func (mr *RandomReply) Add(reply ...core.Reply) *RandomReply {
+// Add adds a new Reply to the random list.
+func (mr *RandomReply) Add(reply ...Reply) *RandomReply {
 	mr.replies = append(mr.replies, reply...)
 	return mr
 }
 
-// Build builds a response stub randomly based on previously added core.Reply implementations.
-func (mr *RandomReply) Build(r *http.Request, m *core.Mock, p parameters.Params) (*core.Response, error) {
+// Build builds a response stub randomly based on previously added Reply implementations.
+func (mr *RandomReply) Build(r *http.Request, m M, p parameters.Params) (*Response, error) {
 	size := len(mr.replies)
 	if size == 0 {
 		return nil,

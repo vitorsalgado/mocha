@@ -18,7 +18,5 @@ func TestNotifier_FailNow(t *testing.T) {
 
 func TestNotifier_Errorf(t *testing.T) {
 	n := NewStdoutNotifier()
-	assert.NotPanics(t, func() {
-		n.Errorf("test %s", "hello")
-	})
+	n.Errorf("test %s", "hello")
 }

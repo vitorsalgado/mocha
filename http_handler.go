@@ -13,6 +13,7 @@ import (
 	"github.com/vitorsalgado/mocha/internal/headers"
 	"github.com/vitorsalgado/mocha/internal/mimetypes"
 	"github.com/vitorsalgado/mocha/internal/parameters"
+	"github.com/vitorsalgado/mocha/reply"
 )
 
 type mockHandler struct {
@@ -84,7 +85,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// map the response using mock mappers.
-	mapperArgs := core.ResponseMapperArgs{Request: r, Parameters: h.params}
+	mapperArgs := reply.ResponseMapperArgs{Request: r, Parameters: h.params}
 	for _, mapper := range res.Mappers {
 		if err = mapper(res, mapperArgs); err != nil {
 			respondError(w, r, h.evt, err)

@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/vitorsalgado/mocha/core"
 	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/hooks"
 	"github.com/vitorsalgado/mocha/internal/parameters"
@@ -111,7 +110,7 @@ func TestResponseMapper(t *testing.T) {
 	scoped := m.AddMocks(Get(expect.URLPath("/test")).
 		Reply(reply.
 			OK().
-			Map(func(r *core.Response, rma core.ResponseMapperArgs) error {
+			Map(func(r *reply.Response, rma reply.ResponseMapperArgs) error {
 				r.Header.Add("x-test", rma.Request.Header.Get("x-param"))
 				return nil
 			})))
@@ -192,7 +191,7 @@ func TestErrors(t *testing.T) {
 
 	t.Run("should log errors on reply", func(t *testing.T) {
 		scoped := m.AddMocks(Get(expect.URLPath("/test1")).
-			ReplyFunction(func(r *http.Request, m *core.Mock, p parameters.Params) (*core.Response, error) {
+			ReplyFunction(func(r *http.Request, m reply.M, p parameters.Params) (*reply.Response, error) {
 				return nil, fmt.Errorf("failed to build a response")
 			}))
 

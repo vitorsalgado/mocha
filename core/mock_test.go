@@ -37,7 +37,7 @@ func TestRace(t *testing.T) {
 
 	wg.Wait()
 
-	assert.Equal(t, (jobs*2)+2, m.Hits)
+	assert.Equal(t, (jobs*2)+2, m.hits)
 }
 
 func TestMock(t *testing.T) {

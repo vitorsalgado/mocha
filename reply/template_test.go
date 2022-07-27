@@ -70,7 +70,7 @@ func TestReplyWithTemplate(t *testing.T) {
 			FuncMap(template.FuncMap{"trim": strings.TrimSpace}).
 			Template(string(b))).
 		Model(data).
-		Build(req, &testMock, nil)
+		Build(req, testMock, nil)
 
 	if err != nil {
 		t.Fatal(err)
