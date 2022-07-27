@@ -10,7 +10,7 @@ import (
 	"github.com/vitorsalgado/mocha/hooks"
 	"github.com/vitorsalgado/mocha/internal/middleware"
 	"github.com/vitorsalgado/mocha/internal/middleware/recover"
-	"github.com/vitorsalgado/mocha/internal/params"
+	"github.com/vitorsalgado/mocha/params"
 )
 
 type (

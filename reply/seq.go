@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/vitorsalgado/mocha/internal/params"
+	"github.com/vitorsalgado/mocha/params"
 )
 
 // SequentialReply configures a sequence of replies to be used after a mock.Mock is matched to a http.Request.

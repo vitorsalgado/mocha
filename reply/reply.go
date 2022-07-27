@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vitorsalgado/mocha/internal/params"
+	"github.com/vitorsalgado/mocha/params"
 )
 
 type (

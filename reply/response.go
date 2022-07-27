@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/vitorsalgado/mocha/internal/params"
+	"github.com/vitorsalgado/mocha/params"
 )
 
 type (

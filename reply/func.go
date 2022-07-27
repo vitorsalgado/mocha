@@ -3,7 +3,7 @@ package reply
 import (
 	"net/http"
 
-	"github.com/vitorsalgado/mocha/internal/params"
+	"github.com/vitorsalgado/mocha/params"
 )
 
 // FunctionReply represents a reply that will be built using the given function.

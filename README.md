@@ -68,7 +68,7 @@ The basic is workflow for a request is:
     - if a mock is found, it will run **post matchers**.
     - if all matchers passes, it will use mock reply implementation to build a response
     - if no mock is found, **it returns an HTTP Status Code 418 (teapot)**.
-- after serving a mock response, it will run any `core.PostAction` configured.
+- after serving a mock response, it will run any `PostAction` configured.
 
 ## Getting Started
 
@@ -105,7 +105,7 @@ func Test_Example(t *testing.T) {
 
 Mocha has two ways to create an instance: `mocha.New()` and `mocha.NewSimple()`.  
 `mocha.NewSimple()` creates a new instance with default values for everything.  
-`mocha.New(t, ...config)` needs a `core.T` implementation and allows to configure the mock server.
+`mocha.New(t, ...config)` needs a `mocha.T` implementation and allows to configure the mock server.
 You use `testing.T` implementation. Mocha will use this to log useful information for each request match attempt.
 Use `mocha.Configure()` or provide a `mocha.Config` to configure the mock server.
 
@@ -172,7 +172,7 @@ The built-in reply features are:
 - [Specify Headers](#specifying-headers)
 - [Delay Responses](#delay-responses)
 
-Replies are based on the `core.Reply` interface.  
+Replies are based on the `Reply` interface.  
 It's also possible to configure response bodies from templates. **Mocha** uses Go Templates.
 Replies usage examples:
 
@@ -199,7 +199,7 @@ m.AddMocks(mocha.Get(expect.URLPath("/test")).
 m := mocha.New(t)
 m.AddMocks(mocha.Get(expect.URLPath("/test")).
     Reply(reply.Rand().
-		Add(BadRequest(), OK(), Created(), InternalServerError())))
+		Add(reply.BadRequest(), reply.OK(), reply.Created(), reply.InternalServerError())))
 ```
 
 ### Reply Function
@@ -207,8 +207,8 @@ m.AddMocks(mocha.Get(expect.URLPath("/test")).
 ```
 m := mocha.New(t)
 m.AddMocks(mocha.Get(expect.URLPath("/test")).
-    ReplyFunction(func(r *http.Request, m *core.Mock, p parameters.Params) (*core.Response, error) {
-        return &core.Response{Status: http.StatusAccepted}, nil
+    ReplyFunction(func(r *http.Request, m mocha.M, p params.P) (*mocha.Response, error) {
+        return &mocha.Response{Status: http.StatusAccepted}, nil
     }))
 ```
 
@@ -302,7 +302,7 @@ You can create custom matchers using these two approaches:
 ### BuiltIn Matchers
 
 | Matcher      | Description                                                                                              |
-| ------------ | -------------------------------------------------------------------------------------------------------- |
+|--------------|----------------------------------------------------------------------------------------------------------|
 | AllOf        | Returns true when all given matchers returns true                                                        |
 | AnyOf        | Returns true when any given matchers returns true                                                        |
 | Both         | Returns true when both matchers returns true                                                             |

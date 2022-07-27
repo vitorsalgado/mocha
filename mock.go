@@ -7,7 +7,7 @@ import (
 
 	"github.com/vitorsalgado/mocha/expect"
 	"github.com/vitorsalgado/mocha/internal/autoid"
-	"github.com/vitorsalgado/mocha/internal/params"
+	"github.com/vitorsalgado/mocha/params"
 	"github.com/vitorsalgado/mocha/reply"
 )
 
