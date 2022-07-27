@@ -299,6 +299,16 @@ You can create custom matchers using these two approaches:
 - use the function `expect.Func` providing a function with the following
   signature: `func(v any, a expect.Args) (bool, error)`
 
+### Matcher Composition
+
+It's possible to compose multiple matchers.  
+Every matcher has a `.And()`, `.Or()` and a `.Xor()` that allows composing multiple matchers.  
+See the example below:
+
+```
+expect.ToEqual("test").And(expect.ToContain("t"))
+```
+
 ### BuiltIn Matchers
 
 | Matcher      | Description                                                                                              |
