@@ -299,6 +299,44 @@ func TestMocha_Enable_Disable(t *testing.T) {
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 }
 
+func TestMocha_ReplyJust(t *testing.T) {
+	t.Run("should return status set on first parameter", func(t *testing.T) {
+		m := New(t)
+		m.Start()
+
+		scoped := m.AddMocks(
+			Post(expect.URLPath("/test")).
+				ReplyJust(http.StatusCreated, reply.New().Header("test", "ok")))
+
+		req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", nil)
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		assert.True(t, scoped.Called())
+		assert.Equal(t, http.StatusCreated, res.StatusCode)
+	})
+
+	t.Run("should overwrite status", func(t *testing.T) {
+		m := New(t)
+		m.Start()
+
+		scoped := m.AddMocks(
+			Post(expect.URLPath("/test")).
+				ReplyJust(http.StatusCreated, reply.OK().Header("test", "ok")))
+
+		req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", nil)
+		res, err := http.DefaultClient.Do(req)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		assert.True(t, scoped.Called())
+		assert.Equal(t, http.StatusCreated, res.StatusCode)
+	})
+}
+
 func TestMocha_Context(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	m := New(t, Configure().Context(ctx).Build())

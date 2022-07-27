@@ -246,12 +246,12 @@ func (b *MockBuilder) ReplyFunction(fn func(*http.Request, reply.M, params.P) (*
 // ReplyJust sets the mock to return a simple response with the given status code.
 // Optionally, you can provide a reply as well. The status provided in the first parameter will prevail.
 // Only the first reply will be used.
-func (b *MockBuilder) ReplyJust(status int, r ...reply.StdReply) *MockBuilder {
+func (b *MockBuilder) ReplyJust(status int, r ...*reply.StdReply) *MockBuilder {
 	if len(r) > 0 {
 		rep := r[0]
 		rep.Status(status)
 
-		b.mock.Reply = &rep
+		b.mock.Reply = rep
 	} else {
 		b.mock.Reply = reply.Status(status)
 	}
