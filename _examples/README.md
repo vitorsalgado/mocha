@@ -5,3 +5,4 @@
 ## Table of Contents
 
 - [Basic](basic)
+- [Simple Application](application)
