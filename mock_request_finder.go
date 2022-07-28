@@ -1,7 +1,7 @@
 package mocha
 
 import (
-	"github.com/vitorsalgado/mocha/expect"
+	"github.com/vitorsalgado/mocha/v2/expect"
 )
 
 // findResult holds the results for an attempt to match a mock to a request.

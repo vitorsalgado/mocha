@@ -7,12 +7,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vitorsalgado/mocha/expect"
-	"github.com/vitorsalgado/mocha/hooks"
-	"github.com/vitorsalgado/mocha/internal/headers"
-	"github.com/vitorsalgado/mocha/internal/mimetypes"
-	params2 "github.com/vitorsalgado/mocha/params"
-	"github.com/vitorsalgado/mocha/reply"
+	"github.com/vitorsalgado/mocha/v2/expect"
+	"github.com/vitorsalgado/mocha/v2/hooks"
+	"github.com/vitorsalgado/mocha/v2/internal/headers"
+	"github.com/vitorsalgado/mocha/v2/internal/mimetypes"
+	params2 "github.com/vitorsalgado/mocha/v2/params"
+	"github.com/vitorsalgado/mocha/v2/reply"
 )
 
 type mockHandler struct {

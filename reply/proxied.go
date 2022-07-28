@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vitorsalgado/mocha/params"
+	"github.com/vitorsalgado/mocha/v2/params"
 )
 
 var forbiddenHeaders = []string{

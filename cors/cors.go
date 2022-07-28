@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/vitorsalgado/mocha/internal/headers"
+	"github.com/vitorsalgado/mocha/v2/internal/headers"
 )
 
 // Config represents the possible options to configure New for the mock server.

@@ -10,11 +10,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/expect"
-	"github.com/vitorsalgado/mocha/internal/headers"
-	"github.com/vitorsalgado/mocha/internal/mimetypes"
-	"github.com/vitorsalgado/mocha/internal/testutil"
-	"github.com/vitorsalgado/mocha/reply"
+	"github.com/vitorsalgado/mocha/v2/expect"
+	"github.com/vitorsalgado/mocha/v2/internal/headers"
+	"github.com/vitorsalgado/mocha/v2/internal/mimetypes"
+	"github.com/vitorsalgado/mocha/v2/internal/testutil"
+	"github.com/vitorsalgado/mocha/v2/reply"
 )
 
 type testBodyParser struct{}

@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/vitorsalgado/mocha/internal/headers"
-	"github.com/vitorsalgado/mocha/internal/mimetypes"
+	"github.com/vitorsalgado/mocha/v2/internal/headers"
+	"github.com/vitorsalgado/mocha/v2/internal/mimetypes"
 )
 
 // RequestBodyParser parses request body if CanParse returns true.

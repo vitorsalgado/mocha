@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/vitorsalgado/mocha/cors"
-	"github.com/vitorsalgado/mocha/expect"
-	"github.com/vitorsalgado/mocha/hooks"
-	"github.com/vitorsalgado/mocha/internal/middleware"
-	"github.com/vitorsalgado/mocha/internal/middleware/recover"
-	"github.com/vitorsalgado/mocha/params"
+	"github.com/vitorsalgado/mocha/v2/cors"
+	"github.com/vitorsalgado/mocha/v2/expect"
+	"github.com/vitorsalgado/mocha/v2/hooks"
+	"github.com/vitorsalgado/mocha/v2/internal/middleware"
+	"github.com/vitorsalgado/mocha/v2/internal/middleware/recover"
+	"github.com/vitorsalgado/mocha/v2/params"
 )
 
 type (

@@ -6,8 +6,8 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/vitorsalgado/mocha/internal/colorize"
-	"github.com/vitorsalgado/mocha/internal/misc"
+	"github.com/vitorsalgado/mocha/v2/internal/colorize"
+	"github.com/vitorsalgado/mocha/v2/internal/misc"
 )
 
 // ToEqual returns true if matcher value is equal to the given parameter value.

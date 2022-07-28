@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/internal/middleware/recover"
+	"github.com/vitorsalgado/mocha/v2/internal/middleware/recover"
 )
 
 func TestMiddlewaresComposition(t *testing.T) {

@@ -12,12 +12,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 
-	"github.com/vitorsalgado/mocha/expect"
-	"github.com/vitorsalgado/mocha/hooks"
-	"github.com/vitorsalgado/mocha/internal/testmocks"
-	"github.com/vitorsalgado/mocha/internal/testutil"
-	"github.com/vitorsalgado/mocha/params"
-	"github.com/vitorsalgado/mocha/reply"
+	"github.com/vitorsalgado/mocha/v2/expect"
+	"github.com/vitorsalgado/mocha/v2/hooks"
+	"github.com/vitorsalgado/mocha/v2/internal/testmocks"
+	"github.com/vitorsalgado/mocha/v2/internal/testutil"
+	"github.com/vitorsalgado/mocha/v2/params"
+	"github.com/vitorsalgado/mocha/v2/reply"
 )
 
 func TestMocha(t *testing.T) {

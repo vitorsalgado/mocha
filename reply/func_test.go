@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/params"
+	"github.com/vitorsalgado/mocha/v2/params"
 )
 
 func TestFunctionReply(t *testing.T) {

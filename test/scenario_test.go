@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha"
-	"github.com/vitorsalgado/mocha/expect"
-	"github.com/vitorsalgado/mocha/reply"
+	"github.com/vitorsalgado/mocha/v2"
+	"github.com/vitorsalgado/mocha/v2/expect"
+	"github.com/vitorsalgado/mocha/v2/reply"
 )
 
 func TestScenarioMatcher(t *testing.T) {

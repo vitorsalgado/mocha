@@ -41,7 +41,7 @@ Inspired by [WireMock](https://github.com/wiremock/wiremock) and [Nock](https://
 ## Installation
 
 ```bash
-go get github.com/vitorsalgado/mocha
+go get github.com/vitorsalgado/mocha/v2
 ```
 
 ## Features
@@ -62,12 +62,12 @@ The basic is workflow for a request is:
 
 - run configured middlewares
 - mocha parses the request body based on:
-    - custom `RequestBodyParser` configured
-    - request content-type
+  - custom `RequestBodyParser` configured
+  - request content-type
 - mock http handler tries to find a mock for the incoming request were all matchers evaluates to true
-    - if a mock is found, it will run **post matchers**.
-    - if all matchers passes, it will use mock reply implementation to build a response
-    - if no mock is found, **it returns an HTTP Status Code 418 (teapot)**.
+  - if a mock is found, it will run **post matchers**.
+  - if all matchers passes, it will use mock reply implementation to build a response
+  - if no mock is found, **it returns an HTTP Status Code 418 (teapot)**.
 - after serving a mock response, it will run any `PostAction` configured.
 
 ## Getting Started
@@ -312,7 +312,7 @@ expect.ToEqual("test").And(expect.ToContain("t"))
 ### BuiltIn Matchers
 
 | Matcher      | Description                                                                                              |
-|--------------|----------------------------------------------------------------------------------------------------------|
+| ------------ | -------------------------------------------------------------------------------------------------------- |
 | AllOf        | Returns true when all given matchers returns true                                                        |
 | AnyOf        | Returns true when any given matchers returns true                                                        |
 | Both         | Returns true when both matchers returns true                                                             |

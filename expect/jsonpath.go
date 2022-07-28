@@ -3,7 +3,7 @@ package expect
 import (
 	"fmt"
 
-	"github.com/vitorsalgado/mocha/internal/jsonx"
+	"github.com/vitorsalgado/mocha/v2/internal/jsonx"
 )
 
 // JSONPath applies the provided matcher to the JSON field value in the given path.
