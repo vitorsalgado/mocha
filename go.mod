@@ -1,4 +1,4 @@
-module github.com/vitorsalgado/mocha
+module github.com/vitorsalgado/mocha/v2
 
 go 1.18
 
