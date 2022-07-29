@@ -2,3 +2,4 @@ ignore:
   - "*_mock.go"
   - "_mocks"
   - "internal/testutil"
+  - "internal/testmocks"
