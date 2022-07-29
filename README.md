@@ -74,7 +74,7 @@ The basic is workflow for a request is:
 
 Usage typically looks like the example below:
 
-```
+```go
 func Test_Example(t *testing.T) {
 	m := mocha.New(t)
 	m.Start()
@@ -116,14 +116,14 @@ See usage examples below:
 
 ### Method and URL
 
-```
+```go
 m := mocha.New(t)
 m.AddMocks(mocha.Request().Method(http.MethodGet).URL(expect.URLPath("/test"))
 ```
 
 ### Header
 
-```
+```go
 m := mocha.New(t)
 m.AddMocks(mocha.Get(expect.URLPath("/test")).
     Header("test", expect.ToEqual("hello")))
@@ -131,7 +131,7 @@ m.AddMocks(mocha.Get(expect.URLPath("/test")).
 
 ### Query
 
-```
+```go
 m := mocha.New(t)
 m.AddMocks(mocha.Get(expect.URLPath("/test")).
     Query("filter", expect.ToEqual("all")))
@@ -141,7 +141,7 @@ m.AddMocks(mocha.Get(expect.URLPath("/test")).
 
 **Matching JSON Fields**
 
-```
+```go
 m := mocha.New(t)
 m.AddMocks(mocha.Post(expect.URLPath("/test")).
     Body(
@@ -151,7 +151,7 @@ m.AddMocks(mocha.Post(expect.URLPath("/test")).
 
 ### Form URL Encoded Fields
 
-```
+```go
 m.AddMocks(mocha.Post(expect.URLPath("/test")).
     FormField("field1", expect.ToEqual("dev")).
     FormField("field2", expect.ToContain("qa")).
@@ -178,7 +178,7 @@ Replies usage examples:
 
 ### Basic Reply
 
-```
+```go
 m := mocha.New(t)
 m.AddMocks(mocha.Get(expect.URLPath("/test")).
     Reply(reply.OK())
@@ -186,7 +186,7 @@ m.AddMocks(mocha.Get(expect.URLPath("/test")).
 
 ### Replies In Sequence
 
-```
+```go
 m := mocha.New(t)
 m.AddMocks(mocha.Get(expect.URLPath("/test")).
     Reply(reply.Seq().
@@ -195,7 +195,7 @@ m.AddMocks(mocha.Get(expect.URLPath("/test")).
 
 ### Random Replies
 
-```
+```go
 m := mocha.New(t)
 m.AddMocks(mocha.Get(expect.URLPath("/test")).
     Reply(reply.Rand().
@@ -204,7 +204,7 @@ m.AddMocks(mocha.Get(expect.URLPath("/test")).
 
 ### Reply Function
 
-```
+```go
 m := mocha.New(t)
 m.AddMocks(mocha.Get(expect.URLPath("/test")).
     ReplyFunction(func(r *http.Request, m mocha.M, p params.P) (*mocha.Response, error) {
@@ -217,7 +217,7 @@ m.AddMocks(mocha.Get(expect.URLPath("/test")).
 **reply.From** will forward the request to the given destination and serve the response from the forwarded server.  
 It`s possible to add extra headers to the request and the response and also remove unwanted headers.
 
-```
+```go
 m := mocha.New(t)
 m.AddMocks(mocha.Get(expect.URLPath("/test")).
     Reply(reply.From("http://example.org").
@@ -231,7 +231,7 @@ m.AddMocks(mocha.Get(expect.URLPath("/test")).
 **Mocha** comes with a built-in template parser based on Go Templates.  
 To serve a response body from a template, follow the example below:
 
-```
+```go
 templateFile, _ := os.Open("template.tmpl"))
 content, _ := ioutil.ReadAll(templateFile)
 
@@ -247,7 +247,7 @@ m.AddMocks(mocha.Get(expect.URLPath("/test")).
 
 ### Specifying Headers
 
-```
+```go
 m := mocha.New(t)
 m.AddMocks(mocha.Get(expect.URLPath("/test")).
     Reply(reply.OK().Header("test", "test-value"))
@@ -258,7 +258,7 @@ m.AddMocks(mocha.Get(expect.URLPath("/test")).
 You can configure a delay to responses to simulate timeouts, slow requests and any other timing related scenarios.  
 See the example below:
 
-```
+```go
 delay := time.Duration(1250) * time.Millisecond
 
 m.AddMocks(Get(expect.URLPath("/test")).
@@ -305,7 +305,7 @@ It's possible to compose multiple matchers.
 Every matcher has a `.And()`, `.Or()` and a `.Xor()` that allows composing multiple matchers.  
 See the example below:
 
-```
+```go
 expect.ToEqual("test").And(expect.ToContain("t"))
 ```
 
