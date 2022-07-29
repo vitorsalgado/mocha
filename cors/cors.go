@@ -1,4 +1,4 @@
-// Package cors implements functions to enable New support for the mock server.
+// Package cors implements functions to enable cross-origin resource sharing support for the mock server.
 package cors
 
 import (
