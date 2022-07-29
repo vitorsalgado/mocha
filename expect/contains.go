@@ -30,7 +30,7 @@ func ToContain(expectation any) Matcher {
 		if kind == reflect.Map {
 			keys := listValue.MapKeys()
 			for i := 0; i < len(keys); i++ {
-				if reflect.DeepEqual(keys[i].Interface(), list) {
+				if reflect.DeepEqual(keys[i].Interface(), expectation) {
 					return true, nil
 				}
 			}
