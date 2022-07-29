@@ -16,14 +16,11 @@
       <a href="#">
         <img alt="GitHub go.mod Go version" src="https://img.shields.io/github/go-mod/go-version/vitorsalgado/mocha">
       </a>
-      <a href="https://github.com/vitorsalgado/mocha/releases">
-        <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/vitorsalgado/mocha">
+      <a href="https://pkg.go.dev/github.com/vitorsalgado/mocha/v2">
+        <img src="https://pkg.go.dev/badge/github.com/vitorsalgado/mocha/v2.svg" alt="Go Reference">
       </a>
-      <a href="https://pkg.go.dev/github.com/vitorsalgado/mocha">
-        <img src="https://pkg.go.dev/badge/github.com/vitorsalgado/mocha.svg" alt="Go Reference">
-      </a>
-      <a href="https://goreportcard.com/report/github.com/vitorsalgado/mocha">
-        <img src="https://goreportcard.com/badge/github.com/vitorsalgado/mocha" alt="Go Report" />
+      <a href="https://goreportcard.com/report/github.com/vitorsalgado/mocha/v2">
+        <img src="https://goreportcard.com/badge/github.com/vitorsalgado/mocha/v2" alt="Go Report" />
       </a>
     </div>
 </div>
