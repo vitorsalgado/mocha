@@ -41,4 +41,8 @@ func TestAllOf(t *testing.T) {
 		assert.Nil(t, err)
 		assert.False(t, result)
 	})
+
+	t.Run("mismatch description is not empty", func(t *testing.T) {
+		assert.NotEmpty(t, AllOf().DescribeMismatch("any target", "value"))
+	})
 }

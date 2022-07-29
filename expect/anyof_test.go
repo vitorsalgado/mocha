@@ -28,4 +28,8 @@ func TestAnyOf(t *testing.T) {
 		assert.Nil(t, err)
 		assert.False(t, result)
 	})
+
+	t.Run("mismatch description is not empty", func(t *testing.T) {
+		assert.NotEmpty(t, AnyOf().DescribeMismatch("any target", "value"))
+	})
 }

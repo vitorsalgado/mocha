@@ -31,7 +31,7 @@ type (
 		Name string
 
 		// DescribeMismatch gives more context of why the Matcher failed to match a given value.
-		DescribeMismatch func(p string, v any) string
+		DescribeMismatch func(target string, value any) string
 
 		// Matches is the function that does the actual matching logic.
 		Matches func(v any, args Args) (bool, error)
