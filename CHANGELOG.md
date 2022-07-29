@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.1](https://github.com/vitorsalgado/mocha/compare/v2.0.0...v2.0.1) (2022-07-29)
+
+### Bug Fixes
+
+- **matchers:** contains with map ([e8c05e4](https://github.com/vitorsalgado/mocha/commit/e8c05e44455a5a055a69b3561f2e674ede8b4019))
+
+### Chore
+
+- add simple application example ([69e22df](https://github.com/vitorsalgado/mocha/commit/69e22df9dfb127f4670b91a00bba44d0fe36a875))
+- **examples:** adjust table of contents ([b7c15c8](https://github.com/vitorsalgado/mocha/commit/b7c15c8756acb94dd848358ca57b22792318d3cb))
+- fix cors pkg doc ([d56b841](https://github.com/vitorsalgado/mocha/commit/d56b8416be6ec989c136db718ee98b6a22f2efe2))
+
+### Docs
+
+- Add syntax highlighting to all go code in readme ([#3](https://github.com/vitorsalgado/mocha/issues/3)) ([55fcab6](https://github.com/vitorsalgado/mocha/commit/55fcab6f0d0ed6956bbb6de3d834bc40a01e4f72))
+- fix docs and badges references ([77bbdb0](https://github.com/vitorsalgado/mocha/commit/77bbdb0249f0cbbd0578664b29d992a99eff5c93))
+
+### Refactor
+
+- fix typo ([1d480fe](https://github.com/vitorsalgado/mocha/commit/1d480feaef07e7ec91a2677959f2bc904afd027e))
+- ignore cov of testmocks ([5cf2da6](https://github.com/vitorsalgado/mocha/commit/5cf2da6b0c2f81a3d39fa27b13fb0bd2c46c9f15))
+- move cov + change describe mismatch params ([8182c89](https://github.com/vitorsalgado/mocha/commit/8182c8913133f2865238726a5cb577b6946c2cb1))
+
 ## [2.0.0](https://github.com/vitorsalgado/mocha/compare/v1.1.0...v2.0.0) (2022-07-27)
 
 ### Bug Fixes
