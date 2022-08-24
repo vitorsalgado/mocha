@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.0.2](https://github.com/vitorsalgado/mocha/compare/v2.0.1...v2.0.2) (2022-08-24)
+
+### Chore
+
+- **deps:** bump fastify/github-action-merge-dependabot ([#6](https://github.com/vitorsalgado/mocha/issues/6)) ([9505426](https://github.com/vitorsalgado/mocha/commit/950542631dfe704de43a4bc79293103ec3ae5f3a))
+
+### Refactor
+
+- log messages ([57255cc](https://github.com/vitorsalgado/mocha/commit/57255cc18da1a6f68ff42d4ff8c7d3862b5e6faf))
+- remove ioutil ref ([b674631](https://github.com/vitorsalgado/mocha/commit/b674631e0805a0b05a47f8e1e365c170b528aab2))
+- remove unnecessary import alias ([ca59f1f](https://github.com/vitorsalgado/mocha/commit/ca59f1fc95d8139b16745098acc99ee68f1d68a8))
+
 ### [2.0.1](https://github.com/vitorsalgado/mocha/compare/v2.0.0...v2.0.1) (2022-07-29)
 
 ### Bug Fixes
