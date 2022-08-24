@@ -147,11 +147,12 @@ func (m *Mocha) StartTLS() ServerInfo {
 // The returned Scoped is useful for tests.
 //
 // Usage:
-// 	scoped := m.AddMocks(
-// 		Get(expect.URLPath("/test")).
-// 			Header("test", expect.ToEqual("hello")).
-// 			Query("filter", expect.ToEqual("all")).
-// 			Reply(reply.Created().BodyString("hello world")))
+//
+//	scoped := m.AddMocks(
+//		Get(expect.URLPath("/test")).
+//			Header("test", expect.ToEqual("hello")).
+//			Query("filter", expect.ToEqual("all")).
+//			Reply(reply.Created().BodyString("hello world")))
 //
 //	assert.True(t, scoped.Called())
 func (m *Mocha) AddMocks(builders ...*MockBuilder) *Scoped {

@@ -7,6 +7,7 @@ import (
 
 // AnyOf matches when any of the given matchers returns true.
 // Example:
+//
 //	AnyOf(EqualTo("test"),ToEqualFold("TEST"),ToContains("tes"))
 func AnyOf(matchers ...Matcher) Matcher {
 	m := Matcher{}

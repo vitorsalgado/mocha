@@ -2,7 +2,7 @@ package reply
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path"
@@ -59,7 +59,7 @@ func TestReply(t *testing.T) {
 
 	assert.Nil(t, err)
 
-	b, err := ioutil.ReadAll(res.Body)
+	b, err := io.ReadAll(res.Body)
 
 	assert.Nil(t, err)
 	assert.Equal(t, http.StatusCreated, res.Status)
@@ -81,7 +81,7 @@ func TestStdReply_BodyString(t *testing.T) {
 
 	assert.Nil(t, err)
 
-	b, err := ioutil.ReadAll(res.Body)
+	b, err := io.ReadAll(res.Body)
 
 	assert.Nil(t, err)
 	assert.Equal(t, "text", string(b))
@@ -136,7 +136,7 @@ func TestStdReply_BodyReader(t *testing.T) {
 
 	assert.Nil(t, err)
 
-	b, err := ioutil.ReadAll(res.Body)
+	b, err := io.ReadAll(res.Body)
 
 	assert.Nil(t, err)
 	assert.Equal(t, "hello\nworld\n", string(b))

@@ -1,7 +1,7 @@
 package test
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"testing"
 
@@ -39,7 +39,7 @@ func TestScenarioMatcher(t *testing.T) {
 
 	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/1", nil)
 	res, _ := http.DefaultClient.Do(req)
-	body, _ := ioutil.ReadAll(res.Body)
+	body, _ := io.ReadAll(res.Body)
 
 	assert.True(t, s1.Called())
 	assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -47,7 +47,7 @@ func TestScenarioMatcher(t *testing.T) {
 
 	req, _ = http.NewRequest(http.MethodGet, m.URL()+"/2", nil)
 	res, _ = http.DefaultClient.Do(req)
-	body, _ = ioutil.ReadAll(res.Body)
+	body, _ = io.ReadAll(res.Body)
 
 	assert.True(t, s2.Called())
 	assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -55,7 +55,7 @@ func TestScenarioMatcher(t *testing.T) {
 
 	req, _ = http.NewRequest(http.MethodGet, m.URL()+"/3", nil)
 	res, _ = http.DefaultClient.Do(req)
-	body, _ = ioutil.ReadAll(res.Body)
+	body, _ = io.ReadAll(res.Body)
 
 	assert.True(t, s3.Called())
 	assert.Equal(t, http.StatusOK, res.StatusCode)

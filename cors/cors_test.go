@@ -1,7 +1,7 @@
 package cors
 
 import (
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -54,7 +54,7 @@ func TestCORS(t *testing.T) {
 			log.Fatal(err)
 		}
 
-		body, err := ioutil.ReadAll(res.Body)
+		body, err := io.ReadAll(res.Body)
 		if err != nil {
 			log.Fatal(err)
 		}

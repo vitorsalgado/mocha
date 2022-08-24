@@ -2,7 +2,6 @@ package test
 
 import (
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -24,7 +23,7 @@ func TestForward(t *testing.T) {
 		assert.Equal(t, "", r.Header.Get("x-del"))
 		assert.Equal(t, mimetypes.TextPlain, r.Header.Get(headers.ContentType))
 
-		b, err := ioutil.ReadAll(r.Body)
+		b, err := io.ReadAll(r.Body)
 		if err != nil && err != io.EOF {
 			t.Fatal(err)
 		}
@@ -57,7 +56,7 @@ func TestForward(t *testing.T) {
 			log.Fatal(err)
 		}
 
-		b, err := ioutil.ReadAll(res.Body)
+		b, err := io.ReadAll(res.Body)
 		if err != nil {
 			t.Fatal(err)
 		}

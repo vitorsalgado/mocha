@@ -129,6 +129,7 @@ func (b *MockBuilder) Query(key string, m expect.Matcher) *MockBuilder {
 // Body adds matchers to the request body.
 // If request contains a JSON body, you can provide multiple matchers to several fields.
 // Example:
+//
 //	m.Body(JSONPath("name", EqualTo("test")), JSONPath("address.street", ToContains("nowhere")))
 func (b *MockBuilder) Body(matcherList ...expect.Matcher) *MockBuilder {
 	for _, m := range matcherList {

@@ -7,6 +7,7 @@ import (
 
 // AllOf matches when all the given matchers returns true.
 // Example:
+//
 //	AllOf(EqualTo("test"),ToEqualFold("test"),ToContains("tes"))
 func AllOf(matchers ...Matcher) Matcher {
 	m := Matcher{}

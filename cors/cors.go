@@ -41,6 +41,7 @@ var ConfigDefault = Config{
 // New returns a http.Handler that will be used to handle New requests.
 // To build options more easily, use the options' builder cors.Configure().
 // Example:
+//
 //	cors.New(cors.Configure().AllowOrigin(""))
 func New(options Config) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {

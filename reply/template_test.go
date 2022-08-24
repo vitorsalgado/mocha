@@ -2,7 +2,7 @@ package reply
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path"
@@ -22,7 +22,7 @@ func TestGoTemplating(t *testing.T) {
 	wd, _ := os.Getwd()
 	filename := path.Join(wd, "_testdata/test.tmpl")
 
-	tpl, err := ioutil.ReadFile(filename)
+	tpl, err := os.ReadFile(filename)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -56,7 +56,7 @@ func TestReplyWithTemplate(t *testing.T) {
 
 	wd, _ := os.Getwd()
 	f, _ := os.Open(path.Join(wd, "_testdata/test_req.tmpl"))
-	b, _ := ioutil.ReadAll(f)
+	b, _ := io.ReadAll(f)
 
 	data := struct {
 		Name string
@@ -76,7 +76,7 @@ func TestReplyWithTemplate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	b, err = ioutil.ReadAll(res.Body)
+	b, err = io.ReadAll(res.Body)
 	if err != nil {
 		t.Fatal(err)
 	}

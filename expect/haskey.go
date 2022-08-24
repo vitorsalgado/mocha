@@ -8,6 +8,7 @@ import (
 
 // ToHaveKey returns true if the JSON key in the given path is present.
 // Example:
+//
 //	JSON: { "name": "test" }
 //	ToHaveKey("name") will return true
 //	ToHaveKey("address.street") will return false.

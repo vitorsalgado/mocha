@@ -20,9 +20,11 @@ var (
 
 // Reach returns the field with the given path from the given json data
 // Example:
+//
 //	data := map[string]any{"address": map[string]any{"street": "somewhere"}}
 //	Reach("address.street", data)
 //	will return "somewhere"
+//
 // For arrays, use the notation "field[index]" to get a specific index
 func Reach(path string, data any) (any, error) {
 	var dataType = reflect.TypeOf(data).Kind()

@@ -3,7 +3,7 @@ package mocha
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strings"
 
@@ -26,13 +26,13 @@ type RequestBodyParser interface {
 // User provided RequestBodyParser takes precedence.
 func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (any, error) {
 	if r.Body != nil && r.Method != http.MethodGet && r.Method != http.MethodHead {
-		b, err := ioutil.ReadAll(r.Body)
+		b, err := io.ReadAll(r.Body)
 		if err != nil {
 			return nil, err
 		}
 
 		r.Body.Close()
-		r.Body = ioutil.NopCloser(bytes.NewBuffer(b))
+		r.Body = io.NopCloser(bytes.NewBuffer(b))
 
 		contentType := r.Header.Get(headers.ContentType)
 
