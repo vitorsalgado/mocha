@@ -85,7 +85,7 @@ func New(t T, config ...Config) *Mocha {
 
 	err := server.Configure(cfg, handler)
 	if err != nil {
-		t.Errorf("failed to configure mock server. reason: %v", err)
+		t.Errorf("failed to configure mock server. reason=%v", err)
 		t.FailNow()
 	}
 
@@ -122,7 +122,7 @@ func (m *Mocha) Start() ServerInfo {
 
 	info, err := m.server.Start()
 	if err != nil {
-		m.t.Errorf("failed to start mock server. reason: %v", err)
+		m.t.Errorf("failed to start mock server. reason=%v", err)
 		m.t.FailNow()
 	}
 
@@ -135,7 +135,7 @@ func (m *Mocha) StartTLS() ServerInfo {
 
 	info, err := m.server.StartTLS()
 	if err != nil {
-		m.t.Errorf("failed to start a TLS mock server. reason: %v", err)
+		m.t.Errorf("failed to start a TLS mock server. reason=%v", err)
 		m.t.FailNow()
 	}
 

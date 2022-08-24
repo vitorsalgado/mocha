@@ -178,7 +178,7 @@ func (m *Mock) matches(params expect.Args, expectations []Expectation) (matchRes
 		// fail fast if an error occurs
 		if err != nil {
 			return matchResult{IsMatch: false, Weight: w},
-				fmt.Errorf("matcher %s returned an error: %v", exp.Target, err)
+				fmt.Errorf("matcher %s returned an error=%v", exp.Target, err)
 		}
 
 		if !matched {
