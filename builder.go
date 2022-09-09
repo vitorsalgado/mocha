@@ -160,15 +160,7 @@ func (b *MockBuilder) FormField(field string, m expect.Matcher) *MockBuilder {
 
 // Repeat defines to total times that a mock should be served, if request matches.
 func (b *MockBuilder) Repeat(times int) *MockBuilder {
-	b.mock.PostExpectations = append(
-		b.mock.PostExpectations,
-		Expectation{
-			Target:        "repeat",
-			ValueSelector: func(r *expect.RequestInfo) any { return r.Request },
-			Matcher:       expect.Repeat(times),
-			Weight:        _weightNone,
-		})
-
+	b.mock.Repeat = times
 	return b
 }
 
@@ -208,21 +200,6 @@ func (b *MockBuilder) ScenarioStateIs(requiredState string) *MockBuilder {
 // ScenarioStateWillBe defines the state of the scenario after this mock is matched, making the scenario flow continue.
 func (b *MockBuilder) ScenarioStateWillBe(newState string) *MockBuilder {
 	b.scenarioNewState = newState
-	return b
-}
-
-// MatchAfter adds a expect.Matcher that will run after the standard matchers and before serving the mocked response.
-// After matchers are mostly used in special cases, like when they need to keep data that should not be evaluated all the time.
-func (b *MockBuilder) MatchAfter(m expect.Matcher) *MockBuilder {
-	b.mock.PostExpectations = append(
-		b.mock.PostExpectations,
-		Expectation{
-			Target:        "after",
-			ValueSelector: func(r *expect.RequestInfo) any { return r.Request },
-			Matcher:       m,
-			Weight:        _weightNone,
-		})
-
 	return b
 }
 

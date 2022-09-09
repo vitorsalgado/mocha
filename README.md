@@ -62,7 +62,6 @@ The basic is workflow for a request is:
   - custom `RequestBodyParser` configured
   - request content-type
 - mock http handler tries to find a mock for the incoming request were all matchers evaluates to true
-  - if a mock is found, it will run **post matchers**.
   - if all matchers passes, it will use mock reply implementation to build a response
   - if no mock is found, **it returns an HTTP Status Code 418 (teapot)**.
 - after serving a mock response, it will run any `PostAction` configured.
@@ -308,33 +307,32 @@ expect.ToEqual("test").And(expect.ToContain("t"))
 
 ### BuiltIn Matchers
 
-| Matcher      | Description                                                                                              |
-| ------------ | -------------------------------------------------------------------------------------------------------- |
-| AllOf        | Returns true when all given matchers returns true                                                        |
-| AnyOf        | Returns true when any given matchers returns true                                                        |
-| Both         | Returns true when both matchers returns true                                                             |
-| ToContain    | Returns true when expected value is contained on the request value                                       |
-| Either       | Returns true when any matcher returns true                                                               |
-| ToBeEmpty    | Returns true when request value is empty                                                                 |
-| ToEqual      | Returns true when values are equal                                                                       |
-| ToEqualFold  | Returns true when string values are equal, ignoring case                                                 |
-| ToEqualJSON  | Returns true when the expected struct represents a JSON value                                            |
-| Func         | Wraps a function to create a inline matcher                                                              |
-| ToHaveKey    | Returns true if the JSON key in the given path is present                                                |
-| ToHavePrefix | Returns true if the matcher argument starts with the given prefix                                        |
-| ToHaveSuffix | Returns true when matcher argument ends with the given suffix                                            |
-| JSONPath     | Applies the provided matcher to the JSON field value in the given path                                   |
-| ToHaveLen    | Returns true when matcher argument length is equal to the expected value                                 |
-| LowerCase    | Lower case matcher string argument before submitting it to provided matcher.                             |
-| UpperCase    | Upper case matcher string argument before submitting it to provided matcher                              |
-| ToMatchExpr  | Returns true then the given regular expression matches matcher argument                                  |
-| Not          | Negates the provided matcher                                                                             |
-| Peek         | Will return the result of the given matcher, after executing the provided function                       |
-| ToBePresent  | Checks if matcher argument contains a value that is not nil or the zero value for the argument type      |
-| Repeat       | Returns true if total request hits for current mock is equal or lower total the provided max call times. |
-| Trim         | Trims' spaces of matcher argument before submitting it to the given matcher                              |
-| URLPath      | Returns true if request URL path is equal to the expected path, ignoring case                            |
-| XOR          | Exclusive "or" matcher                                                                                   |
+| Matcher      | Description                                                                                         |
+| ------------ | --------------------------------------------------------------------------------------------------- |
+| AllOf        | Returns true when all given matchers returns true                                                   |
+| AnyOf        | Returns true when any given matchers returns true                                                   |
+| Both         | Returns true when both matchers returns true                                                        |
+| ToContain    | Returns true when expected value is contained on the request value                                  |
+| Either       | Returns true when any matcher returns true                                                          |
+| ToBeEmpty    | Returns true when request value is empty                                                            |
+| ToEqual      | Returns true when values are equal                                                                  |
+| ToEqualFold  | Returns true when string values are equal, ignoring case                                            |
+| ToEqualJSON  | Returns true when the expected struct represents a JSON value                                       |
+| Func         | Wraps a function to create a inline matcher                                                         |
+| ToHaveKey    | Returns true if the JSON key in the given path is present                                           |
+| ToHavePrefix | Returns true if the matcher argument starts with the given prefix                                   |
+| ToHaveSuffix | Returns true when matcher argument ends with the given suffix                                       |
+| JSONPath     | Applies the provided matcher to the JSON field value in the given path                              |
+| ToHaveLen    | Returns true when matcher argument length is equal to the expected value                            |
+| LowerCase    | Lower case matcher string argument before submitting it to provided matcher.                        |
+| UpperCase    | Upper case matcher string argument before submitting it to provided matcher                         |
+| ToMatchExpr  | Returns true then the given regular expression matches matcher argument                             |
+| Not          | Negates the provided matcher                                                                        |
+| Peek         | Will return the result of the given matcher, after executing the provided function                  |
+| ToBePresent  | Checks if matcher argument contains a value that is not nil or the zero value for the argument type |
+| Trim         | Trims' spaces of matcher argument before submitting it to the given matcher                         |
+| URLPath      | Returns true if request URL path is equal to the expected path, ignoring case                       |
+| XOR          | Exclusive "or" matcher                                                                              |
 
 ---
 

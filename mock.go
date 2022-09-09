@@ -27,10 +27,6 @@ type (
 		// Expectations are a list of Expectation. These will run on every request to find the correct Mock.
 		Expectations []Expectation
 
-		// PostExpectations are a list of Expectation. They will be executed after the request was matched to a Mock.
-		// This allows stateful matchers whose state data should not be evaluated every match attempt.
-		PostExpectations []Expectation
-
 		// Reply is the responder that will be used to serve the HTTP response stub, once matched against an
 		// HTTP request.
 		Reply reply.Reply
@@ -40,6 +36,10 @@ type (
 
 		// PostActions holds PostAction list to be executed after the Mock was matched and served.
 		PostActions []PostAction
+
+		// Repeat indicates how many times a mocked response should be served.
+		// If value is equal or lower than zero, it will not be considered.
+		Repeat int
 
 		mu   *sync.Mutex
 		hits int
@@ -115,11 +115,10 @@ const (
 // newMock returns a new Mock with default values set.
 func newMock() *Mock {
 	return &Mock{
-		ID:               autoid.Next(),
-		Enabled:          true,
-		Expectations:     make([]Expectation, 0),
-		PostExpectations: make([]Expectation, 0),
-		PostActions:      make([]PostAction, 0),
+		ID:           autoid.Next(),
+		Enabled:      true,
+		Expectations: make([]Expectation, 0),
+		PostActions:  make([]PostAction, 0),
 
 		mu: &sync.Mutex{},
 	}

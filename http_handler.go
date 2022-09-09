@@ -60,23 +60,17 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	m := result.Matched
-	m.Hit()
+	mock := result.Matched
+	mock.Hit()
 
-	// run post matchers, after standard ones and after marking the mock as called.
-	afterResult, err := m.matches(args, m.PostExpectations)
-	if err != nil {
-		respondError(w, r, h.evt, err)
-		return
-	}
-
-	if !afterResult.IsMatch {
-		respondNonMatched(w, r, result, h.evt)
+	if mock.Repeat > 0 && mock.Hits() > mock.Repeat {
+		respondError(w, r, h.evt,
+			fmt.Errorf("mock is set to respond only %d times. current hits is %d", mock.Repeat, mock.Hits()))
 		return
 	}
 
 	// get the reply for the mock, after running all possible matchers.
-	res, err := result.Matched.Reply.Build(r, m, h.params)
+	res, err := result.Matched.Reply.Build(r, mock, h.params)
 	if err != nil {
 		h.t.Logf(err.Error())
 		respondError(w, r, h.evt, err)
@@ -115,8 +109,8 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// run post actions.
-	paArgs := PostActionArgs{Request: r, Response: res, Mock: m, Params: h.params}
-	for i, action := range m.PostActions {
+	paArgs := PostActionArgs{Request: r, Response: res, Mock: mock, Params: h.params}
+	for i, action := range mock.PostActions {
 		err = action.Run(paArgs)
 		if err != nil {
 			h.t.Logf("\nan error occurred running post action %d. error=%v", i, err)
@@ -126,7 +120,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.evt.Emit(hooks.OnRequestMatch{
 		Request:            er,
 		ResponseDefinition: hooks.Response{Status: res.Status, Header: res.Header.Clone()},
-		Mock:               hooks.Mock{ID: m.ID, Name: m.Name},
+		Mock:               hooks.Mock{ID: mock.ID, Name: mock.Name},
 		Elapsed:            time.Since(start)})
 }
 

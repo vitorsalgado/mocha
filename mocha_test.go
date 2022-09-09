@@ -153,36 +153,6 @@ func TestResponseDelay(t *testing.T) {
 	assert.GreaterOrEqual(t, elapsed, delay)
 }
 
-func TestPostExpectations(t *testing.T) {
-	m := New(t)
-	m.Start()
-
-	scoped := m.AddMocks(
-		Request().
-			MatchAfter(expect.Repeat(2)).
-			Method(http.MethodGet).
-			URL(expect.URLPath("/test")).
-			Reply(reply.
-				OK()))
-
-	_, _ = testutil.Get(fmt.Sprintf("%s/other", m.URL())).Do()
-	_, _ = testutil.Get(fmt.Sprintf("%s/other", m.URL())).Do()
-
-	res, _ := testutil.Get(fmt.Sprintf("%s/other", m.URL())).Do()
-	assert.Equal(t, res.StatusCode, http.StatusTeapot)
-
-	res, _ = testutil.Get(fmt.Sprintf("%s/test", m.URL())).Do()
-	assert.Equal(t, res.StatusCode, http.StatusOK)
-
-	res, _ = testutil.Get(fmt.Sprintf("%s/test", m.URL())).Do()
-	assert.Equal(t, res.StatusCode, http.StatusOK)
-
-	res, _ = testutil.Get(fmt.Sprintf("%s/test", m.URL())).Do()
-	assert.Equal(t, res.StatusCode, http.StatusTeapot)
-
-	scoped.AssertCalled(t)
-}
-
 func TestErrors(t *testing.T) {
 	m := New(t)
 	m.Start()
