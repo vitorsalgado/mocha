@@ -168,7 +168,7 @@ func TestErrors(t *testing.T) {
 		res, err := testutil.Get(fmt.Sprintf("%s/test1", m.URL())).Do()
 
 		assert.Nil(t, err)
-		assert.True(t, scoped.Called())
+		assert.False(t, scoped.Called())
 		assert.Equal(t, http.StatusTeapot, res.StatusCode)
 	})
 

@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/vitorsalgado/mocha/v2/cors"
-	"github.com/vitorsalgado/mocha/v2/expect"
 	"github.com/vitorsalgado/mocha/v2/hooks"
 	"github.com/vitorsalgado/mocha/v2/internal/middleware"
 	"github.com/vitorsalgado/mocha/v2/internal/middleware/recover"
@@ -36,8 +35,6 @@ type (
 // New creates a new Mocha mock server with the given configurations.
 // Parameter config accepts a Config or a Configurer implementation.
 func New(t T, config ...Config) *Mocha {
-	t.Helper()
-
 	cfg := configDefault
 	if len(config) > 0 {
 		cfg = config[0]
@@ -55,9 +52,6 @@ func New(t T, config ...Config) *Mocha {
 	parsers = append(parsers, cfg.BodyParsers...)
 	parsers = append(parsers, &jsonBodyParser{}, &plainTextParser{}, &formURLEncodedParser{}, &bytesParser{})
 
-	p := params.New()
-	p.Set(expect.ScenarioBuiltInParamStore, expect.NewScenarioStore())
-
 	middlewares := make([]func(handler http.Handler) http.Handler, 0)
 	middlewares = append(middlewares, recover.Recover)
 
@@ -72,10 +66,10 @@ func New(t T, config ...Config) *Mocha {
 	}
 
 	middlewares = append(middlewares, cfg.Middlewares...)
-
+	p := params.New()
 	handler := middleware.
 		Compose(middlewares...).
-		Root(newHandler(mockStorage, parsers, p, evt, t))
+		Root(newHandler(mockStorage, newScenarioStore(), parsers, p, evt, t))
 
 	server := cfg.Server
 
@@ -118,8 +112,6 @@ func NewBasic() *Mocha {
 
 // Start starts the mock server.
 func (m *Mocha) Start() ServerInfo {
-	m.t.Helper()
-
 	info, err := m.server.Start()
 	if err != nil {
 		m.t.Errorf("failed to start mock server. reason=%v", err)
@@ -131,8 +123,6 @@ func (m *Mocha) Start() ServerInfo {
 
 // StartTLS starts TLS from a server.
 func (m *Mocha) StartTLS() ServerInfo {
-	m.t.Helper()
-
 	info, err := m.server.StartTLS()
 	if err != nil {
 		m.t.Errorf("failed to start a TLS mock server. reason=%v", err)

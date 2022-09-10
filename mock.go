@@ -41,6 +41,14 @@ type (
 		// If value is equal or lower than zero, it will not be considered.
 		Repeat int
 
+		ScenarioName string
+
+		ScenarioState string
+
+		ScenarioRequiredState string
+
+		ScenarioNewState string
+
 		mu   *sync.Mutex
 		hits int
 	}

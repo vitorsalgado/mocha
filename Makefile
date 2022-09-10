@@ -1,4 +1,4 @@
-MOCHA_COLOR := 1
+MOCHA_NO_COLOR := "0"
 
 .ONESHELL:
 .DEFAULT_GOAL := help

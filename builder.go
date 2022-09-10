@@ -10,10 +10,7 @@ import (
 
 // MockBuilder is a builder for mock.Mock.
 type MockBuilder struct {
-	scenario              string
-	scenarioRequiredState string
-	scenarioNewState      string
-	mock                  *Mock
+	mock *Mock
 }
 
 // Request creates a new empty MockBuilder.
@@ -180,26 +177,26 @@ func (b *MockBuilder) RequestMatches(m expect.Matcher) *MockBuilder {
 
 // StartScenario sets that this mock will start a new scenario with the given name.
 func (b *MockBuilder) StartScenario(name string) *MockBuilder {
-	b.scenario = name
-	b.scenarioRequiredState = expect.ScenarioStateStarted
+	b.mock.ScenarioName = name
+	b.mock.ScenarioRequiredState = _scenarioStateStarted
 	return b
 }
 
 // ScenarioIs mark this mock to be used only within the given scenario.
 func (b *MockBuilder) ScenarioIs(scenario string) *MockBuilder {
-	b.scenario = scenario
+	b.mock.ScenarioName = scenario
 	return b
 }
 
 // ScenarioStateIs mark this mock to be served only if the scenario state is equal to the given required state.
 func (b *MockBuilder) ScenarioStateIs(requiredState string) *MockBuilder {
-	b.scenarioRequiredState = requiredState
+	b.mock.ScenarioRequiredState = requiredState
 	return b
 }
 
 // ScenarioStateWillBe defines the state of the scenario after this mock is matched, making the scenario flow continue.
 func (b *MockBuilder) ScenarioStateWillBe(newState string) *MockBuilder {
-	b.scenarioNewState = newState
+	b.mock.ScenarioNewState = newState
 	return b
 }
 
@@ -240,9 +237,5 @@ func (b *MockBuilder) ReplyJust(status int, r ...*reply.StdReply) *MockBuilder {
 // Build builds a mock.Mock with previously configured parameters.
 // Used internally by Mocha.
 func (b *MockBuilder) Build() *Mock {
-	if b.scenario != "" {
-		b.RequestMatches(expect.Scenario(b.scenario, b.scenarioRequiredState, b.scenarioNewState))
-	}
-
 	return b.mock
 }

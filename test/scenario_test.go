@@ -15,23 +15,23 @@ import (
 func TestScenarioMatcher(t *testing.T) {
 	m := mocha.New(t)
 	m.Start()
-	scenario := "test"
+	scn := "test"
 
 	s1 := m.AddMocks(mocha.Get(expect.URLPath("/1")).
-		StartScenario(scenario).
+		StartScenario(scn).
 		ScenarioStateWillBe("step2").
 		Name("step-1").
 		Reply(reply.OK().BodyString("step1")))
 
 	s2 := m.AddMocks(mocha.Get(expect.URLPath("/2")).
-		ScenarioIs(scenario).
+		ScenarioIs(scn).
 		ScenarioStateIs("step2").
 		ScenarioStateWillBe("step3").
 		Name("step-2").
 		Reply(reply.OK().BodyString("step2")))
 
 	s3 := m.AddMocks(mocha.Get(expect.URLPath("/3")).
-		ScenarioIs(scenario).
+		ScenarioIs(scn).
 		ScenarioStateIs("step3").
 		ScenarioStateWillBe("step4").
 		Name("step-3").

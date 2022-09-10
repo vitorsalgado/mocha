@@ -17,6 +17,7 @@ import (
 
 type mockHandler struct {
 	mocks       storage
+	scenarios   scenarioStore
 	bodyParsers []RequestBodyParser
 	params      params.P
 	evt         *hooks.Emitter
@@ -25,12 +26,13 @@ type mockHandler struct {
 
 func newHandler(
 	storage storage,
+	scenarios scenarioStore,
 	bodyParsers []RequestBodyParser,
 	params params.P,
 	evt *hooks.Emitter,
 	t T,
 ) *mockHandler {
-	return &mockHandler{mocks: storage, bodyParsers: bodyParsers, params: params, evt: evt, t: t}
+	return &mockHandler{mocks: storage, scenarios: scenarios, bodyParsers: bodyParsers, params: params, evt: evt, t: t}
 }
 
 func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -61,12 +63,34 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mock := result.Matched
-	mock.Hit()
 
-	if mock.Repeat > 0 && mock.Hits() > mock.Repeat {
+	if mock.Repeat > 0 && mock.Hits()+1 > mock.Repeat {
 		respondError(w, r, h.evt,
 			fmt.Errorf("mock is set to respond only %d times. current hits is %d", mock.Repeat, mock.Hits()))
 		return
+	}
+
+	if mock.ScenarioName != "" {
+		scn, ok := h.scenarios.FetchByName(mock.ScenarioName)
+
+		if !ok && mock.ScenarioRequiredState == _scenarioStateStarted {
+			scn = h.scenarios.CreateNewIfNeeded(mock.ScenarioName)
+			ok = true
+		}
+
+		if ok {
+			if scn.State == mock.ScenarioRequiredState {
+				if mock.ScenarioNewState != "" {
+					scn.State = mock.ScenarioNewState
+					h.scenarios.Save(scn)
+				}
+			} else {
+				respondError(w, r, h.evt,
+					fmt.Errorf("expected mock id=%d scenario=%s to be %s. got %s",
+						mock.ID, mock.ScenarioName, mock.ScenarioRequiredState, scn.State))
+				return
+			}
+		}
 	}
 
 	// get the reply for the mock, after running all possible matchers.
@@ -85,6 +109,9 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 	}
+
+	// success
+	mock.Hit()
 
 	// if a delay is set, it will wait before continuing serving the mocked response.
 	if res.Delay > 0 {
