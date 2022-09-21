@@ -16,11 +16,11 @@
       <a href="#">
         <img alt="GitHub go.mod Go version" src="https://img.shields.io/github/go-mod/go-version/vitorsalgado/mocha">
       </a>
-      <a href="https://pkg.go.dev/github.com/vitorsalgado/mocha/v2">
-        <img src="https://pkg.go.dev/badge/github.com/vitorsalgado/mocha/v2.svg" alt="Go Reference">
+      <a href="https://pkg.go.dev/github.com/vitorsalgado/mocha/v3">
+        <img src="https://pkg.go.dev/badge/github.com/vitorsalgado/mocha/v3.svg" alt="Go Reference">
       </a>
-      <a href="https://goreportcard.com/report/github.com/vitorsalgado/mocha/v2">
-        <img src="https://goreportcard.com/badge/github.com/vitorsalgado/mocha/v2" alt="Go Report" />
+      <a href="https://goreportcard.com/report/github.com/vitorsalgado/mocha/v3">
+        <img src="https://goreportcard.com/badge/github.com/vitorsalgado/mocha/v3" alt="Go Report" />
       </a>
     </div>
 </div>
@@ -38,7 +38,7 @@ Inspired by [WireMock](https://github.com/wiremock/wiremock) and [Nock](https://
 ## Installation
 
 ```bash
-go get github.com/vitorsalgado/mocha/v2
+go get github.com/vitorsalgado/mocha/v3
 ```
 
 ## Features

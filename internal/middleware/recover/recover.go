@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"runtime"
 
-	"github.com/vitorsalgado/mocha/v2/internal/headers"
-	"github.com/vitorsalgado/mocha/v2/internal/mimetypes"
+	"github.com/vitorsalgado/mocha/v3/internal/headers"
+	"github.com/vitorsalgado/mocha/v3/internal/mimetypes"
 )
 
 func Recover(next http.Handler) http.Handler {

@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"net/http"
 
-	"github.com/vitorsalgado/mocha/v2/params"
+	"github.com/vitorsalgado/mocha/v3/params"
 )
 
 // RandomReply configures a Reply that serves random HTTP responses.

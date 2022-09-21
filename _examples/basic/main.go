@@ -7,11 +7,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/vitorsalgado/mocha/v2"
-	"github.com/vitorsalgado/mocha/v2/expect"
-	"github.com/vitorsalgado/mocha/v2/internal/headers"
-	"github.com/vitorsalgado/mocha/v2/internal/mimetypes"
-	"github.com/vitorsalgado/mocha/v2/reply"
+	"github.com/vitorsalgado/mocha/v3"
+	"github.com/vitorsalgado/mocha/v3/expect"
+	"github.com/vitorsalgado/mocha/v3/internal/headers"
+	"github.com/vitorsalgado/mocha/v3/internal/mimetypes"
+	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 func main() {

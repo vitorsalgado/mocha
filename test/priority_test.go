@@ -7,10 +7,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/v2"
-	"github.com/vitorsalgado/mocha/v2/expect"
-	"github.com/vitorsalgado/mocha/v2/internal/testutil"
-	"github.com/vitorsalgado/mocha/v2/reply"
+	"github.com/vitorsalgado/mocha/v3"
+	"github.com/vitorsalgado/mocha/v3/expect"
+	"github.com/vitorsalgado/mocha/v3/internal/testutil"
+	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 func TestPriority(t *testing.T) {

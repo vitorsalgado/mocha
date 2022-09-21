@@ -3,9 +3,9 @@ package mocha
 import (
 	"net/http"
 
-	"github.com/vitorsalgado/mocha/v2/expect"
-	"github.com/vitorsalgado/mocha/v2/params"
-	"github.com/vitorsalgado/mocha/v2/reply"
+	"github.com/vitorsalgado/mocha/v3/expect"
+	"github.com/vitorsalgado/mocha/v3/params"
+	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 // MockBuilder is a builder for mock.Mock.

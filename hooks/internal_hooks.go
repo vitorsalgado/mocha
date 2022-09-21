@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vitorsalgado/mocha/v2/internal/colorize"
+	"github.com/vitorsalgado/mocha/v3/internal/colorize"
 )
 
 // Logger defines internal events logger contract.

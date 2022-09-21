@@ -3,7 +3,7 @@ package expect
 import (
 	"fmt"
 
-	"github.com/vitorsalgado/mocha/v2/internal/jsonx"
+	"github.com/vitorsalgado/mocha/v3/internal/jsonx"
 )
 
 // ToHaveKey returns true if the JSON key in the given path is present.

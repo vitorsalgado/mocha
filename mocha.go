@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/vitorsalgado/mocha/v2/cors"
-	"github.com/vitorsalgado/mocha/v2/hooks"
-	"github.com/vitorsalgado/mocha/v2/internal/middleware"
-	"github.com/vitorsalgado/mocha/v2/internal/middleware/recover"
-	"github.com/vitorsalgado/mocha/v2/params"
+	"github.com/vitorsalgado/mocha/v3/cors"
+	"github.com/vitorsalgado/mocha/v3/hooks"
+	"github.com/vitorsalgado/mocha/v3/internal/middleware"
+	"github.com/vitorsalgado/mocha/v3/internal/middleware/recover"
+	"github.com/vitorsalgado/mocha/v3/params"
 )
 
 type (

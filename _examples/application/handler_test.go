@@ -7,9 +7,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/vitorsalgado/mocha/v2"
-	"github.com/vitorsalgado/mocha/v2/expect"
-	"github.com/vitorsalgado/mocha/v2/reply"
+	"github.com/vitorsalgado/mocha/v3"
+	"github.com/vitorsalgado/mocha/v3/expect"
+	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 func TestHandler_GetById(t *testing.T) {

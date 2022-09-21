@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/v2/expect"
+	"github.com/vitorsalgado/mocha/v3/expect"
 )
 
 func TestRace(t *testing.T) {

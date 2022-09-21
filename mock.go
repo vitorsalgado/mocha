@@ -5,10 +5,10 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/vitorsalgado/mocha/v2/expect"
-	"github.com/vitorsalgado/mocha/v2/internal/autoid"
-	"github.com/vitorsalgado/mocha/v2/params"
-	"github.com/vitorsalgado/mocha/v2/reply"
+	"github.com/vitorsalgado/mocha/v3/expect"
+	"github.com/vitorsalgado/mocha/v3/internal/autoid"
+	"github.com/vitorsalgado/mocha/v3/params"
+	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 type (

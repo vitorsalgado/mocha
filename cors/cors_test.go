@@ -10,8 +10,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/v2/internal/headers"
-	"github.com/vitorsalgado/mocha/v2/internal/middleware"
+	"github.com/vitorsalgado/mocha/v3/internal/headers"
+	"github.com/vitorsalgado/mocha/v3/internal/middleware"
 )
 
 func TestCORS(t *testing.T) {
