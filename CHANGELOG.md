@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.0.0](https://github.com/vitorsalgado/mocha/compare/v2.0.2...v3.0.0) (2022-09-21)
+
+### Refactor
+
+- improve scenarios ([d89af6d](https://github.com/vitorsalgado/mocha/commit/d89af6d568475f616bc38605515a3cd0edbc00ae))
+- remove repeat matcher and after matchers ([a6e8c79](https://github.com/vitorsalgado/mocha/commit/a6e8c79b4689ceb716afc16ea584e3d01b563d1c))
+
+### Chore
+
+- **deps:** bump fastify/github-action-merge-dependabot ([#7](https://github.com/vitorsalgado/mocha/issues/7)) ([5f43de4](https://github.com/vitorsalgado/mocha/commit/5f43de4fe063019a4a3c59224ddb4bbfc1dac65f))
+- **deps:** bump fastify/github-action-merge-dependabot ([#8](https://github.com/vitorsalgado/mocha/issues/8)) ([1311ba4](https://github.com/vitorsalgado/mocha/commit/1311ba40f31771a2cf15bbbdcf773ff70df87d8e))
+- v3 ([5056c3b](https://github.com/vitorsalgado/mocha/commit/5056c3bf1d6a44f046bc2f8e8bbac09d0401f713))
+
 ### [2.0.2](https://github.com/vitorsalgado/mocha/compare/v2.0.1...v2.0.2) (2022-08-24)
 
 ### Chore
