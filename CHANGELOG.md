@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.1](https://github.com/vitorsalgado/mocha/compare/v3.0.0...v3.0.1) (2022-11-13)
+
+### Chore
+
+- **deps:** bump fastify/github-action-merge-dependabot ([#10](https://github.com/vitorsalgado/mocha/issues/10)) ([4d3bc14](https://github.com/vitorsalgado/mocha/commit/4d3bc145c9fd0c38b8f9c354f0b45795096d549f))
+- **deps:** bump fastify/github-action-merge-dependabot ([#11](https://github.com/vitorsalgado/mocha/issues/11)) ([a432d3a](https://github.com/vitorsalgado/mocha/commit/a432d3ada856a214dc9daed27a4cf30b0fcdfcfa))
+- **deps:** bump fastify/github-action-merge-dependabot ([#13](https://github.com/vitorsalgado/mocha/issues/13)) ([c7ce299](https://github.com/vitorsalgado/mocha/commit/c7ce29958cbf3ad9d0449af7e436c8c7b7adf1a4))
+- **deps:** bump fastify/github-action-merge-dependabot ([#9](https://github.com/vitorsalgado/mocha/issues/9)) ([ceb8780](https://github.com/vitorsalgado/mocha/commit/ceb87804f97f8ee170a1c7a7adeb0687b4056902))
+- **deps:** bump github.com/stretchr/testify from 1.8.0 to 1.8.1 ([#12](https://github.com/vitorsalgado/mocha/issues/12)) ([5aca103](https://github.com/vitorsalgado/mocha/commit/5aca103ea720768658fd72cabab01b93478d4da4))
+
 ## [3.0.0](https://github.com/vitorsalgado/mocha/compare/v2.0.2...v3.0.0) (2022-09-21)
 
 ### Refactor
