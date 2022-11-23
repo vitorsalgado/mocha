@@ -8,14 +8,14 @@ import (
 
 func TestHasSuffix(t *testing.T) {
 	t.Run("should return true when string has suffix", func(t *testing.T) {
-		result, err := ToHaveSuffix("world").Matches("hello world", emptyArgs())
+		result, err := ToHaveSuffix("world").Match("hello world")
 
 		assert.Nil(t, err)
 		assert.True(t, result)
 	})
 
 	t.Run("should return true when string hasn't suffix", func(t *testing.T) {
-		result, err := ToHaveSuffix("hello").Matches("hello world", emptyArgs())
+		result, err := ToHaveSuffix("hello").Match("hello world")
 
 		assert.Nil(t, err)
 		assert.False(t, result)

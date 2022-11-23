@@ -174,13 +174,13 @@ func (m *Mock) Disable() {
 
 // matches checks if current Mock matches against a list of expectations.
 // Will iterate through all expectations even if it doesn't match early.
-func (m *Mock) matches(params expect.Args, expectations []Expectation) (matchResult, error) {
+func (m *Mock) matches(ri *expect.RequestInfo, expectations []Expectation) (matchResult, error) {
 	w := 0
 	hasMatched := true
 	details := make([]mismatchDetail, 0)
 
 	for _, exp := range expectations {
-		matched, detail, err := matches(exp, params)
+		matched, detail, err := matches(exp, ri)
 
 		// fail fast if an error occurs
 		if err != nil {
@@ -199,24 +199,22 @@ func (m *Mock) matches(params expect.Args, expectations []Expectation) (matchRes
 	return matchResult{IsMatch: hasMatched, Weight: w, MismatchDetails: details}, nil
 }
 
-func matches(e Expectation, params expect.Args) (bool, mismatchDetail, error) {
-	val := e.ValueSelector(params.RequestInfo)
-	res, err := e.Matcher.Matches(val, params)
+func matches(e Expectation, params *expect.RequestInfo) (bool, mismatchDetail, error) {
+	val := e.ValueSelector(params)
+	res, err := e.Matcher.Match(val)
 
 	if err != nil {
 		return false,
-			mismatchDetail{Name: e.Matcher.Name, Target: e.Target},
+			mismatchDetail{Name: e.Matcher.Name(), Target: e.Target},
 			err
 	}
 
 	if !res {
-		desc := ""
-
-		if e.Matcher.DescribeMismatch != nil {
-			desc = e.Matcher.DescribeMismatch(e.Target, val)
-		}
-
-		return res, mismatchDetail{Name: e.Matcher.Name, Target: e.Target, Description: desc}, err
+		return res, mismatchDetail{
+			Name:        e.Matcher.Name(),
+			Target:      e.Target,
+			Description: e.Matcher.DescribeFailure(val),
+		}, err
 	}
 
 	return res, mismatchDetail{}, err

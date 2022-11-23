@@ -4,10 +4,12 @@ import (
 	"fmt"
 )
 
+var _ Matcher = (*EitherMatcher)(nil)
+
 // EitherMatcherBuilder is a builder for Either matcher.
 // Prefer to use the Either() function.
 type EitherMatcherBuilder struct {
-	first Matcher
+	First Matcher
 }
 
 // Either matches true when any of the two given matchers returns true.
@@ -17,21 +19,32 @@ func Either(first Matcher) *EitherMatcherBuilder {
 
 // Or sets the second matcher
 func (e *EitherMatcherBuilder) Or(second Matcher) Matcher {
-	m := Matcher{}
-	m.Name = "Either"
-	m.DescribeMismatch = func(p string, v any) string {
-		return fmt.Sprintf("none of the matchers \"%s, %s\" matched.", e.first.Name, second.Name)
+	return &EitherMatcher{First: e.First, Second: second}
+}
+
+type EitherMatcher struct {
+	First  Matcher
+	Second Matcher
+}
+
+func (m *EitherMatcher) Name() string {
+	return "Either"
+}
+
+func (m *EitherMatcher) Match(v any) (bool, error) {
+	r1, err := m.First.Match(v)
+	if err != nil {
+		return false, err
 	}
-	m.Matches = func(v any, args Args) (bool, error) {
-		r1, err := e.first.Matches(v, args)
-		if err != nil {
-			return false, err
-		}
 
-		r2, err := second.Matches(v, args)
+	r2, err := m.Second.Match(v)
 
-		return r1 || r2, err
-	}
+	return r1 || r2, err
+}
 
-	return m
+func (m *EitherMatcher) DescribeFailure(_ any) string {
+	return fmt.Sprintf("none of the matchers \"%s, %s\" matched.", m.First.Name(), m.Second.Name())
+}
+
+func (m *EitherMatcher) OnMockServed() {
 }

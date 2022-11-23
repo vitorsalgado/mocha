@@ -78,31 +78,6 @@ func TestMocha_NewBasic(t *testing.T) {
 	assert.Equal(t, string(body), "hello world")
 }
 
-func TestMocha_Parameters(t *testing.T) {
-	key := "k"
-	expected := "test"
-
-	m := New(t)
-	m.Start()
-	m.Parameters().Set(key, expected)
-
-	scoped := m.AddMocks(Get(expect.URLPath("/test")).
-		RequestMatches(expect.Func(func(v any, params expect.Args) (bool, error) {
-			p, _ := params.Params.Get(key)
-			return p.(string) == expected, nil
-		})).
-		Reply(reply.Accepted()))
-
-	req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
-	res, err := req.Do()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	scoped.AssertCalled(t)
-	assert.Equal(t, http.StatusAccepted, res.StatusCode)
-}
-
 func TestResponseMapper(t *testing.T) {
 	m := New(t)
 	m.Start()
@@ -175,7 +150,7 @@ func TestErrors(t *testing.T) {
 	t.Run("should log errors from matchers", func(t *testing.T) {
 		scoped := m.AddMocks(Get(expect.URLPath("/test2")).
 			Header("test", expect.Func(
-				func(_ any, _ expect.Args) (bool, error) {
+				func(_ any) (bool, error) {
 					return false, fmt.Errorf("failed")
 				})))
 

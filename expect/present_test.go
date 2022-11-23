@@ -7,20 +7,20 @@ import (
 )
 
 func TestIsPresent(t *testing.T) {
-	resYes, _ := ToBePresent().Matches("test", emptyArgs())
-	resNo, _ := ToBePresent().Matches("", emptyArgs())
+	resYes, _ := ToBePresent().Match("test")
+	resNo, _ := ToBePresent().Match("")
 	assert.True(t, resYes)
 	assert.False(t, resNo)
 
-	resYes, _ = ToBePresent().Matches(1, emptyArgs())
+	resYes, _ = ToBePresent().Match(1)
 	assert.True(t, resYes)
 
-	resYes, _ = ToBePresent().Matches(0, emptyArgs())
+	resYes, _ = ToBePresent().Match(0)
 	assert.True(t, resYes)
 
 	p := "test"
-	resYes, _ = ToBePresent().Matches(&p, emptyArgs())
-	resNo, _ = ToBePresent().Matches(nil, emptyArgs())
+	resYes, _ = ToBePresent().Match(&p)
+	resNo, _ = ToBePresent().Match(nil)
 	assert.True(t, resYes)
 	assert.False(t, resNo)
 }

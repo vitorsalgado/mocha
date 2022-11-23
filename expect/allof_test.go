@@ -15,7 +15,7 @@ func TestAllOf(t *testing.T) {
 			ToEqualFold("TEST"),
 			UpperCase(ToEqual("TEST")),
 			ToContain("tes")).
-			Matches("test", emptyArgs())
+			Match("test")
 		assert.Nil(t, err)
 		assert.True(t, result)
 	})
@@ -26,7 +26,7 @@ func TestAllOf(t *testing.T) {
 			ToEqualFold("dev"),
 			UpperCase(ToEqual("TEST")),
 			ToContain("tes")).
-			Matches("test", emptyArgs())
+			Match("test")
 		assert.Nil(t, err)
 		assert.False(t, result)
 	})
@@ -37,12 +37,12 @@ func TestAllOf(t *testing.T) {
 			ToEqualFold("qa"),
 			UpperCase(ToEqual("none")),
 			ToContain("blah")).
-			Matches("test", emptyArgs())
+			Match("test")
 		assert.Nil(t, err)
 		assert.False(t, result)
 	})
 
 	t.Run("mismatch description is not empty", func(t *testing.T) {
-		assert.NotEmpty(t, AllOf().DescribeMismatch("any target", "value"))
+		assert.NotEmpty(t, AllOf().DescribeFailure("value"))
 	})
 }

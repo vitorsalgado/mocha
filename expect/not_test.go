@@ -10,14 +10,14 @@ func TestNot(t *testing.T) {
 	value := "test"
 
 	t.Run("should return true when value is not equal", func(t *testing.T) {
-		result, err := Not(ToEqual("dev")).Matches(value, emptyArgs())
+		result, err := Not(ToEqual("dev")).Match(value)
 
 		assert.Nil(t, err)
 		assert.True(t, result)
 	})
 
 	t.Run("should return false when value is equal", func(t *testing.T) {
-		result, err := Not(ToEqual("test")).Matches(value, emptyArgs())
+		result, err := Not(ToEqual("test")).Match(value)
 
 		assert.Nil(t, err)
 		assert.False(t, result)

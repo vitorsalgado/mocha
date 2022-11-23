@@ -67,7 +67,7 @@ func TestMock(t *testing.T) {
 
 func TestMock_Matches(t *testing.T) {
 	m := newMock()
-	params := expect.Args{}
+	params := &expect.RequestInfo{}
 
 	t.Run("should match when generic type is known and matcher returns true without errors", func(t *testing.T) {
 		// any
@@ -188,7 +188,7 @@ func TestMock_Matches(t *testing.T) {
 	t.Run("should return not matched and error when one of expectations returns error", func(t *testing.T) {
 		// string
 		res, err := m.matches(params, []Expectation{{
-			Matcher: expect.Func(func(_ any, p expect.Args) (bool, error) {
+			Matcher: expect.Func(func(_ any) (bool, error) {
 				return false, fmt.Errorf("fail")
 			}),
 			ValueSelector: func(r *expect.RequestInfo) any {

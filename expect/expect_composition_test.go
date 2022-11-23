@@ -7,35 +7,35 @@ import (
 )
 
 func TestExpect_Compositions(t *testing.T) {
-	m, err := ToEqual("hello world").
+	m, err := Compose(ToEqual("hello world")).
 		And(ToContain("hello")).
 		And(ToHavePrefix("hello")).
 		And(ToHaveSuffix("world")).
-		Matches("hello world", emptyArgs())
+		Match("hello world")
 
 	assert.True(t, m)
 	assert.Nil(t, err)
 
-	m, err = ToEqual("dev qa").
+	m, err = Compose(ToEqual("dev qa")).
 		And(ToHaveSuffix("dev")).
 		Or(ToContain("qa")).
-		Matches("dev qa", emptyArgs())
+		Match("dev qa")
 
 	assert.True(t, m)
 	assert.Nil(t, err)
 
-	m, err = ToEqual("testing").
+	m, err = Compose(ToEqual("testing")).
 		Xor(ToContain("test")).
-		Matches("testing", emptyArgs())
+		Match("testing")
 
 	assert.False(t, m)
 	assert.Nil(t, err)
 
-	m, err = ToEqual("hello world").
+	m, err = Compose(ToEqual("hello world")).
 		And(ToContain("hello")).
 		And(ToHavePrefix("world")).
 		And(ToHaveSuffix("hello")).
-		Matches("hello world", emptyArgs())
+		Match("hello world")
 
 	assert.False(t, m)
 	assert.Nil(t, err)

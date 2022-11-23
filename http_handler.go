@@ -48,10 +48,8 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// match current request with all eligible stored matchers in order to find one mock.
-	args := expect.Args{
-		RequestInfo: &expect.RequestInfo{Request: r, ParsedBody: parsedBody},
-		Params:      h.params}
-	result, err := findMockForRequest(h.mocks, args)
+	info := &expect.RequestInfo{Request: r, ParsedBody: parsedBody}
+	result, err := findMockForRequest(h.mocks, info)
 	if err != nil {
 		respondError(w, r, h.evt, err)
 		return

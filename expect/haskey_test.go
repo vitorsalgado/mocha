@@ -19,31 +19,31 @@ func TestHasKey(t *testing.T) {
 		"zero":    0,
 	}
 
-	result, err := ToHaveKey("name").Matches(m, emptyArgs())
+	result, err := ToHaveKey("name").Match(m)
 	assert.True(t, result)
 	assert.Nil(t, err)
 
-	result, err = ToHaveKey("age").Matches(m, emptyArgs())
+	result, err = ToHaveKey("age").Match(m)
 	assert.True(t, result)
 	assert.Nil(t, err)
 
-	result, err = ToHaveKey("address").Matches(m, emptyArgs())
+	result, err = ToHaveKey("address").Match(m)
 	assert.True(t, result)
 	assert.Nil(t, err)
 
-	result, err = ToHaveKey("active").Matches(m, emptyArgs())
+	result, err = ToHaveKey("active").Match(m)
 	assert.True(t, result)
 	assert.Nil(t, err)
 
-	result, err = ToHaveKey("zero").Matches(m, emptyArgs())
+	result, err = ToHaveKey("zero").Match(m)
 	assert.True(t, result)
 	assert.Nil(t, err)
 
-	result, err = ToHaveKey("options").Matches(m, emptyArgs())
+	result, err = ToHaveKey("options").Match(m)
 	assert.True(t, result)
 	assert.Nil(t, err)
 
-	result, err = ToHaveKey("none").Matches(m, emptyArgs())
+	result, err = ToHaveKey("none").Match(m)
 	assert.False(t, result)
 	assert.Nil(t, err)
 }

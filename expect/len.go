@@ -5,17 +5,27 @@ import (
 	"reflect"
 )
 
+type LenMatcher struct {
+	Length int
+}
+
+func (m *LenMatcher) Name() string {
+	return "Len"
+}
+
+func (m *LenMatcher) Match(v any) (bool, error) {
+	value := reflect.ValueOf(v)
+	return value.Len() == m.Length, nil
+}
+
+func (m *LenMatcher) DescribeFailure(_ any) string {
+	return fmt.Sprintf("value does not have the expected length of %d", m.Length)
+}
+
+func (m *LenMatcher) OnMockServed() {
+}
+
 // ToHaveLen returns true when matcher argument length is equal to the expected value.
 func ToHaveLen(length int) Matcher {
-	m := Matcher{}
-	m.Name = "Len"
-	m.DescribeMismatch = func(p string, v any) string {
-		return fmt.Sprintf("value does not have the expected length of %d", length)
-	}
-	m.Matches = func(v any, args Args) (bool, error) {
-		value := reflect.ValueOf(v)
-		return value.Len() == length, nil
-	}
-
-	return m
+	return &LenMatcher{Length: length}
 }

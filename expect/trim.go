@@ -2,14 +2,27 @@ package expect
 
 import "strings"
 
+type TrimMatcher struct {
+	Matcher Matcher
+}
+
+func (m *TrimMatcher) Name() string {
+	return "Trim"
+}
+
+func (m *TrimMatcher) Match(v any) (bool, error) {
+	return m.Matcher.Match(strings.TrimSpace(v.(string)))
+}
+
+func (m *TrimMatcher) DescribeFailure(v any) string {
+	return m.Matcher.DescribeFailure(v)
+}
+
+func (m *TrimMatcher) OnMockServed() {
+	m.OnMockServed()
+}
+
 // Trim trims' spaces of matcher argument before submitting it to the given matcher.
 func Trim(matcher Matcher) Matcher {
-	m := Matcher{}
-	m.Name = "Trim"
-	m.DescribeMismatch = matcher.DescribeMismatch
-	m.Matches = func(v any, params Args) (bool, error) {
-		return matcher.Matches(strings.TrimSpace(v.(string)), params)
-	}
-
-	return m
+	return &TrimMatcher{Matcher: matcher}
 }

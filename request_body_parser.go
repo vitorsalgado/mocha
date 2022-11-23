@@ -54,11 +54,11 @@ func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (any, error)
 // jsonBodyParser parses requests with content type header containing "application/json"
 type jsonBodyParser struct{}
 
-func (parser jsonBodyParser) CanParse(content string, _ *http.Request) bool {
+func (parser *jsonBodyParser) CanParse(content string, _ *http.Request) bool {
 	return strings.Contains(content, mimetypes.JSON)
 }
 
-func (parser jsonBodyParser) Parse(body []byte, _ *http.Request) (data any, err error) {
+func (parser *jsonBodyParser) Parse(body []byte, _ *http.Request) (data any, err error) {
 	err = json.Unmarshal(body, &data)
 	return data, err
 }
@@ -66,7 +66,7 @@ func (parser jsonBodyParser) Parse(body []byte, _ *http.Request) (data any, err 
 // jsonBodyParser parses requests with content type header containing "application/x-www-form-urlencoded"
 type formURLEncodedParser struct{}
 
-func (parser formURLEncodedParser) CanParse(content string, _ *http.Request) bool {
+func (parser *formURLEncodedParser) CanParse(content string, _ *http.Request) bool {
 	return strings.Contains(content, mimetypes.FormURLEncoded)
 }
 

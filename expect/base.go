@@ -2,53 +2,56 @@ package expect
 
 import "net/http"
 
-type (
-	// Params define a custom parameter holder for matchers.
-	Params interface {
-		Get(key string) (any, bool)
-	}
+// RequestInfo implements HTTP request information to be passed to each Matcher.
+type RequestInfo struct {
+	// Request is the actual http.Request.
+	Request *http.Request
 
-	// RequestInfo implements HTTP request information to be passed to each Matcher.
-	RequestInfo struct {
-		// Request is the actual http.Request.
-		Request *http.Request
+	// ParsedBody is http.Request parsed body.
+	// Value of parsed body can vary depending on the mocha.RequestBodyParser that parsed the request.
+	ParsedBody any
+}
 
-		// ParsedBody is http.Request parsed body.
-		// Value of parsed body can vary depending on the mocha.RequestBodyParser that parsed the request.
-		ParsedBody any
-	}
+// Matcher defines request matchers.
+// Request matchers are used to match requests in order to find a mock to serve a stub response.
+type Matcher interface {
+	Name() string
 
-	// Args groups contextual information available for each Matcher.
-	Args struct {
-		RequestInfo *RequestInfo
-		Params      Params
-	}
+	// Match is the function that does the actual matching logic.
+	Match(value any) (bool, error)
 
-	// Matcher defines request matchers.
-	// Request matchers are used to match requests in order to find a mock to serve a stub response.
-	Matcher struct {
-		// Name is a metadata that defines the matcher name.
-		Name string
+	// DescribeFailure gives more context of why the Matcher failed to match a given value.
+	DescribeFailure(value any) string
 
-		// DescribeMismatch gives more context of why the Matcher failed to match a given value.
-		DescribeMismatch func(target string, value any) string
+	OnMockServed()
+}
 
-		// Matches is the function that does the actual matching logic.
-		Matches func(v any, args Args) (bool, error)
-	}
-)
+type ComposableMatcher struct {
+	M Matcher
+}
+
+func (m *ComposableMatcher) Name() string              { return m.M.Name() }
+func (m *ComposableMatcher) Match(v any) (bool, error) { return m.M.Match(v) }
+func (m *ComposableMatcher) OnMockServed()             {}
+func (m *ComposableMatcher) DescribeFailure(v any) string {
+	return m.M.DescribeFailure(v)
+}
 
 // And compose the current Matcher with another one using the "and" operator.
-func (m Matcher) And(and Matcher) Matcher {
-	return AllOf(m, and)
+func (m *ComposableMatcher) And(and Matcher) *ComposableMatcher {
+	return Compose(AllOf(m, and))
 }
 
 // Or compose the current Matcher with another one using the "or" operator.
-func (m Matcher) Or(or Matcher) Matcher {
-	return AnyOf(m, or)
+func (m *ComposableMatcher) Or(or Matcher) *ComposableMatcher {
+	return Compose(AnyOf(m, or))
 }
 
 // Xor compose the current Matcher with another one using the "xor" operator.
-func (m Matcher) Xor(and Matcher) Matcher {
-	return XOR(m, and)
+func (m *ComposableMatcher) Xor(and Matcher) *ComposableMatcher {
+	return Compose(XOR(m, and))
+}
+
+func Compose(base Matcher) *ComposableMatcher {
+	return &ComposableMatcher{M: base}
 }

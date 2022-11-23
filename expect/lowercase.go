@@ -4,14 +4,28 @@ import (
 	"strings"
 )
 
+type LowerCaseMatcher struct {
+	Matcher Matcher
+}
+
+func (m *LowerCaseMatcher) Name() string {
+	return "LowerCase"
+}
+
+func (m *LowerCaseMatcher) Match(v any) (bool, error) {
+	return m.Matcher.Match(strings.ToLower(v.(string)))
+}
+
+func (m *LowerCaseMatcher) DescribeFailure(v any) string {
+	return m.Matcher.DescribeFailure(v)
+}
+
+func (m *LowerCaseMatcher) OnMockServed() {
+	// TODO implement me
+	panic("implement me")
+}
+
 // LowerCase lower case matcher string argument before submitting it to provided matcher.
 func LowerCase(matcher Matcher) Matcher {
-	m := Matcher{}
-	m.Name = "LowerCase"
-	m.DescribeMismatch = matcher.DescribeMismatch
-	m.Matches = func(v any, params Args) (bool, error) {
-		return matcher.Matches(strings.ToLower(v.(string)), params)
-	}
-
-	return m
+	return &LowerCaseMatcher{Matcher: matcher}
 }

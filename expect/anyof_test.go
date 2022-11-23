@@ -13,7 +13,7 @@ func TestAnyOf(t *testing.T) {
 			ToEqualFold("dev"),
 			LowerCase(ToEqual("TEST")),
 			ToContain("qa")).
-			Matches("test", emptyArgs())
+			Match("test")
 		assert.Nil(t, err)
 		assert.True(t, result)
 	})
@@ -24,12 +24,12 @@ func TestAnyOf(t *testing.T) {
 			ToEqualFold("def"),
 			LowerCase(ToEqual("TEST")),
 			ToContain("dev")).
-			Matches("test", emptyArgs())
+			Match("test")
 		assert.Nil(t, err)
 		assert.False(t, result)
 	})
 
 	t.Run("mismatch description is not empty", func(t *testing.T) {
-		assert.NotEmpty(t, AnyOf().DescribeMismatch("any target", "value"))
+		assert.NotEmpty(t, AnyOf().DescribeFailure("value"))
 	})
 }

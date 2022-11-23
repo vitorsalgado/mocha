@@ -6,24 +6,35 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/jsonx"
 )
 
+type JSONPathMatcher struct {
+	Path    string
+	Matcher Matcher
+}
+
+func (m *JSONPathMatcher) Name() string {
+	return "JSONPath"
+}
+
+func (m *JSONPathMatcher) Match(v any) (bool, error) {
+	value, err := jsonx.Reach(m.Path, v)
+	if err != nil || value == nil {
+		return false, err
+	}
+
+	return m.Matcher.Match(value)
+}
+
+func (m *JSONPathMatcher) DescribeFailure(_ any) string {
+	return fmt.Sprintf("matcher %s applied on json field %s did not match", m.Matcher.Name(), m.Path)
+}
+
+func (m *JSONPathMatcher) OnMockServed() {
+}
+
 // JSONPath applies the provided matcher to the JSON field value in the given path.
 // Example:
 //
 //	JSONPath("address.city", EqualTo("Santiago"))
-func JSONPath(p string, matcher Matcher) Matcher {
-	m := Matcher{}
-	m.Name = "JSONPath"
-	m.DescribeMismatch = func(p string, v any) string {
-		return fmt.Sprintf("matcher %s applied on json field %s did not match", matcher.Name, p)
-	}
-	m.Matches = func(v any, args Args) (bool, error) {
-		value, err := jsonx.Reach(p, v)
-		if err != nil || value == nil {
-			return false, err
-		}
-
-		return matcher.Matches(value, args)
-	}
-
-	return m
+func JSONPath(path string, matcher Matcher) Matcher {
+	return &JSONPathMatcher{Path: path, Matcher: matcher}
 }
