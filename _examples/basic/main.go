@@ -9,8 +9,8 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/expect"
-	"github.com/vitorsalgado/mocha/v3/internal/headers"
-	"github.com/vitorsalgado/mocha/v3/internal/mimetypes"
+	"github.com/vitorsalgado/mocha/v3/internal/headerx"
+	"github.com/vitorsalgado/mocha/v3/internal/mimetypex"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -23,8 +23,8 @@ func main() {
 
 	m.AddMocks(mocha.
 		Get(expect.URLPath("/test")).
-		Header(headers.Accept,
-			expect.ToContain(mimetypes.TextHTML)).
+		Header(headerx.Accept,
+			expect.ToContain(mimetypex.TextHTML)).
 		Reply(reply.OK().
 			BodyString("hello world").
 			Header("x-basic", "true")))

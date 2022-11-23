@@ -1,4 +1,4 @@
-package middleware
+package mid
 
 import (
 	"io"
@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/v3/internal/middleware/recover"
+	"github.com/vitorsalgado/mocha/v3/internal/mid/recover"
 )
 
 func TestMiddlewaresComposition(t *testing.T) {

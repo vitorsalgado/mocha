@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/vitorsalgado/mocha/v3/internal/headers"
-	"github.com/vitorsalgado/mocha/v3/internal/mimetypes"
+	"github.com/vitorsalgado/mocha/v3/internal/headerx"
+	"github.com/vitorsalgado/mocha/v3/internal/mimetypex"
 )
 
 // RequestBodyParser parses request body if CanParse returns true.
@@ -34,7 +34,7 @@ func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (any, error)
 		r.Body.Close()
 		r.Body = io.NopCloser(bytes.NewBuffer(b))
 
-		contentType := r.Header.Get(headers.ContentType)
+		contentType := r.Header.Get(headerx.ContentType)
 
 		for _, parse := range parsers {
 			if parse.CanParse(contentType, r) {
@@ -55,7 +55,7 @@ func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (any, error)
 type jsonBodyParser struct{}
 
 func (parser *jsonBodyParser) CanParse(content string, _ *http.Request) bool {
-	return strings.Contains(content, mimetypes.JSON)
+	return strings.Contains(content, mimetypex.JSON)
 }
 
 func (parser *jsonBodyParser) Parse(body []byte, _ *http.Request) (data any, err error) {
@@ -67,7 +67,7 @@ func (parser *jsonBodyParser) Parse(body []byte, _ *http.Request) (data any, err
 type formURLEncodedParser struct{}
 
 func (parser *formURLEncodedParser) CanParse(content string, _ *http.Request) bool {
-	return strings.Contains(content, mimetypes.FormURLEncoded)
+	return strings.Contains(content, mimetypex.FormURLEncoded)
 }
 
 func (parser *formURLEncodedParser) Parse(_ []byte, r *http.Request) (any, error) {
@@ -83,7 +83,7 @@ func (parser *formURLEncodedParser) Parse(_ []byte, r *http.Request) (any, error
 type plainTextParser struct{}
 
 func (parser *plainTextParser) CanParse(content string, _ *http.Request) bool {
-	return strings.Contains(content, mimetypes.TextPlain)
+	return strings.Contains(content, mimetypex.TextPlain)
 }
 
 func (parser *plainTextParser) Parse(body []byte, _ *http.Request) (any, error) {

@@ -1,5 +1,5 @@
 // Package headers contains common headers used internally.
-package headers
+package headerx
 
 // Common HTTP headers.
 const (

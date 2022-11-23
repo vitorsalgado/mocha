@@ -8,8 +8,8 @@ import (
 	"github.com/vitorsalgado/mocha/v3/cors"
 	"github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/hooks"
-	"github.com/vitorsalgado/mocha/v3/internal/middleware"
-	"github.com/vitorsalgado/mocha/v3/internal/middleware/recover"
+	"github.com/vitorsalgado/mocha/v3/internal/mid"
+	"github.com/vitorsalgado/mocha/v3/internal/mid/recover"
 	"github.com/vitorsalgado/mocha/v3/params"
 )
 
@@ -68,7 +68,7 @@ func New(t TestingT, config ...Config) *Mocha {
 
 	middlewares = append(middlewares, cfg.Middlewares...)
 	p := params.New()
-	handler := middleware.
+	handler := mid.
 		Compose(middlewares...).
 		Root(newHandler(mockStorage, parsers, p, evt, t))
 

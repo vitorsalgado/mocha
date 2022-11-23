@@ -11,8 +11,8 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/expect"
-	"github.com/vitorsalgado/mocha/v3/internal/headers"
-	"github.com/vitorsalgado/mocha/v3/internal/mimetypes"
+	"github.com/vitorsalgado/mocha/v3/internal/headerx"
+	"github.com/vitorsalgado/mocha/v3/internal/mimetypex"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -31,7 +31,7 @@ func TestFormUrlEncoded(t *testing.T) {
 
 	req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", strings.NewReader(data.Encode()))
 	req.Header.Add("test", "hello")
-	req.Header.Add(headers.ContentType, mimetypes.FormURLEncoded)
+	req.Header.Add(headerx.ContentType, mimetypex.FormURLEncoded)
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {

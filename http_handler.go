@@ -9,8 +9,8 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/hooks"
-	"github.com/vitorsalgado/mocha/v3/internal/headers"
-	"github.com/vitorsalgado/mocha/v3/internal/mimetypes"
+	"github.com/vitorsalgado/mocha/v3/internal/headerx"
+	"github.com/vitorsalgado/mocha/v3/internal/mimetypex"
 	"github.com/vitorsalgado/mocha/v3/params"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
@@ -155,7 +155,7 @@ func respondNonMatched(w http.ResponseWriter, r *http.Request, result *findResul
 			detail.Name, detail.Description, detail.Target))
 	}
 
-	w.Header().Add(headers.ContentType, mimetypes.TextPlain)
+	w.Header().Add(headerx.ContentType, mimetypex.TextPlain)
 	w.WriteHeader(http.StatusTeapot)
 	w.Write([]byte(builder.String()))
 }
@@ -163,7 +163,7 @@ func respondNonMatched(w http.ResponseWriter, r *http.Request, result *findResul
 func respondError(w http.ResponseWriter, r *http.Request, evt *hooks.Emitter, err error) {
 	evt.Emit(hooks.OnError{Request: hooks.FromRequest(r), Err: err})
 
-	w.Header().Add(headers.ContentType, mimetypes.TextPlain)
+	w.Header().Add(headerx.ContentType, mimetypex.TextPlain)
 	w.WriteHeader(http.StatusTeapot)
 
 	w.Write([]byte("Request did not match. An error occurred.\n"))

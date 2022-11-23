@@ -1,5 +1,5 @@
 // Package mimetypes contains common mime types used internally by Mocha.
-package mimetypes
+package mimetypex
 
 // Common mime types.
 const (

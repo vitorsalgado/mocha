@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"runtime"
 
-	"github.com/vitorsalgado/mocha/v3/internal/headers"
-	"github.com/vitorsalgado/mocha/v3/internal/mimetypes"
+	"github.com/vitorsalgado/mocha/v3/internal/headerx"
+	"github.com/vitorsalgado/mocha/v3/internal/mimetypex"
 )
 
 func Recover(next http.Handler) http.Handler {
@@ -19,7 +19,7 @@ func Recover(next http.Handler) http.Handler {
 
 				log.Printf("panic=%v\n%s\n", recovery, buf)
 
-				w.Header().Set(headers.ContentType, mimetypes.TextPlain)
+				w.Header().Set(headerx.ContentType, mimetypex.TextPlain)
 				w.WriteHeader(http.StatusTeapot)
 				w.Write([]byte(fmt.Sprintf("%s - an unexpected error has occurred", http.StatusText(http.StatusTeapot))))
 				w.Write([]byte(fmt.Sprintf("%v", recovery)))
