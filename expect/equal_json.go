@@ -39,7 +39,8 @@ func (m *EqualJSONMatcher) DescribeFailure(v any) string {
 	)
 }
 
-func (m *EqualJSONMatcher) OnMockServed() {
+func (m *EqualJSONMatcher) OnMockServed() error {
+	return nil
 }
 
 // ToEqualJSON returns true if matcher value is equal to the given parameter value.

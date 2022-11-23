@@ -23,7 +23,7 @@ type Matcher interface {
 	// DescribeFailure gives more context of why the Matcher failed to match a given value.
 	DescribeFailure(value any) string
 
-	OnMockServed()
+	OnMockServed() error
 }
 
 type ComposableMatcher struct {
@@ -32,7 +32,7 @@ type ComposableMatcher struct {
 
 func (m *ComposableMatcher) Name() string              { return m.M.Name() }
 func (m *ComposableMatcher) Match(v any) (bool, error) { return m.M.Match(v) }
-func (m *ComposableMatcher) OnMockServed()             {}
+func (m *ComposableMatcher) OnMockServed() error       { return nil }
 func (m *ComposableMatcher) DescribeFailure(v any) string {
 	return m.M.DescribeFailure(v)
 }

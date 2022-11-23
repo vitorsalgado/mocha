@@ -46,5 +46,6 @@ func (m *EitherMatcher) DescribeFailure(_ any) string {
 	return fmt.Sprintf("none of the matchers \"%s, %s\" matched.", m.First.Name(), m.Second.Name())
 }
 
-func (m *EitherMatcher) OnMockServed() {
+func (m *EitherMatcher) OnMockServed() error {
+	return nil
 }

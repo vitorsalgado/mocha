@@ -19,8 +19,8 @@ func (m *NotMatcher) DescribeFailure(_ any) string {
 	return fmt.Sprintf("matcher %s returned true", m.Matcher.Name())
 }
 
-func (m *NotMatcher) OnMockServed() {
-	m.Matcher.OnMockServed()
+func (m *NotMatcher) OnMockServed() error {
+	return m.Matcher.OnMockServed()
 }
 
 // Not negates the provided matcher.

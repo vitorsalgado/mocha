@@ -18,7 +18,8 @@ func (m *FuncMatcher) DescribeFailure(v any) string {
 	return fmt.Sprintf("custom matcher function did not match. value: %v", v)
 }
 
-func (m *FuncMatcher) OnMockServed() {
+func (m *FuncMatcher) OnMockServed() error {
+	return nil
 }
 
 // Func creates an anonymous Matcher using the given function.

@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/vitorsalgado/mocha/v3/cors"
+	"github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/hooks"
 	"github.com/vitorsalgado/mocha/v3/internal/middleware"
 	"github.com/vitorsalgado/mocha/v3/internal/middleware/recover"
@@ -69,7 +70,7 @@ func New(t T, config ...Config) *Mocha {
 	p := params.New()
 	handler := middleware.
 		Compose(middlewares...).
-		Root(newHandler(mockStorage, newScenarioStore(), parsers, p, evt, t))
+		Root(newHandler(mockStorage, parsers, p, evt, t))
 
 	server := cfg.Server
 
@@ -153,9 +154,9 @@ func (m *Mocha) AddMocks(builders ...*MockBuilder) *Scoped {
 	added := make([]*Mock, size)
 
 	for i, b := range builders {
-		newMock := b.Build()
-		m.storage.Save(newMock)
-		added[i] = newMock
+		nm := b.Build(&Deps{ScenarioStore: expect.NewScenarioStorage()})
+		m.storage.Save(nm)
+		added[i] = nm
 	}
 
 	scoped := scope(m.storage, added)

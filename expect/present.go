@@ -33,7 +33,8 @@ func (m *BePresentMatcher) DescribeFailure(v any) string {
 	return fmt.Sprintf("%v is not present", v)
 }
 
-func (m *BePresentMatcher) OnMockServed() {
+func (m *BePresentMatcher) OnMockServed() error {
+	return nil
 }
 
 // ToBePresent checks if matcher argument contains a value that is not nil or the zero value for the argument type.

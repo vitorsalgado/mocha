@@ -21,7 +21,8 @@ func (m *HasPrefixMatcher) DescribeFailure(v any) string {
 	return fmt.Sprintf("value %v, doest not have the prefix %s", v, m.Prefix)
 }
 
-func (m *HasPrefixMatcher) OnMockServed() {
+func (m *HasPrefixMatcher) OnMockServed() error {
+	return nil
 }
 
 // ToHavePrefix returns true if the matcher argument starts with the given prefix.

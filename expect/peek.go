@@ -22,8 +22,8 @@ func (m *PeekMatcher) DescribeFailure(v any) string {
 	return m.Matcher.DescribeFailure(v)
 }
 
-func (m *PeekMatcher) OnMockServed() {
-	m.Matcher.OnMockServed()
+func (m *PeekMatcher) OnMockServed() error {
+	return m.Matcher.OnMockServed()
 }
 
 // Peek will return the result of the given matcher, after executing the provided function.

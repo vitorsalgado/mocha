@@ -54,7 +54,8 @@ func (m *ContainsMatcher) DescribeFailure(value any) string {
 	return fmt.Sprintf("value %v is not contained on %v", m.Expected, value)
 }
 
-func (m *ContainsMatcher) OnMockServed() {
+func (m *ContainsMatcher) OnMockServed() error {
+	return nil
 }
 
 // ToContain returns true when the expected value is contained in the matcher argument.

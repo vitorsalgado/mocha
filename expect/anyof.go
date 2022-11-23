@@ -34,7 +34,7 @@ func (m *AnyOfMatcher) DescribeFailure(_ any) string {
 	return fmt.Sprintf("none of the given matchers \"%s\" matched.", strings.Join(b, ","))
 }
 
-func (m *AnyOfMatcher) OnMockServed() {}
+func (m *AnyOfMatcher) OnMockServed() error { return nil }
 
 // AnyOf matches when any of the given matchers returns true.
 // Example:

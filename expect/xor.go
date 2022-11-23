@@ -29,7 +29,8 @@ func (m *XORMatcher) DescribeFailure(_ any) string {
 	return fmt.Sprintf("matchers \"%s, %s\" did not meet xor condition", m.First.Name(), m.Second.Name())
 }
 
-func (m *XORMatcher) OnMockServed() {
+func (m *XORMatcher) OnMockServed() error {
+	return nil
 }
 
 // XOR is an exclusive or matcher

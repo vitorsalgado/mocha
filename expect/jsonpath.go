@@ -28,7 +28,8 @@ func (m *JSONPathMatcher) DescribeFailure(_ any) string {
 	return fmt.Sprintf("matcher %s applied on json field %s did not match", m.Matcher.Name(), m.Path)
 }
 
-func (m *JSONPathMatcher) OnMockServed() {
+func (m *JSONPathMatcher) OnMockServed() error {
+	return nil
 }
 
 // JSONPath applies the provided matcher to the JSON field value in the given path.

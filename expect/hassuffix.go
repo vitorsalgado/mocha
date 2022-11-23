@@ -21,7 +21,8 @@ func (m *HasSuffixMatcher) DescribeFailure(v any) string {
 	return fmt.Sprintf("value %v, doest not have the suffix %s", v, m.Suffix)
 }
 
-func (m *HasSuffixMatcher) OnMockServed() {
+func (m *HasSuffixMatcher) OnMockServed() error {
+	return nil
 }
 
 // ToHaveSuffix returns true when matcher argument ends with the given suffix.

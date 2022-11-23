@@ -1,4 +1,4 @@
-package mocha
+package expect
 
 import (
 	"testing"
@@ -8,11 +8,11 @@ import (
 
 func TestScenario(t *testing.T) {
 	t.Run("should init scenario as started", func(t *testing.T) {
-		assert.True(t, newScenario("test").HasStarted())
+		assert.True(t, NewScenarioState("test").HasStarted())
 	})
 
 	t.Run("should only create scenario if needed", func(t *testing.T) {
-		store := newScenarioStore()
+		store := NewScenarioStorage()
 		store.CreateNewIfNeeded("scenario-1")
 
 		s, ok := store.FetchByName("scenario-1")

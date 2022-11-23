@@ -19,7 +19,8 @@ func (m *EmptyMatcher) DescribeFailure(v any) string {
 	return fmt.Sprintf("%v is not empty", v)
 }
 
-func (m *EmptyMatcher) OnMockServed() {
+func (m *EmptyMatcher) OnMockServed() error {
+	return nil
 }
 
 // ToBeEmpty returns true if matcher value has zero length.

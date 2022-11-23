@@ -27,7 +27,8 @@ func (m *HasKeyMatcher) DescribeFailure(_ any) string {
 	return fmt.Sprintf("json doest not have a key on path: %s", m.Path)
 }
 
-func (m *HasKeyMatcher) OnMockServed() {
+func (m *HasKeyMatcher) OnMockServed() error {
+	return nil
 }
 
 // ToHaveKey returns true if the JSON key in the given path is present.

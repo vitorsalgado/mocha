@@ -20,9 +20,8 @@ func (m *LowerCaseMatcher) DescribeFailure(v any) string {
 	return m.Matcher.DescribeFailure(v)
 }
 
-func (m *LowerCaseMatcher) OnMockServed() {
-	// TODO implement me
-	panic("implement me")
+func (m *LowerCaseMatcher) OnMockServed() error {
+	return nil
 }
 
 // LowerCase lower case matcher string argument before submitting it to provided matcher.

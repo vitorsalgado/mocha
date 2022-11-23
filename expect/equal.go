@@ -27,7 +27,8 @@ func (m *EqualMatcher) DescribeFailure(v any) string {
 	)
 }
 
-func (m *EqualMatcher) OnMockServed() {
+func (m *EqualMatcher) OnMockServed() error {
+	return nil
 }
 
 // ToEqual returns true if matcher value is equal to the given parameter value.

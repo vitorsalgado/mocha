@@ -26,7 +26,8 @@ func (m *EqualFoldMatcher) DescribeFailure(v any) string {
 	)
 }
 
-func (m *EqualFoldMatcher) OnMockServed() {
+func (m *EqualFoldMatcher) OnMockServed() error {
+	return nil
 }
 
 // ToEqualFold returns true if expected value is equal to matcher value, ignoring case.

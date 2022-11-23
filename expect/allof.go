@@ -34,7 +34,8 @@ func (m *AllOfMatcher) DescribeFailure(_ any) string {
 	return fmt.Sprintf("one or more of the matchers \"%s\" did not match.", strings.Join(b, ","))
 }
 
-func (m *AllOfMatcher) OnMockServed() {
+func (m *AllOfMatcher) OnMockServed() error {
+	return nil
 }
 
 // AllOf matches when all the given matchers returns true.

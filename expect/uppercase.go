@@ -18,8 +18,8 @@ func (m *UpperCaseMatcher) DescribeFailure(v any) string {
 	return m.Matcher.DescribeFailure(v)
 }
 
-func (m *UpperCaseMatcher) OnMockServed() {
-	m.Matcher.OnMockServed()
+func (m *UpperCaseMatcher) OnMockServed() error {
+	return m.Matcher.OnMockServed()
 }
 
 // UpperCase upper case matcher string argument before submitting it to provided matcher.

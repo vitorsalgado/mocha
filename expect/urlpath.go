@@ -37,7 +37,8 @@ func (m *URLPathMatcher) DescribeFailure(_ any) string {
 	return fmt.Sprintf("url does not have the expected path %s", m.Expected)
 }
 
-func (m *URLPathMatcher) OnMockServed() {
+func (m *URLPathMatcher) OnMockServed() error {
+	return nil
 }
 
 // URLPath returns true if request URL path is equal to the expected path, ignoring case.

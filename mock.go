@@ -37,18 +37,6 @@ type (
 		// PostActions holds PostAction list to be executed after the Mock was matched and served.
 		PostActions []PostAction
 
-		// Repeat indicates how many times a mocked response should be served.
-		// If value is equal or lower than zero, it will not be considered.
-		Repeat int
-
-		ScenarioName string
-
-		ScenarioState string
-
-		ScenarioRequiredState string
-
-		ScenarioNewState string
-
 		mu   *sync.Mutex
 		hits int
 	}

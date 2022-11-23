@@ -22,7 +22,8 @@ func (m *LenMatcher) DescribeFailure(_ any) string {
 	return fmt.Sprintf("value does not have the expected length of %d", m.Length)
 }
 
-func (m *LenMatcher) OnMockServed() {
+func (m *LenMatcher) OnMockServed() error {
+	return nil
 }
 
 // ToHaveLen returns true when matcher argument length is equal to the expected value.

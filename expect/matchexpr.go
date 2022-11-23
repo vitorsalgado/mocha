@@ -38,7 +38,8 @@ func (m *RegExpMatcher[T]) DescribeFailure(_ any) string {
 	return "given regular expression dit not match"
 }
 
-func (m *RegExpMatcher[T]) OnMockServed() {
+func (m *RegExpMatcher[T]) OnMockServed() error {
+	return nil
 }
 
 // ToMatchExpr returns true then the given regular expression matches matcher argument.

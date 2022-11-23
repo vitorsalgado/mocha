@@ -18,8 +18,8 @@ func (m *TrimMatcher) DescribeFailure(v any) string {
 	return m.Matcher.DescribeFailure(v)
 }
 
-func (m *TrimMatcher) OnMockServed() {
-	m.Matcher.OnMockServed()
+func (m *TrimMatcher) OnMockServed() error {
+	return m.Matcher.OnMockServed()
 }
 
 // Trim trims' spaces of matcher argument before submitting it to the given matcher.

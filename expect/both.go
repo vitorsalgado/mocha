@@ -42,7 +42,8 @@ func (m *BothMatcher) DescribeFailure(_ any) string {
 	return fmt.Sprintf("one of the matchers \"%s, %s\" dit not match", m.First.Name(), m.Second.Name())
 }
 
-func (m *BothMatcher) OnMockServed() {
+func (m *BothMatcher) OnMockServed() error {
+	return nil
 }
 
 // And sets the second matcher.
