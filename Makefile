@@ -1,4 +1,5 @@
 MOCHA_NO_COLOR := "0"
+BREW_EXISTS := $(shell brew --version 2>/dev/null)
 
 .ONESHELL:
 .DEFAULT_GOAL := help
@@ -40,12 +41,14 @@ deps: ## check dependencies
 download: ## download dependencies
 	@go mod download
 
-prep: ## prepare local development environment
-	@echo "local tools"
-	@go install honnef.co/go/tools/cmd/staticcheck@latest
-	@npm i --no-package-lock
-
 .PHONY: docs
-docs: ## godocs
-	@echo navigate to: http://localhost:6060/pkg/github.com/vitorsalgado/mocha/
+docs: ## show godocs
+	@echo navigate to: http://localhost:6060/pkg/github.com/vitorsalgado/mocha/v3
 	@godoc -http=:6060
+
+init: ## prepare local development environment
+	@echo "tools"
+	@make -C tools
+ifdef YOUR_PROGRAM_VERSION
+	brew bundle
+endif
