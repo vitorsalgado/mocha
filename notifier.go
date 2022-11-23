@@ -4,15 +4,15 @@ import (
 	"fmt"
 )
 
-// T is based on testing.T and allow mocha components to log information and errors.
-type T interface {
+// TestingT is based on testing.T and allow mocha components to log information and errors.
+type TestingT interface {
 	Helper()
 	Logf(string, ...any)
 	Errorf(string, ...any)
 	FailNow()
 }
 
-// ConsoleNotifier implements core.T outputting logs to the stdout.
+// ConsoleNotifier implements core.TestingT outputting logs to the stdout.
 type ConsoleNotifier struct {
 }
 
@@ -32,8 +32,8 @@ func (n *ConsoleNotifier) FailNow() {
 func (n *ConsoleNotifier) Helper() {
 }
 
-// NewConsoleNotifier returns a core.T implementation that logs to the stdout.
+// NewConsoleNotifier returns a core.TestingT implementation that logs to the stdout.
 // FailNow() and Helper() will do nothing.
-func NewConsoleNotifier() T {
+func NewConsoleNotifier() TestingT {
 	return &ConsoleNotifier{}
 }

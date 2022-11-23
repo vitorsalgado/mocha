@@ -26,18 +26,23 @@ cov: ## run tests and generate coverage report
 	@go test -v ./... -coverpkg=./... -race -coverprofile=coverage.out
 	@go tool cover -html=coverage.out -o coverage.html
 
+.PHONY: vet
 vet: ## check go code
 	@go vet ./...
 
+.PHONY: fmt
 fmt: ## run gofmt in all project files
 	@go fmt ./...
 
+.PHONY: check
 check: vet ## check source code
 	@staticcheck ./...
 
+.PHONY: deps
 deps: ## check dependencies
 	@go mod verify
 
+.PHONY: download
 download: ## download dependencies
 	@go mod download
 
@@ -46,9 +51,10 @@ docs: ## show godocs
 	@echo navigate to: http://localhost:6060/pkg/github.com/vitorsalgado/mocha/v3
 	@godoc -http=:6060
 
+.PHONY: init
 init: ## prepare local development environment
 	@echo "tools"
 	@make -C tools
-ifdef YOUR_PROGRAM_VERSION
+ifdef BREW_EXISTS
 	brew bundle
 endif

@@ -20,7 +20,7 @@ type mockHandler struct {
 	bodyParsers []RequestBodyParser
 	params      params.P
 	evt         *hooks.Emitter
-	t           T
+	t           TestingT
 }
 
 func newHandler(
@@ -28,7 +28,7 @@ func newHandler(
 	bodyParsers []RequestBodyParser,
 	params params.P,
 	evt *hooks.Emitter,
-	t T,
+	t TestingT,
 ) *mockHandler {
 	return &mockHandler{mocks: storage, bodyParsers: bodyParsers, params: params, evt: evt, t: t}
 }

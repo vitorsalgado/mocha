@@ -110,7 +110,7 @@ func (s *Scoped) Clean() {
 }
 
 // AssertCalled reports an error if there are still pending mocks.
-func (s *Scoped) AssertCalled(t T) bool {
+func (s *Scoped) AssertCalled(t TestingT) bool {
 	t.Helper()
 
 	if s.IsPending() {
@@ -131,7 +131,7 @@ func (s *Scoped) AssertCalled(t T) bool {
 }
 
 // AssertNotCalled reports an error if any mock was called.
-func (s *Scoped) AssertNotCalled(t T) bool {
+func (s *Scoped) AssertNotCalled(t TestingT) bool {
 	t.Helper()
 
 	if !s.IsPending() {

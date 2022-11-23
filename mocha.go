@@ -24,7 +24,7 @@ type (
 		events  *hooks.Emitter
 		scopes  []*Scoped
 		mu      *sync.Mutex
-		t       T
+		t       TestingT
 	}
 
 	// Cleanable allows marking mocha instance to be closed on test cleanup.
@@ -35,7 +35,7 @@ type (
 
 // New creates a new Mocha mock server with the given configurations.
 // Parameter config accepts a Config or a Configurer implementation.
-func New(t T, config ...Config) *Mocha {
+func New(t TestingT, config ...Config) *Mocha {
 	cfg := configDefault
 	if len(config) > 0 {
 		cfg = config[0]
@@ -228,7 +228,7 @@ func (m *Mocha) CloseOnCleanup(t Cleanable) *Mocha {
 }
 
 // AssertCalled asserts that all mocks associated with this instance were called at least once.
-func (m *Mocha) AssertCalled(t T) bool {
+func (m *Mocha) AssertCalled(t TestingT) bool {
 	t.Helper()
 
 	result := true
@@ -245,7 +245,7 @@ func (m *Mocha) AssertCalled(t T) bool {
 }
 
 // AssertNotCalled asserts that all mocks associated with this instance were called at least once.
-func (m *Mocha) AssertNotCalled(t T) bool {
+func (m *Mocha) AssertNotCalled(t TestingT) bool {
 	t.Helper()
 
 	result := true
@@ -263,7 +263,7 @@ func (m *Mocha) AssertNotCalled(t T) bool {
 
 // AssertHits asserts that the sum of request hits for mocks
 // is equal to the given expected value.
-func (m *Mocha) AssertHits(t T, expected int) bool {
+func (m *Mocha) AssertHits(t TestingT, expected int) bool {
 	t.Helper()
 
 	hits := m.Hits()
