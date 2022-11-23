@@ -110,7 +110,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// run post actions.
-	paArgs := PostActionArgs{Request: r, Response: res, Mock: mock, Params: h.params}
+	paArgs := &PostActionArgs{Request: r, Response: res, Mock: mock, Params: h.params}
 	for i, action := range mock.PostActions {
 		err = action.Run(paArgs)
 		if err != nil {

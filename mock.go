@@ -52,7 +52,7 @@ type (
 	// PostAction defines the contract for an action that will be executed after serving a mocked HTTP response.
 	PostAction interface {
 		// Run runs the PostAction implementation.
-		Run(args PostActionArgs) error
+		Run(args *PostActionArgs) error
 	}
 
 	// ValueSelector defines a function that will be used to extract RequestInfo value and provide it to Matcher instances.

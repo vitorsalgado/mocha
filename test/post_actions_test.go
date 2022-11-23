@@ -18,7 +18,7 @@ type action struct {
 	mock.Mock
 }
 
-func (act *action) Run(a mocha.PostActionArgs) error {
+func (act *action) Run(a *mocha.PostActionArgs) error {
 	args := act.Called(a)
 	return args.Error(0)
 }
