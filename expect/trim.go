@@ -19,7 +19,7 @@ func (m *TrimMatcher) DescribeFailure(v any) string {
 }
 
 func (m *TrimMatcher) OnMockServed() {
-	m.OnMockServed()
+	m.Matcher.OnMockServed()
 }
 
 // Trim trims' spaces of matcher argument before submitting it to the given matcher.

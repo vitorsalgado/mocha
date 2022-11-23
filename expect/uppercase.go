@@ -7,7 +7,7 @@ type UpperCaseMatcher struct {
 }
 
 func (m *UpperCaseMatcher) Name() string {
-	return m.Name()
+	return m.Matcher.Name()
 }
 
 func (m *UpperCaseMatcher) Match(v any) (bool, error) {
@@ -15,11 +15,11 @@ func (m *UpperCaseMatcher) Match(v any) (bool, error) {
 }
 
 func (m *UpperCaseMatcher) DescribeFailure(v any) string {
-	return m.DescribeFailure(v)
+	return m.Matcher.DescribeFailure(v)
 }
 
 func (m *UpperCaseMatcher) OnMockServed() {
-	m.OnMockServed()
+	m.Matcher.OnMockServed()
 }
 
 // UpperCase upper case matcher string argument before submitting it to provided matcher.

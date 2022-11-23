@@ -9,8 +9,6 @@ var _ Matcher = (*AllOfMatcher)(nil)
 
 type AllOfMatcher struct {
 	Matchers []Matcher
-
-	failures []string
 }
 
 func (m *AllOfMatcher) Name() string {
