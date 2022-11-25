@@ -1,25 +1,23 @@
 package expect
 
+import "fmt"
+
 type PeekMatcher struct {
 	Matcher Matcher
 	Action  func(v any) error
 }
 
 func (m *PeekMatcher) Name() string {
-	return "Peek -> " + m.Matcher.Name()
+	return fmt.Sprintf("Peek(%s)", m.Matcher.Name())
 }
 
-func (m *PeekMatcher) Match(v any) (bool, error) {
+func (m *PeekMatcher) Match(v any) (Result, error) {
 	err := m.Action(v)
 	if err != nil {
-		return false, err
+		return mismatch(nil), err
 	}
 
 	return m.Matcher.Match(v)
-}
-
-func (m *PeekMatcher) DescribeFailure(v any) string {
-	return m.Matcher.DescribeFailure(v)
 }
 
 func (m *PeekMatcher) OnMockServed() error {

@@ -7,14 +7,12 @@ import (
 )
 
 func TestEqual(t *testing.T) {
-	t.Parallel()
-
 	t.Run("should compare expected string with nil value", func(t *testing.T) {
 		exp := "test"
 		res, err := ToEqual(&exp).Match(nil)
 
 		assert.Nil(t, err)
-		assert.False(t, res)
+		assert.False(t, res.OK)
 	})
 
 	t.Run("should compare two byte arrays", func(t *testing.T) {
@@ -22,6 +20,6 @@ func TestEqual(t *testing.T) {
 		res, err := ToEqual(value).Match(value)
 
 		assert.Nil(t, err)
-		assert.True(t, res)
+		assert.True(t, res.OK)
 	})
 }

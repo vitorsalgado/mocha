@@ -2,8 +2,6 @@ package expect
 
 import "fmt"
 
-var _ Matcher = (*EmptyMatcher)(nil)
-
 type EmptyMatcher struct {
 }
 
@@ -11,12 +9,18 @@ func (m *EmptyMatcher) Name() string {
 	return "Empty"
 }
 
-func (m *EmptyMatcher) Match(v any) (bool, error) {
-	return ToHaveLen(0).Match(v)
-}
+func (m *EmptyMatcher) Match(v any) (Result, error) {
+	result, err := ToHaveLen(0).Match(v)
+	if err != nil {
+		return Result{}, err
+	}
 
-func (m *EmptyMatcher) DescribeFailure(v any) string {
-	return fmt.Sprintf("%v is not empty", v)
+	return Result{
+		OK: result.OK,
+		DescribeFailure: func() string {
+			return fmt.Sprintf("%s %s %s", hint(m.Name()), _separator, v)
+		},
+	}, nil
 }
 
 func (m *EmptyMatcher) OnMockServed() error {

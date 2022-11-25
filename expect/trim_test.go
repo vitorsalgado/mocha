@@ -10,5 +10,5 @@ func TestTrim(t *testing.T) {
 	result, err := Trim(ToEqual("test")).Match("  test  ")
 
 	assert.Nil(t, err)
-	assert.True(t, result)
+	assert.True(t, result.OK)
 }

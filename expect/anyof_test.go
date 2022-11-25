@@ -15,7 +15,7 @@ func TestAnyOf(t *testing.T) {
 			ToContain("qa")).
 			Match("test")
 		assert.Nil(t, err)
-		assert.True(t, result)
+		assert.True(t, result.OK)
 	})
 
 	t.Run("should return false if all of the given matchers returns false", func(t *testing.T) {
@@ -26,10 +26,13 @@ func TestAnyOf(t *testing.T) {
 			ToContain("dev")).
 			Match("test")
 		assert.Nil(t, err)
-		assert.False(t, result)
+		assert.False(t, result.OK)
 	})
 
 	t.Run("mismatch description is not empty", func(t *testing.T) {
-		assert.NotEmpty(t, AnyOf().DescribeFailure("value"))
+		result, err := AnyOf().Match("")
+
+		assert.NoError(t, err)
+		assert.NotEmpty(t, result.DescribeFailure())
 	})
 }

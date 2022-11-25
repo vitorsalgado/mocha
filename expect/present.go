@@ -12,25 +12,24 @@ func (m *BePresentMatcher) Name() string {
 	return "Present"
 }
 
-func (m *BePresentMatcher) Match(v any) (bool, error) {
+func (m *BePresentMatcher) Match(v any) (Result, error) {
 	if v == nil {
-		return false, nil
+		return Result{}, nil
 	}
 
 	val := reflect.ValueOf(v)
+	message := func() string {
+		return fmt.Sprintf("%s %v", hint(m.Name()), v)
+	}
 
 	switch val.Kind() {
 	case reflect.String, reflect.Array, reflect.Slice, reflect.Map, reflect.Struct, reflect.Interface:
-		return !val.IsZero(), nil
+		return Result{OK: !val.IsZero(), DescribeFailure: message}, nil
 	case reflect.Pointer:
-		return !val.IsNil(), nil
+		return Result{OK: !val.IsNil(), DescribeFailure: message}, nil
 	}
 
-	return true, nil
-}
-
-func (m *BePresentMatcher) DescribeFailure(v any) string {
-	return fmt.Sprintf("%v is not present", v)
+	return Result{OK: true, DescribeFailure: message}, nil
 }
 
 func (m *BePresentMatcher) OnMockServed() error {

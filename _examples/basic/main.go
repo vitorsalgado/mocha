@@ -25,6 +25,8 @@ func main() {
 		Get(expect.URLPath("/test")).
 		Header(headerx.Accept,
 			expect.ToContain(mimetypex.TextHTML)).
+		Header(headerx.ContentType, expect.ToEqual("test")).
+		Header("any", expect.AllOf(expect.ToContain("test"), expect.ToEqualFold("dev"))).
 		Reply(reply.OK().
 			BodyString("hello world").
 			Header("x-basic", "true")))

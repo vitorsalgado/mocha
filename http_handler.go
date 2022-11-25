@@ -37,13 +37,15 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	er := hooks.FromRequest(r)
 
-	h.evt.Emit(hooks.OnRequest{Request: er, StartedAt: start})
-
 	parsedBody, err := parseRequestBody(r, h.bodyParsers)
 	if err != nil {
+		h.evt.Emit(hooks.OnRequest{Request: er, StartedAt: start})
 		respondError(w, r, h.evt, err)
 		return
 	}
+
+	er.Body = parsedBody
+	h.evt.Emit(hooks.OnRequest{Request: er, StartedAt: start})
 
 	// match current request with all eligible stored matchers in order to find one mock.
 	info := &expect.RequestInfo{Request: r, ParsedBody: parsedBody}
@@ -135,7 +137,7 @@ func respondNonMatched(w http.ResponseWriter, r *http.Request, result *findResul
 
 	for _, detail := range result.MismatchDetails {
 		e.Result.Details = append(e.Result.Details,
-			hooks.ResultDetail{Name: detail.Name, Description: detail.Description, Target: detail.Target})
+			hooks.ResultDetail{Name: detail.Name, Description: detail.Desc, Target: detail.Target})
 	}
 
 	evt.Emit(e)
@@ -152,7 +154,7 @@ func respondNonMatched(w http.ResponseWriter, r *http.Request, result *findResul
 
 	for _, detail := range result.MismatchDetails {
 		builder.WriteString(fmt.Sprintf("%s, reason=%s, applied-to=%s\n",
-			detail.Name, detail.Description, detail.Target))
+			detail.Name, detail.Desc, detail.Target))
 	}
 
 	w.Header().Add(headerx.ContentType, mimetypex.TextPlain)

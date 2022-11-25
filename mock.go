@@ -1,7 +1,6 @@
 package mocha
 
 import (
-	"fmt"
 	"net/http"
 	"sync"
 
@@ -87,15 +86,16 @@ type (
 		// Weight for the Matcher. It helps determine the closest match.
 		Weight int
 
-		// IsMatch indicates whether it matched or not.
-		IsMatch bool
+		// OK indicates whether it matched or not.
+		OK bool
 	}
 
 	// mismatchDetail gives more context about why a matcher did not match.
 	mismatchDetail struct {
-		Name        string
-		Target      string
-		Description string
+		Name   string
+		Target string
+		Desc   string
+		Err    error
 	}
 )
 
@@ -160,50 +160,50 @@ func (m *Mock) Disable() {
 	m.Enabled = false
 }
 
-// matches checks if current Mock matches against a list of expectations.
+// requestMatches checks if current Mock matches against a list of expectations.
 // Will iterate through all expectations even if it doesn't match early.
-func (m *Mock) matches(ri *expect.RequestInfo, expectations []Expectation) (matchResult, error) {
+func (m *Mock) requestMatches(ri *expect.RequestInfo, expectations []Expectation) *matchResult {
 	w := 0
-	hasMatched := true
+	ok := true
 	details := make([]mismatchDetail, 0)
 
 	for _, exp := range expectations {
-		matched, detail, err := matches(exp, ri)
+		val := exp.ValueSelector(ri)
+		result, err := matches(exp, val)
 
-		// fail fast if an error occurs
 		if err != nil {
-			return matchResult{IsMatch: false, Weight: w},
-				fmt.Errorf("matcher %s returned an error=%v", exp.Target, err)
+			ok = false
+			details = append(details, mismatchDetail{
+				Name:   exp.Matcher.Name(),
+				Target: exp.Target,
+				Desc:   err.Error(),
+				Err:    err,
+			})
+
+			continue
 		}
 
-		if !matched {
-			details = append(details, detail)
-			hasMatched = matched
+		if result.OK {
+			w += int(exp.Weight)
+		} else {
+			ok = false
+			details = append(details, mismatchDetail{
+				Name:   exp.Matcher.Name(),
+				Target: exp.Target,
+				Desc:   result.DescribeFailure(),
+			})
 		}
-
-		w += int(exp.Weight)
 	}
 
-	return matchResult{IsMatch: hasMatched, Weight: w, MismatchDetails: details}, nil
+	return &matchResult{OK: ok, Weight: w, MismatchDetails: details}
 }
 
-func matches(e Expectation, params *expect.RequestInfo) (bool, mismatchDetail, error) {
-	val := e.ValueSelector(params)
-	res, err := e.Matcher.Match(val)
+func matches(e Expectation, value any) (expect.Result, error) {
+	res, err := e.Matcher.Match(value)
 
 	if err != nil {
-		return false,
-			mismatchDetail{Name: e.Matcher.Name(), Target: e.Target},
-			err
+		return expect.Result{}, err
 	}
 
-	if !res {
-		return res, mismatchDetail{
-			Name:        e.Matcher.Name(),
-			Target:      e.Target,
-			Description: e.Matcher.DescribeFailure(val),
-		}, err
-	}
-
-	return res, mismatchDetail{}, err
+	return res, nil
 }

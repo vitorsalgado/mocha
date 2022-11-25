@@ -8,33 +8,50 @@ import (
 
 type URLPathMatcher struct {
 	Expected string
+
+	u string
 }
 
 func (m *URLPathMatcher) Name() string {
 	return "URLPath"
 }
 
-func (m *URLPathMatcher) Match(v any) (bool, error) {
+func (m *URLPathMatcher) Match(v any) (Result, error) {
+	message := func() string {
+		return fmt.Sprintf(
+			"%s %s %s",
+			hint(m.Name(), printExpected(m.Expected)),
+			_separator,
+			printReceived(m.u),
+		)
+	}
+
 	switch e := v.(type) {
 	case *url.URL:
-		return strings.EqualFold(m.Expected, e.Path), nil
+		m.u = e.Path
+		return Result{
+			OK:              strings.EqualFold(m.Expected, e.Path),
+			DescribeFailure: message,
+		}, nil
 	case url.URL:
-		return strings.EqualFold(m.Expected, e.Path), nil
+		m.u = e.Path
+		return Result{
+			OK:              strings.EqualFold(m.Expected, e.Path),
+			DescribeFailure: message,
+		}, nil
 	case string:
 		u, err := url.Parse(e)
 		if err != nil {
-			return false, err
+			return Result{}, err
 		}
 
-		return strings.EqualFold(m.Expected, u.Path), nil
+		m.u = u.Path
+
+		return Result{OK: strings.EqualFold(m.Expected, u.Path), DescribeFailure: message}, nil
 
 	default:
 		panic("URLPath matcher only accepts the types: *url.URL | url.URL | string")
 	}
-}
-
-func (m *URLPathMatcher) DescribeFailure(_ any) string {
-	return fmt.Sprintf("url does not have the expected path %s", m.Expected)
 }
 
 func (m *URLPathMatcher) OnMockServed() error {

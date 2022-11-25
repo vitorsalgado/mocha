@@ -8,30 +8,28 @@ import (
 )
 
 func TestEither(t *testing.T) {
-	t.Parallel()
-
 	t.Run("should return true when only left matcher evaluates to true", func(t *testing.T) {
 		result, err := Either(ToEqual("test")).Or(ToContain("qa")).Match("test")
 		assert.Nil(t, err)
-		assert.True(t, result)
+		assert.True(t, result.OK)
 	})
 
 	t.Run("should return true when only right matcher evaluates to true", func(t *testing.T) {
 		result, err := Either(ToEqual("qa")).Or(ToContain("tes")).Match("test")
 		assert.Nil(t, err)
-		assert.True(t, result)
+		assert.True(t, result.OK)
 	})
 
 	t.Run("should return true when both matchers evaluates to true", func(t *testing.T) {
 		result, err := Either(ToEqual("test")).Or(ToContain("te")).Match("test")
 		assert.Nil(t, err)
-		assert.True(t, result)
+		assert.True(t, result.OK)
 	})
 
 	t.Run("should return false when both evaluates to false", func(t *testing.T) {
 		result, err := Either(ToEqual("dev")).Or(ToContain("qa")).Match("test")
 		assert.Nil(t, err)
-		assert.False(t, result)
+		assert.False(t, result.OK)
 	})
 
 	t.Run("should return false when matchers throws errors", func(t *testing.T) {
@@ -43,6 +41,6 @@ func TestEither(t *testing.T) {
 			Match("test")
 
 		assert.NotNil(t, err)
-		assert.False(t, result)
+		assert.False(t, result.OK)
 	})
 }

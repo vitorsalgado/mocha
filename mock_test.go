@@ -71,123 +71,112 @@ func TestMock_Matches(t *testing.T) {
 
 	t.Run("should match when generic type is known and matcher returns true without errors", func(t *testing.T) {
 		// any
-		res, err := m.matches(params, []Expectation{{
+		res := m.requestMatches(params, []Expectation{{
 			Matcher: expect.ToEqual("test"),
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return "test"
 			},
 		}})
-		assert.True(t, res.IsMatch)
-		assert.Nil(t, err)
+		assert.True(t, res.OK)
 
 		// string
-		res, err = m.matches(params, []Expectation{{
+		res = m.requestMatches(params, []Expectation{{
 			Matcher: expect.ToEqual("test"),
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return "test"
 			},
 		}})
-		assert.True(t, res.IsMatch)
-		assert.Nil(t, err)
+		assert.True(t, res.OK)
 
 		// float64
-		res, err = m.matches(params, []Expectation{{
+		res = m.requestMatches(params, []Expectation{{
 			Matcher: expect.ToEqual(10.0),
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return 10.0
 			},
 		}})
-		assert.True(t, res.IsMatch)
-		assert.Nil(t, err)
+		assert.True(t, res.OK)
 
 		// bool
-		res, err = m.matches(params, []Expectation{{
+		res = m.requestMatches(params, []Expectation{{
 			Matcher: expect.ToEqual(true),
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return true
 			},
 		}})
-		assert.True(t, res.IsMatch)
-		assert.Nil(t, err)
+		assert.True(t, res.OK)
 
 		// map[string]any
-		res, err = m.matches(params, []Expectation{{
+		res = m.requestMatches(params, []Expectation{{
 			Matcher: expect.ToEqual(map[string]any{"key": "value"}),
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return map[string]any{"key": "value"}
 			},
 		}})
-		assert.True(t, res.IsMatch)
-		assert.Nil(t, err)
+		assert.True(t, res.OK)
 
 		// map[string]any
-		res, err = m.matches(params, []Expectation{{
+		res = m.requestMatches(params, []Expectation{{
 			Matcher: expect.ToEqual(map[string][]string{"key": {"value1", "value2"}}),
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return map[string][]string{"key": {"value1", "value2"}}
 			},
 		}})
-		assert.True(t, res.IsMatch)
-		assert.Nil(t, err)
+		assert.True(t, res.OK)
 
 		// []any]
-		res, err = m.matches(params, []Expectation{{
+		res = m.requestMatches(params, []Expectation{{
 			Matcher: expect.ToEqual([]any{"test"}),
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return []any{"test"}
 			},
 		}})
-		assert.True(t, res.IsMatch)
-		assert.Nil(t, err)
+		assert.True(t, res.OK)
 
 		// url.URL
 		u, _ := url.Parse("http://localhost:8080")
-		res, err = m.matches(params, []Expectation{{
+		res = m.requestMatches(params, []Expectation{{
 			Matcher: expect.ToEqual(*u),
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return *u
 			},
 		}})
-		assert.True(t, res.IsMatch)
-		assert.Nil(t, err)
+		assert.True(t, res.OK)
 
 		// url.Value
-		res, err = m.matches(params, []Expectation{{
+		res = m.requestMatches(params, []Expectation{{
 			Matcher: expect.ToEqual(url.Values{}),
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return url.Values{}
 			},
 		}})
-		assert.True(t, res.IsMatch)
-		assert.Nil(t, err)
+		assert.True(t, res.OK)
 
 		// http.Request
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
-		res, err = m.matches(params, []Expectation{{
+		res = m.requestMatches(params, []Expectation{{
 			Matcher: expect.ToEqual(req),
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return req
 			},
 		}})
-		assert.True(t, res.IsMatch)
-		assert.Nil(t, err)
+		assert.True(t, res.OK)
 	})
 
 	t.Run("should return not matched result when one of expectations returns false", func(t *testing.T) {
 		// string
-		res, err := m.matches(params, []Expectation{{
+		res := m.requestMatches(params, []Expectation{{
 			Matcher: expect.ToEqual("test"),
 			ValueSelector: func(r *expect.RequestInfo) any {
 				return "dev"
 			},
 		}})
-		assert.False(t, res.IsMatch)
-		assert.Nil(t, err)
+		assert.False(t, res.OK)
 	})
 
 	t.Run("should return not matched and error when one of expectations returns error", func(t *testing.T) {
 		// string
-		res, err := m.matches(params, []Expectation{{
+		res := m.requestMatches(params, []Expectation{{
 			Matcher: expect.Func(func(_ any) (bool, error) {
 				return false, fmt.Errorf("fail")
 			}),
@@ -195,13 +184,12 @@ func TestMock_Matches(t *testing.T) {
 				return "dev"
 			},
 		}})
-		assert.False(t, res.IsMatch)
-		assert.NotNil(t, err)
+		assert.False(t, res.OK)
 	})
 
 	t.Run("should return the sum of the matchers weight when it matches", func(t *testing.T) {
 		// any
-		res, err := m.matches(params, []Expectation{
+		res := m.requestMatches(params, []Expectation{
 			{
 				Matcher: expect.ToEqual("test"),
 				ValueSelector: func(r *expect.RequestInfo) any {
@@ -224,14 +212,13 @@ func TestMock_Matches(t *testing.T) {
 				Weight: 2,
 			},
 		})
-		assert.True(t, res.IsMatch)
-		assert.Nil(t, err)
+		assert.True(t, res.OK)
 		assert.Equal(t, 5, res.Weight)
 	})
 
 	t.Run("should return the sum of the matchers weight when one of then doesnt matches", func(t *testing.T) {
 		// any
-		res, err := m.matches(params, []Expectation{
+		res := m.requestMatches(params, []Expectation{
 			{
 				Matcher: expect.ToEqual("test"),
 				ValueSelector: func(r *expect.RequestInfo) any {
@@ -254,8 +241,7 @@ func TestMock_Matches(t *testing.T) {
 				Weight: 2,
 			},
 		})
-		assert.False(t, res.IsMatch)
-		assert.Nil(t, err)
-		assert.Equal(t, 5, res.Weight)
+		assert.False(t, res.OK)
+		assert.Equal(t, 4, res.Weight)
 	})
 }

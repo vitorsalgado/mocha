@@ -9,9 +9,9 @@ import (
 
 type LogVerbosity int
 
-// Log verbosity enum
 const (
 	LogSilently LogVerbosity = iota
+	LogInfo
 	LogVerbose
 )
 

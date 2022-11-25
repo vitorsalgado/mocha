@@ -2,6 +2,7 @@ package hooks
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"reflect"
@@ -18,6 +19,7 @@ type (
 		RequestURI string
 		Host       string
 		Header     http.Header
+		Body       any
 	}
 
 	// Response defines HTTP Response information to be logged.
@@ -93,6 +95,10 @@ type (
 		mu       sync.Mutex
 	}
 )
+
+func (r *Request) FullURL() string {
+	return fmt.Sprintf("%s%s", r.Host, r.RequestURI)
+}
 
 // NewEmitter creates an Emitter instance.
 func NewEmitter(ctx context.Context) *Emitter {

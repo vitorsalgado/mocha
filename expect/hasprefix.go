@@ -13,12 +13,20 @@ func (m *HasPrefixMatcher) Name() string {
 	return "HasPrefix"
 }
 
-func (m *HasPrefixMatcher) Match(v any) (bool, error) {
-	return strings.HasPrefix(v.(string), m.Prefix), nil
-}
+func (m *HasPrefixMatcher) Match(v any) (Result, error) {
+	txt := v.(string)
 
-func (m *HasPrefixMatcher) DescribeFailure(v any) string {
-	return fmt.Sprintf("value %v, doest not have the prefix %s", v, m.Prefix)
+	return Result{
+		OK: strings.HasPrefix(txt, m.Prefix),
+		DescribeFailure: func() string {
+			return fmt.Sprintf(
+				"%s %s %s",
+				hint(m.Name(), printExpected(m.Prefix)),
+				_separator,
+				txt,
+			)
+		},
+	}, nil
 }
 
 func (m *HasPrefixMatcher) OnMockServed() error {

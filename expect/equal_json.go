@@ -4,9 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
-
-	"github.com/vitorsalgado/mocha/v3/internal/colorize"
-	"github.com/vitorsalgado/mocha/v3/internal/misc"
 )
 
 type EqualJSONMatcher struct {
@@ -17,26 +14,28 @@ func (m *EqualJSONMatcher) Name() string {
 	return "EqualJSON"
 }
 
-func (m *EqualJSONMatcher) Match(v any) (bool, error) {
+func (m *EqualJSONMatcher) Match(v any) (Result, error) {
 	expectedAsJson, err := json.Marshal(m.Expected)
 	if err != nil {
-		return false, err
+		return mismatch(nil), err
 	}
 
 	var exp any
 	err = json.Unmarshal(expectedAsJson, &exp)
 	if err != nil {
-		return false, err
+		return mismatch(nil), err
 	}
 
-	return reflect.DeepEqual(v, exp), nil
-}
-
-func (m *EqualJSONMatcher) DescribeFailure(v any) string {
-	return fmt.Sprintf("%s\n%s",
-		fmt.Sprintf("expected: %v", colorize.Green(misc.Stringify(m.Expected))),
-		fmt.Sprintf("got: %s", colorize.Yellow(misc.Stringify(v))),
-	)
+	return Result{
+		OK: reflect.DeepEqual(v, exp),
+		DescribeFailure: func() string {
+			return fmt.Sprintf("%s\nExpected:\n%s\nReceived:\n%s",
+				hint(m.Name()),
+				printExpected(m.Expected),
+				printReceived(v),
+			)
+		},
+	}, nil
 }
 
 func (m *EqualJSONMatcher) OnMockServed() error {

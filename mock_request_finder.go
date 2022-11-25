@@ -22,12 +22,9 @@ func findMockForRequest(storage storage, ri *expect.RequestInfo) (*findResult, e
 	var details = make([]mismatchDetail, 0)
 
 	for _, m := range mocks {
-		result, err := m.matches(ri, m.Expectations)
-		if err != nil {
-			return nil, err
-		}
+		result := m.requestMatches(ri, m.Expectations)
 
-		if result.IsMatch {
+		if result.OK {
 			return &findResult{Matches: true, Matched: m}, nil
 		}
 

@@ -15,21 +15,30 @@ func (m *JSONPathMatcher) Name() string {
 	return "JSONPath"
 }
 
-func (m *JSONPathMatcher) Match(v any) (bool, error) {
+func (m *JSONPathMatcher) Match(v any) (Result, error) {
 	value, err := jsonx.Reach(m.Path, v)
 	if err != nil || value == nil {
-		return false, err
+		return mismatch(nil), err
 	}
 
-	return m.Matcher.Match(value)
-}
+	r, err := m.Matcher.Match(value)
+	if err != nil {
+		return Result{}, err
+	}
 
-func (m *JSONPathMatcher) DescribeFailure(_ any) string {
-	return fmt.Sprintf("matcher %s applied on json field %s did not match", m.Matcher.Name(), m.Path)
+	return Result{OK: r.OK, DescribeFailure: func() string {
+		return fmt.Sprintf(
+			"%s %s %s %s",
+			hint(m.Name(), printExpected(m.Path)),
+			hint(m.Matcher.Name()),
+			_separator,
+			r.DescribeFailure(),
+		)
+	}}, nil
 }
 
 func (m *JSONPathMatcher) OnMockServed() error {
-	return nil
+	return m.Matcher.OnMockServed()
 }
 
 // JSONPath applies the provided matcher to the JSON field value in the given path.

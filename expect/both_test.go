@@ -8,30 +8,28 @@ import (
 )
 
 func TestBothMatcher(t *testing.T) {
-	t.Parallel()
-
 	t.Run("should return false when only left matcher evaluates to true", func(t *testing.T) {
 		result, err := Both(ToEqual("test")).And(ToContain("qa")).Match("test")
 		assert.Nil(t, err)
-		assert.False(t, result)
+		assert.False(t, result.OK)
 	})
 
 	t.Run("should return false when only right matcher evaluates to true", func(t *testing.T) {
 		result, err := Both(ToEqual("qa")).And(ToContain("tes")).Match("test")
 		assert.Nil(t, err)
-		assert.False(t, result)
+		assert.False(t, result.OK)
 	})
 
 	t.Run("should return true when both matchers evaluates to true", func(t *testing.T) {
 		result, err := Both(ToEqual("test")).And(ToContain("te")).Match("test")
 		assert.Nil(t, err)
-		assert.True(t, result)
+		assert.True(t, result.OK)
 	})
 
 	t.Run("should return false when only left matcher evaluates to true", func(t *testing.T) {
 		result, err := Both(ToEqual("test")).And(ToContain("qa")).Match("test")
 		assert.Nil(t, err)
-		assert.False(t, result)
+		assert.False(t, result.OK)
 	})
 
 	t.Run("should return false when matchers throws errors", func(t *testing.T) {
@@ -42,6 +40,6 @@ func TestBothMatcher(t *testing.T) {
 			And(ToContain("qa")).Match("test")
 
 		assert.NotNil(t, err)
-		assert.False(t, result)
+		assert.False(t, result.OK)
 	})
 }

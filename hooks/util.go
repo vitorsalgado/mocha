@@ -1,7 +1,6 @@
 package hooks
 
 import (
-	"fmt"
 	"net/http"
 )
 
@@ -14,8 +13,4 @@ func FromRequest(r *http.Request) Request {
 		Host:       r.Host,
 		Header:     r.Header.Clone(),
 	}
-}
-
-func fullURL(host, uri string) string {
-	return fmt.Sprintf("%s%s", host, uri)
 }

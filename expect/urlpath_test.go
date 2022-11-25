@@ -14,14 +14,14 @@ func TestUrlPath(t *testing.T) {
 		result, err := URLPath("/test/hello").Match(*u)
 
 		assert.Nil(t, err)
-		assert.True(t, result)
+		assert.True(t, result.OK)
 	})
 
 	t.Run("should accept a pointer", func(t *testing.T) {
 		result, err := URLPath("/test/hello").Match(u)
 
 		assert.Nil(t, err)
-		assert.True(t, result)
+		assert.True(t, result.OK)
 	})
 
 	t.Run("should accept a string", func(t *testing.T) {
@@ -30,7 +30,7 @@ func TestUrlPath(t *testing.T) {
 		result, err := URLPath("/test/hello").Match(su)
 
 		assert.Nil(t, err)
-		assert.True(t, result)
+		assert.True(t, result.OK)
 	})
 
 	t.Run("should panic when providing a type that is not handled by URLPath", func(t *testing.T) {
@@ -43,6 +43,6 @@ func TestUrlPath(t *testing.T) {
 		result, err := URLPath("/test/bye").Match(*u)
 
 		assert.Nil(t, err)
-		assert.False(t, result)
+		assert.False(t, result.OK)
 	})
 }

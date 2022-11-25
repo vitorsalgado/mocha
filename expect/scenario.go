@@ -1,5 +1,9 @@
 package expect
 
+import (
+	"fmt"
+)
+
 const ScenarioStateStarted = "started"
 
 type ScenarioState struct {
@@ -58,28 +62,33 @@ type ScenarioMatcher struct {
 }
 
 func (m *ScenarioMatcher) Name() string {
-	return "ScenarioState"
+	return "Scenario"
 }
 
-func (m *ScenarioMatcher) Match(_ any) (bool, error) {
+func (m *ScenarioMatcher) Match(_ any) (Result, error) {
 	if m.RequiredState == ScenarioStateStarted {
 		m.Store.CreateNewIfNeeded(m.Nm)
 	}
 
 	scn, ok := m.Store.FetchByName(m.Nm)
 	if !ok {
-		return true, nil
+		return Result{OK: true}, nil
+	}
+
+	message := func() string {
+		return fmt.Sprintf(
+			"%s %s %s",
+			hint(m.Name(), printExpected(m.RequiredState)),
+			_separator,
+			printReceived(scn.State),
+		)
 	}
 
 	if scn.State == m.RequiredState {
-		return true, nil
+		return Result{OK: true}, nil
 	}
 
-	return false, nil
-}
-
-func (m *ScenarioMatcher) DescribeFailure(_ any) string {
-	return ""
+	return Result{OK: false, DescribeFailure: message}, nil
 }
 
 func (m *ScenarioMatcher) OnMockServed() error {

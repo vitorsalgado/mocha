@@ -13,12 +13,20 @@ func (m *HasSuffixMatcher) Name() string {
 	return "HasSuffix"
 }
 
-func (m *HasSuffixMatcher) Match(v any) (bool, error) {
-	return strings.HasSuffix(v.(string), m.Suffix), nil
-}
+func (m *HasSuffixMatcher) Match(v any) (Result, error) {
+	txt := v.(string)
 
-func (m *HasSuffixMatcher) DescribeFailure(v any) string {
-	return fmt.Sprintf("value %v, doest not have the suffix %s", v, m.Suffix)
+	return Result{
+		OK: strings.HasSuffix(txt, m.Suffix),
+		DescribeFailure: func() string {
+			return fmt.Sprintf(
+				"%s %s %s",
+				hint(m.Name(), printExpected(m.Suffix)),
+				_separator,
+				txt,
+			)
+		},
+	}, nil
 }
 
 func (m *HasSuffixMatcher) OnMockServed() error {

@@ -11,22 +11,40 @@ func (m *XORMatcher) Name() string {
 	return "XOR"
 }
 
-func (m *XORMatcher) Match(v any) (bool, error) {
+func (m *XORMatcher) Match(v any) (Result, error) {
 	a, err := m.First.Match(v)
 	if err != nil {
-		return false, err
+		return Result{}, err
 	}
 
 	b, err := m.Second.Match(v)
 	if err != nil {
-		return false, err
+		return Result{}, err
 	}
 
-	return a != b, nil
-}
+	msg := func() string {
+		desc := ""
 
-func (m *XORMatcher) DescribeFailure(_ any) string {
-	return fmt.Sprintf("matchers \"%s, %s\" did not meet xor condition", m.First.Name(), m.Second.Name())
+		if !a.OK {
+			desc = a.DescribeFailure()
+		}
+
+		if !b.OK {
+			desc += "\n\n"
+			desc += b.DescribeFailure()
+		}
+
+		return fmt.Sprintf(
+			"%s %s %s",
+			hint(m.Name(), m.First.Name(), m.Second.Name()),
+			_separator,
+			desc)
+	}
+
+	return Result{
+		OK:              a.OK != b.OK,
+		DescribeFailure: msg,
+	}, nil
 }
 
 func (m *XORMatcher) OnMockServed() error {

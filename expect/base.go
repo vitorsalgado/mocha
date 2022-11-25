@@ -2,6 +2,10 @@ package expect
 
 import "net/http"
 
+const (
+	_separator = "=>"
+)
+
 // RequestInfo implements HTTP request information to be passed to each Matcher.
 type RequestInfo struct {
 	// Request is the actual http.Request.
@@ -18,24 +22,23 @@ type Matcher interface {
 	Name() string
 
 	// Match is the function that does the actual matching logic.
-	Match(value any) (bool, error)
-
-	// DescribeFailure gives more context of why the Matcher failed to match a given value.
-	DescribeFailure(value any) string
+	Match(value any) (Result, error)
 
 	OnMockServed() error
+}
+
+type Result struct {
+	OK              bool
+	DescribeFailure func() string
 }
 
 type ComposableMatcher struct {
 	M Matcher
 }
 
-func (m *ComposableMatcher) Name() string              { return m.M.Name() }
-func (m *ComposableMatcher) Match(v any) (bool, error) { return m.M.Match(v) }
-func (m *ComposableMatcher) OnMockServed() error       { return nil }
-func (m *ComposableMatcher) DescribeFailure(v any) string {
-	return m.M.DescribeFailure(v)
-}
+func (m *ComposableMatcher) Name() string                { return m.M.Name() }
+func (m *ComposableMatcher) Match(v any) (Result, error) { return m.M.Match(v) }
+func (m *ComposableMatcher) OnMockServed() error         { return m.M.OnMockServed() }
 
 // And compose the current Matcher with another one using the "and" operator.
 func (m *ComposableMatcher) And(and Matcher) *ComposableMatcher {
@@ -54,4 +57,8 @@ func (m *ComposableMatcher) Xor(and Matcher) *ComposableMatcher {
 
 func Compose(base Matcher) *ComposableMatcher {
 	return &ComposableMatcher{M: base}
+}
+
+func mismatch(failureMessageFunc func() string) Result {
+	return Result{OK: false, DescribeFailure: failureMessageFunc}
 }

@@ -13,13 +13,15 @@ func (m *LenMatcher) Name() string {
 	return "Len"
 }
 
-func (m *LenMatcher) Match(v any) (bool, error) {
+func (m *LenMatcher) Match(v any) (Result, error) {
 	value := reflect.ValueOf(v)
-	return value.Len() == m.Length, nil
-}
 
-func (m *LenMatcher) DescribeFailure(_ any) string {
-	return fmt.Sprintf("value does not have the expected length of %d", m.Length)
+	return Result{
+		OK: value.Len() == m.Length,
+		DescribeFailure: func() string {
+			return fmt.Sprintf("%s", hint(m.Name(), printExpected(m.Length)))
+		},
+	}, nil
 }
 
 func (m *LenMatcher) OnMockServed() error {

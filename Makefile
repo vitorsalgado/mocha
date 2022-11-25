@@ -1,4 +1,3 @@
-MOCHA_NO_COLOR := "0"
 BREW_EXISTS := $(shell brew --version 2>/dev/null)
 
 .ONESHELL:

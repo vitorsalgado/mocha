@@ -1,6 +1,8 @@
 package expect
 
-import "fmt"
+import (
+	"fmt"
+)
 
 type NotMatcher struct {
 	Matcher Matcher
@@ -10,13 +12,18 @@ func (m *NotMatcher) Name() string {
 	return "Not"
 }
 
-func (m *NotMatcher) Match(v any) (bool, error) {
+func (m *NotMatcher) Match(v any) (Result, error) {
 	result, err := m.Matcher.Match(v)
-	return !result, err
-}
-
-func (m *NotMatcher) DescribeFailure(_ any) string {
-	return fmt.Sprintf("matcher %s returned true", m.Matcher.Name())
+	return Result{
+		OK: !result.OK,
+		DescribeFailure: func() string {
+			return fmt.Sprintf(
+				"%s ! %s",
+				hint(m.Name(), m.Matcher.Name()),
+				result.DescribeFailure(),
+			)
+		},
+	}, err
 }
 
 func (m *NotMatcher) OnMockServed() error {

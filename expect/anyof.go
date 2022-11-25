@@ -5,8 +5,6 @@ import (
 	"strings"
 )
 
-var _ Matcher = (*AnyOfMatcher)(nil)
-
 type AnyOfMatcher struct {
 	Matchers []Matcher
 }
@@ -15,26 +13,53 @@ func (m *AnyOfMatcher) Name() string {
 	return "AnyOf"
 }
 
-func (m *AnyOfMatcher) Match(v any) (bool, error) {
+func (m *AnyOfMatcher) Match(v any) (Result, error) {
+	ok := false
+	errs := make([]string, 0)
+	failed := make([]string, 0)
+
 	for _, matcher := range m.Matchers {
-		if result, err := matcher.Match(v); result || err != nil {
-			return result, err
+		result, err := matcher.Match(v)
+		if err != nil {
+			ok = false
+			errs = append(errs, err.Error())
+			failed = append(failed, result.DescribeFailure())
+
+			continue
 		}
+
+		if !result.OK {
+			ok = false
+			failed = append(failed, result.DescribeFailure())
+
+			continue
+		}
+
+		ok = true
+		break
 	}
 
-	return false, nil
-}
-
-func (m *AnyOfMatcher) DescribeFailure(_ any) string {
-	b := make([]string, len(m.Matchers))
-	for i, matcher := range m.Matchers {
-		b[i] = matcher.Name()
+	describeFailure := func() string {
+		return fmt.Sprintf(
+			"%s\n%s",
+			hint(m.Name(), fmt.Sprintf("+%d", len(m.Matchers))),
+			indent(strings.Join(failed, "\n")),
+		)
 	}
 
-	return fmt.Sprintf("none of the given matchers \"%s\" matched.", strings.Join(b, ","))
+	if len(errs) > 0 {
+		return Result{
+			OK:              false,
+			DescribeFailure: describeFailure,
+		}, fmt.Errorf(strings.Join(errs, "\n"))
+	}
+
+	return Result{OK: ok, DescribeFailure: describeFailure}, nil
 }
 
-func (m *AnyOfMatcher) OnMockServed() error { return nil }
+func (m *AnyOfMatcher) OnMockServed() error {
+	return multiOnMockServed(m.Matchers...)
+}
 
 // AnyOf matches when any of the given matchers returns true.
 // Example:

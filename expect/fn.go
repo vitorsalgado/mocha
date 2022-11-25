@@ -10,12 +10,23 @@ func (m *FuncMatcher) Name() string {
 	return "Func"
 }
 
-func (m *FuncMatcher) Match(v any) (bool, error) {
-	return m.Func(v)
-}
+func (m *FuncMatcher) Match(v any) (Result, error) {
+	r, err := m.Func(v)
+	if err != nil {
+		return Result{}, err
+	}
 
-func (m *FuncMatcher) DescribeFailure(v any) string {
-	return fmt.Sprintf("custom matcher function did not match. value: %v", v)
+	return Result{
+		OK: r,
+		DescribeFailure: func() string {
+			return fmt.Sprintf(
+				"%s %s %v",
+				hint(m.Name()),
+				_separator,
+				v,
+			)
+		},
+	}, nil
 }
 
 func (m *FuncMatcher) OnMockServed() error {

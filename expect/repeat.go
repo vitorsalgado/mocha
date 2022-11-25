@@ -1,24 +1,28 @@
 package expect
 
 import (
+	"fmt"
 	"sync/atomic"
 )
 
 type RepeatMatcher struct {
-	Times int64
-	Hits  int64
+	Max  int64
+	Hits int64
 }
 
 func (m *RepeatMatcher) Name() string {
 	return "Repeat"
 }
 
-func (m *RepeatMatcher) Match(_ any) (bool, error) {
-	return m.Hits < m.Times, nil
-}
-
-func (m *RepeatMatcher) DescribeFailure(v any) string {
-	return ""
+func (m *RepeatMatcher) Match(_ any) (Result, error) {
+	return Result{OK: m.Hits < m.Max, DescribeFailure: func() string {
+		return fmt.Sprintf(
+			"%s %s %s",
+			hint(m.Name(), printExpected(m.Max)),
+			_separator,
+			printReceived(m.Hits),
+		)
+	}}, nil
 }
 
 func (m *RepeatMatcher) OnMockServed() error {
@@ -27,5 +31,5 @@ func (m *RepeatMatcher) OnMockServed() error {
 }
 
 func Repeat(times int64) Matcher {
-	return &RepeatMatcher{Times: times}
+	return &RepeatMatcher{Max: times}
 }

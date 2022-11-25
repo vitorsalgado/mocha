@@ -1,6 +1,9 @@
 package expect
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 type TrimMatcher struct {
 	Matcher Matcher
@@ -10,12 +13,22 @@ func (m *TrimMatcher) Name() string {
 	return "Trim"
 }
 
-func (m *TrimMatcher) Match(v any) (bool, error) {
-	return m.Matcher.Match(strings.TrimSpace(v.(string)))
-}
+func (m *TrimMatcher) Match(v any) (Result, error) {
+	txt := v.(string)
+	result, err := m.Matcher.Match(strings.TrimSpace(txt))
+	if err != nil {
+		return Result{}, err
+	}
 
-func (m *TrimMatcher) DescribeFailure(v any) string {
-	return m.Matcher.DescribeFailure(v)
+	return Result{
+		OK: result.OK,
+		DescribeFailure: func() string {
+			return fmt.Sprintf("%s %s",
+				hint(m.Name(), printExpected(txt)),
+				result.DescribeFailure(),
+			)
+		},
+	}, nil
 }
 
 func (m *TrimMatcher) OnMockServed() error {

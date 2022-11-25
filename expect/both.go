@@ -4,8 +4,6 @@ import (
 	"fmt"
 )
 
-var _ Matcher = (*BothMatcher)(nil)
-
 // BothMatcherBuilder is a builder for Both matcher.
 // Use .Both() function to create a new Both matcher.
 type BothMatcherBuilder struct {
@@ -27,23 +25,41 @@ func (m *BothMatcher) Name() string {
 	return "Both"
 }
 
-func (m *BothMatcher) Match(value any) (bool, error) {
+func (m *BothMatcher) Match(value any) (Result, error) {
 	r1, err := m.First.Match(value)
 	if err != nil {
-		return false, err
+		return Result{OK: false}, err
 	}
 
 	r2, err := m.Second.Match(value)
+	if err != nil {
+		return Result{OK: false}, err
+	}
 
-	return r1 && r2, err
-}
+	msg := func() string {
+		desc := ""
 
-func (m *BothMatcher) DescribeFailure(_ any) string {
-	return fmt.Sprintf("one of the matchers \"%s, %s\" dit not match", m.First.Name(), m.Second.Name())
+		if !r1.OK {
+			desc = r1.DescribeFailure()
+		}
+
+		if !r2.OK {
+			desc += "\n\n"
+			desc += r2.DescribeFailure()
+		}
+
+		return fmt.Sprintf(
+			"%s %s %s",
+			hint(m.Name(), m.First.Name(), m.Second.Name()),
+			_separator,
+			desc)
+	}
+
+	return Result{OK: r1.OK && r2.OK, DescribeFailure: msg}, nil
 }
 
 func (m *BothMatcher) OnMockServed() error {
-	return nil
+	return multiOnMockServed(m.First, m.Second)
 }
 
 // And sets the second matcher.

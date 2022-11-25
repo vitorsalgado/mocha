@@ -6,17 +6,13 @@ import (
 	"testing"
 )
 
-func TestMain(m *testing.M) {
+func TestStylize(t *testing.T) {
 	_ = os.Setenv(_noColorEnv, "1")
 
-	code := m.Run()
+	t.Cleanup(func() {
+		_ = os.Unsetenv(_noColorEnv)
+	})
 
-	_ = os.Unsetenv(_noColorEnv)
-
-	os.Exit(code)
-}
-
-func TestStylize(t *testing.T) {
 	fmt.Println(Black("black"))
 	fmt.Println(BlackBright("black bright"))
 	fmt.Println(Red("red"))

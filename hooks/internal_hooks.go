@@ -24,16 +24,17 @@ func NewInternalEvents(l Logger) *InternalEvents {
 }
 
 func (h *InternalEvents) OnRequest(e OnRequest) {
-	h.l.Logf("\n%s %s ---> %s %s\n%s %s\n\n%s:\n %s: %v\n",
+	h.l.Logf("\n%s %s ---> %s %s\n%s %s\n\n%s: %v\n%s: %v\n",
 		colorize.BlueBright(colorize.Bold("REQUEST RECEIVED")),
 		e.StartedAt.Format(time.RFC3339),
 		colorize.Blue(e.Request.Method),
 		colorize.Blue(e.Request.Path),
 		e.Request.Method,
-		fullURL(e.Request.Host, e.Request.RequestURI),
-		colorize.Blue("Request"),
+		e.Request.FullURL(),
 		colorize.Blue("Headers"),
 		e.Request.Header,
+		colorize.Blue("Body"),
+		e.Request.Body,
 	)
 }
 
@@ -44,7 +45,7 @@ func (h *InternalEvents) OnRequestMatched(e OnRequestMatch) {
 		colorize.Green(e.Request.Method),
 		colorize.Green(e.Request.Path),
 		e.Request.Method,
-		fullURL(e.Request.Host, e.Request.RequestURI),
+		e.Request.FullURL(),
 		colorize.Bold("Mock: "),
 		e.Mock.ID,
 		e.Mock.Name,
@@ -67,7 +68,7 @@ func (h *InternalEvents) OnRequestNotMatched(e OnRequestNotMatched) {
 		colorize.Yellow(e.Request.Method),
 		colorize.Yellow(e.Request.Path),
 		e.Request.Method,
-		fullURL(e.Request.Host, e.Request.RequestURI)))
+		e.Request.FullURL()))
 
 	if e.Result.HasClosestMatch {
 		builder.WriteString(fmt.Sprintf("%s: %d %s\n\n",
@@ -77,8 +78,8 @@ func (h *InternalEvents) OnRequestNotMatched(e OnRequestNotMatched) {
 	builder.WriteString(fmt.Sprintf("%s:\n", colorize.Bold("Mismatches")))
 
 	for _, detail := range e.Result.Details {
-		builder.WriteString(fmt.Sprintf("%s, reason=%s, applied-to=%s\n",
-			colorize.Bold(detail.Name), detail.Description, detail.Target))
+		builder.WriteString(detail.Description)
+		builder.WriteString("\n")
 	}
 
 	h.l.Logf(builder.String())
@@ -91,7 +92,7 @@ func (h *InternalEvents) OnError(e OnError) {
 		colorize.Red(e.Request.Method),
 		colorize.Red(e.Request.Path),
 		e.Request.Method,
-		fullURL(e.Request.Host, e.Request.RequestURI),
+		e.Request.FullURL(),
 		colorize.Red(colorize.Bold("Error: ")),
 		e.Err,
 	)

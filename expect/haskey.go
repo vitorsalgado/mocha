@@ -14,17 +14,21 @@ func (m *HasKeyMatcher) Name() string {
 	return "HasKey"
 }
 
-func (m *HasKeyMatcher) Match(v any) (bool, error) {
+func (m *HasKeyMatcher) Match(v any) (Result, error) {
 	value, err := jsonx.Reach(m.Path, v)
 	if err != nil || value == nil {
-		return false, err
+		return mismatch(nil), err
 	}
 
-	return true, nil
-}
-
-func (m *HasKeyMatcher) DescribeFailure(_ any) string {
-	return fmt.Sprintf("json doest not have a key on path: %s", m.Path)
+	return Result{
+		OK: true,
+		DescribeFailure: func() string {
+			return fmt.Sprintf(
+				"%s",
+				hint(m.Name(), printExpected(m.Path)),
+			)
+		},
+	}, nil
 }
 
 func (m *HasKeyMatcher) OnMockServed() error {

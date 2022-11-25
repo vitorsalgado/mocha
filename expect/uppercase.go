@@ -1,6 +1,9 @@
 package expect
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 type UpperCaseMatcher struct {
 	Matcher Matcher
@@ -10,12 +13,22 @@ func (m *UpperCaseMatcher) Name() string {
 	return m.Matcher.Name()
 }
 
-func (m *UpperCaseMatcher) Match(v any) (bool, error) {
-	return m.Matcher.Match(strings.ToUpper(v.(string)))
-}
+func (m *UpperCaseMatcher) Match(v any) (Result, error) {
+	txt := v.(string)
+	result, err := m.Matcher.Match(strings.ToUpper(txt))
+	if err != nil {
+		return Result{}, err
+	}
 
-func (m *UpperCaseMatcher) DescribeFailure(v any) string {
-	return m.Matcher.DescribeFailure(v)
+	return Result{
+		OK: result.OK,
+		DescribeFailure: func() string {
+			return fmt.Sprintf("%s %s",
+				hint(m.Name(), m.Matcher.Name()),
+				result.DescribeFailure(),
+			)
+		},
+	}, nil
 }
 
 func (m *UpperCaseMatcher) OnMockServed() error {

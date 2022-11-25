@@ -3,8 +3,6 @@ package expect
 import (
 	"fmt"
 	"strings"
-
-	"github.com/vitorsalgado/mocha/v3/internal/colorize"
 )
 
 type EqualFoldMatcher struct {
@@ -15,15 +13,17 @@ func (m *EqualFoldMatcher) Name() string {
 	return "EqualFold"
 }
 
-func (m *EqualFoldMatcher) Match(v any) (bool, error) {
-	return strings.EqualFold(m.Expected, v.(string)), nil
-}
-
-func (m *EqualFoldMatcher) DescribeFailure(v any) string {
-	return fmt.Sprintf("%s\n%s",
-		fmt.Sprintf("expected: %v", colorize.Green(m.Expected)),
-		fmt.Sprintf("got: %s", colorize.Yellow(v.(string))),
-	)
+func (m *EqualFoldMatcher) Match(v any) (Result, error) {
+	return Result{
+		OK: strings.EqualFold(m.Expected, v.(string)),
+		DescribeFailure: func() string {
+			return fmt.Sprintf("%s %s %s",
+				hint(m.Name(), printExpected(m.Expected)),
+				_separator,
+				printReceived(v),
+			)
+		},
+	}, nil
 }
 
 func (m *EqualFoldMatcher) OnMockServed() error {

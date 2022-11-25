@@ -6,8 +6,6 @@ import (
 	"strings"
 )
 
-var _ Matcher = (*ContainsMatcher)(nil)
-
 type ContainsMatcher struct {
 	Expected any
 }
@@ -16,42 +14,53 @@ func (m *ContainsMatcher) Name() string {
 	return "Contains"
 }
 
-func (m *ContainsMatcher) Match(list any) (bool, error) {
-	listValue := reflect.ValueOf(list)
-	sub := reflect.ValueOf(m.Expected)
-	listType := reflect.TypeOf(list)
+func (m *ContainsMatcher) Match(list any) (Result, error) {
+	var listValue = reflect.ValueOf(list)
+	var sub = reflect.ValueOf(m.Expected)
+	var listType = reflect.TypeOf(list)
 	if listType == nil {
-		return false, nil
+		return mismatch(nil), fmt.Errorf("unknown typeof value")
 	}
 
-	kind := listType.Kind()
-
-	if kind == reflect.String {
-		return strings.Contains(listValue.String(), sub.String()), nil
+	var describeFailure = func() string {
+		return fmt.Sprintf(
+			"%s %s %v",
+			hint(m.Name(), printExpected(m.Expected)),
+			_separator,
+			printReceived(listValue),
+		)
 	}
 
-	if kind == reflect.Map {
+	switch listType.Kind() {
+	case reflect.String:
+		return Result{
+			OK:              strings.Contains(listValue.String(), sub.String()),
+			DescribeFailure: describeFailure,
+		}, nil
+	case reflect.Map:
 		keys := listValue.MapKeys()
 		for i := 0; i < len(keys); i++ {
 			if reflect.DeepEqual(keys[i].Interface(), m.Expected) {
-				return true, nil
+				return Result{
+					OK:              true,
+					DescribeFailure: describeFailure,
+				}, nil
 			}
 		}
 
-		return false, nil
+		return mismatch(describeFailure), nil
 	}
 
 	for i := 0; i < listValue.Len(); i++ {
 		if reflect.DeepEqual(listValue.Index(i).Interface(), sub.Interface()) {
-			return true, nil
+			return Result{
+				OK:              true,
+				DescribeFailure: describeFailure,
+			}, nil
 		}
 	}
 
-	return false, nil
-}
-
-func (m *ContainsMatcher) DescribeFailure(value any) string {
-	return fmt.Sprintf("value %v is not contained on %v", m.Expected, value)
+	return mismatch(describeFailure), nil
 }
 
 func (m *ContainsMatcher) OnMockServed() error {

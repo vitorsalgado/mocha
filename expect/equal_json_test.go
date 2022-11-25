@@ -13,6 +13,6 @@ func TestToEqualJSON(t *testing.T) {
 		res, err := ToEqualJSON(c).Match(body)
 
 		assert.Error(t, err)
-		assert.False(t, res)
+		assert.False(t, res.OK)
 	})
 }
