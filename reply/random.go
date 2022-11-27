@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
-
-	"github.com/vitorsalgado/mocha/v3/params"
 )
 
 // RandomReply configures a Reply that serves random HTTP responses.
@@ -23,7 +21,7 @@ func (mr *RandomReply) Add(reply ...Reply) *RandomReply {
 }
 
 // Build builds a response stub randomly based on previously added Reply implementations.
-func (mr *RandomReply) Build(r *http.Request, m M, p params.P) (*Response, error) {
+func (mr *RandomReply) Build(r *http.Request, m M, p Params) (*Response, error) {
 	size := len(mr.replies)
 	if size == 0 {
 		return nil,

@@ -6,12 +6,10 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/vitorsalgado/mocha/v3/params"
 )
 
 func TestFunctionReply(t *testing.T) {
-	fn := func(*http.Request, M, params.P) (*Response, error) {
+	fn := func(*http.Request, M, Params) (*Response, error) {
 		return &Response{Status: http.StatusAccepted}, nil
 	}
 

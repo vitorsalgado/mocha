@@ -10,7 +10,7 @@ import (
 	"github.com/vitorsalgado/mocha/v3/hooks"
 	"github.com/vitorsalgado/mocha/v3/internal/mid"
 	"github.com/vitorsalgado/mocha/v3/internal/mid/recover"
-	"github.com/vitorsalgado/mocha/v3/params"
+	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 type (
@@ -20,7 +20,7 @@ type (
 		storage storage
 		context context.Context
 		cancel  context.CancelFunc
-		params  params.P
+		params  reply.Params
 		events  *hooks.Emitter
 		scopes  []*Scoped
 		mu      *sync.Mutex
@@ -67,7 +67,7 @@ func New(t TestingT, config ...Config) *Mocha {
 	}
 
 	middlewares = append(middlewares, cfg.Middlewares...)
-	p := params.New()
+	p := reply.Parameters()
 	handler := mid.
 		Compose(middlewares...).
 		Root(newHandler(mockStorage, parsers, p, evt, t))
@@ -166,7 +166,7 @@ func (m *Mocha) AddMocks(builders ...*MockBuilder) *Scoped {
 }
 
 // Parameters allows managing custom parameters that will be available inside matchers.
-func (m *Mocha) Parameters() params.P {
+func (m *Mocha) Parameters() reply.Params {
 	return m.params
 }
 

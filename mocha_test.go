@@ -16,7 +16,6 @@ import (
 	"github.com/vitorsalgado/mocha/v3/hooks"
 	"github.com/vitorsalgado/mocha/v3/internal/testmocks"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
-	"github.com/vitorsalgado/mocha/v3/params"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -136,7 +135,7 @@ func TestErrors(t *testing.T) {
 
 	t.Run("should log errors on reply", func(t *testing.T) {
 		scoped := m.AddMocks(Get(expect.URLPath("/test1")).
-			ReplyFunction(func(r *http.Request, m reply.M, p params.P) (*reply.Response, error) {
+			ReplyFunction(func(r *http.Request, m reply.M, p reply.Params) (*reply.Response, error) {
 				return nil, fmt.Errorf("failed to build a response")
 			}))
 

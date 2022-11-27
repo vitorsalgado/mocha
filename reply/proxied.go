@@ -7,8 +7,6 @@ import (
 	"net/url"
 	"strings"
 	"time"
-
-	"github.com/vitorsalgado/mocha/v3/params"
 )
 
 var forbiddenHeaders = []string{
@@ -88,7 +86,7 @@ func (r *ProxyReply) StripSuffix(suffix string) *ProxyReply {
 }
 
 // Build builds a Reply based on the ProxyReply configuration.
-func (r *ProxyReply) Build(req *http.Request, _ M, _ params.P) (*Response, error) {
+func (r *ProxyReply) Build(req *http.Request, _ M, _ Params) (*Response, error) {
 	path := req.URL.Path
 
 	if r.trimPrefix != "" {

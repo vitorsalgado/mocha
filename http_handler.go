@@ -11,14 +11,13 @@ import (
 	"github.com/vitorsalgado/mocha/v3/hooks"
 	"github.com/vitorsalgado/mocha/v3/internal/headerx"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetypex"
-	"github.com/vitorsalgado/mocha/v3/params"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 type mockHandler struct {
 	mocks       storage
 	bodyParsers []RequestBodyParser
-	params      params.P
+	params      reply.Params
 	evt         *hooks.Emitter
 	t           TestingT
 }
@@ -26,7 +25,7 @@ type mockHandler struct {
 func newHandler(
 	storage storage,
 	bodyParsers []RequestBodyParser,
-	params params.P,
+	params reply.Params,
 	evt *hooks.Emitter,
 	t TestingT,
 ) *mockHandler {

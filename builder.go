@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/vitorsalgado/mocha/v3/expect"
-	"github.com/vitorsalgado/mocha/v3/params"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -226,22 +225,18 @@ func (b *MockBuilder) Reply(rep reply.Reply) *MockBuilder {
 }
 
 // ReplyFunction defines a function to will build the response mock.
-func (b *MockBuilder) ReplyFunction(fn func(*http.Request, reply.M, params.P) (*reply.Response, error)) *MockBuilder {
+func (b *MockBuilder) ReplyFunction(fn func(*http.Request, reply.M, reply.Params) (*reply.Response, error)) *MockBuilder {
 	b.mock.Reply = reply.Function(fn)
 	return b
 }
 
 // ReplyJust sets the mock to return a simple response with the given status code.
-// Optionally, you can provide a reply as well. The status provided in the first parameter will prevail.
-// Only the first reply will be used.
-func (b *MockBuilder) ReplyJust(status int, r ...*reply.StdReply) *MockBuilder {
-	if len(r) > 0 {
-		rep := r[0]
-		rep.Status(status)
-
-		b.mock.Reply = rep
-	} else {
+// Optionally, you can provide a reply as well.
+func (b *MockBuilder) ReplyJust(status int, r *reply.StdReply) *MockBuilder {
+	if r == nil {
 		b.mock.Reply = reply.Status(status)
+	} else {
+		b.mock.Reply = r.Status(status)
 	}
 
 	return b

@@ -6,7 +6,6 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/internal/autoid"
-	"github.com/vitorsalgado/mocha/v3/params"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -45,7 +44,7 @@ type (
 		Request  *http.Request
 		Response *reply.Response
 		Mock     *Mock
-		Params   params.P
+		Params   reply.Params
 	}
 
 	// PostAction defines the contract for an action that will be executed after serving a mocked HTTP response.

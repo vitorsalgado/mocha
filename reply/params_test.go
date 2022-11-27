@@ -1,4 +1,4 @@
-package params
+package reply
 
 import (
 	"testing"
@@ -7,7 +7,7 @@ import (
 )
 
 func TestParameters(t *testing.T) {
-	params := New()
+	params := Parameters()
 	key1 := "k1"
 	val1 := "test"
 	key2 := "k2"
