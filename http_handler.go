@@ -18,7 +18,7 @@ type mockHandler struct {
 	mocks       storage
 	bodyParsers []RequestBodyParser
 	params      reply.Params
-	evt         *hooks.Emitter
+	evt         *hooks.Hooks
 	t           TestingT
 }
 
@@ -26,7 +26,7 @@ func newHandler(
 	storage storage,
 	bodyParsers []RequestBodyParser,
 	params reply.Params,
-	evt *hooks.Emitter,
+	evt *hooks.Hooks,
 	t TestingT,
 ) *mockHandler {
 	return &mockHandler{mocks: storage, bodyParsers: bodyParsers, params: params, evt: evt, t: t}
@@ -38,13 +38,13 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	parsedBody, err := parseRequestBody(r, h.bodyParsers)
 	if err != nil {
-		h.evt.Emit(hooks.OnRequest{Request: er, StartedAt: start})
+		h.evt.Emit(&hooks.OnRequest{Request: er, StartedAt: start})
 		respondError(w, r, h.evt, err)
 		return
 	}
 
 	er.Body = parsedBody
-	h.evt.Emit(hooks.OnRequest{Request: er, StartedAt: start})
+	h.evt.Emit(&hooks.OnRequest{Request: er, StartedAt: start})
 
 	// match current request with all eligible stored matchers in order to find one mock.
 	info := &expect.RequestInfo{Request: r, ParsedBody: parsedBody}
@@ -119,14 +119,14 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	h.evt.Emit(hooks.OnRequestMatch{
+	h.evt.Emit(&hooks.OnRequestMatch{
 		Request:            er,
 		ResponseDefinition: hooks.Response{Status: res.Status, Header: res.Header.Clone()},
 		Mock:               hooks.Mock{ID: mock.ID, Name: mock.Name},
 		Elapsed:            time.Since(start)})
 }
 
-func respondNonMatched(w http.ResponseWriter, r *http.Request, result *findResult, evt *hooks.Emitter) {
+func respondNonMatched(w http.ResponseWriter, r *http.Request, result *findResult, evt *hooks.Hooks) {
 	e := hooks.OnRequestNotMatched{Request: hooks.FromRequest(r), Result: hooks.Result{Details: make([]hooks.ResultDetail, 0)}}
 
 	if result.ClosestMatch != nil {
@@ -139,7 +139,7 @@ func respondNonMatched(w http.ResponseWriter, r *http.Request, result *findResul
 			hooks.ResultDetail{Name: detail.Name, Description: detail.Desc, Target: detail.Target})
 	}
 
-	evt.Emit(e)
+	evt.Emit(&e)
 
 	builder := strings.Builder{}
 	builder.WriteString("REQUEST DID NOT MATCH.\n")
@@ -161,8 +161,8 @@ func respondNonMatched(w http.ResponseWriter, r *http.Request, result *findResul
 	w.Write([]byte(builder.String()))
 }
 
-func respondError(w http.ResponseWriter, r *http.Request, evt *hooks.Emitter, err error) {
-	evt.Emit(hooks.OnError{Request: hooks.FromRequest(r), Err: err})
+func respondError(w http.ResponseWriter, r *http.Request, evt *hooks.Hooks, err error) {
+	evt.Emit(&hooks.OnError{Request: hooks.FromRequest(r), Err: err})
 
 	w.Header().Add(headerx.ContentType, mimetypex.TextPlain)
 	w.WriteHeader(http.StatusTeapot)

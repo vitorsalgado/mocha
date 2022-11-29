@@ -1,8 +1,6 @@
 package expect
 
 import (
-	"fmt"
-
 	"github.com/vitorsalgado/mocha/v3/internal/jsonx"
 )
 
@@ -23,10 +21,7 @@ func (m *HasKeyMatcher) Match(v any) (Result, error) {
 	return Result{
 		OK: true,
 		DescribeFailure: func() string {
-			return fmt.Sprintf(
-				"%s",
-				hint(m.Name(), printExpected(m.Path)),
-			)
+			return hint(m.Name(), printExpected(m.Path))
 		},
 	}, nil
 }

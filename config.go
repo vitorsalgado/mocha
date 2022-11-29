@@ -7,10 +7,10 @@ import (
 	"github.com/vitorsalgado/mocha/v3/cors"
 )
 
-type LogVerbosity int
+type LogLevel int
 
 const (
-	LogSilently LogVerbosity = iota
+	LogSilently LogLevel = iota
 	LogInfo
 	LogVerbose
 )
@@ -37,8 +37,8 @@ type (
 		// Server defines a custom mock HTTP server.
 		Server Server
 
-		// LogVerbosity defines the level of logs
-		LogVerbosity LogVerbosity
+		// LogLevel defines the level of logs
+		LogLevel LogLevel
 
 		corsEnabled bool
 	}
@@ -50,15 +50,15 @@ type (
 	}
 )
 
-var configDefault = Configure().LogVerbosity(LogVerbose).Build()
+var configDefault = Configure().LogLevel(LogVerbose).Build()
 
 // Configure inits a new Configurer.
 // Entrypoint to start a new custom configuration for Mocha mock servers.
 func Configure() *Configurer {
 	return &Configurer{conf: Config{
-		LogVerbosity: LogVerbose,
-		BodyParsers:  make([]RequestBodyParser, 0),
-		Middlewares:  make([]func(http.Handler) http.Handler, 0)}}
+		LogLevel:    LogVerbose,
+		BodyParsers: make([]RequestBodyParser, 0),
+		Middlewares: make([]func(http.Handler) http.Handler, 0)}}
 }
 
 // Context sets a custom context.
@@ -105,10 +105,10 @@ func (cb *Configurer) Server(srv Server) *Configurer {
 	return cb
 }
 
-// LogVerbosity configure the verbosity of informative logs.
+// LogLevel configure the verbosity of informative logs.
 // Defaults to LogVerbose.
-func (cb *Configurer) LogVerbosity(l LogVerbosity) *Configurer {
-	cb.conf.LogVerbosity = l
+func (cb *Configurer) LogLevel(l LogLevel) *Configurer {
+	cb.conf.LogLevel = l
 	return cb
 }
 

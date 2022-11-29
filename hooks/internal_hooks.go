@@ -23,7 +23,9 @@ func NewInternalEvents(l Logger) *InternalEvents {
 	return &InternalEvents{l: l}
 }
 
-func (h *InternalEvents) OnRequest(e OnRequest) {
+func (h *InternalEvents) OnRequest(evt any) {
+	e := evt.(*OnRequest)
+
 	h.l.Logf("\n%s %s ---> %s %s\n%s %s\n\n%s: %v\n%s: %v\n",
 		colorize.BlueBright(colorize.Bold("REQUEST RECEIVED")),
 		e.StartedAt.Format(time.RFC3339),
@@ -38,7 +40,9 @@ func (h *InternalEvents) OnRequest(e OnRequest) {
 	)
 }
 
-func (h *InternalEvents) OnRequestMatched(e OnRequestMatch) {
+func (h *InternalEvents) OnRequestMatched(evt any) {
+	e := evt.(*OnRequestMatch)
+
 	h.l.Logf("\n%s %s <--- %s %s\n%s %s\n\n%s%d %s\n\n%s: %dms\n%s:\n %s: %d\n %s: %v\n",
 		colorize.GreenBright(colorize.Bold("REQUEST DID MATCH")),
 		time.Now().Format(time.RFC3339),
@@ -59,9 +63,10 @@ func (h *InternalEvents) OnRequestMatched(e OnRequestMatch) {
 	)
 }
 
-func (h *InternalEvents) OnRequestNotMatched(e OnRequestNotMatched) {
-	builder := strings.Builder{}
+func (h *InternalEvents) OnRequestNotMatched(evt any) {
+	e := evt.(*OnRequestNotMatched)
 
+	builder := strings.Builder{}
 	builder.WriteString(fmt.Sprintf("\n%s %s <--- %s %s\n%s %s\n\n",
 		colorize.YellowBright(colorize.Bold("REQUEST DID NOT MATCH")),
 		time.Now().Format(time.RFC3339),
@@ -85,7 +90,9 @@ func (h *InternalEvents) OnRequestNotMatched(e OnRequestNotMatched) {
 	h.l.Logf(builder.String())
 }
 
-func (h *InternalEvents) OnError(e OnError) {
+func (h *InternalEvents) OnError(evt any) {
+	e := evt.(*OnError)
+
 	h.l.Logf("\n%s %s <--- %s %s\n%s %s\n\n%s: %v",
 		colorize.RedBright(colorize.Bold("REQUEST DID NOT MATCH")),
 		time.Now().Format(time.RFC3339),

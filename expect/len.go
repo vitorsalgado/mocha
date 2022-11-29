@@ -1,7 +1,6 @@
 package expect
 
 import (
-	"fmt"
 	"reflect"
 )
 
@@ -19,7 +18,7 @@ func (m *LenMatcher) Match(v any) (Result, error) {
 	return Result{
 		OK: value.Len() == m.Length,
 		DescribeFailure: func() string {
-			return fmt.Sprintf("%s", hint(m.Name(), printExpected(m.Length)))
+			return hint(m.Name(), printExpected(m.Length))
 		},
 	}, nil
 }

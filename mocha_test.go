@@ -308,29 +308,30 @@ func TestMocha_Context(t *testing.T) {
 
 type FakeEvents struct{ mock.Mock }
 
-func (h *FakeEvents) OnRequest(e hooks.OnRequest) {
+func (h *FakeEvents) OnRequest(e any) {
 	h.Called(e)
 }
 
-func (h *FakeEvents) OnRequestMatched(e hooks.OnRequestMatch) {
+func (h *FakeEvents) OnRequestMatched(e any) {
 	h.Called(e)
 }
 
-func (h *FakeEvents) OnRequestNotMatched(e hooks.OnRequestNotMatched) {
+func (h *FakeEvents) OnRequestNotMatched(e any) {
 	h.Called(e)
 }
 
-func (h *FakeEvents) OnError(e hooks.OnError) {
+func (h *FakeEvents) OnError(e any) {
 	h.Called(e)
 }
 
 func TestMocha_Subscribe(t *testing.T) {
 	f := &FakeEvents{}
-	f.On("OnRequest", mock.AnythingOfType("OnRequest")).Return()
+	f.On("OnRequest", mock.Anything).Return()
 	f.On("OnRequestMatched", mock.Anything).Return()
 
-	m := New(t, Configure().Build())
-	m.Subscribe(f)
+	m := New(t, Configure().LogLevel(LogSilently).Build()).CloseOnCleanup(t)
+	m.Subscribe(hooks.HookOnRequest, f.OnRequest)
+	m.Subscribe(hooks.HookOnRequestMatched, f.OnRequestMatched)
 	m.Start()
 
 	scoped := m.AddMocks(
@@ -351,7 +352,7 @@ func TestMocha_Subscribe(t *testing.T) {
 }
 
 func TestMocha_Silently(t *testing.T) {
-	m := New(t, Configure().LogVerbosity(LogSilently).Build())
+	m := New(t, Configure().LogLevel(LogSilently).Build())
 	m.Start()
 
 	scoped := m.AddMocks(

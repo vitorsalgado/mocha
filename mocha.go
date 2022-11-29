@@ -3,6 +3,7 @@ package mocha
 import (
 	"context"
 	"net/http"
+	"reflect"
 	"sync"
 
 	"github.com/vitorsalgado/mocha/v3/cors"
@@ -21,7 +22,7 @@ type (
 		context context.Context
 		cancel  context.CancelFunc
 		params  reply.Params
-		events  *hooks.Emitter
+		events  *hooks.Hooks
 		scopes  []*Scoped
 		mu      *sync.Mutex
 		t       TestingT
@@ -56,10 +57,16 @@ func New(t TestingT, config ...Config) *Mocha {
 	middlewares := make([]func(handler http.Handler) http.Handler, 0)
 	middlewares = append(middlewares, recover.Recover)
 
-	evt := hooks.NewEmitter(ctx)
+	evt := hooks.New()
+	evt.Start(ctx)
 
-	if cfg.LogVerbosity == LogVerbose {
-		evt.Subscribe(hooks.NewInternalEvents(t))
+	if cfg.LogLevel > LogSilently {
+		h := hooks.NewInternalEvents(t)
+
+		evt.Subscribe(hooks.HookOnRequest, h.OnRequest)
+		evt.Subscribe(hooks.HookOnRequestMatched, h.OnRequestMatched)
+		evt.Subscribe(hooks.HookOnRequestNotMatched, h.OnRequestNotMatched)
+		evt.Subscribe(hooks.HookOnError, h.OnError)
 	}
 
 	if cfg.corsEnabled {
@@ -176,8 +183,8 @@ func (m *Mocha) URL() string {
 }
 
 // Subscribe add a new event listener.
-func (m *Mocha) Subscribe(evt hooks.Events) {
-	m.events.Subscribe(evt)
+func (m *Mocha) Subscribe(evt reflect.Type, fn func(payload any)) {
+	m.events.Subscribe(evt, fn)
 }
 
 // Close closes the mock server.

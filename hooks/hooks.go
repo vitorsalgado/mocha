@@ -2,140 +2,77 @@ package hooks
 
 import (
 	"context"
-	"fmt"
-	"log"
-	"net/http"
 	"reflect"
 	"sync"
-	"time"
 )
 
-// Event data transfer objects
-type (
-	// Request defines information from http.Request to be logged.
-	Request struct {
-		Method     string
-		Path       string
-		RequestURI string
-		Host       string
-		Header     http.Header
-		Body       any
-	}
-
-	// Response defines HTTP Response information to be logged.
-	Response struct {
-		Status int
-		Header http.Header
-	}
-
-	// Mock defines core.Mock information to be logged.
-	Mock struct {
-		ID   int
-		Name string
-	}
-
-	// ResultDetail defines matching result details to be logged.
-	ResultDetail struct {
-		Name        string
-		Target      string
-		Description string
-	}
-
-	// Result defines matching result to be logged.
-	Result struct {
-		HasClosestMatch bool
-		ClosestMatch    Mock
-		Details         []ResultDetail
-	}
+// Hook Types.
+var (
+	HookOnRequest           = reflect.TypeOf(&OnRequest{})
+	HookOnRequestMatched    = reflect.TypeOf(&OnRequestMatch{})
+	HookOnRequestNotMatched = reflect.TypeOf(&OnRequestNotMatched{})
+	HookOnError             = reflect.TypeOf(&OnError{})
 )
 
-// Events
-type (
-	// OnRequest event is triggered every time a request arrives at the mock handler.
-	OnRequest struct {
-		Request   Request
-		StartedAt time.Time
-	}
+type hook reflect.Type
+type queue chan any
 
-	// OnRequestMatch event is triggered when a mock is found for a request.
-	OnRequestMatch struct {
-		Request            Request
-		ResponseDefinition Response
-		Mock               Mock
-		Elapsed            time.Duration
-	}
-
-	// OnRequestNotMatched event is triggered when no mocks are found for a request.
-	OnRequestNotMatched struct {
-		Request Request
-		Result  Result
-	}
-
-	// OnError event is triggered when an error occurs during request matching.
-	OnError struct {
-		Request Request
-		Err     error
-	}
-)
-
-type (
-	// Events interface defines available event handlers.
-	Events interface {
-		OnRequest(OnRequest)
-		OnRequestMatched(OnRequestMatch)
-		OnRequestNotMatched(OnRequestNotMatched)
-		OnError(OnError)
-	}
-
-	// Emitter implements a event listener, subscriber and emitter.
-	Emitter struct {
-		ctx      context.Context
-		events   []Events
-		listener chan any
-		mu       sync.Mutex
-	}
-)
-
-func (r *Request) FullURL() string {
-	return fmt.Sprintf("%s%s", r.Host, r.RequestURI)
+type Hooks struct {
+	worker *worker
+	queue  queue
+	hooks  map[hook][]func(e any)
+	mu     sync.Mutex
 }
 
-// NewEmitter creates an Emitter instance.
-func NewEmitter(ctx context.Context) *Emitter {
-	return &Emitter{ctx: ctx, events: make([]Events, 0), listener: make(chan any)}
+func New() *Hooks {
+	h := &Hooks{}
+	h.queue = make(queue)
+	h.hooks = map[hook][]func(e any){}
+
+	h.worker = &worker{queue: h.queue, hooks: h.hooks}
+
+	return h
+}
+
+// Start starts background event listener.
+func (h *Hooks) Start(ctx context.Context) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	if h.worker.started.Load() {
+		return
+	}
+
+	h.worker.Start(ctx)
 }
 
 // Emit dispatches a new event.
-// Parameter data must be:
+// Parameter event must be one of:
 // - OnRequest
 // - OnRequestMatch
 // - OnRequestNotMatched
 // - OnError
-func (h *Emitter) Emit(data any) {
-	h.mu.Lock()
-	defer h.mu.Unlock()
-
-	for _, hook := range h.events {
-		switch evt := data.(type) {
-		case OnRequest:
-			hook.OnRequest(evt)
-		case OnRequestMatch:
-			hook.OnRequestMatched(evt)
-		case OnRequestNotMatched:
-			hook.OnRequestNotMatched(evt)
-		case OnError:
-			hook.OnError(evt)
-
-		default:
-			log.Printf("event type %s is invalid\n", reflect.TypeOf(data).Name())
-		}
-	}
+func (h *Hooks) Emit(event any) {
+	go func() {
+		h.queue <- event
+	}()
 }
 
-// Subscribe subscribes new event handlers.
-func (h *Emitter) Subscribe(evt Events) {
+// Subscribe subscribes new event handler to a reflect.Type.
+// Parameter eventType must be one of:
+// - OnRequest
+// - OnRequestMatch
+// - OnRequestNotMatched
+// - OnError
+func (h *Hooks) Subscribe(eventType reflect.Type, fn func(e any)) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	h.events = append(h.events, evt)
+	_, ok := h.hooks[eventType]
+
+	if !ok {
+		h.hooks[eventType] = []func(e any){fn}
+	} else {
+		h.hooks[eventType] = append(h.hooks[eventType], fn)
+	}
 }
