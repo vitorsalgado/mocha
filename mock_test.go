@@ -2,8 +2,6 @@ package mocha
 
 import (
 	"fmt"
-	"net/http"
-	"net/url"
 	"sync"
 	"testing"
 	"time"
@@ -69,110 +67,50 @@ func TestMock_Matches(t *testing.T) {
 	m := newMock()
 	params := &expect.RequestInfo{}
 
-	t.Run("should match when generic type is known and matcher returns true without errors", func(t *testing.T) {
-		// any
-		res := m.requestMatches(params, []Expectation{{
-			Matcher: expect.ToEqual("test"),
-			ValueSelector: func(r *expect.RequestInfo) any {
-				return "test"
-			},
-		}})
-		assert.True(t, res.OK)
+	cases := []struct {
+		name     string
+		value    any
+		selector any
+		expected bool
+	}{
+		{
+			value:    "test",
+			selector: "test",
+			expected: true,
+		},
+		{
+			value:    float64(10.0),
+			selector: float64(10.0),
+			expected: true,
+		},
+		{
+			value:    true,
+			selector: true,
+			expected: true,
+		},
+		{
+			value:    map[string]any{"key": "value"},
+			selector: map[string]any{"key": "value"},
+			expected: true,
+		},
+		{
+			value:    "test",
+			selector: "dev",
+			expected: false,
+		},
+	}
 
-		// string
-		res = m.requestMatches(params, []Expectation{{
-			Matcher: expect.ToEqual("test"),
-			ValueSelector: func(r *expect.RequestInfo) any {
-				return "test"
-			},
-		}})
-		assert.True(t, res.OK)
-
-		// float64
-		res = m.requestMatches(params, []Expectation{{
-			Matcher: expect.ToEqual(10.0),
-			ValueSelector: func(r *expect.RequestInfo) any {
-				return 10.0
-			},
-		}})
-		assert.True(t, res.OK)
-
-		// bool
-		res = m.requestMatches(params, []Expectation{{
-			Matcher: expect.ToEqual(true),
-			ValueSelector: func(r *expect.RequestInfo) any {
-				return true
-			},
-		}})
-		assert.True(t, res.OK)
-
-		// map[string]any
-		res = m.requestMatches(params, []Expectation{{
-			Matcher: expect.ToEqual(map[string]any{"key": "value"}),
-			ValueSelector: func(r *expect.RequestInfo) any {
-				return map[string]any{"key": "value"}
-			},
-		}})
-		assert.True(t, res.OK)
-
-		// map[string]any
-		res = m.requestMatches(params, []Expectation{{
-			Matcher: expect.ToEqual(map[string][]string{"key": {"value1", "value2"}}),
-			ValueSelector: func(r *expect.RequestInfo) any {
-				return map[string][]string{"key": {"value1", "value2"}}
-			},
-		}})
-		assert.True(t, res.OK)
-
-		// []any]
-		res = m.requestMatches(params, []Expectation{{
-			Matcher: expect.ToEqual([]any{"test"}),
-			ValueSelector: func(r *expect.RequestInfo) any {
-				return []any{"test"}
-			},
-		}})
-		assert.True(t, res.OK)
-
-		// url.URL
-		u, _ := url.Parse("http://localhost:8080")
-		res = m.requestMatches(params, []Expectation{{
-			Matcher: expect.ToEqual(*u),
-			ValueSelector: func(r *expect.RequestInfo) any {
-				return *u
-			},
-		}})
-		assert.True(t, res.OK)
-
-		// url.Value
-		res = m.requestMatches(params, []Expectation{{
-			Matcher: expect.ToEqual(url.Values{}),
-			ValueSelector: func(r *expect.RequestInfo) any {
-				return url.Values{}
-			},
-		}})
-		assert.True(t, res.OK)
-
-		// http.Request
-		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
-		res = m.requestMatches(params, []Expectation{{
-			Matcher: expect.ToEqual(req),
-			ValueSelector: func(r *expect.RequestInfo) any {
-				return req
-			},
-		}})
-		assert.True(t, res.OK)
-	})
-
-	t.Run("should return not matched result when one of expectations returns false", func(t *testing.T) {
-		// string
-		res := m.requestMatches(params, []Expectation{{
-			Matcher: expect.ToEqual("test"),
-			ValueSelector: func(r *expect.RequestInfo) any {
-				return "dev"
-			},
-		}})
-		assert.False(t, res.OK)
-	})
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			res := m.requestMatches(params, []Expectation{{
+				Matcher: expect.ToEqual(tc.value),
+				ValueSelector: func(r *expect.RequestInfo) any {
+					return tc.selector
+				},
+			}})
+			assert.Equal(t, tc.expected, res.OK)
+		})
+	}
 
 	t.Run("should return not matched and error when one of expectations returns error", func(t *testing.T) {
 		// string

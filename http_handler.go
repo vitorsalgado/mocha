@@ -70,7 +70,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// map the response using mock mappers.
-	mapperArgs := reply.ResponseMapperArgs{Request: r, Parameters: h.params}
+	mapperArgs := reply.MapperArgs{Request: r, Parameters: h.params}
 	for _, mapper := range res.Mappers {
 		if err = mapper(res, mapperArgs); err != nil {
 			respondError(w, r, h.evt, err)
@@ -127,7 +127,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func respondNonMatched(w http.ResponseWriter, r *http.Request, result *findResult, evt *hooks.Hooks) {
-	e := hooks.OnRequestNotMatched{Request: hooks.FromRequest(r), Result: hooks.Result{Details: make([]hooks.ResultDetail, 0)}}
+	e := &hooks.OnRequestNotMatched{Request: hooks.FromRequest(r), Result: hooks.Result{Details: make([]hooks.ResultDetail, 0)}}
 
 	if result.ClosestMatch != nil {
 		e.Result.HasClosestMatch = true
@@ -139,7 +139,7 @@ func respondNonMatched(w http.ResponseWriter, r *http.Request, result *findResul
 			hooks.ResultDetail{Name: detail.Name, Description: detail.Desc, Target: detail.Target})
 	}
 
-	evt.Emit(&e)
+	evt.Emit(e)
 
 	builder := strings.Builder{}
 	builder.WriteString("REQUEST DID NOT MATCH.\n")
@@ -166,7 +166,5 @@ func respondError(w http.ResponseWriter, r *http.Request, evt *hooks.Hooks, err 
 
 	w.Header().Add(headerx.ContentType, mimetypex.TextPlain)
 	w.WriteHeader(http.StatusTeapot)
-
-	w.Write([]byte("Request did not match. An error occurred.\n"))
-	w.Write([]byte(fmt.Sprintf("%v", err)))
+	w.Write([]byte(fmt.Sprintf("Request did not match. An error occurred.\n%v", err)))
 }

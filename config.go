@@ -1,7 +1,6 @@
 package mocha
 
 import (
-	"context"
 	"net/http"
 
 	"github.com/vitorsalgado/mocha/v3/cors"
@@ -18,9 +17,6 @@ const (
 type (
 	// Config holds Mocha mock server configurations.
 	Config struct {
-		// Context to be used internally by Mocha.
-		Context context.Context
-
 		// Addr defines a custom server address.
 		Addr string
 
@@ -59,12 +55,6 @@ func Configure() *Configurer {
 		LogLevel:    LogVerbose,
 		BodyParsers: make([]RequestBodyParser, 0),
 		Middlewares: make([]func(http.Handler) http.Handler, 0)}}
-}
-
-// Context sets a custom context.
-func (cb *Configurer) Context(context context.Context) *Configurer {
-	cb.conf.Context = context
-	return cb
 }
 
 // Addr sets a custom address for the mock HTTP server.

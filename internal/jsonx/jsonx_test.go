@@ -2,7 +2,6 @@ package jsonx
 
 import (
 	"encoding/json"
-	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -28,9 +27,7 @@ func TestArray(t *testing.T) {
 `
 	var data []any
 	err := json.Unmarshal([]byte(jsonData), &data)
-	if err != nil {
-		log.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	c, err := Reach("test", jsonData)
 	assert.Nil(t, c)
@@ -97,9 +94,7 @@ func TestObject(t *testing.T) {
 `
 	mapped := make(map[string]any)
 	err := json.Unmarshal([]byte(jsonData), &mapped)
-	if err != nil {
-		log.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	br, err := Reach("[1].name", jsonData)
 	assert.Nil(t, br)

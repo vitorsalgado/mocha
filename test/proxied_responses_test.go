@@ -2,7 +2,6 @@ package test
 
 import (
 	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -37,11 +36,13 @@ func TestForward(t *testing.T) {
 	m := mocha.New(t)
 	m.Start()
 
+	defer m.Close()
+
 	t.Run("should forward request and respond using proxied response and mock definition", func(t *testing.T) {
 		scoped := m.AddMocks(mocha.Post(expect.URLPath("/test")).
 			Body(expect.ToEqual("hello world")).
 			Reply(reply.
-				From(dest.URL).
+				Forward(dest.URL).
 				ProxyHeader("x-test", "ok").
 				Header("x-res", "example").
 				RemoveProxyHeader("x-del")))
@@ -52,9 +53,7 @@ func TestForward(t *testing.T) {
 		req.Header.Add(headerx.ContentType, mimetypex.TextPlain)
 
 		res, err := http.DefaultClient.Do(req)
-		if err != nil {
-			log.Fatal(err)
-		}
+		assert.NoError(t, err)
 
 		b, err := io.ReadAll(res.Body)
 		if err != nil {

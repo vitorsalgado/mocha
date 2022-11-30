@@ -34,3 +34,4 @@ coverage/
 node_modules/
 
 poc_test.go
+tests

@@ -15,6 +15,9 @@ import (
 func TestScenarioMatcher(t *testing.T) {
 	m := mocha.New(t)
 	m.Start()
+
+	defer m.Close()
+
 	scn := "test"
 
 	s1 := m.AddMocks(mocha.Get(expect.URLPath("/1")).

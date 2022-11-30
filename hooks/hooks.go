@@ -26,10 +26,8 @@ type Hooks struct {
 
 func New() *Hooks {
 	h := &Hooks{}
-	h.queue = make(queue)
 	h.hooks = map[hook][]func(e any){}
-
-	h.worker = &worker{queue: h.queue, hooks: h.hooks}
+	h.worker = &worker{hooks: h.hooks}
 
 	return h
 }
@@ -43,6 +41,9 @@ func (h *Hooks) Start(ctx context.Context) {
 		return
 	}
 
+	h.queue = make(queue)
+	h.worker.queue = h.queue
+
 	h.worker.Start(ctx)
 }
 
@@ -53,9 +54,7 @@ func (h *Hooks) Start(ctx context.Context) {
 // - OnRequestNotMatched
 // - OnError
 func (h *Hooks) Emit(event any) {
-	go func() {
-		h.queue <- event
-	}()
+	h.queue <- event
 }
 
 // Subscribe subscribes new event handler to a reflect.Type.

@@ -45,7 +45,7 @@ func New() *StdReply {
 		response: &Response{
 			Cookies: make([]*http.Cookie, 0),
 			Header:  make(http.Header),
-			Mappers: make([]ResponseMapper, 0),
+			Mappers: make([]Mapper, 0),
 		},
 		bodyType: _bodyDefault,
 	}
@@ -199,8 +199,8 @@ func (rpl *StdReply) Delay(duration time.Duration) *StdReply {
 	return rpl
 }
 
-// Map adds ResponseMapper that will be executed after the Response was built.
-func (rpl *StdReply) Map(mapper ResponseMapper) *StdReply {
+// Map adds Mapper that will be executed after the Response was built.
+func (rpl *StdReply) Map(mapper Mapper) *StdReply {
 	rpl.response.Mappers = append(rpl.response.Mappers, mapper)
 	return rpl
 }

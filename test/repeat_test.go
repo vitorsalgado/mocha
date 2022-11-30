@@ -15,6 +15,8 @@ func TestRepeat(t *testing.T) {
 	m := mocha.New(t)
 	m.Start()
 
+	defer m.Close()
+
 	m.AddMocks(mocha.Get(expect.URLPath("/test")).
 		Repeat(3).
 		Reply(reply.OK()))

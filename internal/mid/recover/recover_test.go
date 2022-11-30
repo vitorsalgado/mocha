@@ -2,7 +2,6 @@ package recover
 
 import (
 	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -21,14 +20,10 @@ func TestRecover(t *testing.T) {
 	defer ts.Close()
 
 	res, err := http.Get(ts.URL)
-	if err != nil {
-		log.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	assert.Equal(t, http.StatusTeapot, res.StatusCode)
 	assert.Equal(t, "text/plain", res.Header.Get("content-type"))

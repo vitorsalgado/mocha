@@ -2,7 +2,6 @@ package test
 
 import (
 	"crypto/tls"
-	"log"
 	"net/http"
 	"testing"
 
@@ -18,6 +17,8 @@ func TestTLS(t *testing.T) {
 	m := mocha.New(t)
 	m.StartTLS()
 
+	defer m.Close()
+
 	// allow insecure https request
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
@@ -29,9 +30,7 @@ func TestTLS(t *testing.T) {
 	req.Header("test", "hello")
 
 	res, err := req.Do()
-	if err != nil {
-		log.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	defer res.Body.Close()
 

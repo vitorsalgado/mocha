@@ -71,6 +71,8 @@ func TestScoped(t *testing.T) {
 		m := New(t)
 		m.Start()
 
+		defer m.Close()
+
 		s1 := m.AddMocks(Get(expect.URLPath("/test1")).Reply(reply.OK()))
 		s2 := m.AddMocks(
 			Get(expect.URLPath("/test2")).Reply(reply.OK()),

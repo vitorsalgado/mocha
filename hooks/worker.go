@@ -25,7 +25,11 @@ func (w *worker) Start(ctx context.Context) {
 
 		for {
 			select {
-			case event := <-w.queue:
+			case event, ok := <-w.queue:
+				if !ok {
+					return
+				}
+
 				t := reflect.TypeOf(event)
 				fns, ok := w.hooks[t]
 				if !ok {
@@ -36,6 +40,8 @@ func (w *worker) Start(ctx context.Context) {
 					fn(event)
 				}
 			case <-ctx.Done():
+				close(w.queue)
+				w.started.Store(false)
 				return
 			}
 		}

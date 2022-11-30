@@ -2,7 +2,6 @@ package cors
 
 import (
 	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -37,9 +36,7 @@ func TestCORS(t *testing.T) {
 		// check preflight request
 		req, _ := http.NewRequest(http.MethodOptions, ts.URL, nil)
 		res, err := http.DefaultClient.Do(req)
-		if err != nil {
-			log.Fatal(err)
-		}
+		assert.NoError(t, err)
 
 		assert.Equal(t, http.StatusNoContent, res.StatusCode)
 		assert.Equal(t, "*", res.Header.Get(headerx.AccessControlAllowOrigin))
@@ -50,14 +47,10 @@ func TestCORS(t *testing.T) {
 
 		// check the actual request
 		res, err = http.Get(ts.URL)
-		if err != nil {
-			log.Fatal(err)
-		}
+		assert.NoError(t, err)
 
 		body, err := io.ReadAll(res.Body)
-		if err != nil {
-			log.Fatal(err)
-		}
+		assert.NoError(t, err)
 
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.True(t, strings.Contains(string(body), msg))
@@ -78,9 +71,7 @@ func TestCORS(t *testing.T) {
 
 		req, _ := http.NewRequest(http.MethodOptions, ts.URL, nil)
 		res, err := http.DefaultClient.Do(req)
-		if err != nil {
-			log.Fatal(err)
-		}
+		assert.NoError(t, err)
 
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 		assert.Equal(t, "*", res.Header.Get(headerx.AccessControlAllowOrigin))
@@ -97,9 +88,7 @@ func TestCORS(t *testing.T) {
 
 		req, _ := http.NewRequest(http.MethodOptions, ts.URL, nil)
 		res, err := http.DefaultClient.Do(req)
-		if err != nil {
-			log.Fatal(err)
-		}
+		assert.NoError(t, err)
 
 		assert.Equal(t, http.StatusNoContent, res.StatusCode)
 		assert.Equal(t, "", res.Header.Get(headerx.AccessControlAllowOrigin))
@@ -115,9 +104,7 @@ func TestCORS(t *testing.T) {
 
 		req, _ := http.NewRequest(http.MethodOptions, ts.URL, nil)
 		res, err := http.DefaultClient.Do(req)
-		if err != nil {
-			log.Fatal(err)
-		}
+		assert.NoError(t, err)
 
 		assert.Equal(t, http.StatusNoContent, res.StatusCode)
 		assert.Equal(t, "", res.Header.Get(headerx.AccessControlAllowOrigin))

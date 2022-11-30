@@ -1,7 +1,6 @@
 package test
 
 import (
-	"log"
 	"net/http"
 	"testing"
 
@@ -17,6 +16,8 @@ func TestPriority(t *testing.T) {
 	m := mocha.New(t)
 	m.Start()
 
+	defer m.Close()
+
 	one := m.AddMocks(mocha.Get(expect.URLPath("/test")).
 		Priority(3).
 		Reply(reply.OK()))
@@ -28,9 +29,7 @@ func TestPriority(t *testing.T) {
 		Reply(reply.Created()))
 
 	res, err := testutil.Get(m.URL() + "/test").Do()
-	if err != nil {
-		log.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 	assert.False(t, one.Called())

@@ -14,15 +14,15 @@ type (
 		Cookies []*http.Cookie
 		Body    io.Reader
 		Delay   time.Duration
-		Mappers []ResponseMapper
+		Mappers []Mapper
 	}
 
-	// ResponseMapperArgs represents the expected arguments for every ResponseMapper.
-	ResponseMapperArgs struct {
+	// MapperArgs represents the expected arguments for every Mapper.
+	MapperArgs struct {
 		Request    *http.Request
 		Parameters Params
 	}
 
-	// ResponseMapper is the function definition to be used to map Mock Response before serving it.
-	ResponseMapper func(res *Response, args ResponseMapperArgs) error
+	// Mapper is the function definition to be used to map Mock Response before serving it.
+	Mapper func(res *Response, args MapperArgs) error
 )

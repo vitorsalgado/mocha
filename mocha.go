@@ -22,9 +22,9 @@ type (
 		context context.Context
 		cancel  context.CancelFunc
 		params  reply.Params
-		events  *hooks.Hooks
+		hooks   *hooks.Hooks
 		scopes  []*Scoped
-		mu      *sync.Mutex
+		mu      sync.Mutex
 		t       TestingT
 	}
 
@@ -42,14 +42,8 @@ func New(t TestingT, config ...Config) *Mocha {
 		cfg = config[0]
 	}
 
-	parent := cfg.Context
-	if parent == nil {
-		parent = context.Background()
-	}
-	ctx, cancel := context.WithCancel(parent)
-
+	ctx, cancel := context.WithCancel(context.Background())
 	mockStorage := newStorage()
-
 	parsers := make([]RequestBodyParser, 0)
 	parsers = append(parsers, cfg.BodyParsers...)
 	parsers = append(parsers, &jsonBodyParser{}, &plainTextParser{}, &formURLEncodedParser{}, &bytesParser{})
@@ -57,16 +51,15 @@ func New(t TestingT, config ...Config) *Mocha {
 	middlewares := make([]func(handler http.Handler) http.Handler, 0)
 	middlewares = append(middlewares, recover.Recover)
 
-	evt := hooks.New()
-	evt.Start(ctx)
+	hook := hooks.New()
 
 	if cfg.LogLevel > LogSilently {
 		h := hooks.NewInternalEvents(t)
 
-		evt.Subscribe(hooks.HookOnRequest, h.OnRequest)
-		evt.Subscribe(hooks.HookOnRequestMatched, h.OnRequestMatched)
-		evt.Subscribe(hooks.HookOnRequestNotMatched, h.OnRequestNotMatched)
-		evt.Subscribe(hooks.HookOnError, h.OnError)
+		hook.Subscribe(hooks.HookOnRequest, h.OnRequest)
+		hook.Subscribe(hooks.HookOnRequestMatched, h.OnRequestMatched)
+		hook.Subscribe(hooks.HookOnRequestNotMatched, h.OnRequestNotMatched)
+		hook.Subscribe(hooks.HookOnError, h.OnError)
 	}
 
 	if cfg.corsEnabled {
@@ -77,7 +70,7 @@ func New(t TestingT, config ...Config) *Mocha {
 	p := reply.Parameters()
 	handler := mid.
 		Compose(middlewares...).
-		Root(newHandler(mockStorage, parsers, p, evt, t))
+		Root(newHandler(mockStorage, parsers, p, hook, t))
 
 	server := cfg.Server
 
@@ -98,17 +91,8 @@ func New(t TestingT, config ...Config) *Mocha {
 		cancel:  cancel,
 		params:  p,
 		scopes:  make([]*Scoped, 0),
-		events:  evt,
-		mu:      &sync.Mutex{},
+		hooks:   hook,
 		t:       t}
-
-	go func() {
-		<-ctx.Done()
-		e := m.Close()
-		if e != nil {
-			m.t.Logf("\nerror closing mocha http server. error=%v", e)
-		}
-	}()
 
 	return m
 }
@@ -126,6 +110,8 @@ func (m *Mocha) Start() ServerInfo {
 		m.t.FailNow()
 	}
 
+	m.hooks.Start(m.context)
+
 	return info
 }
 
@@ -136,6 +122,8 @@ func (m *Mocha) StartTLS() ServerInfo {
 		m.t.Errorf("failed to start a TLS mock server. reason=%v", err)
 		m.t.FailNow()
 	}
+
+	m.hooks.Start(m.context)
 
 	return info
 }
@@ -184,12 +172,17 @@ func (m *Mocha) URL() string {
 
 // Subscribe add a new event listener.
 func (m *Mocha) Subscribe(evt reflect.Type, fn func(payload any)) {
-	m.events.Subscribe(evt, fn)
+	m.hooks.Subscribe(evt, fn)
 }
 
 // Close closes the mock server.
-func (m *Mocha) Close() error {
-	return m.server.Close()
+func (m *Mocha) Close() {
+	m.cancel()
+
+	err := m.server.Close()
+	if err != nil {
+		m.t.Logf(err.Error())
+	}
 }
 
 // Hits returns the total request hits.
@@ -219,18 +212,7 @@ func (m *Mocha) Enable() {
 
 // CloseOnCleanup adds mocha server Close to the Cleanup.
 func (m *Mocha) CloseOnCleanup(t Cleanable) *Mocha {
-	closeSrv := func() {
-		e := m.Close()
-		if e != nil {
-			m.t.Logf("\nerror closing mocha http server. error=%v", e)
-		}
-	}
-
-	t.Cleanup(func() {
-		defer m.cancel()
-		closeSrv()
-	})
-
+	t.Cleanup(func() { m.Close() })
 	return m
 }
 

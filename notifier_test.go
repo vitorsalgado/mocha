@@ -15,8 +15,3 @@ func TestNotifier_FailNow(t *testing.T) {
 	n := NewConsoleNotifier()
 	assert.NotPanics(t, n.FailNow)
 }
-
-func TestNotifier_Errorf(t *testing.T) {
-	n := NewConsoleNotifier()
-	n.Errorf("test %s", "hello")
-}

@@ -24,11 +24,11 @@ func (act *action) Run(a *mocha.PostActionArgs) error {
 }
 
 func TestPostAction(t *testing.T) {
-	t.Parallel()
-
 	t.Run("should call registered post action", func(t *testing.T) {
 		m := mocha.New(t)
 		m.Start()
+
+		defer m.Close()
 
 		act := &action{}
 		act.On("Run", mock.Anything).Return(nil)

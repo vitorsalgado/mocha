@@ -23,7 +23,7 @@ var forbiddenHeaders = []string{
 type FromTypes interface{ string | *url.URL }
 
 // ProxyReply represents a response stub that will be the response "proxied" from the specified target.
-// Use From or ProxyFrom to init a new ProxyReply.
+// Use Forward to init a new ProxyReply.
 type ProxyReply struct {
 	target               *url.URL
 	headers              http.Header
@@ -34,21 +34,25 @@ type ProxyReply struct {
 	trimSuffix           string
 }
 
-// From inits a ProxyReply with the given target. It will parse the raw URL target to an url.URL.
-// It panics if the given target cannot be parsed to a valid url.URL.
-func From(target string) *ProxyReply {
-	u, err := url.Parse(target)
-	if err != nil {
-		panic(err)
+// Forward inits a ProxyReply with the given target URL.
+func Forward[T FromTypes](target T) *ProxyReply {
+	u := &url.URL{}
+
+	switch e := any(target).(type) {
+	case string:
+		var err error
+
+		u, err = url.Parse(e)
+		if err != nil {
+			panic(err)
+		}
+
+	case *url.URL:
+		u = e
 	}
 
-	return ProxiedFrom(u)
-}
-
-// ProxiedFrom inits a ProxyReply with the given target URL.
-func ProxiedFrom(target *url.URL) *ProxyReply {
 	return &ProxyReply{
-		target:               target,
+		target:               u,
 		headers:              make(http.Header),
 		proxyHeaders:         make(http.Header),
 		proxyHeadersToRemove: make([]string, 0),

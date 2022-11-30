@@ -1,7 +1,6 @@
 package test
 
 import (
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -20,6 +19,8 @@ func TestFormUrlEncoded(t *testing.T) {
 	m := mocha.New(t)
 	m.Start()
 
+	defer m.Close()
+
 	scoped := m.AddMocks(mocha.Post(expect.URLPath("/test")).
 		FormField("var1", expect.ToEqual("dev")).
 		FormField("var2", expect.ToContain("q")).
@@ -34,9 +35,7 @@ func TestFormUrlEncoded(t *testing.T) {
 	req.Header.Add(headerx.ContentType, mimetypex.FormURLEncoded)
 
 	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	defer res.Body.Close()
 

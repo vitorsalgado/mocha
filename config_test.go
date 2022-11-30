@@ -1,7 +1,6 @@
 package mocha
 
 import (
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -64,16 +63,16 @@ func TestConfig(t *testing.T) {
 			CloseOnCleanup(t)
 		m.Start()
 
+		defer m.Close()
+
 		scoped := m.AddMocks(
 			Get(expect.URLPath("/test")).
 				Reply(reply.OK()))
 
 		req := testutil.Get(m.URL() + "/test")
 		res, err := req.Do()
-		if err != nil {
-			log.Fatal(err)
-		}
 
+		assert.NoError(t, err)
 		assert.True(t, scoped.Called())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Contains(t, m.server.Info().URL, addr)
@@ -85,6 +84,8 @@ func TestConfig(t *testing.T) {
 			Build())
 		m.Start()
 
+		defer m.Close()
+
 		scoped := m.AddMocks(Post(expect.URLPath("/test")).
 			Body(expect.ToEqual(10)).
 			Reply(reply.OK()))
@@ -94,10 +95,8 @@ func TestConfig(t *testing.T) {
 		req.Header("x-test", "num")
 
 		res, err := req.Do()
-		if err != nil {
-			log.Fatal(err)
-		}
 
+		assert.NoError(t, err)
 		assert.True(t, scoped.Called())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
@@ -119,16 +118,16 @@ func TestConfig(t *testing.T) {
 			Build())
 		m.Start()
 
+		defer m.Close()
+
 		scoped := m.AddMocks(
 			Get(expect.URLPath("/test")).
 				Reply(reply.OK()))
 
 		req := testutil.Get(m.URL() + "/test")
 		res, err := req.Do()
-		if err != nil {
-			log.Fatal(err)
-		}
 
+		assert.NoError(t, err)
 		assert.False(t, scoped.Called())
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 		assert.Equal(t, "true", res.Header.Get("intercepted"))
@@ -140,16 +139,16 @@ func TestConfig(t *testing.T) {
 			Build())
 		m.Start()
 
+		defer m.Close()
+
 		scoped := m.AddMocks(
 			Get(expect.URLPath("/test")).
 				Reply(reply.OK()))
 
 		req := testutil.Get(m.URL() + "/test")
 		res, err := req.Do()
-		if err != nil {
-			log.Fatal(err)
-		}
 
+		assert.NoError(t, err)
 		assert.True(t, scoped.Called())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})

@@ -1,16 +1,15 @@
 package mocha
 
 import (
-	"context"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"go.uber.org/goleak"
 
 	"github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/hooks"
@@ -19,9 +18,19 @@ import (
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
+func TestMain(m *testing.M) {
+	goleak.VerifyTestMain(
+		m,
+		goleak.IgnoreTopFunction("net/http.(*persistConn).readLoop"),
+		goleak.IgnoreTopFunction("net/http.(*persistConn).writeLoop"),
+	)
+}
+
 func TestMocha(t *testing.T) {
 	m := New(t)
 	m.Start()
+
+	defer m.Close()
 
 	scoped := m.AddMocks(
 		Get(expect.URLPath("/test")).
@@ -35,15 +44,11 @@ func TestMocha(t *testing.T) {
 	req.Header.Add("test", "hello")
 
 	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
 
+	assert.NoError(t, err)
 	assert.True(t, scoped.Called())
 	assert.Equal(t, 201, res.StatusCode)
 	assert.Equal(t, string(body), "hello world")
@@ -63,15 +68,11 @@ func TestMocha_NewBasic(t *testing.T) {
 
 	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
 	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
 
+	assert.NoError(t, err)
 	assert.True(t, scoped.Called())
 	assert.Equal(t, 201, res.StatusCode)
 	assert.Equal(t, string(body), "hello world")
@@ -81,10 +82,12 @@ func TestResponseMapper(t *testing.T) {
 	m := New(t)
 	m.Start()
 
+	defer m.Close()
+
 	scoped := m.AddMocks(Get(expect.URLPath("/test")).
 		Reply(reply.
 			OK().
-			Map(func(r *reply.Response, rma reply.ResponseMapperArgs) error {
+			Map(func(r *reply.Response, rma reply.MapperArgs) error {
 				r.Header.Add("x-test", rma.Request.Header.Get("x-param"))
 				return nil
 			})))
@@ -105,6 +108,8 @@ func TestResponseMapper(t *testing.T) {
 func TestResponseDelay(t *testing.T) {
 	m := New(t)
 	m.Start()
+
+	defer m.Close()
 
 	start := time.Now()
 	delay := time.Duration(1250) * time.Millisecond
@@ -165,6 +170,8 @@ func TestMocha_Assertions(t *testing.T) {
 	m := New(t)
 	m.Start()
 
+	defer m.Close()
+
 	fakeT := testmocks.NewFakeNotifier()
 
 	scoped := m.AddMocks(
@@ -178,10 +185,8 @@ func TestMocha_Assertions(t *testing.T) {
 	assert.Equal(t, 0, m.Hits())
 
 	res, err := testutil.Get(m.URL() + "/test-ok").Do()
-	if err != nil {
-		log.Fatal(err)
-	}
 
+	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.Equal(t, 1, scoped.Hits())
 	assert.True(t, m.AssertCalled(fakeT))
@@ -194,6 +199,8 @@ func TestMocha_Enable_Disable(t *testing.T) {
 	m := New(t)
 	m.Start()
 
+	defer m.Close()
+
 	m.AddMocks(
 		Get(expect.URLPath("/test-1")).
 			Reply(reply.OK()),
@@ -201,10 +208,8 @@ func TestMocha_Enable_Disable(t *testing.T) {
 			Reply(reply.OK()))
 
 	res, err := testutil.Get(m.URL() + "/test-1").Do()
-	if err != nil {
-		log.Fatal(err)
-	}
 
+	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 
 	// disable all mocks
@@ -212,33 +217,25 @@ func TestMocha_Enable_Disable(t *testing.T) {
 	m.Disable()
 
 	res, err = testutil.Get(m.URL() + "/test-1").Do()
-	if err != nil {
-		log.Fatal(err)
-	}
 
+	assert.NoError(t, err)
 	assert.Equal(t, http.StatusTeapot, res.StatusCode)
 
 	res, err = testutil.Get(m.URL() + "/test-2").Do()
-	if err != nil {
-		log.Fatal(err)
-	}
 
+	assert.NoError(t, err)
 	assert.Equal(t, http.StatusTeapot, res.StatusCode)
 
 	// re-enable mocks again
 	m.Enable()
 
 	res, err = testutil.Get(m.URL() + "/test-1").Do()
-	if err != nil {
-		log.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 
 	res, err = testutil.Get(m.URL() + "/test-2").Do()
-	if err != nil {
-		log.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 }
@@ -248,15 +245,15 @@ func TestMocha_ReplyJust(t *testing.T) {
 		m := New(t)
 		m.Start()
 
+		defer m.Close()
+
 		scoped := m.AddMocks(
 			Post(expect.URLPath("/test")).
 				ReplyJust(http.StatusCreated, reply.New().Header("test", "ok")))
 
 		req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", nil)
 		res, err := http.DefaultClient.Do(req)
-		if err != nil {
-			log.Fatal(err)
-		}
+		assert.NoError(t, err)
 
 		assert.True(t, scoped.Called())
 		assert.Equal(t, http.StatusCreated, res.StatusCode)
@@ -266,44 +263,19 @@ func TestMocha_ReplyJust(t *testing.T) {
 		m := New(t)
 		m.Start()
 
+		defer m.Close()
+
 		scoped := m.AddMocks(
 			Post(expect.URLPath("/test")).
 				ReplyJust(http.StatusCreated, reply.OK().Header("test", "ok")))
 
 		req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", nil)
 		res, err := http.DefaultClient.Do(req)
-		if err != nil {
-			log.Fatal(err)
-		}
+		assert.NoError(t, err)
 
 		assert.True(t, scoped.Called())
 		assert.Equal(t, http.StatusCreated, res.StatusCode)
 	})
-}
-
-func TestMocha_Context(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	m := New(t, Configure().Context(ctx).Build())
-	m.Start()
-
-	scoped := m.AddMocks(
-		Get(expect.URLPath("/test")).
-			Reply(reply.OK()))
-
-	res, err := testutil.Get(m.URL() + "/test").Do()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	assert.Equal(t, http.StatusOK, res.StatusCode)
-	assert.True(t, scoped.Called())
-
-	cancel()
-
-	res, err = testutil.Get(m.URL() + "/test").Do()
-
-	assert.NotNil(t, err, "server was supposed to be closed")
-	assert.Nil(t, res)
 }
 
 type FakeEvents struct{ mock.Mock }
@@ -334,14 +306,14 @@ func TestMocha_Subscribe(t *testing.T) {
 	m.Subscribe(hooks.HookOnRequestMatched, f.OnRequestMatched)
 	m.Start()
 
+	defer m.Close()
+
 	scoped := m.AddMocks(
 		Get(expect.URLPath("/test")).
 			Reply(reply.OK()))
 
 	res, err := testutil.Get(m.URL() + "/test").Do()
-	if err != nil {
-		log.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	time.Sleep(2 * time.Second)
 
@@ -355,6 +327,8 @@ func TestMocha_Silently(t *testing.T) {
 	m := New(t, Configure().LogLevel(LogSilently).Build())
 	m.Start()
 
+	defer m.Close()
+
 	scoped := m.AddMocks(
 		Get(expect.URLPath("/test")).
 			Reply(reply.
@@ -364,9 +338,7 @@ func TestMocha_Silently(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test?filter=all", nil)
 
 	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		log.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {

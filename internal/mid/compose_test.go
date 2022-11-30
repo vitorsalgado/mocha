@@ -2,7 +2,6 @@ package mid
 
 import (
 	"io"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -27,14 +26,10 @@ func TestMiddlewaresComposition(t *testing.T) {
 	defer ts.Close()
 
 	res, err := http.Get(ts.URL)
-	if err != nil {
-		log.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
+	assert.NoError(t, err)
 
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.Equal(t, "ok", res.Header.Get("x-one"))

@@ -22,6 +22,8 @@ func TestPostJSON(t *testing.T) {
 		m := mocha.New(t)
 		m.Start()
 
+		defer m.Close()
+
 		scoped := m.AddMocks(mocha.Post(expect.URLPath("/test")).
 			Header("test", expect.ToEqual("hello")).
 			Body(

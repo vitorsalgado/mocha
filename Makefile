@@ -16,6 +16,12 @@ help: ## show help
 test: ## run tests
 	@go test -race -v ./... -race
 
+.PHONY: test-leaks
+test-leaks:
+	@go test -c -o tests
+	@for test in $$(go test -list . | grep -E "^(Test|Example)"); do ./tests -test.run "^$$test\$$" &>/dev/null && echo -n "." || echo -e "\n$$test failed"; done
+
+
 .PHONY: bench
 bench: ## run benchmarks
 	@go test -v ./... -bench=. -count 2 -benchmem -run=^#
