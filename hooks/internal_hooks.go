@@ -26,6 +26,14 @@ func NewInternalEvents(l Logger) *InternalEvents {
 func (h *InternalEvents) OnRequest(evt any) {
 	e := evt.(*OnRequest)
 
+	var b any
+	switch t := any(e.Request.Body).(type) {
+	case []byte:
+		b = string(t)
+	default:
+		b = t
+	}
+
 	h.l.Logf("\n%s %s ---> %s %s\n%s %s\n\n%s: %v\n%s: %v\n",
 		colorize.BlueBright(colorize.Bold("REQUEST RECEIVED")),
 		e.StartedAt.Format(time.RFC3339),
@@ -36,7 +44,7 @@ func (h *InternalEvents) OnRequest(evt any) {
 		colorize.Blue("Headers"),
 		e.Request.Header,
 		colorize.Blue("Body"),
-		e.Request.Body,
+		b,
 	)
 }
 

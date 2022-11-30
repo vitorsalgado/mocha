@@ -18,6 +18,7 @@ type OnRequestMatch struct {
 	ResponseDefinition Response
 	Mock               Mock
 	Elapsed            time.Duration
+	Body               any
 }
 
 // OnRequestNotMatched event is triggered when no mocks are found for a request.

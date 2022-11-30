@@ -57,9 +57,12 @@ docs: ## show godocs
 	@godoc -http=:6060
 
 .PHONY: init
-init: ## prepare local development environment
-	@echo "tools"
-	@make -C tools
+init: tools ## prepare local development environment
 ifdef BREW_EXISTS
 	brew bundle
 endif
+
+.PHONY: tools
+tools:
+	@echo "tools"
+	@make -C tools

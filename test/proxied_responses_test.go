@@ -11,8 +11,8 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/expect"
-	"github.com/vitorsalgado/mocha/v3/internal/headerx"
-	"github.com/vitorsalgado/mocha/v3/internal/mimetypex"
+	"github.com/vitorsalgado/mocha/v3/internal/header"
+	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -20,7 +20,7 @@ func TestForward(t *testing.T) {
 	dest := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "ok", r.Header.Get("x-test"))
 		assert.Equal(t, "", r.Header.Get("x-del"))
-		assert.Equal(t, mimetypex.TextPlain, r.Header.Get(headerx.ContentType))
+		assert.Equal(t, mimetype.TextPlain, r.Header.Get(header.ContentType))
 
 		b, err := io.ReadAll(r.Body)
 		if err != nil && err != io.EOF {
@@ -50,7 +50,7 @@ func TestForward(t *testing.T) {
 		data := strings.NewReader("hello world")
 		req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", data)
 		req.Header.Add("x-del", "to-delete")
-		req.Header.Add(headerx.ContentType, mimetypex.TextPlain)
+		req.Header.Add(header.ContentType, mimetype.TextPlain)
 
 		res, err := http.DefaultClient.Do(req)
 		assert.NoError(t, err)

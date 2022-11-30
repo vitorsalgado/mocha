@@ -14,6 +14,10 @@ func (m *EqualFoldMatcher) Name() string {
 }
 
 func (m *EqualFoldMatcher) Match(v any) (Result, error) {
+	if v == nil {
+		v = ""
+	}
+
 	return Result{
 		OK: strings.EqualFold(m.Expected, v.(string)),
 		DescribeFailure: func() string {

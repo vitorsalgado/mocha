@@ -1,11 +1,13 @@
 package mocha
 
 import (
+	"fmt"
 	"net/http"
 	"sync"
 
 	"github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/internal/autoid"
+	"github.com/vitorsalgado/mocha/v3/internal/colorize"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -175,8 +177,12 @@ func (m *Mock) requestMatches(ri *expect.RequestInfo, expectations []Expectation
 			details = append(details, mismatchDetail{
 				Name:   exp.Matcher.Name(),
 				Target: exp.Target,
-				Desc:   err.Error(),
-				Err:    err,
+				Desc: fmt.Sprintf(
+					"%s => Error: %s",
+					colorize.Bold(exp.Matcher.Name()),
+					colorize.Red(err.Error()),
+				),
+				Err: err,
 			})
 
 			continue
@@ -197,12 +203,15 @@ func (m *Mock) requestMatches(ri *expect.RequestInfo, expectations []Expectation
 	return &matchResult{OK: ok, Weight: w, MismatchDetails: details}
 }
 
-func matches(e Expectation, value any) (expect.Result, error) {
-	res, err := e.Matcher.Match(value)
+func matches(e Expectation, value any) (result expect.Result, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("matcher %s panicked. reason=%v", e.Matcher.Name(), r)
+			return
+		}
+	}()
 
-	if err != nil {
-		return expect.Result{}, err
-	}
+	result, err = e.Matcher.Match(value)
 
-	return res, nil
+	return
 }

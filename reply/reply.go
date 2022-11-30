@@ -7,6 +7,9 @@ import (
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/vitorsalgado/mocha/v3/internal/header"
+	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 )
 
 type (
@@ -136,6 +139,12 @@ func (rpl *StdReply) ExpireCookie(cookie http.Cookie) *StdReply {
 	return rpl
 }
 
+// JSON sets the response to application/json.
+func (rpl *StdReply) JSON() *StdReply {
+	rpl.Header(header.ContentType, mimetype.JSON)
+	return rpl
+}
+
 // Body defines the response body using a []byte,
 func (rpl *StdReply) Body(value []byte) *StdReply {
 	rpl.response.Body = bytes.NewReader(value)
@@ -145,6 +154,7 @@ func (rpl *StdReply) Body(value []byte) *StdReply {
 // BodyString defines the response body using a string.
 func (rpl *StdReply) BodyString(value string) *StdReply {
 	rpl.response.Body = strings.NewReader(value)
+	rpl.Header(header.ContentType, mimetype.TextPlain)
 	return rpl
 }
 
@@ -158,6 +168,7 @@ func (rpl *StdReply) BodyJSON(data any) *StdReply {
 	}
 
 	rpl.response.Body = buf
+	rpl.Header(header.ContentType, mimetype.JSON)
 
 	return rpl
 }

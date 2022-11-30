@@ -1,0 +1,28 @@
+{
+  "request_count": 1000,
+  "load_type": "linear",
+  "duration": 10,
+  "steps": [
+    {
+      "id": 1,
+      "url": "http://[::]:8080/test",
+      "protocol": "http",
+      "method": "GET",
+      "headers": {
+        "Accept": "text/plain",
+        "X-Scenario": "1"
+      },
+      "timeout": 1
+    },
+    {
+      "id": 2,
+      "url": "http://[::]:8080/test",
+      "method": "POST",
+      "headers": {
+        "Content-Type": "application/json"
+      },
+      "payload_file": "d/b2.json",
+      "timeout": 1
+    }
+  ]
+}

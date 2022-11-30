@@ -72,6 +72,10 @@ func New(t TestingT, config ...Config) *Mocha {
 		Compose(middlewares...).
 		Root(newHandler(mockStorage, parsers, p, hook, t))
 
+	if cfg.Handler != nil {
+		handler = cfg.Handler(handler)
+	}
+
 	server := cfg.Server
 
 	if server == nil {

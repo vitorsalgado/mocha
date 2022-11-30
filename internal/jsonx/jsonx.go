@@ -2,7 +2,6 @@
 package jsonx
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -13,9 +12,6 @@ import (
 var (
 	fieldRegExp = regexp.MustCompile(`(\w+)\[(\d+)](.*)`)
 	idxRegExp   = regexp.MustCompile(`^\[(\d+)](.*)`)
-
-	// ErrFieldNotFound is thrown when a JSON path is invalid.
-	ErrFieldNotFound = errors.New("could not find a field using provided json path")
 )
 
 // Reach returns the field with the given path from the given json data
@@ -47,7 +43,7 @@ func Reach(path string, data any) (any, error) {
 			size := len(field)
 
 			if idx > size-1 {
-				return nil, ErrFieldNotFound
+				return nil, fieldNotFound(path)
 			}
 
 			entry := field[idx]
@@ -62,7 +58,7 @@ func Reach(path string, data any) (any, error) {
 					return nil, nil
 				}
 
-				return nil, ErrFieldNotFound
+				return nil, fieldNotFound(path)
 			}
 
 			return entry, nil
@@ -78,7 +74,7 @@ func Reach(path string, data any) (any, error) {
 		if s == 1 {
 			val, ok := data.(map[string]any)[parts[0]]
 			if !ok {
-				return nil, ErrFieldNotFound
+				return nil, fieldNotFound(path)
 			}
 
 			return val, nil
@@ -87,7 +83,7 @@ func Reach(path string, data any) (any, error) {
 		ch := strings.Join(parts[1:], ".")
 		val, ok := data.(map[string]any)[parts[0]]
 		if !ok {
-			return nil, ErrFieldNotFound
+			return nil, fieldNotFound(path)
 		}
 
 		return Reach(ch, val)
@@ -106,7 +102,7 @@ func Reach(path string, data any) (any, error) {
 			size := len(d)
 
 			if idx > size-1 {
-				return nil, ErrFieldNotFound
+				return nil, fieldNotFound(path)
 			}
 
 			next := values[2]
@@ -114,7 +110,7 @@ func Reach(path string, data any) (any, error) {
 
 			if next == "" {
 				if field == nil && len(data.([]any)) < (idx+1) {
-					return nil, ErrFieldNotFound
+					return nil, fieldNotFound(path)
 				}
 
 				return field, nil
@@ -124,5 +120,9 @@ func Reach(path string, data any) (any, error) {
 		}
 	}
 
-	return nil, ErrFieldNotFound
+	return nil, fieldNotFound(path)
+}
+
+func fieldNotFound(p string) error {
+	return fmt.Errorf("field \"%s\" is not present", p)
 }

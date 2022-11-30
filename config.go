@@ -33,6 +33,10 @@ type (
 		// Server defines a custom mock HTTP server.
 		Server Server
 
+		// Handler provides a mean to configure a custom HTTP handler
+		// while leveraging the default mock handler.
+		Handler func(handler http.Handler) http.Handler
+
 		// LogLevel defines the level of logs
 		LogLevel LogLevel
 
@@ -92,6 +96,12 @@ func (cb *Configurer) CORS(options ...cors.Config) *Configurer {
 // Server configures a custom HTTP mock Server.
 func (cb *Configurer) Server(srv Server) *Configurer {
 	cb.conf.Server = srv
+	return cb
+}
+
+// Handler configures a custom HTTP handler using the default mock handler.
+func (cb *Configurer) Handler(fn func(handler http.Handler) http.Handler) *Configurer {
+	cb.conf.Handler = fn
 	return cb
 }
 

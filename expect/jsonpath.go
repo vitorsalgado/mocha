@@ -1,8 +1,6 @@
 package expect
 
 import (
-	"fmt"
-
 	"github.com/vitorsalgado/mocha/v3/internal/jsonx"
 )
 
@@ -16,8 +14,16 @@ func (m *JSONPathMatcher) Name() string {
 }
 
 func (m *JSONPathMatcher) Match(v any) (Result, error) {
-	value, err := jsonx.Reach(m.Path, v)
-	if err != nil || value == nil {
+	var value any
+	var err error
+
+	if v == nil {
+		value = v
+	} else {
+		value, err = jsonx.Reach(m.Path, v)
+	}
+
+	if err != nil {
 		return mismatch(nil), err
 	}
 
@@ -27,13 +33,7 @@ func (m *JSONPathMatcher) Match(v any) (Result, error) {
 	}
 
 	return Result{OK: r.OK, DescribeFailure: func() string {
-		return fmt.Sprintf(
-			"%s %s %s %s",
-			hint(m.Name(), printExpected(m.Path)),
-			hint(m.Matcher.Name()),
-			_separator,
-			r.DescribeFailure(),
-		)
+		return hint(m.Name(), printExpected(m.Path), r.DescribeFailure())
 	}}, nil
 }
 

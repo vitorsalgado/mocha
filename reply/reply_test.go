@@ -122,7 +122,7 @@ func TestStdReply_BodyJSON(t *testing.T) {
 
 func TestStdReply_BodyReader(t *testing.T) {
 	wd, _ := os.Getwd()
-	f, err := os.Open(path.Join(wd, "_testdata", "data.txt"))
+	f, err := os.Open(path.Join(wd, "testdata", "data.txt"))
 	if err != nil {
 		t.Fatal(err)
 	}

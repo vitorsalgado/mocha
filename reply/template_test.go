@@ -20,7 +20,7 @@ type testData struct {
 
 func TestGoTemplating(t *testing.T) {
 	wd, _ := os.Getwd()
-	filename := path.Join(wd, "_testdata/test.tmpl")
+	filename := path.Join(wd, "testdata/test.tmpl")
 
 	tpl, err := os.ReadFile(filename)
 	if err != nil {
@@ -55,7 +55,7 @@ func TestReplyWithTemplate(t *testing.T) {
 	_req.Header.Add("x-test", "dev")
 
 	wd, _ := os.Getwd()
-	f, _ := os.Open(path.Join(wd, "_testdata/test_req.tmpl"))
+	f, _ := os.Open(path.Join(wd, "testdata/test_req.tmpl"))
 	b, _ := io.ReadAll(f)
 
 	data := struct {

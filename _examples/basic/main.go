@@ -3,14 +3,15 @@ package main
 import (
 	"context"
 	"fmt"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/expect"
-	"github.com/vitorsalgado/mocha/v3/internal/headerx"
-	"github.com/vitorsalgado/mocha/v3/internal/mimetypex"
+	"github.com/vitorsalgado/mocha/v3/internal/header"
+	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -18,14 +19,14 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	m := mocha.New(mocha.NewConsoleNotifier(), mocha.Configure().Context(ctx).Build())
+	m := mocha.New(mocha.NewConsoleNotifier(), mocha.Configure().Addr(":8080").Build())
 	m.Start()
 
 	m.AddMocks(mocha.
 		Get(expect.URLPath("/test")).
-		Header(headerx.Accept,
-			expect.ToContain(mimetypex.TextHTML)).
-		Header(headerx.ContentType, expect.ToEqual("test")).
+		Header(header.Accept,
+			expect.ToContain(mimetype.TextHTML)).
+		Header(header.ContentType, expect.ToEqual("test")).
 		Header("any", expect.AllOf(expect.ToContain("test"), expect.ToEqualFold("dev"))).
 		Reply(reply.OK().
 			BodyString("hello world").
@@ -44,4 +45,6 @@ func main() {
 	fmt.Printf("go to: %s\n", m.URL()+"/test")
 
 	<-ctx.Done()
+
+	m.Close()
 }

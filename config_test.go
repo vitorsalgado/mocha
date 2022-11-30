@@ -10,8 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/vitorsalgado/mocha/v3/expect"
-	"github.com/vitorsalgado/mocha/v3/internal/headerx"
-	"github.com/vitorsalgado/mocha/v3/internal/mimetypex"
+	"github.com/vitorsalgado/mocha/v3/internal/header"
+	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
@@ -19,7 +19,7 @@ import (
 type testBodyParser struct{}
 
 func (p testBodyParser) CanParse(content string, r *http.Request) bool {
-	return content == mimetypex.TextPlain && r.Header.Get("x-test") == "num"
+	return content == mimetype.TextPlain && r.Header.Get("x-test") == "num"
 }
 
 func (p testBodyParser) Parse(body []byte, _ *http.Request) (any, error) {
@@ -91,7 +91,7 @@ func TestConfig(t *testing.T) {
 			Reply(reply.OK()))
 
 		req := testutil.Post(m.URL()+"/test", strings.NewReader("10"))
-		req.Header(headerx.ContentType, mimetypex.TextPlain)
+		req.Header(header.ContentType, mimetype.TextPlain)
 		req.Header("x-test", "num")
 
 		res, err := req.Do()
@@ -107,7 +107,7 @@ func TestConfig(t *testing.T) {
 			return http.HandlerFunc(
 				func(w http.ResponseWriter, r *http.Request) {
 					w.Header().Add("intercepted", "true")
-					w.Header().Add(headerx.ContentType, mimetypex.TextPlain)
+					w.Header().Add(header.ContentType, mimetype.TextPlain)
 					w.WriteHeader(http.StatusBadRequest)
 					w.Write([]byte(msg))
 				})
