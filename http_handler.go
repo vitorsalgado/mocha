@@ -103,7 +103,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	for _, expectation := range mock.Expectations {
+	for _, expectation := range mock.expectations {
 		err = expectation.Matcher.OnMockServed()
 		if err != nil {
 			h.t.Logf("matcher %s .OnMockServed() returned the error=%v", expectation.Matcher.Name(), err)

@@ -50,7 +50,9 @@ type (
 	}
 )
 
-var configDefault = Configure().LogLevel(LogVerbose).Build()
+var _configDefault = Configure().
+	LogLevel(LogVerbose).
+	Build()
 
 // Configure inits a new Configurer.
 // Entrypoint to start a new custom configuration for Mocha mock servers.
@@ -99,8 +101,8 @@ func (cb *Configurer) Server(srv Server) *Configurer {
 	return cb
 }
 
-// Handler configures a custom HTTP handler using the default mock handler.
-func (cb *Configurer) Handler(fn func(handler http.Handler) http.Handler) *Configurer {
+// DecorateHandler configures a custom HTTP handler using the default mock handler.
+func (cb *Configurer) DecorateHandler(fn func(handler http.Handler) http.Handler) *Configurer {
 	cb.conf.Handler = fn
 	return cb
 }

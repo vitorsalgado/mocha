@@ -75,9 +75,9 @@ func (b *MockBuilder) Priority(p int) *MockBuilder {
 
 // Method sets the HTTP request method to be matched.
 func (b *MockBuilder) Method(method string) *MockBuilder {
-	b.mock.Expectations = append(
-		b.mock.Expectations,
-		Expectation{
+	b.mock.expectations = append(
+		b.mock.expectations,
+		expectation{
 			Target:        "method",
 			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Method },
 			Matcher:       matcher.EqualIgnoreCase(method),
@@ -89,9 +89,9 @@ func (b *MockBuilder) Method(method string) *MockBuilder {
 
 // URL defines a matcher to be applied to the http.Request url.URL.
 func (b *MockBuilder) URL(m matcher.Matcher) *MockBuilder {
-	b.mock.Expectations = append(
-		b.mock.Expectations,
-		Expectation{
+	b.mock.expectations = append(
+		b.mock.expectations,
+		expectation{
 			Target:        "url",
 			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.URL },
 			Matcher:       m,
@@ -103,9 +103,9 @@ func (b *MockBuilder) URL(m matcher.Matcher) *MockBuilder {
 
 // Header adds a matcher to a specific http.Header key.
 func (b *MockBuilder) Header(key string, m matcher.Matcher) *MockBuilder {
-	b.mock.Expectations = append(
-		b.mock.Expectations,
-		Expectation{
+	b.mock.expectations = append(
+		b.mock.expectations,
+		expectation{
 			Target:        "header",
 			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Header.Get(key) },
 			Matcher:       m,
@@ -117,9 +117,9 @@ func (b *MockBuilder) Header(key string, m matcher.Matcher) *MockBuilder {
 
 // Query defines a matcher to a specific query.
 func (b *MockBuilder) Query(key string, m matcher.Matcher) *MockBuilder {
-	b.mock.Expectations = append(
-		b.mock.Expectations,
-		Expectation{
+	b.mock.expectations = append(
+		b.mock.expectations,
+		expectation{
 			Target:        "query",
 			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.URL.Query().Get(key) },
 			Matcher:       m,
@@ -136,8 +136,8 @@ func (b *MockBuilder) Query(key string, m matcher.Matcher) *MockBuilder {
 //	m.Body(JSONPath("name", EqualTo("test")), JSONPath("address.street", ToContains("nowhere")))
 func (b *MockBuilder) Body(matcherList ...matcher.Matcher) *MockBuilder {
 	for _, m := range matcherList {
-		b.mock.Expectations = append(b.mock.Expectations,
-			Expectation{
+		b.mock.expectations = append(b.mock.expectations,
+			expectation{
 				Target:        "body",
 				ValueSelector: func(r *matcher.RequestInfo) any { return r.ParsedBody },
 				Matcher:       m,
@@ -150,8 +150,8 @@ func (b *MockBuilder) Body(matcherList ...matcher.Matcher) *MockBuilder {
 
 // FormField defines a matcher for a specific form field by its key.
 func (b *MockBuilder) FormField(field string, m matcher.Matcher) *MockBuilder {
-	b.mock.Expectations = append(b.mock.Expectations,
-		Expectation{
+	b.mock.expectations = append(b.mock.expectations,
+		expectation{
 			Target:        "form",
 			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Form.Get(field) },
 			Matcher:       m,
@@ -163,8 +163,8 @@ func (b *MockBuilder) FormField(field string, m matcher.Matcher) *MockBuilder {
 
 // Repeat defines to total times that a mock should be served, if request matches.
 func (b *MockBuilder) Repeat(times int64) *MockBuilder {
-	b.mock.Expectations = append(b.mock.Expectations,
-		Expectation{
+	b.mock.expectations = append(b.mock.expectations,
+		expectation{
 			Target:        "request",
 			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request },
 			Matcher:       matcher.Repeat(times),
@@ -175,9 +175,9 @@ func (b *MockBuilder) Repeat(times int64) *MockBuilder {
 
 // RequestMatches defines matcher.Matcher to be applied to a http.Request.
 func (b *MockBuilder) RequestMatches(m matcher.Matcher) *MockBuilder {
-	b.mock.Expectations = append(
-		b.mock.Expectations,
-		Expectation{
+	b.mock.expectations = append(
+		b.mock.expectations,
+		expectation{
 			Target:        "request",
 			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request },
 			Matcher:       m,
@@ -246,8 +246,8 @@ func (b *MockBuilder) ReplyJust(status int, r *reply.StdReply) *MockBuilder {
 // Used internally by Mocha.
 func (b *MockBuilder) Build(deps *Deps) *Mock {
 	if b.scenario != "" {
-		b.mock.Expectations = append(b.mock.Expectations,
-			Expectation{
+		b.mock.expectations = append(b.mock.expectations,
+			expectation{
 				Target: "scenario",
 				ValueSelector: func(r *matcher.RequestInfo) any {
 					return r.Request

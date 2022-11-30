@@ -39,7 +39,7 @@ type (
 // New creates a new Mocha mock server with the given configurations.
 // Parameter config accepts a Config or a Configurer implementation.
 func New(t TestingT, config ...*Config) *Mocha {
-	cfg := configDefault
+	cfg := _configDefault
 	if len(config) > 0 {
 		cfg = config[0]
 	}

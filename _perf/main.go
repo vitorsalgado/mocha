@@ -106,7 +106,7 @@ func main() {
 
 	m := mocha.New(mocha.NewConsoleNotifier(),
 		mocha.Configure().
-			Handler(h).
+			DecorateHandler(h).
 			Server(&Srv{}).
 			Addr(":8080").Build())
 	m.Start()

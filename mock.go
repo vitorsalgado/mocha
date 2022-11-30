@@ -24,9 +24,6 @@ type (
 		// Priority sets the priority for a Mock.
 		Priority int
 
-		// Expectations are a list of Expectation. These will run on every request to find the correct Mock.
-		Expectations []Expectation
-
 		// Reply is the responder that will be used to serve the HTTP response stub, once matched against an
 		// HTTP request.
 		Reply reply.Reply
@@ -37,8 +34,9 @@ type (
 		// PostActions holds PostAction list to be executed after the Mock was matched and served.
 		PostActions []PostAction
 
-		mu   *sync.Mutex
-		hits int
+		expectations []expectation
+		mu           *sync.Mutex
+		hits         int
 	}
 
 	// PostActionArgs represents the arguments that will be passed to every PostAction implementation
@@ -55,22 +53,22 @@ type (
 		Run(args *PostActionArgs) error
 	}
 
-	// ValueSelector defines a function that will be used to extract RequestInfo value and provide it to Matcher instances.
-	ValueSelector func(r *matcher.RequestInfo) any
+	// valueSelector defines a function that will be used to extract RequestInfo value and provide it to Matcher instances.
+	valueSelector func(r *matcher.RequestInfo) any
 
-	// Expectation holds metadata related to one http.Request Matcher.
-	Expectation struct {
+	// expectation holds metadata related to one http.Request Matcher.
+	expectation struct {
 		// Target is an optional metadata that describes the target of the matcher.
 		// Example: the target could have the "header", meaning that the matcher will be applied to one request header.
 		Target string
 
-		// Matcher associated with this Expectation.
+		// Matcher associated with this expectation.
 		Matcher matcher.Matcher
 
 		// ValueSelector will extract the http.Request or a portion of it and feed it to the associated Matcher.
-		ValueSelector ValueSelector
+		ValueSelector valueSelector
 
-		// Weight of this Expectation.
+		// Weight of this expectation.
 		Weight weight
 	}
 )
@@ -103,8 +101,8 @@ type (
 // Enums of weight.
 const (
 	_weightNone weight = iota
+	_weightLow  weight = iota * 2
 	_weightVeryLow
-	_weightLow
 	_weightRegular
 	_weightHigh
 )
@@ -114,7 +112,7 @@ func newMock() *Mock {
 	return &Mock{
 		ID:           autoid.Next(),
 		Enabled:      true,
-		Expectations: make([]Expectation, 0),
+		expectations: make([]expectation, 0),
 		PostActions:  make([]PostAction, 0),
 
 		mu: &sync.Mutex{},
@@ -163,14 +161,14 @@ func (m *Mock) Disable() {
 
 // requestMatches checks if current Mock matches against a list of expectations.
 // Will iterate through all expectations even if it doesn't match early.
-func (m *Mock) requestMatches(ri *matcher.RequestInfo, expectations []Expectation) *matchResult {
+func (m *Mock) requestMatches(ri *matcher.RequestInfo, expectations []expectation) *matchResult {
 	w := 0
 	ok := true
 	details := make([]mismatchDetail, 0)
 
 	for _, exp := range expectations {
 		val := exp.ValueSelector(ri)
-		result, err := matches(exp, val)
+		result, err := doMatches(exp, val)
 
 		if err != nil {
 			ok = false
@@ -203,7 +201,7 @@ func (m *Mock) requestMatches(ri *matcher.RequestInfo, expectations []Expectatio
 	return &matchResult{OK: ok, Weight: w, MismatchDetails: details}
 }
 
-func matches(e Expectation, value any) (result matcher.Result, err error) {
+func doMatches(e expectation, value any) (result matcher.Result, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("matcher %s panicked. reason=%v", e.Matcher.Name(), r)
