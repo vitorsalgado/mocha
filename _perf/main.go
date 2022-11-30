@@ -15,9 +15,9 @@ import (
 	"syscall"
 
 	"github.com/vitorsalgado/mocha/v3"
-	. "github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
+	. "github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -113,18 +113,18 @@ func main() {
 
 	m.AddMocks(mocha.
 		Get(URLPath("/test")).
-		Header(header.Accept, ToContain(mimetype.TextPlain)).
-		Header("X-Scenario", ToEqual("1")).
+		Header(header.Accept, Contain(mimetype.TextPlain)).
+		Header("X-Scenario", Equal("1")).
 		Reply(reply.OK().
 			BodyString("ok").
 			Header("X-Scenario-Result", "true")))
 
 	m.AddMocks(mocha.
 		Post(URLPath("/test")).
-		Header(header.ContentType, ToContain(mimetype.JSON)).
+		Header(header.ContentType, Contain(mimetype.JSON)).
 		Body(AllOf(
-			JSONPath("active", ToEqual(true)),
-			JSONPath("result", ToEqual("ok")))).
+			JSONPath("active", Equal(true)),
+			JSONPath("result", Equal("ok")))).
 		Reply(reply.OK().
 			JSON().
 			BodyReader(f)),

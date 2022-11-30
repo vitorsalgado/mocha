@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
+	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -24,10 +24,10 @@ func TestPostJSON(t *testing.T) {
 
 		defer m.Close()
 
-		scoped := m.AddMocks(mocha.Post(expect.URLPath("/test")).
-			Header("test", expect.ToEqual("hello")).
+		scoped := m.AddMocks(mocha.Post(matcher.URLPath("/test")).
+			Header("test", matcher.Equal("hello")).
 			Body(
-				expect.JSONPath("name", expect.ToEqual("dev")), expect.JSONPath("ok", expect.ToEqual(true))).
+				matcher.JSONPath("name", matcher.Equal("dev")), matcher.JSONPath("ok", matcher.Equal(true))).
 			Reply(reply.OK()))
 
 		req := testutil.PostJSON(m.URL()+"/test", &jsonTestModel{Name: "dev", OK: true})
@@ -50,9 +50,9 @@ func TestPostJSON(t *testing.T) {
 
 		data := &jsonTestModel{OK: true, Name: "dev"}
 
-		scoped := m.AddMocks(mocha.Post(expect.URLPath("/test")).
-			Header("test", expect.ToEqual("hello")).
-			Body(expect.ToEqualJSON(data)).
+		scoped := m.AddMocks(mocha.Post(matcher.URLPath("/test")).
+			Header("test", matcher.Equal("hello")).
+			Body(matcher.EqualJSON(data)).
 			Reply(reply.OK()))
 
 		req := testutil.PostJSON(m.URL()+"/test", data)
@@ -76,9 +76,9 @@ func TestPostJSON(t *testing.T) {
 		data1 := map[string]interface{}{"ok": true, "name": "dev"}
 		data2 := map[string]interface{}{"ok": true, "name": "dev"}
 
-		scoped := m.AddMocks(mocha.Post(expect.URLPath("/test")).
-			Header("test", expect.ToEqual("hello")).
-			Body(expect.ToEqualJSON(data1)).
+		scoped := m.AddMocks(mocha.Post(matcher.URLPath("/test")).
+			Header("test", matcher.Equal("hello")).
+			Body(matcher.EqualJSON(data1)).
 			Reply(reply.OK()))
 
 		req := testutil.PostJSON(m.URL()+"/test", data2)
@@ -102,9 +102,9 @@ func TestPostJSON(t *testing.T) {
 		toMatch := map[string]interface{}{"name": "dev", "ok": true}
 		data := jsonTestModel{Name: "dev", OK: true}
 
-		scoped := m.AddMocks(mocha.Post(expect.URLPath("/test")).
-			Header("test", expect.ToEqual("hello")).
-			Body(expect.ToEqualJSON(toMatch)).
+		scoped := m.AddMocks(mocha.Post(matcher.URLPath("/test")).
+			Header("test", matcher.Equal("hello")).
+			Body(matcher.EqualJSON(toMatch)).
 			Reply(reply.OK()))
 
 		req := testutil.PostJSON(m.URL()+"/test", data)
@@ -128,9 +128,9 @@ func TestPostJSON(t *testing.T) {
 		body := map[string]interface{}{"ok": true, "name": "dev"}
 		exp := map[string]interface{}{"ok": false, "name": "qa"}
 
-		scoped := m.AddMocks(mocha.Post(expect.URLPath("/test")).
-			Header("test", expect.ToEqual("hello")).
-			Body(expect.ToEqualJSON(exp)).
+		scoped := m.AddMocks(mocha.Post(matcher.URLPath("/test")).
+			Header("test", matcher.Equal("hello")).
+			Body(matcher.EqualJSON(exp)).
 			Reply(reply.OK()))
 
 		req := testutil.PostJSON(m.URL()+"/test", body)

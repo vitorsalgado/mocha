@@ -9,10 +9,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
+	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -66,7 +66,7 @@ func TestConfig(t *testing.T) {
 		defer m.Close()
 
 		scoped := m.AddMocks(
-			Get(expect.URLPath("/test")).
+			Get(matcher.URLPath("/test")).
 				Reply(reply.OK()))
 
 		req := testutil.Get(m.URL() + "/test")
@@ -86,8 +86,8 @@ func TestConfig(t *testing.T) {
 
 		defer m.Close()
 
-		scoped := m.AddMocks(Post(expect.URLPath("/test")).
-			Body(expect.ToEqual(10)).
+		scoped := m.AddMocks(Post(matcher.URLPath("/test")).
+			Body(matcher.Equal(10)).
 			Reply(reply.OK()))
 
 		req := testutil.Post(m.URL()+"/test", strings.NewReader("10"))
@@ -121,7 +121,7 @@ func TestConfig(t *testing.T) {
 		defer m.Close()
 
 		scoped := m.AddMocks(
-			Get(expect.URLPath("/test")).
+			Get(matcher.URLPath("/test")).
 				Reply(reply.OK()))
 
 		req := testutil.Get(m.URL() + "/test")
@@ -142,7 +142,7 @@ func TestConfig(t *testing.T) {
 		defer m.Close()
 
 		scoped := m.AddMocks(
-			Get(expect.URLPath("/test")).
+			Get(matcher.URLPath("/test")).
 				Reply(reply.OK()))
 
 		req := testutil.Get(m.URL() + "/test")

@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
+	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -20,7 +20,7 @@ func TestHTTPMethods(t *testing.T) {
 
 	t.Run("should mock GET", func(t *testing.T) {
 		scoped := m.AddMocks(
-			mocha.Get(expect.URLPath("/test")).
+			mocha.Get(matcher.URLPath("/test")).
 				Reply(reply.OK()))
 
 		defer scoped.Clean()
@@ -40,7 +40,7 @@ func TestHTTPMethods(t *testing.T) {
 
 	t.Run("should mock POST", func(t *testing.T) {
 		scoped := m.AddMocks(
-			mocha.Post(expect.URLPath("/test")).
+			mocha.Post(matcher.URLPath("/test")).
 				Reply(reply.OK()))
 
 		defer scoped.Clean()
@@ -61,7 +61,7 @@ func TestHTTPMethods(t *testing.T) {
 
 	t.Run("should mock PUT", func(t *testing.T) {
 		scoped := m.AddMocks(
-			mocha.Put(expect.URLPath("/test")).
+			mocha.Put(matcher.URLPath("/test")).
 				Reply(reply.OK()))
 
 		defer scoped.Clean()
@@ -82,7 +82,7 @@ func TestHTTPMethods(t *testing.T) {
 
 	t.Run("should mock DELETE", func(t *testing.T) {
 		scoped := m.AddMocks(
-			mocha.Delete(expect.URLPath("/test")).
+			mocha.Delete(matcher.URLPath("/test")).
 				Reply(reply.OK()))
 
 		defer scoped.Clean()
@@ -103,7 +103,7 @@ func TestHTTPMethods(t *testing.T) {
 
 	t.Run("should mock PATCH", func(t *testing.T) {
 		scoped := m.AddMocks(
-			mocha.Patch(expect.URLPath("/test")).
+			mocha.Patch(matcher.URLPath("/test")).
 				Reply(reply.OK()))
 
 		defer scoped.Clean()
@@ -124,7 +124,7 @@ func TestHTTPMethods(t *testing.T) {
 
 	t.Run("should mock HEAD", func(t *testing.T) {
 		scoped := m.AddMocks(
-			mocha.Head(expect.URLPath("/test")).
+			mocha.Head(matcher.URLPath("/test")).
 				Reply(reply.OK()))
 
 		defer scoped.Clean()
@@ -145,7 +145,7 @@ func TestHTTPMethods(t *testing.T) {
 
 	t.Run("should mock OPTIONS", func(t *testing.T) {
 		scoped := m.AddMocks(
-			mocha.Options(expect.URLPath("/test")).
+			mocha.Options(matcher.URLPath("/test")).
 				Reply(reply.OK()))
 
 		defer scoped.Clean()

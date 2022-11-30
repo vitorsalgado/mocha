@@ -7,10 +7,10 @@ import (
 	"sync"
 
 	"github.com/vitorsalgado/mocha/v3/cors"
-	"github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/hooks"
 	"github.com/vitorsalgado/mocha/v3/internal/mid"
 	"github.com/vitorsalgado/mocha/v3/internal/mid/recover"
+	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -139,9 +139,9 @@ func (m *Mocha) StartTLS() ServerInfo {
 // Usage:
 //
 //	scoped := m.AddMocks(
-//		Get(expect.URLPath("/test")).
-//			Header("test", expect.ToEqual("hello")).
-//			Query("filter", expect.ToEqual("all")).
+//		Get(matcher.URLPath("/test")).
+//			Header("test", matcher.Equal("hello")).
+//			Query("filter", matcher.Equal("all")).
 //			Reply(reply.Created().BodyString("hello world")))
 //
 //	assert.True(t, scoped.Called())
@@ -153,7 +153,7 @@ func (m *Mocha) AddMocks(builders ...*MockBuilder) *Scoped {
 	added := make([]*Mock, size)
 
 	for i, b := range builders {
-		nm := b.Build(&Deps{ScenarioStore: expect.NewScenarioStorage()})
+		nm := b.Build(&Deps{ScenarioStore: matcher.NewScenarioStorage()})
 		m.storage.Save(nm)
 		added[i] = nm
 	}

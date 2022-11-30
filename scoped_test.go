@@ -7,9 +7,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/internal/testmocks"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
+	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -73,10 +73,10 @@ func TestScoped(t *testing.T) {
 
 		defer m.Close()
 
-		s1 := m.AddMocks(Get(expect.URLPath("/test1")).Reply(reply.OK()))
+		s1 := m.AddMocks(Get(matcher.URLPath("/test1")).Reply(reply.OK()))
 		s2 := m.AddMocks(
-			Get(expect.URLPath("/test2")).Reply(reply.OK()),
-			Get(expect.URLPath("/test3")).Reply(reply.OK()))
+			Get(matcher.URLPath("/test2")).Reply(reply.OK()),
+			Get(matcher.URLPath("/test3")).Reply(reply.OK()))
 
 		t.Run("initial state (enabled)", func(t *testing.T) {
 			req := testutil.Get(fmt.Sprintf("%s/test1", m.URL()))

@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
+	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -17,7 +17,7 @@ func TestRepeat(t *testing.T) {
 
 	defer m.Close()
 
-	m.AddMocks(mocha.Get(expect.URLPath("/test")).
+	m.AddMocks(mocha.Get(matcher.URLPath("/test")).
 		Repeat(3).
 		Reply(reply.OK()))
 

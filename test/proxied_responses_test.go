@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
+	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -39,8 +39,8 @@ func TestForward(t *testing.T) {
 	defer m.Close()
 
 	t.Run("should forward request and respond using proxied response and mock definition", func(t *testing.T) {
-		scoped := m.AddMocks(mocha.Post(expect.URLPath("/test")).
-			Body(expect.ToEqual("hello world")).
+		scoped := m.AddMocks(mocha.Post(matcher.URLPath("/test")).
+			Body(matcher.Equal("hello world")).
 			Reply(reply.
 				Forward(dest.URL).
 				ProxyHeader("x-test", "ok").

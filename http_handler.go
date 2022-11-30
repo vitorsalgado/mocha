@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/hooks"
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
+	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -47,7 +47,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.evt.Emit(&hooks.OnRequest{Request: er, StartedAt: start})
 
 	// match current request with all eligible stored matchers in order to find one mock.
-	info := &expect.RequestInfo{Request: r, ParsedBody: parsedBody}
+	info := &matcher.RequestInfo{Request: r, ParsedBody: parsedBody}
 	result, err := findMockForRequest(h.mocks, info)
 	if err != nil {
 		respondError(w, r, h.evt, err)

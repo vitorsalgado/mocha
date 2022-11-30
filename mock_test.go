@@ -8,7 +8,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/v3/expect"
+	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
 func TestRace(t *testing.T) {
@@ -65,7 +65,7 @@ func TestMock(t *testing.T) {
 
 func TestMock_Matches(t *testing.T) {
 	m := newMock()
-	params := &expect.RequestInfo{}
+	params := &matcher.RequestInfo{}
 
 	cases := []struct {
 		name     string
@@ -103,8 +103,8 @@ func TestMock_Matches(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			res := m.requestMatches(params, []Expectation{{
-				Matcher: expect.ToEqual(tc.value),
-				ValueSelector: func(r *expect.RequestInfo) any {
+				Matcher: matcher.Equal(tc.value),
+				ValueSelector: func(r *matcher.RequestInfo) any {
 					return tc.selector
 				},
 			}})
@@ -115,10 +115,10 @@ func TestMock_Matches(t *testing.T) {
 	t.Run("should return not matched and error when one of expectations returns error", func(t *testing.T) {
 		// string
 		res := m.requestMatches(params, []Expectation{{
-			Matcher: expect.Func(func(_ any) (bool, error) {
+			Matcher: matcher.Func(func(_ any) (bool, error) {
 				return false, fmt.Errorf("fail")
 			}),
-			ValueSelector: func(r *expect.RequestInfo) any {
+			ValueSelector: func(r *matcher.RequestInfo) any {
 				return "dev"
 			},
 		}})
@@ -129,22 +129,22 @@ func TestMock_Matches(t *testing.T) {
 		// any
 		res := m.requestMatches(params, []Expectation{
 			{
-				Matcher: expect.ToEqual("test"),
-				ValueSelector: func(r *expect.RequestInfo) any {
+				Matcher: matcher.Equal("test"),
+				ValueSelector: func(r *matcher.RequestInfo) any {
 					return "test"
 				},
 				Weight: 2,
 			},
 			{
-				Matcher: expect.ToEqual("test"),
-				ValueSelector: func(r *expect.RequestInfo) any {
+				Matcher: matcher.Equal("test"),
+				ValueSelector: func(r *matcher.RequestInfo) any {
 					return "test"
 				},
 				Weight: 1,
 			},
 			{
-				Matcher: expect.ToEqual(10.0),
-				ValueSelector: func(r *expect.RequestInfo) any {
+				Matcher: matcher.Equal(10.0),
+				ValueSelector: func(r *matcher.RequestInfo) any {
 					return 10.0
 				},
 				Weight: 2,
@@ -158,22 +158,22 @@ func TestMock_Matches(t *testing.T) {
 		// any
 		res := m.requestMatches(params, []Expectation{
 			{
-				Matcher: expect.ToEqual("test"),
-				ValueSelector: func(r *expect.RequestInfo) any {
+				Matcher: matcher.Equal("test"),
+				ValueSelector: func(r *matcher.RequestInfo) any {
 					return "test"
 				},
 				Weight: 2,
 			},
 			{
-				Matcher: expect.ToEqual("test"),
-				ValueSelector: func(r *expect.RequestInfo) any {
+				Matcher: matcher.Equal("test"),
+				ValueSelector: func(r *matcher.RequestInfo) any {
 					return "dev"
 				},
 				Weight: 1,
 			},
 			{
-				Matcher: expect.ToEqual(10.0),
-				ValueSelector: func(r *expect.RequestInfo) any {
+				Matcher: matcher.Equal(10.0),
+				ValueSelector: func(r *matcher.RequestInfo) any {
 					return 10.0
 				},
 				Weight: 2,

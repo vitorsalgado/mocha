@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/mock"
 
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
+	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -33,7 +33,7 @@ func TestPostAction(t *testing.T) {
 		act := &action{}
 		act.On("Run", mock.Anything).Return(nil)
 
-		scope := m.AddMocks(mocha.Get(expect.URLPath("/test")).
+		scope := m.AddMocks(mocha.Get(matcher.URLPath("/test")).
 			PostAction(act).
 			Reply(reply.OK()))
 
@@ -57,7 +57,7 @@ func TestPostAction(t *testing.T) {
 		act := &action{}
 		act.On("Run", mock.Anything).Return(fmt.Errorf("failed to run post action"))
 
-		scope := m.AddMocks(mocha.Get(expect.URLPath("/test")).
+		scope := m.AddMocks(mocha.Get(matcher.URLPath("/test")).
 			PostAction(act).
 			Reply(reply.OK()))
 

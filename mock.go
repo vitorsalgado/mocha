@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/internal/autoid"
 	"github.com/vitorsalgado/mocha/v3/internal/colorize"
+	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -56,7 +56,7 @@ type (
 	}
 
 	// ValueSelector defines a function that will be used to extract RequestInfo value and provide it to Matcher instances.
-	ValueSelector func(r *expect.RequestInfo) any
+	ValueSelector func(r *matcher.RequestInfo) any
 
 	// Expectation holds metadata related to one http.Request Matcher.
 	Expectation struct {
@@ -65,7 +65,7 @@ type (
 		Target string
 
 		// Matcher associated with this Expectation.
-		Matcher expect.Matcher
+		Matcher matcher.Matcher
 
 		// ValueSelector will extract the http.Request or a portion of it and feed it to the associated Matcher.
 		ValueSelector ValueSelector
@@ -163,7 +163,7 @@ func (m *Mock) Disable() {
 
 // requestMatches checks if current Mock matches against a list of expectations.
 // Will iterate through all expectations even if it doesn't match early.
-func (m *Mock) requestMatches(ri *expect.RequestInfo, expectations []Expectation) *matchResult {
+func (m *Mock) requestMatches(ri *matcher.RequestInfo, expectations []Expectation) *matchResult {
 	w := 0
 	ok := true
 	details := make([]mismatchDetail, 0)
@@ -203,7 +203,7 @@ func (m *Mock) requestMatches(ri *expect.RequestInfo, expectations []Expectation
 	return &matchResult{OK: ok, Weight: w, MismatchDetails: details}
 }
 
-func matches(e Expectation, value any) (result expect.Result, err error) {
+func matches(e Expectation, value any) (result matcher.Result, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("matcher %s panicked. reason=%v", e.Matcher.Name(), r)

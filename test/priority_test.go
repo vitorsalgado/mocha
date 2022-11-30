@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
+	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -18,13 +18,13 @@ func TestPriority(t *testing.T) {
 
 	defer m.Close()
 
-	one := m.AddMocks(mocha.Get(expect.URLPath("/test")).
+	one := m.AddMocks(mocha.Get(matcher.URLPath("/test")).
 		Priority(3).
 		Reply(reply.OK()))
-	two := m.AddMocks(mocha.Get(expect.URLPath("/test")).
+	two := m.AddMocks(mocha.Get(matcher.URLPath("/test")).
 		Priority(1).
 		Reply(reply.BadRequest()))
-	three := m.AddMocks(mocha.Get(expect.URLPath("/test")).
+	three := m.AddMocks(mocha.Get(matcher.URLPath("/test")).
 		Priority(100).
 		Reply(reply.Created()))
 

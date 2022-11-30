@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/expect"
+	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -20,9 +20,9 @@ func TestHandler_GetById(t *testing.T) {
 	customer := Customer{ID: id, Name: "nice-name"}
 
 	m.AddMocks(mocha.
-		Get(expect.URLPath(fmt.Sprintf("/customers/%s", id))).
-		Header(headerAccept, expect.ToEqual(contentTypeJSON)).
-		Header(headerContentType, expect.ToEqual(contentTypeJSON)).
+		Get(matcher.URLPath(fmt.Sprintf("/customers/%s", id))).
+		Header(headerAccept, matcher.Equal(contentTypeJSON)).
+		Header(headerContentType, matcher.Equal(contentTypeJSON)).
 		Reply(reply.OK().BodyJSON(customer)))
 
 	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/customer/%s", id), nil)

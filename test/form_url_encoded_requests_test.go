@@ -9,9 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
+	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -21,9 +21,9 @@ func TestFormUrlEncoded(t *testing.T) {
 
 	defer m.Close()
 
-	scoped := m.AddMocks(mocha.Post(expect.URLPath("/test")).
-		FormField("var1", expect.ToEqual("dev")).
-		FormField("var2", expect.ToContain("q")).
+	scoped := m.AddMocks(mocha.Post(matcher.URLPath("/test")).
+		FormField("var1", matcher.Equal("dev")).
+		FormField("var2", matcher.Contain("q")).
 		Reply(reply.OK()))
 
 	data := url.Values{}

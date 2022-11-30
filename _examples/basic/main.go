@@ -9,9 +9,9 @@ import (
 	"syscall"
 
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/expect"
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
+	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -23,11 +23,11 @@ func main() {
 	m.Start()
 
 	m.AddMocks(mocha.
-		Get(expect.URLPath("/test")).
+		Get(matcher.URLPath("/test")).
 		Header(header.Accept,
-			expect.ToContain(mimetype.TextHTML)).
-		Header(header.ContentType, expect.ToEqual("test")).
-		Header("any", expect.AllOf(expect.ToContain("test"), expect.ToEqualFold("dev"))).
+			matcher.Contain(mimetype.TextHTML)).
+		Header(header.ContentType, matcher.Equal("test")).
+		Header("any", matcher.AllOf(matcher.Contain("test"), matcher.EqualIgnoreCase("dev"))).
 		Reply(reply.OK().
 			BodyString("hello world").
 			Header("x-basic", "true")))
