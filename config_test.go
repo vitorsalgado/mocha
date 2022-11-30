@@ -30,7 +30,7 @@ type customTestServer struct {
 	decorated Server
 }
 
-func (s *customTestServer) Configure(config Config, handler http.Handler) error {
+func (s *customTestServer) Configure(config *Config, handler http.Handler) error {
 	return s.decorated.Configure(config, handler)
 }
 

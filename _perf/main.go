@@ -23,11 +23,11 @@ import (
 
 type Srv struct {
 	h    http.Handler
-	cfg  mocha.Config
+	cfg  *mocha.Config
 	info mocha.ServerInfo
 }
 
-func (s *Srv) Configure(config mocha.Config, handler http.Handler) error {
+func (s *Srv) Configure(config *mocha.Config, handler http.Handler) error {
 	http.HandleFunc("/", handler.ServeHTTP)
 
 	s.h = handler

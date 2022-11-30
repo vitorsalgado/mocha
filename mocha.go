@@ -17,6 +17,8 @@ import (
 type (
 	// Mocha is the base for the mock server.
 	Mocha struct {
+		Config *Config
+
 		server  Server
 		storage storage
 		context context.Context
@@ -36,7 +38,7 @@ type (
 
 // New creates a new Mocha mock server with the given configurations.
 // Parameter config accepts a Config or a Configurer implementation.
-func New(t TestingT, config ...Config) *Mocha {
+func New(t TestingT, config ...*Config) *Mocha {
 	cfg := configDefault
 	if len(config) > 0 {
 		cfg = config[0]
@@ -89,6 +91,8 @@ func New(t TestingT, config ...Config) *Mocha {
 	}
 
 	m := &Mocha{
+		Config: cfg,
+
 		server:  server,
 		storage: mockStorage,
 		context: ctx,

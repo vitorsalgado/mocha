@@ -16,7 +16,7 @@ type (
 	Server interface {
 		// Configure configures the HTTP mock.
 		// It is the first method called by Mocha during initialization.
-		Configure(Config, http.Handler) error
+		Configure(*Config, http.Handler) error
 
 		// Start starts a server.
 		Start() (ServerInfo, error)
@@ -41,7 +41,7 @@ func newServer() Server {
 	return &httpTestServer{info: ServerInfo{}}
 }
 
-func (s *httpTestServer) Configure(config Config, handler http.Handler) error {
+func (s *httpTestServer) Configure(config *Config, handler http.Handler) error {
 	s.server = httptest.NewUnstartedServer(handler)
 	s.server.EnableHTTP2 = true
 

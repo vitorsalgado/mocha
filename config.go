@@ -46,7 +46,7 @@ type (
 	// Configurer is Config builder,
 	// Use this to build Mocha options, instead of creating a new Config struct manually.
 	Configurer struct {
-		conf Config
+		conf *Config
 	}
 )
 
@@ -55,7 +55,7 @@ var configDefault = Configure().LogLevel(LogVerbose).Build()
 // Configure inits a new Configurer.
 // Entrypoint to start a new custom configuration for Mocha mock servers.
 func Configure() *Configurer {
-	return &Configurer{conf: Config{
+	return &Configurer{conf: &Config{
 		LogLevel:    LogVerbose,
 		BodyParsers: make([]RequestBodyParser, 0),
 		Middlewares: make([]func(http.Handler) http.Handler, 0)}}
@@ -113,6 +113,6 @@ func (cb *Configurer) LogLevel(l LogLevel) *Configurer {
 }
 
 // Build builds a new Config with previously configured values.
-func (cb *Configurer) Build() Config {
+func (cb *Configurer) Build() *Config {
 	return cb.conf
 }
