@@ -59,8 +59,12 @@ func Options(m matcher.Matcher) *MockBuilder {
 	return Request().URL(m).Method(http.MethodOptions)
 }
 
+func newMockBuilder() *MockBuilder {
+	return Request()
+}
+
 // Name defines a name for the mock.
-// Useful to debug.
+// Useful for debug.
 func (b *MockBuilder) Name(name string) *MockBuilder {
 	b.mock.Name = name
 	return b

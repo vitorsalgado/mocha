@@ -40,6 +40,8 @@ type (
 		// LogLevel defines the level of logs
 		LogLevel LogLevel
 
+		Pattern string
+
 		corsEnabled bool
 	}
 
@@ -111,6 +113,11 @@ func (cb *Configurer) DecorateHandler(fn func(handler http.Handler) http.Handler
 // Defaults to LogVerbose.
 func (cb *Configurer) LogLevel(l LogLevel) *Configurer {
 	cb.conf.LogLevel = l
+	return cb
+}
+
+func (cb *Configurer) Pattern(pattern string) *Configurer {
+	cb.conf.Pattern = pattern
 	return cb
 }
 

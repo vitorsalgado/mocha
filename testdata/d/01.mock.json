@@ -1,0 +1,28 @@
+{
+  "name": "test-01",
+  "request": {
+    "method": "POST",
+    "query": {
+      "term": "test",
+      "filter": ["contains", "all"],
+      "page": ["allOf", "present", ["equal", 10]]
+    },
+    "body": [
+      ["jsonpath", "name", ["equal", "john doe"]],
+      [
+        "jsonpath",
+        "job",
+        [
+          "equal",
+          {
+            "value": "DEV",
+            "ignoreCase": true
+          }
+        ]
+      ]
+    ]
+  },
+  "response": {
+    "status": 201
+  }
+}

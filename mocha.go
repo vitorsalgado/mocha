@@ -18,16 +18,16 @@ type (
 	// Mocha is the base for the mock server.
 	Mocha struct {
 		Config *Config
+		T      TestingT
 
 		server  Server
 		storage storage
-		context context.Context
+		ctx     context.Context
 		cancel  context.CancelFunc
 		params  reply.Params
 		hooks   *hooks.Hooks
 		scopes  []*Scoped
 		mu      sync.Mutex
-		t       TestingT
 	}
 
 	// Cleanable allows marking mocha instance to be closed on test cleanup.
@@ -95,12 +95,12 @@ func New(t TestingT, config ...*Config) *Mocha {
 
 		server:  server,
 		storage: mockStorage,
-		context: ctx,
+		ctx:     ctx,
 		cancel:  cancel,
 		params:  p,
 		scopes:  make([]*Scoped, 0),
 		hooks:   hook,
-		t:       t}
+		T:       t}
 
 	return m
 }
@@ -114,11 +114,11 @@ func NewBasic() *Mocha {
 func (m *Mocha) Start() ServerInfo {
 	info, err := m.server.Start()
 	if err != nil {
-		m.t.Errorf("failed to start mock server. reason=%v", err)
-		m.t.FailNow()
+		m.T.Errorf("failed to start mock server. reason=%v", err)
+		m.T.FailNow()
 	}
 
-	m.hooks.Start(m.context)
+	m.hooks.Start(m.ctx)
 
 	return info
 }
@@ -127,11 +127,11 @@ func (m *Mocha) Start() ServerInfo {
 func (m *Mocha) StartTLS() ServerInfo {
 	info, err := m.server.StartTLS()
 	if err != nil {
-		m.t.Errorf("failed to start a TLS mock server. reason=%v", err)
-		m.t.FailNow()
+		m.T.Errorf("failed to start a TLS mock server. reason=%v", err)
+		m.T.FailNow()
 	}
 
-	m.hooks.Start(m.context)
+	m.hooks.Start(m.ctx)
 
 	return info
 }
@@ -148,7 +148,7 @@ func (m *Mocha) StartTLS() ServerInfo {
 //			Query("filter", matcher.Equal("all")).
 //			Reply(reply.Created().BodyString("hello world")))
 //
-//	assert.True(t, scoped.Called())
+//	assert.True(T, scoped.Called())
 func (m *Mocha) AddMocks(builders ...*MockBuilder) *Scoped {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -189,7 +189,7 @@ func (m *Mocha) Close() {
 
 	err := m.server.Close()
 	if err != nil {
-		m.t.Logf(err.Error())
+		m.T.Logf(err.Error())
 	}
 }
 

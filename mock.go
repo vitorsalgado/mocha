@@ -34,6 +34,10 @@ type (
 		// PostActions holds PostAction list to be executed after the Mock was matched and served.
 		PostActions []PostAction
 
+		// Source describes the source of the mock. E.g.: if it wast built from a file,
+		// it will contain the filename.
+		Source string
+
 		expectations []expectation
 		mu           *sync.Mutex
 		hits         int
@@ -89,7 +93,7 @@ type (
 		OK bool
 	}
 
-	// mismatchDetail gives more context about why a matcher did not match.
+	// mismatchDetail gives more ctx about why a matcher did not match.
 	mismatchDetail struct {
 		Name   string
 		Target string
