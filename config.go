@@ -28,7 +28,7 @@ type (
 		Middlewares []func(http.Handler) http.Handler
 
 		// CORS defines CORS configurations.
-		CORS cors.Config
+		CORS *cors.Config
 
 		// Server defines a custom mock HTTP server.
 		Server Server
@@ -83,7 +83,7 @@ func (cb *Configurer) Middlewares(fn ...func(handler http.Handler) http.Handler)
 }
 
 // CORS configures CORS for the mock server.
-func (cb *Configurer) CORS(options ...cors.Config) *Configurer {
+func (cb *Configurer) CORS(options ...*cors.Config) *Configurer {
 	if len(options) > 0 {
 		cb.conf.CORS = options[0]
 	} else {

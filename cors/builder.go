@@ -7,7 +7,7 @@ import (
 
 // OptionsBuilder facilitates building New options.
 type OptionsBuilder struct {
-	options Config
+	options *Config
 	origins []string
 }
 
@@ -15,7 +15,7 @@ type OptionsBuilder struct {
 func Configure() *OptionsBuilder {
 	return &OptionsBuilder{
 		origins: make([]string, 0),
-		options: Config{SuccessStatusCode: http.StatusNoContent}}
+		options: &Config{SuccessStatusCode: http.StatusNoContent}}
 }
 
 // SuccessStatusCode sets a custom status code returned on New Options request.
@@ -64,7 +64,7 @@ func (b *OptionsBuilder) AllowMethods(methods ...string) *OptionsBuilder {
 }
 
 // Build returns an Option with previously configured values.
-func (b *OptionsBuilder) Build() Config {
+func (b *OptionsBuilder) Build() *Config {
 	if len(b.origins) > 0 {
 		if len(b.origins) == 1 {
 			b.options.AllowedOrigin = b.origins[0]

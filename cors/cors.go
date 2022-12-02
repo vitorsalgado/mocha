@@ -21,7 +21,7 @@ type Config struct {
 }
 
 // ConfigDefault is the default config.
-var ConfigDefault = Config{
+var ConfigDefault = &Config{
 	AllowedOrigin: "*",
 	AllowedMethods: strings.Join([]string{
 		http.MethodGet,
@@ -43,7 +43,11 @@ var ConfigDefault = Config{
 // Example:
 //
 //	cors.New(cors.Configure().AllowOrigin(""))
-func New(options Config) func(http.Handler) http.Handler {
+func New(options *Config) func(http.Handler) http.Handler {
+	if options == nil {
+		options = ConfigDefault
+	}
+
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// preflight request
@@ -71,7 +75,7 @@ func New(options Config) func(http.Handler) http.Handler {
 	}
 }
 
-func configureHeaders(options Config, w http.ResponseWriter, r *http.Request) {
+func configureHeaders(options *Config, w http.ResponseWriter, r *http.Request) {
 	// when allowed headers aren't specified, use values from header access-control-request-headers
 	if options.AllowedHeaders != "" {
 		w.Header().Add(header.AccessControlAllowHeaders, options.AllowedHeaders)
@@ -83,31 +87,31 @@ func configureHeaders(options Config, w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func configureMaxAge(options Config, w http.ResponseWriter) {
+func configureMaxAge(options *Config, w http.ResponseWriter) {
 	if options.MaxAge > -1 {
 		w.Header().Add(header.AccessControlMaxAge, strconv.Itoa(options.MaxAge))
 	}
 }
 
-func configureMethods(options Config, w http.ResponseWriter) {
+func configureMethods(options *Config, w http.ResponseWriter) {
 	if len(options.AllowedMethods) > 0 {
 		w.Header().Add(header.AccessControlAllowMethods, options.AllowedMethods)
 	}
 }
 
-func configureExposedHeaders(options Config, w http.ResponseWriter) {
+func configureExposedHeaders(options *Config, w http.ResponseWriter) {
 	if options.ExposeHeaders != "" {
 		w.Header().Add(header.AccessControlExposeHeaders, options.ExposeHeaders)
 	}
 }
 
-func configureCredentials(options Config, w http.ResponseWriter) {
+func configureCredentials(options *Config, w http.ResponseWriter) {
 	if options.AllowCredentials {
 		w.Header().Add(header.AccessControlAllowCredentials, "true")
 	}
 }
 
-func configureOrigin(options Config, r *http.Request, w http.ResponseWriter) {
+func configureOrigin(options *Config, r *http.Request, w http.ResponseWriter) {
 	if options.AllowedOrigin == "" {
 		return
 	}
