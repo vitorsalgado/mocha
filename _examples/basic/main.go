@@ -11,7 +11,7 @@ import (
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
-	"github.com/vitorsalgado/mocha/v3/matcher"
+	. "github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -23,11 +23,10 @@ func main() {
 	m.Start()
 
 	m.AddMocks(mocha.
-		Get(matcher.URLPath("/test")).
-		Header(header.Accept,
-			matcher.Contain(mimetype.TextHTML)).
-		Header(header.ContentType, matcher.Equal("test")).
-		Header("any", matcher.AllOf(matcher.Contain("test"), matcher.EqualIgnoreCase("dev"))).
+		Get(URLPath("/test")).
+		Header(header.Accept, Contain(mimetype.TextHTML)).
+		Header(header.ContentType, Equal("test")).
+		Header("any", AllOf(Contain("test"), EqualIgnoreCase("dev"))).
 		Reply(reply.OK().
 			BodyString("hello world").
 			Header("x-basic", "true")))
