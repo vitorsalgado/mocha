@@ -5,18 +5,18 @@ import (
 	"strings"
 )
 
-type HasSuffixMatcher struct {
+type hasSuffixMatcher struct {
 	Suffix string
 }
 
-func (m *HasSuffixMatcher) Name() string {
+func (m *hasSuffixMatcher) Name() string {
 	return "HasSuffix"
 }
 
-func (m *HasSuffixMatcher) Match(v any) (Result, error) {
+func (m *hasSuffixMatcher) Match(v any) (*Result, error) {
 	txt := v.(string)
 
-	return Result{
+	return &Result{
 		OK: strings.HasSuffix(txt, m.Suffix),
 		DescribeFailure: func() string {
 			return fmt.Sprintf(
@@ -29,11 +29,11 @@ func (m *HasSuffixMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
-func (m *HasSuffixMatcher) OnMockServed() error {
+func (m *hasSuffixMatcher) OnMockServed() error {
 	return nil
 }
 
 // HasSuffix returns true when matcher argument ends with the given suffix.
 func HasSuffix(suffix string) Matcher {
-	return &HasSuffixMatcher{Suffix: suffix}
+	return &hasSuffixMatcher{Suffix: suffix}
 }

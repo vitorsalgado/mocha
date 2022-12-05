@@ -1,21 +1,21 @@
 package matcher
 
-type ShouldMatcher struct {
+type shouldMatcher struct {
 	Matcher Matcher
 }
 
-func (m *ShouldMatcher) Name() string {
+func (m *shouldMatcher) Name() string {
 	return m.Matcher.Name()
 }
 
-func (m *ShouldMatcher) Match(v any) (Result, error) {
+func (m *shouldMatcher) Match(v any) (*Result, error) {
 	return m.Matcher.Match(v)
 }
 
-func (m *ShouldMatcher) OnMockServed() error {
+func (m *shouldMatcher) OnMockServed() error {
 	return m.Matcher.OnMockServed()
 }
 
 func Should(matcher Matcher) Matcher {
-	return &ShouldMatcher{Matcher: matcher}
+	return &shouldMatcher{Matcher: matcher}
 }

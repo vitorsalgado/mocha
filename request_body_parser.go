@@ -31,7 +31,11 @@ func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (any, error)
 			return nil, err
 		}
 
-		r.Body.Close()
+		err = r.Body.Close()
+		if err != nil {
+			return nil, err
+		}
+
 		r.Body = io.NopCloser(bytes.NewBuffer(b))
 
 		contentType := r.Header.Get(header.ContentType)

@@ -18,7 +18,7 @@ func TestScoped(t *testing.T) {
 	m2 := newMock()
 	m3 := newMock()
 
-	repo := newStorage()
+	repo := newStore()
 	repo.Save(m1)
 	repo.Save(m2)
 	repo.Save(m3)
@@ -42,13 +42,13 @@ func TestScoped(t *testing.T) {
 	t.Run("should return done when all mocks were called", func(t *testing.T) {
 		fakeT := testmocks.NewFakeNotifier()
 
-		m1.Hit()
+		m1.Inc()
 
 		assert.False(t, scoped.Called())
 		scoped.AssertCalled(fakeT)
 
-		m2.Hit()
-		m3.Hit()
+		m2.Inc()
+		m3.Inc()
 
 		fakeT.AssertNumberOfCalls(t, "Errorf", 1)
 		assert.True(t, scoped.AssertCalled(t))

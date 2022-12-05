@@ -22,7 +22,7 @@ type Matcher interface {
 	Name() string
 
 	// Match is the function that does the actual matching logic.
-	Match(value any) (Result, error)
+	Match(value any) (*Result, error)
 
 	OnMockServed() error
 }
@@ -30,35 +30,4 @@ type Matcher interface {
 type Result struct {
 	OK              bool
 	DescribeFailure func() string
-}
-
-type ComposableMatcher struct {
-	M Matcher
-}
-
-func (m *ComposableMatcher) Name() string                { return m.M.Name() }
-func (m *ComposableMatcher) Match(v any) (Result, error) { return m.M.Match(v) }
-func (m *ComposableMatcher) OnMockServed() error         { return m.M.OnMockServed() }
-
-// And compose the current Matcher with another one using the "and" operator.
-func (m *ComposableMatcher) And(and Matcher) *ComposableMatcher {
-	return Compose(AllOf(m, and))
-}
-
-// Or compose the current Matcher with another one using the "or" operator.
-func (m *ComposableMatcher) Or(or Matcher) *ComposableMatcher {
-	return Compose(AnyOf(m, or))
-}
-
-// Xor compose the current Matcher with another one using the "xor" operator.
-func (m *ComposableMatcher) Xor(and Matcher) *ComposableMatcher {
-	return Compose(XOR(m, and))
-}
-
-func Compose(base Matcher) *ComposableMatcher {
-	return &ComposableMatcher{M: base}
-}
-
-func mismatch(failureMessageFunc func() string) Result {
-	return Result{OK: false, DescribeFailure: failureMessageFunc}
 }

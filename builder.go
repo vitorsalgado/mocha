@@ -7,11 +7,7 @@ import (
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
-type Deps struct {
-	ScenarioStore matcher.ScenarioStorage
-}
-
-// MockBuilder is a builder for mock.Mock.
+// MockBuilder is a builder for Mock.
 type MockBuilder struct {
 	mock                  *Mock
 	scenario              string
@@ -19,7 +15,7 @@ type MockBuilder struct {
 	scenarioRequiredState string
 }
 
-// Request creates a new empty MockBuilder.
+// Request creates a new empty Builder.
 func Request() *MockBuilder {
 	return &MockBuilder{mock: newMock()}
 }
@@ -81,7 +77,7 @@ func (b *MockBuilder) Priority(p int) *MockBuilder {
 func (b *MockBuilder) Method(method string) *MockBuilder {
 	b.mock.expectations = append(
 		b.mock.expectations,
-		expectation{
+		&expectation{
 			Target:        "method",
 			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Method },
 			Matcher:       matcher.EqualIgnoreCase(method),
@@ -95,7 +91,7 @@ func (b *MockBuilder) Method(method string) *MockBuilder {
 func (b *MockBuilder) URL(m matcher.Matcher) *MockBuilder {
 	b.mock.expectations = append(
 		b.mock.expectations,
-		expectation{
+		&expectation{
 			Target:        "url",
 			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.URL },
 			Matcher:       m,
@@ -109,7 +105,7 @@ func (b *MockBuilder) URL(m matcher.Matcher) *MockBuilder {
 func (b *MockBuilder) Header(key string, m matcher.Matcher) *MockBuilder {
 	b.mock.expectations = append(
 		b.mock.expectations,
-		expectation{
+		&expectation{
 			Target:        "header",
 			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Header.Get(key) },
 			Matcher:       m,
@@ -123,7 +119,7 @@ func (b *MockBuilder) Header(key string, m matcher.Matcher) *MockBuilder {
 func (b *MockBuilder) Query(key string, m matcher.Matcher) *MockBuilder {
 	b.mock.expectations = append(
 		b.mock.expectations,
-		expectation{
+		&expectation{
 			Target:        "query",
 			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.URL.Query().Get(key) },
 			Matcher:       m,
@@ -141,7 +137,7 @@ func (b *MockBuilder) Query(key string, m matcher.Matcher) *MockBuilder {
 func (b *MockBuilder) Body(matcherList ...matcher.Matcher) *MockBuilder {
 	for _, m := range matcherList {
 		b.mock.expectations = append(b.mock.expectations,
-			expectation{
+			&expectation{
 				Target:        "body",
 				ValueSelector: func(r *matcher.RequestInfo) any { return r.ParsedBody },
 				Matcher:       m,
@@ -155,7 +151,7 @@ func (b *MockBuilder) Body(matcherList ...matcher.Matcher) *MockBuilder {
 // FormField defines a matcher for a specific form field by its key.
 func (b *MockBuilder) FormField(field string, m matcher.Matcher) *MockBuilder {
 	b.mock.expectations = append(b.mock.expectations,
-		expectation{
+		&expectation{
 			Target:        "form",
 			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Form.Get(field) },
 			Matcher:       m,
@@ -168,7 +164,7 @@ func (b *MockBuilder) FormField(field string, m matcher.Matcher) *MockBuilder {
 // Repeat defines to total times that a mock should be served, if request matches.
 func (b *MockBuilder) Repeat(times int64) *MockBuilder {
 	b.mock.expectations = append(b.mock.expectations,
-		expectation{
+		&expectation{
 			Target:        "request",
 			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request },
 			Matcher:       matcher.Repeat(times),
@@ -181,7 +177,7 @@ func (b *MockBuilder) Repeat(times int64) *MockBuilder {
 func (b *MockBuilder) RequestMatches(m matcher.Matcher) *MockBuilder {
 	b.mock.expectations = append(
 		b.mock.expectations,
-		expectation{
+		&expectation{
 			Target:        "request",
 			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request },
 			Matcher:       m,
@@ -246,12 +242,12 @@ func (b *MockBuilder) ReplyJust(status int, r *reply.StdReply) *MockBuilder {
 	return b
 }
 
-// Build builds a mock.Mock with previously configured parameters.
+// Build builds a Mock with previously configured parameters.
 // Used internally by Mocha.
 func (b *MockBuilder) Build(deps *Deps) *Mock {
 	if b.scenario != "" {
 		b.mock.expectations = append(b.mock.expectations,
-			expectation{
+			&expectation{
 				Target: "scenario",
 				ValueSelector: func(r *matcher.RequestInfo) any {
 					return r.Request

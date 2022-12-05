@@ -19,7 +19,7 @@ func (s *scenarioState) hasStarted() bool {
 	return s.State == ScenarioStateStarted
 }
 
-type ScenarioStorage interface {
+type ScenarioStore interface {
 	FetchByName(name string) (*scenarioState, bool)
 	CreateNewIfNeeded(name string) *scenarioState
 	Save(scenario *scenarioState)
@@ -29,7 +29,7 @@ type internalScenarioStorage struct {
 	data map[string]*scenarioState
 }
 
-func NewScenarioStorage() ScenarioStorage {
+func NewScenarioStore() ScenarioStore {
 	return &internalScenarioStorage{data: make(map[string]*scenarioState)}
 }
 
@@ -54,25 +54,25 @@ func (store *internalScenarioStorage) Save(scenario *scenarioState) {
 	store.data[scenario.Name] = scenario
 }
 
-type ScenarioMatcher struct {
-	Store         ScenarioStorage
+type scenarioMatcher struct {
+	Store         ScenarioStore
 	RequiredState string
 	NewState      string
 	Nm            string
 }
 
-func (m *ScenarioMatcher) Name() string {
+func (m *scenarioMatcher) Name() string {
 	return "Scenario"
 }
 
-func (m *ScenarioMatcher) Match(_ any) (Result, error) {
+func (m *scenarioMatcher) Match(_ any) (*Result, error) {
 	if m.RequiredState == ScenarioStateStarted {
 		m.Store.CreateNewIfNeeded(m.Nm)
 	}
 
 	scn, ok := m.Store.FetchByName(m.Nm)
 	if !ok {
-		return Result{OK: true}, nil
+		return &Result{OK: true}, nil
 	}
 
 	message := func() string {
@@ -85,13 +85,13 @@ func (m *ScenarioMatcher) Match(_ any) (Result, error) {
 	}
 
 	if scn.State == m.RequiredState {
-		return Result{OK: true}, nil
+		return &Result{OK: true}, nil
 	}
 
-	return Result{OK: false, DescribeFailure: message}, nil
+	return &Result{OK: false, DescribeFailure: message}, nil
 }
 
-func (m *ScenarioMatcher) OnMockServed() error {
+func (m *scenarioMatcher) OnMockServed() error {
 	scn, ok := m.Store.FetchByName(m.Nm)
 	if !ok {
 		return nil
@@ -104,9 +104,9 @@ func (m *ScenarioMatcher) OnMockServed() error {
 	return nil
 }
 
-func Scenario(store ScenarioStorage) func(name, requiredState, newState string) Matcher {
+func Scenario(store ScenarioStore) func(name, requiredState, newState string) Matcher {
 	return func(name, requiredState, newState string) Matcher {
-		return &ScenarioMatcher{
+		return &scenarioMatcher{
 			Store:         store,
 			RequiredState: requiredState,
 			NewState:      newState,

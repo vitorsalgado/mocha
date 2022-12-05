@@ -23,15 +23,15 @@ func TestRace(t *testing.T) {
 				time.Sleep(100 * time.Millisecond)
 			}
 
-			m.Hit()
+			m.Inc()
 			wg.Done()
 		}(i)
 
-		m.Hit()
+		m.Inc()
 	}
 
-	m.Hit()
-	m.Hit()
+	m.Inc()
+	m.Inc()
 
 	wg.Wait()
 
@@ -55,7 +55,7 @@ func TestMock(t *testing.T) {
 
 	t.Run("should return called when it was hit", func(t *testing.T) {
 		assert.False(t, m.Called())
-		m.Hit()
+		m.Inc()
 		assert.True(t, m.Called())
 
 		m.Dec()
@@ -79,8 +79,8 @@ func TestMock_Matches(t *testing.T) {
 			expected: true,
 		},
 		{
-			value:    float64(10.0),
-			selector: float64(10.0),
+			value:    10.0,
+			selector: 10.0,
 			expected: true,
 		},
 		{
@@ -102,7 +102,7 @@ func TestMock_Matches(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			res := m.requestMatches(params, []expectation{{
+			res := m.requestMatches(params, []*expectation{{
 				Matcher: matcher.Equal(tc.value),
 				ValueSelector: func(r *matcher.RequestInfo) any {
 					return tc.selector
@@ -114,7 +114,7 @@ func TestMock_Matches(t *testing.T) {
 
 	t.Run("should return not matched and error when one of expectations returns error", func(t *testing.T) {
 		// string
-		res := m.requestMatches(params, []expectation{{
+		res := m.requestMatches(params, []*expectation{{
 			Matcher: matcher.Func(func(_ any) (bool, error) {
 				return false, fmt.Errorf("fail")
 			}),
@@ -127,7 +127,7 @@ func TestMock_Matches(t *testing.T) {
 
 	t.Run("should return the sum of the matchers weight when it matches", func(t *testing.T) {
 		// any
-		res := m.requestMatches(params, []expectation{
+		res := m.requestMatches(params, []*expectation{
 			{
 				Matcher: matcher.Equal("test"),
 				ValueSelector: func(r *matcher.RequestInfo) any {
@@ -156,7 +156,7 @@ func TestMock_Matches(t *testing.T) {
 
 	t.Run("should return the sum of the matchers weight when one of then doesnt matches", func(t *testing.T) {
 		// any
-		res := m.requestMatches(params, []expectation{
+		res := m.requestMatches(params, []*expectation{
 			{
 				Matcher: matcher.Equal("test"),
 				ValueSelector: func(r *matcher.RequestInfo) any {

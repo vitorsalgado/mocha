@@ -2,20 +2,20 @@ package matcher
 
 import "fmt"
 
-type EmptyMatcher struct {
+type emptyMatcher struct {
 }
 
-func (m *EmptyMatcher) Name() string {
+func (m *emptyMatcher) Name() string {
 	return "Empty"
 }
 
-func (m *EmptyMatcher) Match(v any) (Result, error) {
+func (m *emptyMatcher) Match(v any) (*Result, error) {
 	result, err := HaveLen(0).Match(v)
 	if err != nil {
-		return Result{}, err
+		return &Result{}, err
 	}
 
-	return Result{
+	return &Result{
 		OK: result.OK,
 		DescribeFailure: func() string {
 			return fmt.Sprintf("%s %s %s", hint(m.Name()), _separator, v)
@@ -23,11 +23,11 @@ func (m *EmptyMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
-func (m *EmptyMatcher) OnMockServed() error {
+func (m *emptyMatcher) OnMockServed() error {
 	return nil
 }
 
 // Empty returns true if matcher value has zero length.
 func Empty() Matcher {
-	return &EmptyMatcher{}
+	return &emptyMatcher{}
 }

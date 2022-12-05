@@ -5,15 +5,15 @@ import (
 	"reflect"
 )
 
-type EachMatcher struct {
-	Matcher Matcher
+type eachMatcher struct {
+	matcher Matcher
 }
 
-func (m *EachMatcher) Name() string {
+func (m *eachMatcher) Name() string {
 	return "Each"
 }
 
-func (m *EachMatcher) Match(v any) (Result, error) {
+func (m *eachMatcher) Match(v any) (*Result, error) {
 	var val = reflect.ValueOf(v)
 	var valType = reflect.TypeOf(v).Kind()
 
@@ -23,13 +23,13 @@ func (m *EachMatcher) Match(v any) (Result, error) {
 
 		for iter.Next() {
 			mv := iter.Value().Interface()
-			res, err := m.Matcher.Match(mv)
+			res, err := m.matcher.Match(mv)
 			if err != nil {
 				return mismatch(nil), err
 			}
 
 			if !res.OK {
-				return Result{
+				return &Result{
 					OK: false,
 					DescribeFailure: func() string {
 						return fmt.Sprintf("%s %s %s",
@@ -43,18 +43,18 @@ func (m *EachMatcher) Match(v any) (Result, error) {
 			}
 		}
 
-		return Result{OK: true}, nil
+		return &Result{OK: true}, nil
 
 	case reflect.Slice:
 		for i := 0; i < val.Len(); i++ {
 			entry := val.Index(i).Interface()
-			res, err := m.Matcher.Match(entry)
+			res, err := m.matcher.Match(entry)
 			if err != nil {
 				return mismatch(nil), err
 			}
 
 			if !res.OK {
-				return Result{
+				return &Result{
 					OK: false,
 					DescribeFailure: func() string {
 						return fmt.Sprintf("%s %s %s", hint(
@@ -67,10 +67,10 @@ func (m *EachMatcher) Match(v any) (Result, error) {
 			}
 		}
 
-		return Result{OK: true}, nil
+		return &Result{OK: true}, nil
 	}
 
-	return Result{
+	return &Result{
 		OK: false,
 		DescribeFailure: func() string {
 			return hint(m.Name(), printReceived(fmt.Sprintf("type %s is not supported", valType.String())))
@@ -78,10 +78,10 @@ func (m *EachMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
-func (m *EachMatcher) OnMockServed() error {
-	return m.Matcher.OnMockServed()
+func (m *eachMatcher) OnMockServed() error {
+	return m.matcher.OnMockServed()
 }
 
 func Each(matcher Matcher) Matcher {
-	return &EachMatcher{Matcher: matcher}
+	return &eachMatcher{matcher: matcher}
 }

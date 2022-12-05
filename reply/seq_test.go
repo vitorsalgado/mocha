@@ -9,7 +9,7 @@ import (
 
 func TestSequential(t *testing.T) {
 	t.Run("should return replies based configure sequence and return error when over", func(t *testing.T) {
-		m := &mmock{}
+		m := &mMock{}
 		handler := m.On("Hits").Return(0)
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 		builder := Seq().
@@ -51,7 +51,7 @@ func TestSequential(t *testing.T) {
 	})
 
 	t.Run("should return replies based configure sequence and return error when over", func(t *testing.T) {
-		m := &mmock{}
+		m := &mMock{}
 		handler := m.On("Hits").Return(0)
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 		builder := Seq().Add(OK()).AfterEnded(NotFound())
@@ -73,7 +73,7 @@ func TestSequential(t *testing.T) {
 }
 
 func TestShouldReturnErrorWhenSequenceDoesNotContainReplies(t *testing.T) {
-	m := &mmock{}
+	m := &mMock{}
 	m.On("Hits").Return(0)
 
 	res, err := Seq().Build(nil, m, nil)

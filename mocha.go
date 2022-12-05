@@ -21,13 +21,21 @@ type (
 		T      TestingT
 
 		server  Server
-		storage storage
+		storage mockStore
 		ctx     context.Context
 		cancel  context.CancelFunc
 		params  reply.Params
 		hooks   *hooks.Hooks
 		scopes  []*Scoped
 		mu      sync.Mutex
+	}
+
+	// TestingT is based on testing.T and allow mocha components to log information and errors.
+	TestingT interface {
+		Helper()
+		Logf(format string, a ...any)
+		Errorf(format string, a ...any)
+		FailNow()
 	}
 
 	// Cleanable allows marking mocha instance to be closed on test cleanup.
@@ -39,15 +47,15 @@ type (
 // New creates a new Mocha mock server with the given configurations.
 // Parameter config accepts a Config or a Configurer implementation.
 func New(t TestingT, config ...*Config) *Mocha {
-	cfg := _configDefault
+	conf := _configDefault
 	if len(config) > 0 {
-		cfg = config[0]
+		conf = config[0]
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
-	mockStorage := newStorage()
-	parsers := make([]RequestBodyParser, 0)
-	parsers = append(parsers, cfg.BodyParsers...)
+	store := newStore()
+	parsers := make([]RequestBodyParser, 0, len(conf.BodyParsers)+4)
+	parsers = append(parsers, conf.BodyParsers...)
 	parsers = append(parsers, &jsonBodyParser{}, &plainTextParser{}, &formURLEncodedParser{}, &bytesParser{})
 
 	middlewares := make([]func(handler http.Handler) http.Handler, 0)
@@ -55,7 +63,7 @@ func New(t TestingT, config ...*Config) *Mocha {
 
 	hook := hooks.New()
 
-	if cfg.LogLevel > LogSilently {
+	if conf.LogLevel > LogSilently {
 		h := hooks.NewInternalEvents(t)
 
 		hook.Subscribe(hooks.HookOnRequest, h.OnRequest)
@@ -64,37 +72,37 @@ func New(t TestingT, config ...*Config) *Mocha {
 		hook.Subscribe(hooks.HookOnError, h.OnError)
 	}
 
-	if cfg.corsEnabled {
-		middlewares = append(middlewares, cors.New(cfg.CORS))
+	if conf.corsEnabled {
+		middlewares = append(middlewares, cors.New(conf.CORS))
 	}
 
-	middlewares = append(middlewares, cfg.Middlewares...)
+	middlewares = append(middlewares, conf.Middlewares...)
 	p := reply.Parameters()
 	handler := mid.
 		Compose(middlewares...).
-		Root(newHandler(mockStorage, parsers, p, hook, t))
+		Root(newHandler(store, parsers, p, hook, t))
 
-	if cfg.Handler != nil {
-		handler = cfg.Handler(handler)
+	if conf.Handler != nil {
+		handler = conf.Handler(handler)
 	}
 
-	server := cfg.Server
+	server := conf.Server
 
 	if server == nil {
 		server = newServer()
 	}
 
-	err := server.Configure(cfg, handler)
+	err := server.Configure(conf, handler)
 	if err != nil {
 		t.Errorf("failed to configure mock server. reason=%v", err)
 		t.FailNow()
 	}
 
 	m := &Mocha{
-		Config: cfg,
+		Config: conf,
 
 		server:  server,
-		storage: mockStorage,
+		storage: store,
 		ctx:     ctx,
 		cancel:  cancel,
 		params:  p,
@@ -149,7 +157,7 @@ func (m *Mocha) StartTLS() ServerInfo {
 //			Reply(reply.Created().BodyString("hello world")))
 //
 //	assert.True(T, scoped.Called())
-func (m *Mocha) AddMocks(builders ...*MockBuilder) *Scoped {
+func (m *Mocha) AddMocks(builders ...Builder) *Scoped {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -157,7 +165,7 @@ func (m *Mocha) AddMocks(builders ...*MockBuilder) *Scoped {
 	added := make([]*Mock, size)
 
 	for i, b := range builders {
-		nm := b.Build(&Deps{ScenarioStore: matcher.NewScenarioStorage()})
+		nm := b.Build(&Deps{ScenarioStore: matcher.NewScenarioStore()})
 		m.storage.Save(nm)
 		added[i] = nm
 	}
@@ -180,6 +188,9 @@ func (m *Mocha) URL() string {
 
 // Subscribe add a new event listener.
 func (m *Mocha) Subscribe(evt reflect.Type, fn func(payload any)) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	m.hooks.Subscribe(evt, fn)
 }
 
@@ -193,6 +204,12 @@ func (m *Mocha) Close() {
 	}
 }
 
+// CloseOnCleanup adds mocha server Close to the Cleanup.
+func (m *Mocha) CloseOnCleanup(t Cleanable) *Mocha {
+	t.Cleanup(func() { m.Close() })
+	return m
+}
+
 // Hits returns the total request hits.
 func (m *Mocha) Hits() int {
 	hits := 0
@@ -204,24 +221,18 @@ func (m *Mocha) Hits() int {
 	return hits
 }
 
-// Disable disables all mocks.
-func (m *Mocha) Disable() {
-	for _, scoped := range m.scopes {
-		scoped.Disable()
-	}
-}
-
-// Enable disables all mocks.
+// Enable enables all mocks.
 func (m *Mocha) Enable() {
 	for _, scoped := range m.scopes {
 		scoped.Enable()
 	}
 }
 
-// CloseOnCleanup adds mocha server Close to the Cleanup.
-func (m *Mocha) CloseOnCleanup(t Cleanable) *Mocha {
-	t.Cleanup(func() { m.Close() })
-	return m
+// Disable disables all mocks.
+func (m *Mocha) Disable() {
+	for _, scoped := range m.scopes {
+		scoped.Disable()
+	}
 }
 
 // AssertCalled asserts that all mocks associated with this instance were called at least once.

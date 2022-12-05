@@ -87,7 +87,7 @@ func TestResponseMapper(t *testing.T) {
 	scoped := m.AddMocks(Get(URLPath("/test")).
 		Reply(reply.
 			OK().
-			Map(func(r *reply.Response, rma reply.MapperArgs) error {
+			Map(func(r *reply.Response, rma *reply.MapperArgs) error {
 				r.Header.Add("x-test", rma.Request.Header.Get("x-param"))
 				return nil
 			})))

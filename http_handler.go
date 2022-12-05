@@ -15,7 +15,7 @@ import (
 )
 
 type mockHandler struct {
-	mocks       storage
+	mocks       mockStore
 	bodyParsers []RequestBodyParser
 	params      reply.Params
 	evt         *hooks.Hooks
@@ -23,7 +23,7 @@ type mockHandler struct {
 }
 
 func newHandler(
-	storage storage,
+	storage mockStore,
 	bodyParsers []RequestBodyParser,
 	params reply.Params,
 	evt *hooks.Hooks,
@@ -70,7 +70,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// map the response using mock mappers.
-	mapperArgs := reply.MapperArgs{Request: r, Parameters: h.params}
+	mapperArgs := &reply.MapperArgs{Request: r, Parameters: h.params}
 	for _, mapper := range res.Mappers {
 		if err = mapper(res, mapperArgs); err != nil {
 			respondError(w, r, h.evt, err)
@@ -79,7 +79,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// success
-	mock.Hit()
+	mock.Inc()
 
 	// if a delay is set, it will wait before continuing serving the mocked response.
 	if res.Delay > 0 {
@@ -103,10 +103,10 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	for _, expectation := range mock.expectations {
-		err = expectation.Matcher.OnMockServed()
+	for _, exp := range mock.expectations {
+		err = exp.Matcher.OnMockServed()
 		if err != nil {
-			h.t.Logf("matcher %s .OnMockServed() returned the error=%v", expectation.Matcher.Name(), err)
+			h.t.Logf("matcher %s .OnMockServed() returned the error=%v", exp.Matcher.Name(), err)
 		}
 	}
 

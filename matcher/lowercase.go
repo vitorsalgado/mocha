@@ -5,22 +5,22 @@ import (
 	"strings"
 )
 
-type LowerCaseMatcher struct {
+type lowerCaseMatcher struct {
 	Matcher Matcher
 }
 
-func (m *LowerCaseMatcher) Name() string {
+func (m *lowerCaseMatcher) Name() string {
 	return "ToLower"
 }
 
-func (m *LowerCaseMatcher) Match(v any) (Result, error) {
+func (m *lowerCaseMatcher) Match(v any) (*Result, error) {
 	txt := v.(string)
 	result, err := m.Matcher.Match(strings.ToLower(txt))
 	if err != nil {
-		return Result{}, err
+		return &Result{}, err
 	}
 
-	return Result{
+	return &Result{
 		OK: result.OK,
 		DescribeFailure: func() string {
 			return fmt.Sprintf("%s %s",
@@ -31,11 +31,11 @@ func (m *LowerCaseMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
-func (m *LowerCaseMatcher) OnMockServed() error {
+func (m *lowerCaseMatcher) OnMockServed() error {
 	return m.Matcher.OnMockServed()
 }
 
 // ToLower lower case matcher string argument before submitting it to provided matcher.
 func ToLower(matcher Matcher) Matcher {
-	return &LowerCaseMatcher{Matcher: matcher}
+	return &lowerCaseMatcher{Matcher: matcher}
 }

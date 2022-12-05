@@ -6,15 +6,15 @@ import (
 	"reflect"
 )
 
-type EqualJSONMatcher struct {
+type equalJSONMatcher struct {
 	Expected any
 }
 
-func (m *EqualJSONMatcher) Name() string {
+func (m *equalJSONMatcher) Name() string {
 	return "EqualJSON"
 }
 
-func (m *EqualJSONMatcher) Match(v any) (Result, error) {
+func (m *equalJSONMatcher) Match(v any) (*Result, error) {
 	expectedAsJson, err := json.Marshal(m.Expected)
 	if err != nil {
 		return mismatch(nil), err
@@ -26,7 +26,7 @@ func (m *EqualJSONMatcher) Match(v any) (Result, error) {
 		return mismatch(nil), err
 	}
 
-	return Result{
+	return &Result{
 		OK: reflect.DeepEqual(v, exp),
 		DescribeFailure: func() string {
 			return fmt.Sprintf("%s\nExpected:\n%s\nReceived:\n%s",
@@ -38,11 +38,11 @@ func (m *EqualJSONMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
-func (m *EqualJSONMatcher) OnMockServed() error {
+func (m *equalJSONMatcher) OnMockServed() error {
 	return nil
 }
 
 // EqualJSON returns true if matcher value is equal to the given parameter value.
 func EqualJSON(expected any) Matcher {
-	return &EqualJSONMatcher{Expected: expected}
+	return &equalJSONMatcher{Expected: expected}
 }

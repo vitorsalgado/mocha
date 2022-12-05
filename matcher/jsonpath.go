@@ -4,16 +4,16 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/jsonx"
 )
 
-type JSONPathMatcher struct {
+type jsonPathMatcher struct {
 	Path    string
 	Matcher Matcher
 }
 
-func (m *JSONPathMatcher) Name() string {
+func (m *jsonPathMatcher) Name() string {
 	return "JSONPath"
 }
 
-func (m *JSONPathMatcher) Match(v any) (Result, error) {
+func (m *jsonPathMatcher) Match(v any) (*Result, error) {
 	var value any
 	var err error
 
@@ -29,15 +29,15 @@ func (m *JSONPathMatcher) Match(v any) (Result, error) {
 
 	r, err := m.Matcher.Match(value)
 	if err != nil {
-		return Result{}, err
+		return &Result{}, err
 	}
 
-	return Result{OK: r.OK, DescribeFailure: func() string {
+	return &Result{OK: r.OK, DescribeFailure: func() string {
 		return hint(m.Name(), printExpected(m.Path), r.DescribeFailure())
 	}}, nil
 }
 
-func (m *JSONPathMatcher) OnMockServed() error {
+func (m *jsonPathMatcher) OnMockServed() error {
 	return m.Matcher.OnMockServed()
 }
 
@@ -46,5 +46,5 @@ func (m *JSONPathMatcher) OnMockServed() error {
 //
 //	JSONPath("address.city", EqualTo("Santiago"))
 func JSONPath(path string, matcher Matcher) Matcher {
-	return &JSONPathMatcher{Path: path, Matcher: matcher}
+	return &jsonPathMatcher{Path: path, Matcher: matcher}
 }

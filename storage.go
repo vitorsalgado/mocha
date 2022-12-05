@@ -5,8 +5,8 @@ import (
 	"sync"
 )
 
-// storage is the definition for Mock repository.
-type storage interface {
+// mockStore is the definition for Mock repository.
+type mockStore interface {
 	// Save saves the Mock.
 	Save(mock *Mock)
 
@@ -23,17 +23,17 @@ type storage interface {
 	Flush()
 }
 
-type builtInStorage struct {
+type builtInStore struct {
 	data []*Mock
 	mu   sync.Mutex
 }
 
-// newStorage returns Mock storage implementation.
-func newStorage() storage {
-	return &builtInStorage{data: make([]*Mock, 0)}
+// newStore returns Mock mockStore implementation.
+func newStore() mockStore {
+	return &builtInStore{data: make([]*Mock, 0)}
 }
 
-func (repo *builtInStorage) Save(mock *Mock) {
+func (repo *builtInStore) Save(mock *Mock) {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
@@ -44,7 +44,7 @@ func (repo *builtInStorage) Save(mock *Mock) {
 	})
 }
 
-func (repo *builtInStorage) FetchEligible() []*Mock {
+func (repo *builtInStore) FetchEligible() []*Mock {
 	mocks := make([]*Mock, 0)
 
 	for _, mock := range repo.data {
@@ -56,11 +56,11 @@ func (repo *builtInStorage) FetchEligible() []*Mock {
 	return mocks
 }
 
-func (repo *builtInStorage) FetchAll() []*Mock {
+func (repo *builtInStore) FetchAll() []*Mock {
 	return repo.data
 }
 
-func (repo *builtInStorage) Delete(id int) {
+func (repo *builtInStore) Delete(id int) {
 	index := -1
 	for i, m := range repo.data {
 		if m.ID == id {
@@ -72,7 +72,7 @@ func (repo *builtInStorage) Delete(id int) {
 	repo.data = repo.data[:index+copy(repo.data[index:], repo.data[index+1:])]
 }
 
-func (repo *builtInStorage) Flush() {
+func (repo *builtInStore) Flush() {
 	repo.data = nil
 	repo.data = make([]*Mock, 0)
 }

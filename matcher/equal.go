@@ -5,16 +5,16 @@ import (
 	"reflect"
 )
 
-type EqualMatcher struct {
+type equalMatcher struct {
 	Expected any
 }
 
-func (m *EqualMatcher) Name() string {
+func (m *equalMatcher) Name() string {
 	return "Equal"
 }
 
-func (m *EqualMatcher) Match(v any) (Result, error) {
-	return Result{
+func (m *equalMatcher) Match(v any) (*Result, error) {
+	return &Result{
 		OK: reflect.DeepEqual(m.Expected, v),
 		DescribeFailure: func() string {
 			return fmt.Sprintf("%s %s %v",
@@ -26,11 +26,11 @@ func (m *EqualMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
-func (m *EqualMatcher) OnMockServed() error {
+func (m *equalMatcher) OnMockServed() error {
 	return nil
 }
 
 // Equal returns true if matcher value is equal to the given parameter value.
 func Equal(expected any) Matcher {
-	return &EqualMatcher{Expected: expected}
+	return &equalMatcher{Expected: expected}
 }

@@ -107,7 +107,7 @@ func decode(filename string, file io.ReadCloser, r *ExtSchema) error {
 	}
 }
 
-func buildExternalMock(config *Config, filename string, ext *ExtSchema) (*MockBuilder, error) {
+func buildExternalMock(config *Config, filename string, ext *ExtSchema) (Builder, error) {
 	builder := newMockBuilder()
 
 	builder.Name(ext.Name)
@@ -247,7 +247,7 @@ func buildMatcher(key string, args any) (m matcher.Matcher, err error) {
 			return nil, fmt.Errorf("required 2")
 		}
 
-		return matcher.Both(matchers[0]).And(matchers[1]), nil
+		return matcher.Both(matchers[0], matchers[1]), nil
 
 	case "each":
 		m, err := discoverAndBuildMatcher(args)
@@ -267,7 +267,7 @@ func buildMatcher(key string, args any) (m matcher.Matcher, err error) {
 			return nil, fmt.Errorf("required 2")
 		}
 
-		return matcher.Either(matchers[0]).Or(matchers[1]), nil
+		return matcher.Either(matchers[0], matchers[1]), nil
 
 	case "empty":
 		return matcher.Empty(), nil

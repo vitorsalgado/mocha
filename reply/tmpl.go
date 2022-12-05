@@ -6,35 +6,33 @@ import (
 	"text/template"
 )
 
-type (
-	// Template defines a template parser for response bodies.
-	Template interface {
-		// Compile allows pre-compilation of the given template.
-		Compile() error
+// Template defines a template parser for response bodies.
+type Template interface {
+	// Compile allows pre-compilation of the given template.
+	Compile() error
 
-		// Parse parses the given template.
-		Parse(io.Writer, any) error
-	}
+	// Parse parses the given template.
+	Parse(io.Writer, any) error
+}
 
-	// TemplateData is the data model used to render the templates.
-	TemplateData struct {
-		// Request is HTTP request ref.
-		Request *http.Request
+// TemplateData is the data model used to render the templates.
+type TemplateData struct {
+	// Request is HTTP request ref.
+	Request *http.Request
 
-		// Data is the model to be used with the given template.
-		// This value is set using the Model() function from StdReply.
-		Data any
-	}
+	// Data is the model to be used with the given template.
+	// This value is set using the Model() function from StdReply.
+	Data any
+}
 
-	// TextTemplate is the built-in text Template interface.
-	// It uses Go templates.
-	TextTemplate struct {
-		name     string
-		funcMap  template.FuncMap
-		template string
-		t        *template.Template
-	}
-)
+// TextTemplate is the built-in text Template interface.
+// It uses Go templates.
+type TextTemplate struct {
+	name     string
+	funcMap  template.FuncMap
+	template string
+	t        *template.Template
+}
 
 // NewTextTemplate creates a new BuiltInTemplate.
 func NewTextTemplate() *TextTemplate {

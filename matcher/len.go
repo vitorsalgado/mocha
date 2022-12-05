@@ -4,18 +4,18 @@ import (
 	"reflect"
 )
 
-type LenMatcher struct {
+type lenMatcher struct {
 	Length int
 }
 
-func (m *LenMatcher) Name() string {
+func (m *lenMatcher) Name() string {
 	return "Len"
 }
 
-func (m *LenMatcher) Match(v any) (Result, error) {
+func (m *lenMatcher) Match(v any) (*Result, error) {
 	value := reflect.ValueOf(v)
 
-	return Result{
+	return &Result{
 		OK: value.Len() == m.Length,
 		DescribeFailure: func() string {
 			return hint(m.Name(), printExpected(m.Length))
@@ -23,11 +23,11 @@ func (m *LenMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
-func (m *LenMatcher) OnMockServed() error {
+func (m *lenMatcher) OnMockServed() error {
 	return nil
 }
 
 // HaveLen returns true when matcher argument length is equal to the expected value.
 func HaveLen(length int) Matcher {
-	return &LenMatcher{Length: length}
+	return &lenMatcher{Length: length}
 }

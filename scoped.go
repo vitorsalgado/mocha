@@ -7,11 +7,11 @@ import (
 
 // Scoped holds references to one or more added mocks allowing users perform operations on them, like enabling/disabling.
 type Scoped struct {
-	storage storage
+	storage mockStore
 	mocks   []*Mock
 }
 
-func scope(repo storage, mocks []*Mock) *Scoped {
+func scope(repo mockStore, mocks []*Mock) *Scoped {
 	return &Scoped{storage: repo, mocks: mocks}
 }
 

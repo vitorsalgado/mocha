@@ -5,22 +5,22 @@ import (
 	"strings"
 )
 
-type TrimMatcher struct {
+type trimMatcher struct {
 	Matcher Matcher
 }
 
-func (m *TrimMatcher) Name() string {
+func (m *trimMatcher) Name() string {
 	return "Trim"
 }
 
-func (m *TrimMatcher) Match(v any) (Result, error) {
+func (m *trimMatcher) Match(v any) (*Result, error) {
 	txt := v.(string)
 	result, err := m.Matcher.Match(strings.TrimSpace(txt))
 	if err != nil {
-		return Result{}, err
+		return &Result{}, err
 	}
 
-	return Result{
+	return &Result{
 		OK: result.OK,
 		DescribeFailure: func() string {
 			return fmt.Sprintf("%s %s",
@@ -31,11 +31,11 @@ func (m *TrimMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
-func (m *TrimMatcher) OnMockServed() error {
+func (m *trimMatcher) OnMockServed() error {
 	return m.Matcher.OnMockServed()
 }
 
 // Trim trims' spaces of matcher argument before submitting it to the given matcher.
 func Trim(matcher Matcher) Matcher {
-	return &TrimMatcher{Matcher: matcher}
+	return &trimMatcher{Matcher: matcher}
 }

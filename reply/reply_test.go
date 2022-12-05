@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	_testMock = &mmock{}
+	_testMock = &mMock{}
 	_req, _   = http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 )
 

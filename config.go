@@ -103,8 +103,8 @@ func (cb *Configurer) Server(srv Server) *Configurer {
 	return cb
 }
 
-// DecorateHandler configures a custom HTTP handler using the default mock handler.
-func (cb *Configurer) DecorateHandler(fn func(handler http.Handler) http.Handler) *Configurer {
+// HandlerDecorator configures a custom HTTP handler using the default mock handler.
+func (cb *Configurer) HandlerDecorator(fn func(handler http.Handler) http.Handler) *Configurer {
 	cb.conf.Handler = fn
 	return cb
 }

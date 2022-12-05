@@ -2,24 +2,24 @@ package matcher
 
 import "fmt"
 
-type XORMatcher struct {
+type xorMatcher struct {
 	First  Matcher
 	Second Matcher
 }
 
-func (m *XORMatcher) Name() string {
+func (m *xorMatcher) Name() string {
 	return "XOR"
 }
 
-func (m *XORMatcher) Match(v any) (Result, error) {
+func (m *xorMatcher) Match(v any) (*Result, error) {
 	a, err := m.First.Match(v)
 	if err != nil {
-		return Result{}, err
+		return &Result{}, err
 	}
 
 	b, err := m.Second.Match(v)
 	if err != nil {
-		return Result{}, err
+		return &Result{}, err
 	}
 
 	msg := func() string {
@@ -41,17 +41,17 @@ func (m *XORMatcher) Match(v any) (Result, error) {
 			desc)
 	}
 
-	return Result{
+	return &Result{
 		OK:              a.OK != b.OK,
 		DescribeFailure: msg,
 	}, nil
 }
 
-func (m *XORMatcher) OnMockServed() error {
+func (m *xorMatcher) OnMockServed() error {
 	return nil
 }
 
 // XOR is an exclusive or matcher
 func XOR(first Matcher, second Matcher) Matcher {
-	return &XORMatcher{First: first, Second: second}
+	return &xorMatcher{First: first, Second: second}
 }

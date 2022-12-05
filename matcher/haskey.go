@@ -4,21 +4,21 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/jsonx"
 )
 
-type HasKeyMatcher struct {
+type hasKeyMatcher struct {
 	Path string
 }
 
-func (m *HasKeyMatcher) Name() string {
+func (m *hasKeyMatcher) Name() string {
 	return "HasKey"
 }
 
-func (m *HasKeyMatcher) Match(v any) (Result, error) {
+func (m *hasKeyMatcher) Match(v any) (*Result, error) {
 	value, err := jsonx.Reach(m.Path, v)
 	if err != nil {
 		return mismatch(nil), err
 	}
 
-	return Result{
+	return &Result{
 		OK: value != nil,
 		DescribeFailure: func() string {
 			return hint(m.Name(), printExpected(m.Path))
@@ -26,7 +26,7 @@ func (m *HasKeyMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
-func (m *HasKeyMatcher) OnMockServed() error {
+func (m *hasKeyMatcher) OnMockServed() error {
 	return nil
 }
 
@@ -37,5 +37,5 @@ func (m *HasKeyMatcher) OnMockServed() error {
 //	HaveKey("name") will return true
 //	HaveKey("address.street") will return false.
 func HaveKey(path string) Matcher {
-	return &HasKeyMatcher{Path: path}
+	return &hasKeyMatcher{Path: path}
 }

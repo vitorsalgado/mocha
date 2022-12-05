@@ -12,7 +12,7 @@ func TestScenario(t *testing.T) {
 	})
 
 	t.Run("should only create scenario if needed", func(t *testing.T) {
-		store := NewScenarioStorage()
+		store := NewScenarioStore()
 		store.CreateNewIfNeeded("scenario-1")
 
 		s, ok := store.FetchByName("scenario-1")

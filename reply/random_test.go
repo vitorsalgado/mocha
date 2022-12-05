@@ -8,7 +8,7 @@ import (
 )
 
 func TestRandomReplies(t *testing.T) {
-	m := &mmock{}
+	m := &mMock{}
 
 	req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 	statuses := []int{

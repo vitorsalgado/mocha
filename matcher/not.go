@@ -4,17 +4,17 @@ import (
 	"fmt"
 )
 
-type NotMatcher struct {
+type notMatcher struct {
 	Matcher Matcher
 }
 
-func (m *NotMatcher) Name() string {
+func (m *notMatcher) Name() string {
 	return "Not"
 }
 
-func (m *NotMatcher) Match(v any) (Result, error) {
+func (m *notMatcher) Match(v any) (*Result, error) {
 	result, err := m.Matcher.Match(v)
-	return Result{
+	return &Result{
 		OK: !result.OK,
 		DescribeFailure: func() string {
 			return fmt.Sprintf(
@@ -26,11 +26,11 @@ func (m *NotMatcher) Match(v any) (Result, error) {
 	}, err
 }
 
-func (m *NotMatcher) OnMockServed() error {
+func (m *notMatcher) OnMockServed() error {
 	return m.Matcher.OnMockServed()
 }
 
 // Not negates the provided matcher.
 func Not(matcher Matcher) Matcher {
-	return &NotMatcher{Matcher: matcher}
+	return &notMatcher{Matcher: matcher}
 }

@@ -8,7 +8,7 @@ import (
 )
 
 func TestInMemoryStorage(t *testing.T) {
-	st := newStorage()
+	st := newStore()
 	st.Save(&Mock{ID: 1, Name: "mock_1", Enabled: true, mu: &sync.Mutex{}, Priority: 0})
 	st.Save(&Mock{ID: 2, Name: "mock_2", Enabled: true, mu: &sync.Mutex{}, Priority: 1})
 	st.Save(&Mock{ID: 3, Name: "mock_3", Enabled: true, mu: &sync.Mutex{}, Priority: 2})

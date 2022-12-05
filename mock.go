@@ -11,53 +11,61 @@ import (
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
+// Mock holds metadata and expectations to be matched against HTTP requests in order to serve mocked responses.
+// This is core entity of this project, mostly features works based on it.
+type Mock struct {
+	// ID is unique identifier for a Mock
+	ID int
+
+	// Name is an optional metadata. It helps to find and debug mocks.
+	Name string
+
+	// Priority sets the priority for a Mock.
+	Priority int
+
+	// Reply is the responder that will be used to serve the HTTP response stub, once matched against an
+	// HTTP request.
+	Reply reply.Reply
+
+	// Enabled indicates if the Mock is enabled or disabled. Only enabled mocks are matched.
+	Enabled bool
+
+	// PostActions holds PostAction list to be executed after the Mock was matched and served.
+	PostActions []PostAction
+
+	// Source describes the source of the mock. E.g.: if it wast built from a file,
+	// it will contain the filename.
+	Source string
+
+	expectations []*expectation
+	mu           *sync.Mutex
+	hits         int
+}
+
+type Builder interface {
+	Build(deps *Deps) *Mock
+}
+
+type Deps struct {
+	ScenarioStore matcher.ScenarioStore
+}
+
+// PostActionArgs represents the arguments that will be passed to every PostAction implementation
+type PostActionArgs struct {
+	Request  *http.Request
+	Response *reply.Response
+	Mock     *Mock
+	Params   reply.Params
+}
+
+// PostAction defines the contract for an action that will be executed after serving a mocked HTTP response.
+type PostAction interface {
+	// Run runs the PostAction implementation.
+	Run(args *PostActionArgs) error
+}
+
 type (
-	// Mock holds metadata and expectations to be matched against HTTP requests in order to serve mocked responses.
-	// This is core entity of this project, mostly features works based on it.
-	Mock struct {
-		// ID is unique identifier for a Mock
-		ID int
-
-		// Name is an optional metadata. It helps to find and debug mocks.
-		Name string
-
-		// Priority sets the priority for a Mock.
-		Priority int
-
-		// Reply is the responder that will be used to serve the HTTP response stub, once matched against an
-		// HTTP request.
-		Reply reply.Reply
-
-		// Enabled indicates if the Mock is enabled or disabled. Only enabled mocks are matched.
-		Enabled bool
-
-		// PostActions holds PostAction list to be executed after the Mock was matched and served.
-		PostActions []PostAction
-
-		// Source describes the source of the mock. E.g.: if it wast built from a file,
-		// it will contain the filename.
-		Source string
-
-		expectations []expectation
-		mu           *sync.Mutex
-		hits         int
-	}
-
-	// PostActionArgs represents the arguments that will be passed to every PostAction implementation
-	PostActionArgs struct {
-		Request  *http.Request
-		Response *reply.Response
-		Mock     *Mock
-		Params   reply.Params
-	}
-
-	// PostAction defines the contract for an action that will be executed after serving a mocked HTTP response.
-	PostAction interface {
-		// Run runs the PostAction implementation.
-		Run(args *PostActionArgs) error
-	}
-
-	// valueSelector defines a function that will be used to extract RequestInfo value and provide it to Matcher instances.
+	// valueSelector defines a function that will be used to extract RequestInfo value and provide it to matcher instances.
 	valueSelector func(r *matcher.RequestInfo) any
 
 	// expectation holds metadata related to one http.Request Matcher.
@@ -75,18 +83,13 @@ type (
 		// Weight of this expectation.
 		Weight weight
 	}
-)
-
-type (
-	// weight helps to detect the closest mock match.
-	weight int
 
 	// matchResult holds information related to a matching operation.
 	matchResult struct {
 		// MismatchDetails is the list of non matches messages.
 		MismatchDetails []mismatchDetail
 
-		// Weight for the Matcher. It helps determine the closest match.
+		// Weight for the matcher. It helps determine the closest match.
 		Weight int
 
 		// OK indicates whether it matched or not.
@@ -102,6 +105,9 @@ type (
 	}
 )
 
+// weight helps to detect the closest mock match.
+type weight int
+
 // Enums of weight.
 const (
 	_weightNone weight = iota
@@ -116,23 +122,18 @@ func newMock() *Mock {
 	return &Mock{
 		ID:           autoid.Next(),
 		Enabled:      true,
-		expectations: make([]expectation, 0),
+		expectations: make([]*expectation, 0),
 		PostActions:  make([]PostAction, 0),
 
 		mu: &sync.Mutex{},
 	}
 }
 
-// Hit notify that the Mock was called.
-func (m *Mock) Hit() {
+// Inc increment one Mock call.
+func (m *Mock) Inc() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.hits++
-}
-
-// Hits returns the amount of time this Mock was matched to a request and served.
-func (m *Mock) Hits() int {
-	return m.hits
 }
 
 // Dec reduce one Mock call.
@@ -140,6 +141,11 @@ func (m *Mock) Dec() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.hits--
+}
+
+// Hits returns the amount of time this Mock was matched to a request and served.
+func (m *Mock) Hits() int {
+	return m.hits
 }
 
 // Called checks if the Mock was called at least once.
@@ -165,7 +171,7 @@ func (m *Mock) Disable() {
 
 // requestMatches checks if current Mock matches against a list of expectations.
 // Will iterate through all expectations even if it doesn't match early.
-func (m *Mock) requestMatches(ri *matcher.RequestInfo, expectations []expectation) *matchResult {
+func (m *Mock) requestMatches(ri *matcher.RequestInfo, expectations []*expectation) *matchResult {
 	w := 0
 	ok := true
 	details := make([]mismatchDetail, 0)
@@ -205,7 +211,7 @@ func (m *Mock) requestMatches(ri *matcher.RequestInfo, expectations []expectatio
 	return &matchResult{OK: ok, Weight: w, MismatchDetails: details}
 }
 
-func doMatches(e expectation, value any) (result matcher.Result, err error) {
+func doMatches(e *expectation, value any) (result *matcher.Result, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("matcher %s panicked. reason=%v", e.Matcher.Name(), r)

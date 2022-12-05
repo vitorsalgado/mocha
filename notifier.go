@@ -4,14 +4,6 @@ import (
 	"fmt"
 )
 
-// TestingT is based on testing.T and allow mocha components to log information and errors.
-type TestingT interface {
-	Helper()
-	Logf(string, ...any)
-	Errorf(string, ...any)
-	FailNow()
-}
-
 // ConsoleNotifier implements core.TestingT outputting logs to the stdout.
 type ConsoleNotifier struct {
 }

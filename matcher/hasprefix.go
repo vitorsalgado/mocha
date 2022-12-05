@@ -5,18 +5,18 @@ import (
 	"strings"
 )
 
-type HasPrefixMatcher struct {
+type hasPrefixMatcher struct {
 	Prefix string
 }
 
-func (m *HasPrefixMatcher) Name() string {
+func (m *hasPrefixMatcher) Name() string {
 	return "HasPrefix"
 }
 
-func (m *HasPrefixMatcher) Match(v any) (Result, error) {
+func (m *hasPrefixMatcher) Match(v any) (*Result, error) {
 	txt := v.(string)
 
-	return Result{
+	return &Result{
 		OK: strings.HasPrefix(txt, m.Prefix),
 		DescribeFailure: func() string {
 			return fmt.Sprintf(
@@ -29,11 +29,11 @@ func (m *HasPrefixMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
-func (m *HasPrefixMatcher) OnMockServed() error {
+func (m *hasPrefixMatcher) OnMockServed() error {
 	return nil
 }
 
 // HasPrefix returns true if the matcher argument starts with the given prefix.
 func HasPrefix(prefix string) Matcher {
-	return &HasPrefixMatcher{Prefix: prefix}
+	return &hasPrefixMatcher{Prefix: prefix}
 }

@@ -5,22 +5,22 @@ import (
 	"strings"
 )
 
-type UpperCaseMatcher struct {
+type upperCaseMatcher struct {
 	Matcher Matcher
 }
 
-func (m *UpperCaseMatcher) Name() string {
+func (m *upperCaseMatcher) Name() string {
 	return m.Matcher.Name()
 }
 
-func (m *UpperCaseMatcher) Match(v any) (Result, error) {
+func (m *upperCaseMatcher) Match(v any) (*Result, error) {
 	txt := v.(string)
 	result, err := m.Matcher.Match(strings.ToUpper(txt))
 	if err != nil {
-		return Result{}, err
+		return &Result{}, err
 	}
 
-	return Result{
+	return &Result{
 		OK: result.OK,
 		DescribeFailure: func() string {
 			return fmt.Sprintf("%s %s",
@@ -31,11 +31,11 @@ func (m *UpperCaseMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
-func (m *UpperCaseMatcher) OnMockServed() error {
+func (m *upperCaseMatcher) OnMockServed() error {
 	return m.Matcher.OnMockServed()
 }
 
 // ToUpper upper case matcher string argument before submitting it to provided matcher.
 func ToUpper(matcher Matcher) Matcher {
-	return &UpperCaseMatcher{Matcher: matcher}
+	return &upperCaseMatcher{Matcher: matcher}
 }

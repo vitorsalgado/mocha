@@ -2,21 +2,21 @@ package matcher
 
 import "fmt"
 
-type FuncMatcher struct {
+type funcMatcher struct {
 	Func func(v any) (bool, error)
 }
 
-func (m *FuncMatcher) Name() string {
+func (m *funcMatcher) Name() string {
 	return "Func"
 }
 
-func (m *FuncMatcher) Match(v any) (Result, error) {
+func (m *funcMatcher) Match(v any) (*Result, error) {
 	r, err := m.Func(v)
 	if err != nil {
-		return Result{}, err
+		return &Result{}, err
 	}
 
-	return Result{
+	return &Result{
 		OK: r,
 		DescribeFailure: func() string {
 			return fmt.Sprintf(
@@ -29,11 +29,11 @@ func (m *FuncMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
-func (m *FuncMatcher) OnMockServed() error {
+func (m *funcMatcher) OnMockServed() error {
 	return nil
 }
 
 // Func creates an anonymous Matcher using the given function.
 func Func(fn func(v any) (bool, error)) Matcher {
-	return &FuncMatcher{Func: fn}
+	return &funcMatcher{Func: fn}
 }

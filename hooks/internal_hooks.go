@@ -27,7 +27,7 @@ func (h *InternalEvents) OnRequest(evt any) {
 	e := evt.(*OnRequest)
 
 	var b any
-	switch t := any(e.Request.Body).(type) {
+	switch t := e.Request.Body.(type) {
 	case []byte:
 		b = string(t)
 	default:

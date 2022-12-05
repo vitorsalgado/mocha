@@ -4,15 +4,22 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"time"
 )
 
 // RandomReply configures a Reply that serves random HTTP responses.
 type RandomReply struct {
 	replies []Reply
+	r       *rand.Rand
 }
 
 // Rand inits a new RandomReply.
-func Rand() *RandomReply { return &RandomReply{replies: make([]Reply, 0)} }
+func Rand() *RandomReply {
+	return &RandomReply{
+		replies: make([]Reply, 0),
+		r:       rand.New(rand.NewSource(time.Now().UnixNano())),
+	}
+}
 
 // Add adds a new Reply to the random list.
 func (mr *RandomReply) Add(reply ...Reply) *RandomReply {
@@ -28,7 +35,7 @@ func (mr *RandomReply) Build(r *http.Request, m M, p Params) (*Response, error) 
 			fmt.Errorf("you need to set at least one response when using random reply")
 	}
 
-	index := rand.Intn(len(mr.replies)-1) + 0
+	index := mr.r.Intn(len(mr.replies)-1) + 0
 	reply := mr.replies[index]
 
 	return reply.Build(r, m, p)

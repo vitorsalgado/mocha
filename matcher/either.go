@@ -4,35 +4,24 @@ import (
 	"fmt"
 )
 
-// EitherMatcherBuilder is a builder for Either matcher.
-// Prefer to use the Either() function.
-type EitherMatcherBuilder struct {
-	First Matcher
+type eitherMatcher struct {
+	first  Matcher
+	second Matcher
 }
 
-// Or sets the second matcher
-func (e *EitherMatcherBuilder) Or(second Matcher) Matcher {
-	return &EitherMatcher{First: e.First, Second: second}
-}
-
-type EitherMatcher struct {
-	First  Matcher
-	Second Matcher
-}
-
-func (m *EitherMatcher) Name() string {
+func (m *eitherMatcher) Name() string {
 	return "Either"
 }
 
-func (m *EitherMatcher) Match(v any) (Result, error) {
-	r1, err := m.First.Match(v)
+func (m *eitherMatcher) Match(v any) (*Result, error) {
+	r1, err := m.first.Match(v)
 	if err != nil {
-		return Result{OK: false}, err
+		return &Result{OK: false}, err
 	}
 
-	r2, err := m.Second.Match(v)
+	r2, err := m.second.Match(v)
 	if err != nil {
-		return Result{OK: false}, err
+		return &Result{OK: false}, err
 	}
 
 	msg := func() string {
@@ -49,19 +38,19 @@ func (m *EitherMatcher) Match(v any) (Result, error) {
 
 		return fmt.Sprintf(
 			"%s %s %s",
-			hint(m.Name(), m.First.Name(), m.Second.Name()),
+			hint(m.Name(), m.first.Name(), m.second.Name()),
 			_separator,
 			desc)
 	}
 
-	return Result{OK: r1.OK || r2.OK, DescribeFailure: msg}, nil
+	return &Result{OK: r1.OK || r2.OK, DescribeFailure: msg}, nil
 }
 
-func (m *EitherMatcher) OnMockServed() error {
-	return multiOnMockServed(m.First, m.Second)
+func (m *eitherMatcher) OnMockServed() error {
+	return multiOnMockServed(m.first, m.second)
 }
 
 // Either matches true when any of the two given matchers returns true.
-func Either(first Matcher) *EitherMatcherBuilder {
-	return &EitherMatcherBuilder{first}
+func Either(first Matcher, second Matcher) Matcher {
+	return &eitherMatcher{first: first, second: second}
 }
