@@ -3,29 +3,29 @@ package matcher
 import "fmt"
 
 type peekMatcher struct {
-	Matcher Matcher
-	Action  func(v any) error
+	matcher Matcher
+	action  func(v any) error
 }
 
 func (m *peekMatcher) Name() string {
-	return fmt.Sprintf("Peek(%s)", m.Matcher.Name())
+	return fmt.Sprintf("Peek(%s)", m.matcher.Name())
 }
 
 func (m *peekMatcher) Match(v any) (*Result, error) {
-	err := m.Action(v)
+	err := m.action(v)
 	if err != nil {
 		return mismatch(nil), err
 	}
 
-	return m.Matcher.Match(v)
+	return m.matcher.Match(v)
 }
 
 func (m *peekMatcher) OnMockServed() error {
-	return m.Matcher.OnMockServed()
+	return m.matcher.OnMockServed()
 }
 
 // Peek will return the result of the given matcher, after executing the provided function.
 // Peek can be used to check the matcher argument.
 func Peek(matcher Matcher, action func(v any) error) Matcher {
-	return &peekMatcher{Matcher: matcher, Action: action}
+	return &peekMatcher{matcher: matcher, action: action}
 }

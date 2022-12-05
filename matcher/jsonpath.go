@@ -5,8 +5,8 @@ import (
 )
 
 type jsonPathMatcher struct {
-	Path    string
-	Matcher Matcher
+	path    string
+	matcher Matcher
 }
 
 func (m *jsonPathMatcher) Name() string {
@@ -20,25 +20,25 @@ func (m *jsonPathMatcher) Match(v any) (*Result, error) {
 	if v == nil {
 		value = v
 	} else {
-		value, err = jsonx.Reach(m.Path, v)
+		value, err = jsonx.Reach(m.path, v)
 	}
 
 	if err != nil {
 		return mismatch(nil), err
 	}
 
-	r, err := m.Matcher.Match(value)
+	r, err := m.matcher.Match(value)
 	if err != nil {
 		return &Result{}, err
 	}
 
 	return &Result{OK: r.OK, DescribeFailure: func() string {
-		return hint(m.Name(), printExpected(m.Path), r.DescribeFailure())
+		return hint(m.Name(), printExpected(m.path), r.DescribeFailure())
 	}}, nil
 }
 
 func (m *jsonPathMatcher) OnMockServed() error {
-	return m.Matcher.OnMockServed()
+	return m.matcher.OnMockServed()
 }
 
 // JSONPath applies the provided matcher to the JSON field value in the given path.
@@ -46,5 +46,5 @@ func (m *jsonPathMatcher) OnMockServed() error {
 //
 //	JSONPath("address.city", EqualTo("Santiago"))
 func JSONPath(path string, matcher Matcher) Matcher {
-	return &jsonPathMatcher{Path: path, Matcher: matcher}
+	return &jsonPathMatcher{path: path, matcher: matcher}
 }

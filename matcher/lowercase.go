@@ -6,7 +6,7 @@ import (
 )
 
 type lowerCaseMatcher struct {
-	Matcher Matcher
+	matcher Matcher
 }
 
 func (m *lowerCaseMatcher) Name() string {
@@ -15,7 +15,7 @@ func (m *lowerCaseMatcher) Name() string {
 
 func (m *lowerCaseMatcher) Match(v any) (*Result, error) {
 	txt := v.(string)
-	result, err := m.Matcher.Match(strings.ToLower(txt))
+	result, err := m.matcher.Match(strings.ToLower(txt))
 	if err != nil {
 		return &Result{}, err
 	}
@@ -32,10 +32,10 @@ func (m *lowerCaseMatcher) Match(v any) (*Result, error) {
 }
 
 func (m *lowerCaseMatcher) OnMockServed() error {
-	return m.Matcher.OnMockServed()
+	return m.matcher.OnMockServed()
 }
 
 // ToLower lower case matcher string argument before submitting it to provided matcher.
 func ToLower(matcher Matcher) Matcher {
-	return &lowerCaseMatcher{Matcher: matcher}
+	return &lowerCaseMatcher{matcher: matcher}
 }

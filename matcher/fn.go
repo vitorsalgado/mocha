@@ -3,15 +3,15 @@ package matcher
 import "fmt"
 
 type funcMatcher struct {
-	Func func(v any) (bool, error)
+	fn func(v any) (bool, error)
 }
 
 func (m *funcMatcher) Name() string {
-	return "Func"
+	return "fn"
 }
 
 func (m *funcMatcher) Match(v any) (*Result, error) {
-	r, err := m.Func(v)
+	r, err := m.fn(v)
 	if err != nil {
 		return &Result{}, err
 	}
@@ -35,5 +35,5 @@ func (m *funcMatcher) OnMockServed() error {
 
 // Func creates an anonymous Matcher using the given function.
 func Func(fn func(v any) (bool, error)) Matcher {
-	return &funcMatcher{Func: fn}
+	return &funcMatcher{fn: fn}
 }

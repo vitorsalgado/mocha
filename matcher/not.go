@@ -5,7 +5,7 @@ import (
 )
 
 type notMatcher struct {
-	Matcher Matcher
+	matcher Matcher
 }
 
 func (m *notMatcher) Name() string {
@@ -13,13 +13,13 @@ func (m *notMatcher) Name() string {
 }
 
 func (m *notMatcher) Match(v any) (*Result, error) {
-	result, err := m.Matcher.Match(v)
+	result, err := m.matcher.Match(v)
 	return &Result{
 		OK: !result.OK,
 		DescribeFailure: func() string {
 			return fmt.Sprintf(
 				"%s ! %s",
-				hint(m.Name(), m.Matcher.Name()),
+				hint(m.Name(), m.matcher.Name()),
 				result.DescribeFailure(),
 			)
 		},
@@ -27,10 +27,10 @@ func (m *notMatcher) Match(v any) (*Result, error) {
 }
 
 func (m *notMatcher) OnMockServed() error {
-	return m.Matcher.OnMockServed()
+	return m.matcher.OnMockServed()
 }
 
 // Not negates the provided matcher.
 func Not(matcher Matcher) Matcher {
-	return &notMatcher{Matcher: matcher}
+	return &notMatcher{matcher: matcher}
 }

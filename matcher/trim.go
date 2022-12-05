@@ -6,7 +6,7 @@ import (
 )
 
 type trimMatcher struct {
-	Matcher Matcher
+	matcher Matcher
 }
 
 func (m *trimMatcher) Name() string {
@@ -15,7 +15,7 @@ func (m *trimMatcher) Name() string {
 
 func (m *trimMatcher) Match(v any) (*Result, error) {
 	txt := v.(string)
-	result, err := m.Matcher.Match(strings.TrimSpace(txt))
+	result, err := m.matcher.Match(strings.TrimSpace(txt))
 	if err != nil {
 		return &Result{}, err
 	}
@@ -32,10 +32,10 @@ func (m *trimMatcher) Match(v any) (*Result, error) {
 }
 
 func (m *trimMatcher) OnMockServed() error {
-	return m.Matcher.OnMockServed()
+	return m.matcher.OnMockServed()
 }
 
 // Trim trims' spaces of matcher argument before submitting it to the given matcher.
 func Trim(matcher Matcher) Matcher {
-	return &trimMatcher{Matcher: matcher}
+	return &trimMatcher{matcher: matcher}
 }

@@ -5,7 +5,7 @@ import (
 )
 
 type lenMatcher struct {
-	Length int
+	length int
 }
 
 func (m *lenMatcher) Name() string {
@@ -16,9 +16,9 @@ func (m *lenMatcher) Match(v any) (*Result, error) {
 	value := reflect.ValueOf(v)
 
 	return &Result{
-		OK: value.Len() == m.Length,
+		OK: value.Len() == m.length,
 		DescribeFailure: func() string {
-			return hint(m.Name(), printExpected(m.Length))
+			return hint(m.Name(), printExpected(m.length))
 		},
 	}, nil
 }
@@ -29,5 +29,5 @@ func (m *lenMatcher) OnMockServed() error {
 
 // HaveLen returns true when matcher argument length is equal to the expected value.
 func HaveLen(length int) Matcher {
-	return &lenMatcher{Length: length}
+	return &lenMatcher{length: length}
 }

@@ -15,7 +15,7 @@ import (
 // Multiple implementations of RequestBodyParser can be provided to Mocha using options.
 type RequestBodyParser interface {
 	// CanParse checks if current request body should be parsed by this component.
-	// First parameter is the incoming content-type.
+	// first parameter is the incoming content-type.
 	CanParse(contentType string, r *http.Request) bool
 
 	// Parse parses the request body.

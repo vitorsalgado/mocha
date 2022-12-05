@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/vitorsalgado/mocha/v3/cors"
+	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 type LogLevel int
@@ -14,43 +15,44 @@ const (
 	LogVerbose
 )
 
-type (
-	// Config holds Mocha mock server configurations.
-	Config struct {
-		// Addr defines a custom server address.
-		Addr string
+// Config holds Mocha mock server configurations.
+type Config struct {
+	// Addr defines a custom server address.
+	Addr string
 
-		// BodyParsers defines request body parsers to be executed before core parsers.
-		BodyParsers []RequestBodyParser
+	// BodyParsers defines request body parsers to be executed before core parsers.
+	BodyParsers []RequestBodyParser
 
-		// Middlewares defines a list of custom middlewares that will be
-		// set after panic recover and before mock handler.
-		Middlewares []func(http.Handler) http.Handler
+	// Middlewares defines a list of custom middlewares that will be
+	// set after panic recover and before mock handler.
+	Middlewares []func(http.Handler) http.Handler
 
-		// CORS defines CORS configurations.
-		CORS *cors.Config
+	// CORS defines CORS configurations.
+	CORS *cors.Config
 
-		// Server defines a custom mock HTTP server.
-		Server Server
+	// Server defines a custom mock HTTP server.
+	Server Server
 
-		// Handler provides a mean to configure a custom HTTP handler
-		// while leveraging the default mock handler.
-		Handler func(handler http.Handler) http.Handler
+	// Handler provides a mean to configure a custom HTTP handler
+	// while leveraging the default mock handler.
+	Handler func(handler http.Handler) http.Handler
 
-		// LogLevel defines the level of logs
-		LogLevel LogLevel
+	// LogLevel defines the level of logs
+	LogLevel LogLevel
 
-		Pattern string
+	// Parameters sets a custom reply parameters store.
+	Parameters reply.Params
 
-		corsEnabled bool
-	}
+	Pattern string
 
-	// Configurer is Config builder,
-	// Use this to build Mocha options, instead of creating a new Config struct manually.
-	Configurer struct {
-		conf *Config
-	}
-)
+	corsEnabled bool
+}
+
+// Configurer is Config builder,
+// Use this to build Mocha options, instead of creating a new Config struct manually.
+type Configurer struct {
+	conf *Config
+}
 
 var _configDefault = Configure().
 	LogLevel(LogVerbose).
@@ -113,6 +115,12 @@ func (cb *Configurer) HandlerDecorator(fn func(handler http.Handler) http.Handle
 // Defaults to LogVerbose.
 func (cb *Configurer) LogLevel(l LogLevel) *Configurer {
 	cb.conf.LogLevel = l
+	return cb
+}
+
+// Parameters sets a custom reply parameters store.
+func (cb *Configurer) Parameters(params reply.Params) *Configurer {
+	cb.conf.Parameters = params
 	return cb
 }
 

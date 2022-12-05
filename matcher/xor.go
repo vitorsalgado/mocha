@@ -3,8 +3,8 @@ package matcher
 import "fmt"
 
 type xorMatcher struct {
-	First  Matcher
-	Second Matcher
+	first  Matcher
+	second Matcher
 }
 
 func (m *xorMatcher) Name() string {
@@ -12,12 +12,12 @@ func (m *xorMatcher) Name() string {
 }
 
 func (m *xorMatcher) Match(v any) (*Result, error) {
-	a, err := m.First.Match(v)
+	a, err := m.first.Match(v)
 	if err != nil {
 		return &Result{}, err
 	}
 
-	b, err := m.Second.Match(v)
+	b, err := m.second.Match(v)
 	if err != nil {
 		return &Result{}, err
 	}
@@ -36,7 +36,7 @@ func (m *xorMatcher) Match(v any) (*Result, error) {
 
 		return fmt.Sprintf(
 			"%s %s %s",
-			hint(m.Name(), m.First.Name(), m.Second.Name()),
+			hint(m.Name(), m.first.Name(), m.second.Name()),
 			_separator,
 			desc)
 	}
@@ -53,5 +53,5 @@ func (m *xorMatcher) OnMockServed() error {
 
 // XOR is an exclusive or matcher
 func XOR(first Matcher, second Matcher) Matcher {
-	return &xorMatcher{First: first, Second: second}
+	return &xorMatcher{first: first, second: second}
 }

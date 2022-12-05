@@ -7,12 +7,12 @@ import (
 )
 
 type splitMatcher struct {
-	Separator string
-	Matcher   Matcher
+	separator string
+	matcher   Matcher
 }
 
 func (m *splitMatcher) Name() string {
-	return fmt.Sprintf("Split(%s)", m.Matcher.Name())
+	return fmt.Sprintf("Split(%s)", m.matcher.Name())
 }
 
 func (m *splitMatcher) Match(v any) (*Result, error) {
@@ -21,7 +21,7 @@ func (m *splitMatcher) Match(v any) (*Result, error) {
 		return &Result{}, fmt.Errorf("type %s is not supported. only string is acceptable", reflect.TypeOf(v).Name())
 	}
 
-	result, err := m.Matcher.Match(strings.Split(txt, m.Separator))
+	result, err := m.matcher.Match(strings.Split(txt, m.separator))
 	if err != nil {
 		return &Result{}, err
 	}
@@ -38,9 +38,9 @@ func (m *splitMatcher) Match(v any) (*Result, error) {
 }
 
 func (m *splitMatcher) OnMockServed() error {
-	return m.Matcher.OnMockServed()
+	return m.matcher.OnMockServed()
 }
 
 func Split(separator string, matcher Matcher) Matcher {
-	return &splitMatcher{Separator: separator, Matcher: matcher}
+	return &splitMatcher{separator: separator, matcher: matcher}
 }

@@ -39,10 +39,8 @@ func TestPostAction(t *testing.T) {
 
 		req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
 		res, err := req.Do()
-		if err != nil {
-			t.Fatal(err)
-		}
 
+		assert.NoError(t, err)
 		scope.AssertCalled(t)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		act.AssertExpectations(t)
@@ -63,10 +61,8 @@ func TestPostAction(t *testing.T) {
 
 		req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
 		res, err := req.Do()
-		if err != nil {
-			t.Fatal(err)
-		}
 
+		assert.NoError(t, err)
 		scope.AssertCalled(t)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		act.AssertExpectations(t)

@@ -12,6 +12,8 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 )
 
+var _ Reply = (*StdReply)(nil)
+
 // StdReply holds the configuration on how the Response should be built.
 type StdReply struct {
 	response *Response
@@ -203,7 +205,7 @@ func (rpl *StdReply) Map(mapper Mapper) *StdReply {
 }
 
 // Build builds a Response based on StdReply definition.
-func (rpl *StdReply) Build(r *http.Request, _ M, _ Params) (*Response, error) {
+func (rpl *StdReply) Build(_ http.ResponseWriter, r *http.Request) (*Response, error) {
 	if rpl.err != nil {
 		return nil, rpl.err
 	}

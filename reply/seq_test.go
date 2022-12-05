@@ -1,6 +1,7 @@
 package reply
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -9,74 +10,61 @@ import (
 
 func TestSequential(t *testing.T) {
 	t.Run("should return replies based configure sequence and return error when over", func(t *testing.T) {
-		m := &mMock{}
-		handler := m.On("Hits").Return(0)
-		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
-		builder := Seq().
-			Add(InternalServerError(), BadRequest(), OK(), NotFound())
+		ctx := context.WithValue(context.Background(), KArg, &Arg{M: M{1}})
+		req, _ := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080", nil)
+		builder := Seq(InternalServerError(), BadRequest(), OK(), NotFound())
 
-		handler.Unset()
-		handler = m.On("Hits").Return(1)
-
-		res, err := builder.Build(req, m, nil)
+		res, err := builder.Build(nil, req)
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusInternalServerError, res.Status)
 
-		handler.Unset()
-		handler = m.On("Hits").Return(2)
-
-		res, err = builder.Build(req, m, nil)
+		ctx = context.WithValue(context.Background(), KArg, &Arg{M: M{2}})
+		req, _ = http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080", nil)
+		res, err = builder.Build(nil, req)
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusBadRequest, res.Status)
 
-		handler.Unset()
-		handler = m.On("Hits").Return(3)
-
-		res, err = builder.Build(req, m, nil)
+		ctx = context.WithValue(context.Background(), KArg, &Arg{M: M{3}})
+		req, _ = http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080", nil)
+		res, err = builder.Build(nil, req)
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusOK, res.Status)
 
-		handler.Unset()
-		handler = m.On("Hits").Return(4)
-
-		res, err = builder.Build(req, m, nil)
+		ctx = context.WithValue(context.Background(), KArg, &Arg{M: M{4}})
+		req, _ = http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080", nil)
+		res, err = builder.Build(nil, req)
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusNotFound, res.Status)
 
-		handler.Unset()
-		m.On("Hits").Return(5)
-
-		_, err = builder.Build(req, m, nil)
+		ctx = context.WithValue(context.Background(), KArg, &Arg{M: M{5}})
+		req, _ = http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080", nil)
+		_, err = builder.Build(nil, req)
 		assert.NotNil(t, err)
 	})
 
 	t.Run("should return replies based configure sequence and return error when over", func(t *testing.T) {
-		m := &mMock{}
-		handler := m.On("Hits").Return(0)
-		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
+		ctx := context.WithValue(context.Background(), KArg, &Arg{M: M{0}})
+		req, _ := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080", nil)
 		builder := Seq().Add(OK()).AfterEnded(NotFound())
 
-		handler.Unset()
-		handler = m.On("Hits").Return(1)
-
-		res, err := builder.Build(req, m, nil)
+		ctx = context.WithValue(context.Background(), KArg, &Arg{M: M{1}})
+		req, _ = http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080", nil)
+		res, err := builder.Build(nil, req)
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusOK, res.Status)
 
-		handler.Unset()
-		m.On("Hits").Return(2)
-
-		res, err = builder.Build(req, m, nil)
+		ctx = context.WithValue(context.Background(), KArg, &Arg{M: M{2}})
+		req, _ = http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080", nil)
+		res, err = builder.Build(nil, req)
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusNotFound, res.Status)
 	})
 }
 
 func TestShouldReturnErrorWhenSequenceDoesNotContainReplies(t *testing.T) {
-	m := &mMock{}
-	m.On("Hits").Return(0)
-
-	res, err := Seq().Build(nil, m, nil)
+	ctx := context.WithValue(context.Background(), KArg, &Arg{M: M{0}})
+	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080", nil)
+	res, err := Seq().Build(nil, req)
 	assert.Nil(t, res)
 	assert.NotNil(t, err)
 }

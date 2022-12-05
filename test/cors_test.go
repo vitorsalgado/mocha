@@ -23,13 +23,13 @@ func TestCORS(t *testing.T) {
 
 	corsReq := testutil.NewRequest(http.MethodOptions, m.URL()+"/test", nil)
 	res, err := corsReq.Do()
-	assert.NoError(t, err)
 
+	assert.NoError(t, err)
 	assert.Equal(t, http.StatusNoContent, res.StatusCode)
 
 	req := testutil.NewRequest(http.MethodGet, m.URL()+"/test", nil)
 	res, err = req.Do()
-	assert.NoError(t, err)
 
+	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 }

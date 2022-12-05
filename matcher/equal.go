@@ -6,7 +6,7 @@ import (
 )
 
 type equalMatcher struct {
-	Expected any
+	expected any
 }
 
 func (m *equalMatcher) Name() string {
@@ -15,10 +15,10 @@ func (m *equalMatcher) Name() string {
 
 func (m *equalMatcher) Match(v any) (*Result, error) {
 	return &Result{
-		OK: reflect.DeepEqual(m.Expected, v),
+		OK: reflect.DeepEqual(m.expected, v),
 		DescribeFailure: func() string {
 			return fmt.Sprintf("%s %s %v",
-				hint(m.Name(), printExpected(m.Expected)),
+				hint(m.Name(), printExpected(m.expected)),
 				_separator,
 				printReceived(v),
 			)
@@ -32,5 +32,5 @@ func (m *equalMatcher) OnMockServed() error {
 
 // Equal returns true if matcher value is equal to the given parameter value.
 func Equal(expected any) Matcher {
-	return &equalMatcher{Expected: expected}
+	return &equalMatcher{expected: expected}
 }

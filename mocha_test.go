@@ -140,7 +140,7 @@ func TestErrors(t *testing.T) {
 
 	t.Run("should log errors on reply", func(t *testing.T) {
 		scoped := m.AddMocks(Get(URLPath("/test1")).
-			ReplyFunction(func(r *http.Request, m reply.M, p reply.Params) (*reply.Response, error) {
+			ReplyFunc(func(_ http.ResponseWriter, r *http.Request) (*reply.Response, error) {
 				return nil, fmt.Errorf("failed to build a response")
 			}))
 

@@ -5,6 +5,8 @@ import (
 	"net/http"
 )
 
+var _ Reply = (*SequentialReply)(nil)
+
 // SequentialReply configures a sequence of replies to be used after a mock.Mock is matched to a http.Request.
 type SequentialReply struct {
 	replyOnNotFound Reply
@@ -12,8 +14,8 @@ type SequentialReply struct {
 }
 
 // Seq creates a new SequentialReply.
-func Seq() *SequentialReply {
-	return &SequentialReply{replies: make([]Reply, 0)}
+func Seq(reply ...Reply) *SequentialReply {
+	return &SequentialReply{replies: reply}
 }
 
 // AfterEnded sets a response to be used once the sequence is over.
@@ -30,9 +32,11 @@ func (mr *SequentialReply) Add(reply ...Reply) *SequentialReply {
 
 // Build builds a new response based on current mock.Mock call sequence.
 // When the sequence is over, it will return an error or a previously configured reply for this scenario.
-func (mr *SequentialReply) Build(r *http.Request, m M, p Params) (*Response, error) {
+func (mr *SequentialReply) Build(w http.ResponseWriter, r *http.Request) (*Response, error) {
+	arg := r.Context().Value(KArg).(*Arg)
 	size := len(mr.replies)
-	hits := m.Hits()
+	hits := arg.M.Hits
+
 	if size == 0 {
 		return nil,
 			fmt.Errorf("you need to set at least one response when using multiple response builder")
@@ -40,13 +44,13 @@ func (mr *SequentialReply) Build(r *http.Request, m M, p Params) (*Response, err
 
 	var reply Reply
 
-	if hits <= size {
+	if hits <= size && hits >= 0 {
 		reply = mr.replies[hits-1]
 	}
 
 	if reply == nil {
 		if mr.replyOnNotFound != nil {
-			return mr.replyOnNotFound.Build(r, m, p)
+			return mr.replyOnNotFound.Build(w, r)
 		}
 
 		return nil,
@@ -56,5 +60,5 @@ func (mr *SequentialReply) Build(r *http.Request, m M, p Params) (*Response, err
 				size)
 	}
 
-	return reply.Build(r, m, p)
+	return reply.Build(w, r)
 }

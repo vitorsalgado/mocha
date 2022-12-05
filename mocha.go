@@ -9,8 +9,6 @@ import (
 	"github.com/vitorsalgado/mocha/v3/cors"
 	"github.com/vitorsalgado/mocha/v3/hooks"
 	"github.com/vitorsalgado/mocha/v3/internal/mid"
-	"github.com/vitorsalgado/mocha/v3/internal/mid/recover"
-	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -59,7 +57,7 @@ func New(t TestingT, config ...*Config) *Mocha {
 	parsers = append(parsers, &jsonBodyParser{}, &plainTextParser{}, &formURLEncodedParser{}, &bytesParser{})
 
 	middlewares := make([]func(handler http.Handler) http.Handler, 0)
-	middlewares = append(middlewares, recover.Recover)
+	middlewares = append(middlewares, mid.Recover)
 
 	hook := hooks.New()
 
@@ -77,7 +75,12 @@ func New(t TestingT, config ...*Config) *Mocha {
 	}
 
 	middlewares = append(middlewares, conf.Middlewares...)
+
 	p := reply.Parameters()
+	if conf.Parameters != nil {
+		p = conf.Parameters
+	}
+
 	handler := mid.
 		Compose(middlewares...).
 		Root(newHandler(store, parsers, p, hook, t))
@@ -165,7 +168,7 @@ func (m *Mocha) AddMocks(builders ...Builder) *Scoped {
 	added := make([]*Mock, size)
 
 	for i, b := range builders {
-		nm := b.Build(&Deps{ScenarioStore: matcher.NewScenarioStore()})
+		nm := b.Build()
 		m.storage.Save(nm)
 		added[i] = nm
 	}

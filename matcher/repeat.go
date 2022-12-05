@@ -6,8 +6,8 @@ import (
 )
 
 type repeatMatcher struct {
-	Max  int64
-	Hits int64
+	max  int64
+	hits int64
 }
 
 func (m *repeatMatcher) Name() string {
@@ -15,21 +15,21 @@ func (m *repeatMatcher) Name() string {
 }
 
 func (m *repeatMatcher) Match(_ any) (*Result, error) {
-	return &Result{OK: m.Hits < m.Max, DescribeFailure: func() string {
+	return &Result{OK: m.hits < m.max, DescribeFailure: func() string {
 		return fmt.Sprintf(
 			"%s %s %s",
-			hint(m.Name(), printExpected(m.Max)),
+			hint(m.Name(), printExpected(m.max)),
 			_separator,
-			printReceived(m.Hits),
+			printReceived(m.hits),
 		)
 	}}, nil
 }
 
 func (m *repeatMatcher) OnMockServed() error {
-	atomic.AddInt64(&m.Hits, 1)
+	atomic.AddInt64(&m.hits, 1)
 	return nil
 }
 
 func Repeat(times int64) Matcher {
-	return &repeatMatcher{Max: times}
+	return &repeatMatcher{max: times}
 }

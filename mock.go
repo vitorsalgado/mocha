@@ -43,11 +43,7 @@ type Mock struct {
 }
 
 type Builder interface {
-	Build(deps *Deps) *Mock
-}
-
-type Deps struct {
-	ScenarioStore matcher.ScenarioStore
+	Build() *Mock
 }
 
 // PostActionArgs represents the arguments that will be passed to every PostAction implementation

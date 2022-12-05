@@ -7,6 +7,8 @@ import (
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
+var _ Builder = (*MockBuilder)(nil)
+
 // MockBuilder is a builder for Mock.
 type MockBuilder struct {
 	mock                  *Mock
@@ -224,8 +226,10 @@ func (b *MockBuilder) Reply(rep reply.Reply) *MockBuilder {
 	return b
 }
 
-// ReplyFunction defines a function to will build the response mock.
-func (b *MockBuilder) ReplyFunction(fn func(*http.Request, reply.M, reply.Params) (*reply.Response, error)) *MockBuilder {
+// ReplyFunc defines a function to will build the response mock.
+func (b *MockBuilder) ReplyFunc(
+	fn func(http.ResponseWriter, *http.Request) (*reply.Response, error),
+) *MockBuilder {
 	b.mock.Reply = reply.Function(fn)
 	return b
 }
@@ -244,7 +248,7 @@ func (b *MockBuilder) ReplyJust(status int, r *reply.StdReply) *MockBuilder {
 
 // Build builds a Mock with previously configured parameters.
 // Used internally by Mocha.
-func (b *MockBuilder) Build(deps *Deps) *Mock {
+func (b *MockBuilder) Build() *Mock {
 	if b.scenario != "" {
 		b.mock.expectations = append(b.mock.expectations,
 			&expectation{
@@ -252,11 +256,7 @@ func (b *MockBuilder) Build(deps *Deps) *Mock {
 				ValueSelector: func(r *matcher.RequestInfo) any {
 					return r.Request
 				},
-				Matcher: matcher.
-					Scenario(deps.ScenarioStore)(
-					b.scenario,
-					b.scenarioRequiredState,
-					b.scenarioNewState),
+				Matcher: matcher.Scenario(b.scenario, b.scenarioRequiredState, b.scenarioNewState),
 			})
 	}
 

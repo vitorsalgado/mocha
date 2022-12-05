@@ -12,21 +12,19 @@ func TestScenario(t *testing.T) {
 	})
 
 	t.Run("should only create scenario if needed", func(t *testing.T) {
-		store := NewScenarioStore()
-		store.CreateNewIfNeeded("scenario-1")
+		store := newScenarioStore()
+		store.createNewIfNeeded("scenario-1")
 
-		s, ok := store.FetchByName("scenario-1")
+		s, ok := store.fetchByName("scenario-1")
 		assert.True(t, ok)
 		assert.True(t, s.hasStarted())
 
-		s.State = "another-state"
-		store.Save(s)
+		s.state = "another-state"
+		store.createNewIfNeeded("scenario-1")
 
-		store.CreateNewIfNeeded("scenario-1")
-
-		s, ok = store.FetchByName("scenario-1")
+		s, ok = store.fetchByName("scenario-1")
 		assert.True(t, ok)
 		assert.False(t, s.hasStarted())
-		assert.Equal(t, s.State, "another-state")
+		assert.Equal(t, s.state, "another-state")
 	})
 }

@@ -6,36 +6,34 @@ import (
 	"net/http/httptest"
 )
 
-type (
-	// ServerInfo holds HTTP server information, like its URL.
-	ServerInfo struct {
-		URL string
-	}
+// ServerInfo holds HTTP server information, like its URL.
+type ServerInfo struct {
+	URL string
+}
 
-	// Server defines HTTP mock server operations.
-	Server interface {
-		// Configure configures the HTTP mock.
-		// It is the first method called by Mocha during initialization.
-		Configure(*Config, http.Handler) error
+// Server defines HTTP mock server operations.
+type Server interface {
+	// Configure configures the HTTP mock.
+	// It is the first method called by Mocha during initialization.
+	Configure(*Config, http.Handler) error
 
-		// Start starts a server.
-		Start() (ServerInfo, error)
+	// Start starts a server.
+	Start() (ServerInfo, error)
 
-		// StartTLS starts a TLS server.
-		StartTLS() (ServerInfo, error)
+	// StartTLS starts a TLS server.
+	StartTLS() (ServerInfo, error)
 
-		// Close the server.
-		Close() error
+	// Close the server.
+	Close() error
 
-		// Info returns server information.
-		Info() ServerInfo
-	}
+	// Info returns server information.
+	Info() ServerInfo
+}
 
-	httpTestServer struct {
-		server *httptest.Server
-		info   ServerInfo
-	}
-)
+type httpTestServer struct {
+	server *httptest.Server
+	info   ServerInfo
+}
 
 func newServer() Server {
 	return &httpTestServer{info: ServerInfo{}}

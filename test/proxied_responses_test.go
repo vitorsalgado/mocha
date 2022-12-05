@@ -24,7 +24,7 @@ func TestForward(t *testing.T) {
 
 		b, err := io.ReadAll(r.Body)
 		if err != nil && err != io.EOF {
-			t.Fatal(err)
+			assert.NoError(t, err)
 		}
 
 		w.WriteHeader(http.StatusOK)
@@ -56,12 +56,9 @@ func TestForward(t *testing.T) {
 		assert.NoError(t, err)
 
 		b, err := io.ReadAll(res.Body)
-		if err != nil {
-			t.Fatal(err)
-		}
 
-		defer res.Body.Close()
-
+		assert.NoError(t, err)
+		assert.NoError(t, res.Body.Close())
 		scoped.AssertCalled(t)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Equal(t, "example", res.Header.Get("x-res"))

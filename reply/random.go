@@ -7,6 +7,8 @@ import (
 	"time"
 )
 
+var _ Reply = (*RandomReply)(nil)
+
 // RandomReply configures a Reply that serves random HTTP responses.
 type RandomReply struct {
 	replies []Reply
@@ -14,9 +16,9 @@ type RandomReply struct {
 }
 
 // Rand inits a new RandomReply.
-func Rand() *RandomReply {
+func Rand(reply ...Reply) *RandomReply {
 	return &RandomReply{
-		replies: make([]Reply, 0),
+		replies: reply,
 		r:       rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
 }
@@ -28,7 +30,7 @@ func (mr *RandomReply) Add(reply ...Reply) *RandomReply {
 }
 
 // Build builds a response stub randomly based on previously added Reply implementations.
-func (mr *RandomReply) Build(r *http.Request, m M, p Params) (*Response, error) {
+func (mr *RandomReply) Build(w http.ResponseWriter, r *http.Request) (*Response, error) {
 	size := len(mr.replies)
 	if size == 0 {
 		return nil,
@@ -38,5 +40,5 @@ func (mr *RandomReply) Build(r *http.Request, m M, p Params) (*Response, error) 
 	index := mr.r.Intn(len(mr.replies)-1) + 0
 	reply := mr.replies[index]
 
-	return reply.Build(r, m, p)
+	return reply.Build(w, r)
 }

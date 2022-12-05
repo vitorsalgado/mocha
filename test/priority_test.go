@@ -29,8 +29,8 @@ func TestPriority(t *testing.T) {
 		Reply(reply.Created()))
 
 	res, err := testutil.Get(m.URL() + "/test").Do()
-	assert.NoError(t, err)
 
+	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 	assert.False(t, one.Called())
 	assert.True(t, two.Called())

@@ -6,7 +6,7 @@ import (
 )
 
 type hasSuffixMatcher struct {
-	Suffix string
+	suffix string
 }
 
 func (m *hasSuffixMatcher) Name() string {
@@ -17,11 +17,11 @@ func (m *hasSuffixMatcher) Match(v any) (*Result, error) {
 	txt := v.(string)
 
 	return &Result{
-		OK: strings.HasSuffix(txt, m.Suffix),
+		OK: strings.HasSuffix(txt, m.suffix),
 		DescribeFailure: func() string {
 			return fmt.Sprintf(
 				"%s %s %s",
-				hint(m.Name(), printExpected(m.Suffix)),
+				hint(m.Name(), printExpected(m.suffix)),
 				_separator,
 				txt,
 			)
@@ -35,5 +35,5 @@ func (m *hasSuffixMatcher) OnMockServed() error {
 
 // HasSuffix returns true when matcher argument ends with the given suffix.
 func HasSuffix(suffix string) Matcher {
-	return &hasSuffixMatcher{Suffix: suffix}
+	return &hasSuffixMatcher{suffix: suffix}
 }

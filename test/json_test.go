@@ -34,12 +34,9 @@ func TestPostJSON(t *testing.T) {
 		req.Header("test", "hello")
 
 		res, err := req.Do()
-		if err != nil {
-			t.Fatal(err)
-		}
 
-		defer res.Body.Close()
-
+		assert.NoError(t, err)
+		assert.NoError(t, res.Body.Close())
 		assert.True(t, scoped.Called())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
@@ -59,12 +56,9 @@ func TestPostJSON(t *testing.T) {
 		req.Header("test", "hello")
 
 		res, err := req.Do()
-		if err != nil {
-			t.Fatal(err)
-		}
 
-		defer res.Body.Close()
-
+		assert.NoError(t, err)
+		assert.NoError(t, res.Body.Close())
 		assert.True(t, scoped.Called())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
@@ -85,12 +79,9 @@ func TestPostJSON(t *testing.T) {
 		req.Header("test", "hello")
 
 		res, err := req.Do()
-		if err != nil {
-			t.Fatal(err)
-		}
 
-		defer res.Body.Close()
-
+		assert.NoError(t, err)
+		assert.NoError(t, res.Body.Close())
 		assert.True(t, scoped.Called())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
@@ -111,12 +102,9 @@ func TestPostJSON(t *testing.T) {
 		req.Header("test", "hello")
 
 		res, err := req.Do()
-		if err != nil {
-			t.Fatal(err)
-		}
 
-		defer res.Body.Close()
-
+		assert.NoError(t, err)
+		assert.NoError(t, res.Body.Close())
 		assert.True(t, scoped.Called())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
@@ -137,12 +125,9 @@ func TestPostJSON(t *testing.T) {
 		req.Header("test", "hello")
 
 		res, err := req.Do()
-		if err != nil {
-			t.Fatal(err)
-		}
 
-		defer res.Body.Close()
-
+		assert.NoError(t, err)
+		assert.NoError(t, res.Body.Close())
 		assert.False(t, scoped.Called())
 		assert.Equal(t, http.StatusTeapot, res.StatusCode)
 	})

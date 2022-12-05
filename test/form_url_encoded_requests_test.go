@@ -33,11 +33,9 @@ func TestFormUrlEncoded(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", strings.NewReader(data.Encode()))
 	req.Header.Add("test", "hello")
 	req.Header.Add(header.ContentType, mimetype.FormURLEncoded)
-
 	res, err := http.DefaultClient.Do(req)
+
 	assert.NoError(t, err)
-
-	defer res.Body.Close()
-
+	assert.NoError(t, res.Body.Close())
 	assert.True(t, scoped.Called())
 }

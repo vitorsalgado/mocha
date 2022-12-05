@@ -34,7 +34,7 @@ func TestForward(t *testing.T) {
 			ProxyHeader("x-proxy", "proxied").
 			RemoveProxyHeader("x-to-be-removed").
 			Header("x-res", "response").
-			Build(req, nil, nil)
+			Build(nil, req)
 		assert.NoError(t, err)
 
 		b, err := io.ReadAll(res.Body)
@@ -66,7 +66,7 @@ func TestForward(t *testing.T) {
 
 		u, _ := url.Parse(dest.URL)
 		forward := Forward(u)
-		res, err := forward.Build(req, nil, nil)
+		res, err := forward.Build(nil, req)
 		assert.NoError(t, err)
 
 		b, err := io.ReadAll(res.Body)
@@ -87,7 +87,7 @@ func TestForward(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 
 		forward := Forward(dest.URL)
-		res, err := forward.Build(req, nil, nil)
+		res, err := forward.Build(nil, req)
 		assert.NoError(t, err)
 
 		b, err := io.ReadAll(res.Body)
@@ -109,7 +109,7 @@ func TestForward(t *testing.T) {
 		defer dest.Close()
 
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080/path/test/example?filter=all", nil)
-		res, err := Forward(dest.URL).StripPrefix("/path/test").Build(req, nil, nil)
+		res, err := Forward(dest.URL).StripPrefix("/path/test").Build(nil, req)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
@@ -127,7 +127,7 @@ func TestForward(t *testing.T) {
 		defer dest.Close()
 
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080/path/test/example?filter=all", nil)
-		res, err := Forward(dest.URL).StripSuffix("/example").Build(req, nil, nil)
+		res, err := Forward(dest.URL).StripSuffix("/example").Build(nil, req)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, res)
@@ -136,7 +136,7 @@ func TestForward(t *testing.T) {
 
 	t.Run("should panic if provide raw target cannot be parsed to a URL", func(t *testing.T) {
 		assert.Panics(t, func() {
-			Forward(" http://fail test  ")
+			Forward(" https://fail test  ")
 		})
 	})
 }

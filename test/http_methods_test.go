@@ -26,14 +26,14 @@ func TestHTTPMethods(t *testing.T) {
 		defer scoped.Clean()
 
 		res, err := testutil.Get(m.URL() + "/test").Do()
-		assert.NoError(t, err)
 
+		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
 
 		other, err := testutil.Post(m.URL()+"/test", nil).Do()
-		assert.NoError(t, err)
 
+		assert.NoError(t, err)
 		assert.Equal(t, http.StatusTeapot, other.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
 	})
@@ -46,14 +46,14 @@ func TestHTTPMethods(t *testing.T) {
 		defer scoped.Clean()
 
 		res, err := testutil.Get(m.URL() + "/test").Do()
-		assert.NoError(t, err)
 
+		assert.NoError(t, err)
 		assert.Equal(t, http.StatusTeapot, res.StatusCode)
 		assert.False(t, scoped.Called())
 
 		other, err := testutil.Post(m.URL()+"/test", nil).Do()
-		assert.NoError(t, err)
 
+		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, other.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
 		assert.True(t, scoped.Called())
@@ -67,14 +67,14 @@ func TestHTTPMethods(t *testing.T) {
 		defer scoped.Clean()
 
 		res, err := testutil.Get(m.URL() + "/test").Do()
-		assert.NoError(t, err)
 
+		assert.NoError(t, err)
 		assert.Equal(t, http.StatusTeapot, res.StatusCode)
 		assert.False(t, scoped.Called())
 
 		other, err := testutil.NewRequest(http.MethodPut, m.URL()+"/test", nil).Do()
-		assert.NoError(t, err)
 
+		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, other.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
 		assert.True(t, scoped.Called())
@@ -88,14 +88,14 @@ func TestHTTPMethods(t *testing.T) {
 		defer scoped.Clean()
 
 		res, err := testutil.Get(m.URL() + "/test").Do()
-		assert.NoError(t, err)
 
+		assert.NoError(t, err)
 		assert.Equal(t, http.StatusTeapot, res.StatusCode)
 		assert.False(t, scoped.Called())
 
 		other, err := testutil.NewRequest(http.MethodDelete, m.URL()+"/test", nil).Do()
-		assert.NoError(t, err)
 
+		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, other.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
 		assert.True(t, scoped.Called())
@@ -109,14 +109,14 @@ func TestHTTPMethods(t *testing.T) {
 		defer scoped.Clean()
 
 		res, err := testutil.Get(m.URL() + "/test").Do()
-		assert.NoError(t, err)
 
+		assert.NoError(t, err)
 		assert.Equal(t, http.StatusTeapot, res.StatusCode)
 		assert.False(t, scoped.Called())
 
 		other, err := testutil.NewRequest(http.MethodPatch, m.URL()+"/test", nil).Do()
-		assert.NoError(t, err)
 
+		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, other.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
 		assert.True(t, scoped.Called())
@@ -130,14 +130,14 @@ func TestHTTPMethods(t *testing.T) {
 		defer scoped.Clean()
 
 		res, err := testutil.Get(m.URL() + "/test").Do()
-		assert.NoError(t, err)
 
+		assert.NoError(t, err)
 		assert.Equal(t, http.StatusTeapot, res.StatusCode)
 		assert.False(t, scoped.Called())
 
 		other, err := testutil.NewRequest(http.MethodHead, m.URL()+"/test", nil).Do()
-		assert.NoError(t, err)
 
+		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, other.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
 		assert.True(t, scoped.Called())
@@ -151,14 +151,14 @@ func TestHTTPMethods(t *testing.T) {
 		defer scoped.Clean()
 
 		res, err := testutil.Get(m.URL() + "/test").Do()
-		assert.NoError(t, err)
 
+		assert.NoError(t, err)
 		assert.Equal(t, http.StatusTeapot, res.StatusCode)
 		assert.False(t, scoped.Called())
 
 		other, err := testutil.NewRequest(http.MethodOptions, m.URL()+"/test", nil).Do()
-		assert.NoError(t, err)
 
+		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, other.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
 		assert.True(t, scoped.Called())

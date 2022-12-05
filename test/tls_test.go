@@ -30,9 +30,8 @@ func TestTLS(t *testing.T) {
 	req.Header("test", "hello")
 
 	res, err := req.Do()
+
 	assert.NoError(t, err)
-
-	defer res.Body.Close()
-
+	assert.NoError(t, res.Body.Close())
 	assert.True(t, scoped.Called())
 }

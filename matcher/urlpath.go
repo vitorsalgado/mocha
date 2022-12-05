@@ -7,9 +7,8 @@ import (
 )
 
 type urlPathMatcher struct {
-	Expected string
-
-	u string
+	expected string
+	u        string
 }
 
 func (m *urlPathMatcher) Name() string {
@@ -20,7 +19,7 @@ func (m *urlPathMatcher) Match(v any) (*Result, error) {
 	message := func() string {
 		return fmt.Sprintf(
 			"%s %s %s",
-			hint(m.Name(), printExpected(m.Expected)),
+			hint(m.Name(), printExpected(m.expected)),
 			_separator,
 			printReceived(m.u),
 		)
@@ -30,13 +29,13 @@ func (m *urlPathMatcher) Match(v any) (*Result, error) {
 	case *url.URL:
 		m.u = e.Path
 		return &Result{
-			OK:              strings.EqualFold(m.Expected, e.Path),
+			OK:              strings.EqualFold(m.expected, e.Path),
 			DescribeFailure: message,
 		}, nil
 	case url.URL:
 		m.u = e.Path
 		return &Result{
-			OK:              strings.EqualFold(m.Expected, e.Path),
+			OK:              strings.EqualFold(m.expected, e.Path),
 			DescribeFailure: message,
 		}, nil
 	case string:
@@ -47,7 +46,7 @@ func (m *urlPathMatcher) Match(v any) (*Result, error) {
 
 		m.u = u.Path
 
-		return &Result{OK: strings.EqualFold(m.Expected, u.Path), DescribeFailure: message}, nil
+		return &Result{OK: strings.EqualFold(m.expected, u.Path), DescribeFailure: message}, nil
 
 	default:
 		panic("URLPath matcher only accepts the types: *url.URL | url.URL | string")
@@ -60,5 +59,5 @@ func (m *urlPathMatcher) OnMockServed() error {
 
 // URLPath returns true if request URL path is equal to the expected path, ignoring case.
 func URLPath(expected string) Matcher {
-	return &urlPathMatcher{Expected: expected}
+	return &urlPathMatcher{expected: expected}
 }

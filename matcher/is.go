@@ -1,21 +1,21 @@
 package matcher
 
 type isMatcher struct {
-	Matcher Matcher
+	matcher Matcher
 }
 
 func (m *isMatcher) Name() string {
-	return m.Matcher.Name()
+	return m.matcher.Name()
 }
 
 func (m *isMatcher) Match(v any) (*Result, error) {
-	return m.Matcher.Match(v)
+	return m.matcher.Match(v)
 }
 
 func (m *isMatcher) OnMockServed() error {
-	return m.Matcher.OnMockServed()
+	return m.matcher.OnMockServed()
 }
 
 func Is(matcher Matcher) Matcher {
-	return &isMatcher{Matcher: matcher}
+	return &isMatcher{matcher: matcher}
 }

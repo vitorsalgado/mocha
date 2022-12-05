@@ -7,7 +7,7 @@ import (
 )
 
 type regExpMatcher struct {
-	Expression any
+	expression any
 }
 
 func (m *regExpMatcher) Name() string {
@@ -20,12 +20,12 @@ func (m *regExpMatcher) Match(v any) (*Result, error) {
 	msg := func() string {
 		return fmt.Sprintf(
 			"%s %s %s",
-			hint(m.Name(), printExpected(m.Expression)),
+			hint(m.Name(), printExpected(m.expression)),
 			_separator,
 			txt)
 	}
 
-	switch e := m.Expression.(type) {
+	switch e := m.expression.(type) {
 	case string:
 		match, err := regexp.Match(e, []byte(txt))
 		return &Result{OK: match, DescribeFailure: msg}, err
@@ -46,5 +46,5 @@ func (m *regExpMatcher) OnMockServed() error {
 // Matches returns true then the given regular expression matches matcher argument.
 // It accepts a string or a regexp.Regexp.
 func Matches(expression any) Matcher {
-	return &regExpMatcher{Expression: expression}
+	return &regExpMatcher{expression: expression}
 }

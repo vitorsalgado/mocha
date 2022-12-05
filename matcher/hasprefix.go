@@ -6,7 +6,7 @@ import (
 )
 
 type hasPrefixMatcher struct {
-	Prefix string
+	prefix string
 }
 
 func (m *hasPrefixMatcher) Name() string {
@@ -17,11 +17,11 @@ func (m *hasPrefixMatcher) Match(v any) (*Result, error) {
 	txt := v.(string)
 
 	return &Result{
-		OK: strings.HasPrefix(txt, m.Prefix),
+		OK: strings.HasPrefix(txt, m.prefix),
 		DescribeFailure: func() string {
 			return fmt.Sprintf(
 				"%s %s %s",
-				hint(m.Name(), printExpected(m.Prefix)),
+				hint(m.Name(), printExpected(m.prefix)),
 				_separator,
 				txt,
 			)
@@ -35,5 +35,5 @@ func (m *hasPrefixMatcher) OnMockServed() error {
 
 // HasPrefix returns true if the matcher argument starts with the given prefix.
 func HasPrefix(prefix string) Matcher {
-	return &hasPrefixMatcher{Prefix: prefix}
+	return &hasPrefixMatcher{prefix: prefix}
 }

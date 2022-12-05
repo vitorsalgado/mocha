@@ -6,7 +6,7 @@ import (
 )
 
 type equalIgnoreCaseMatcher struct {
-	Expected string
+	expected string
 }
 
 func (m *equalIgnoreCaseMatcher) Name() string {
@@ -19,10 +19,10 @@ func (m *equalIgnoreCaseMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		OK: strings.EqualFold(m.Expected, v.(string)),
+		OK: strings.EqualFold(m.expected, v.(string)),
 		DescribeFailure: func() string {
 			return fmt.Sprintf("%s %s %s",
-				hint(m.Name(), printExpected(m.Expected)),
+				hint(m.Name(), printExpected(m.expected)),
 				_separator,
 				printReceived(v),
 			)
@@ -37,5 +37,5 @@ func (m *equalIgnoreCaseMatcher) OnMockServed() error {
 // EqualIgnoreCase returns true if expected value is equal to matcher value, ignoring case.
 // EqualIgnoreCase uses strings.EqualFold function.
 func EqualIgnoreCase(expected string) Matcher {
-	return &equalIgnoreCaseMatcher{Expected: expected}
+	return &equalIgnoreCaseMatcher{expected: expected}
 }

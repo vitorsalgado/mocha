@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+var _ Reply = (*ProxyReply)(nil)
+
 var forbiddenHeaders = []string{
 	"Connection",
 	"Keep-Alive",
@@ -90,7 +92,7 @@ func (r *ProxyReply) StripSuffix(suffix string) *ProxyReply {
 }
 
 // Build builds a Reply based on the ProxyReply configuration.
-func (r *ProxyReply) Build(req *http.Request, _ M, _ Params) (*Response, error) {
+func (r *ProxyReply) Build(_ http.ResponseWriter, req *http.Request) (*Response, error) {
 	path := req.URL.Path
 
 	if r.trimPrefix != "" {

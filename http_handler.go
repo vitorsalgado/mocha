@@ -2,6 +2,7 @@ package mocha
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -61,45 +62,54 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	mock := result.Matched
 
+	// request with reply vars
+	r = r.WithContext(
+		context.WithValue(
+			r.Context(), reply.KArg, &reply.Arg{M: reply.M{Hits: mock.Hits()}, Params: h.params}))
+
 	// get the reply for the mock, after running all possible matchers.
-	res, err := result.Matched.Reply.Build(r, mock, h.params)
+	res, err := result.Matched.Reply.Build(w, r)
 	if err != nil {
 		h.t.Logf(err.Error())
 		respondError(w, r, h.evt, err)
 		return
 	}
 
-	// map the response using mock mappers.
-	mapperArgs := &reply.MapperArgs{Request: r, Parameters: h.params}
-	for _, mapper := range res.Mappers {
-		if err = mapper(res, mapperArgs); err != nil {
-			respondError(w, r, h.evt, err)
-			return
+	if res.SendPending() {
+		// map the response using mock mappers.
+		mapperArgs := &reply.MapperArgs{Request: r, Parameters: h.params}
+		for _, mapper := range res.Mappers {
+			if err = mapper(res, mapperArgs); err != nil {
+				respondError(w, r, h.evt, err)
+				return
+			}
 		}
 	}
 
 	// success
 	mock.Inc()
 
-	// if a delay is set, it will wait before continuing serving the mocked response.
-	if res.Delay > 0 {
-		<-time.After(res.Delay)
-	}
-
-	for k := range res.Header {
-		w.Header().Add(k, res.Header.Get(k))
-	}
-
-	w.WriteHeader(res.Status)
-
-	if res.Body != nil {
-		scanner := bufio.NewScanner(res.Body)
-		for scanner.Scan() {
-			w.Write(scanner.Bytes())
+	if res.SendPending() {
+		// if a delay is set, it will wait before continuing serving the mocked response.
+		if res.Delay > 0 {
+			<-time.After(res.Delay)
 		}
 
-		if scanner.Err() != nil {
-			h.t.Logf("error writing response body: error=%v", scanner.Err())
+		for k := range res.Header {
+			w.Header().Add(k, res.Header.Get(k))
+		}
+
+		w.WriteHeader(res.Status)
+
+		if res.Body != nil {
+			scanner := bufio.NewScanner(res.Body)
+			for scanner.Scan() {
+				w.Write(scanner.Bytes())
+			}
+
+			if scanner.Err() != nil {
+				h.t.Logf("error writing response body: error=%v", scanner.Err())
+			}
 		}
 	}
 

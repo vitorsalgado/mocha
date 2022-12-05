@@ -8,16 +8,17 @@ import (
 )
 
 func TestRandomReplies(t *testing.T) {
-	m := &mMock{}
-
 	req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 	statuses := []int{
 		http.StatusOK, http.StatusInternalServerError, http.StatusCreated, http.StatusBadRequest}
 
 	for i := 0; i < 5000; i++ {
-		res, err := Rand().
-			Add(BadRequest(), OK(), Created(), InternalServerError()).
-			Build(req, m, nil)
+		res, err := Rand(
+			BadRequest(),
+			OK(),
+			Created(),
+			InternalServerError(),
+		).Build(nil, req)
 
 		contains := false
 		for _, status := range statuses {
@@ -33,7 +34,7 @@ func TestRandomReplies(t *testing.T) {
 }
 
 func TestShouldReturnErrorWhenRandomDoesNotContainReplies(t *testing.T) {
-	res, err := Rand().Build(nil, nil, nil)
+	res, err := Rand().Build(nil, nil)
 	assert.Nil(t, res)
 	assert.NotNil(t, err)
 }

@@ -5,7 +5,7 @@ import (
 )
 
 type hasKeyMatcher struct {
-	Path string
+	path string
 }
 
 func (m *hasKeyMatcher) Name() string {
@@ -13,7 +13,7 @@ func (m *hasKeyMatcher) Name() string {
 }
 
 func (m *hasKeyMatcher) Match(v any) (*Result, error) {
-	value, err := jsonx.Reach(m.Path, v)
+	value, err := jsonx.Reach(m.path, v)
 	if err != nil {
 		return mismatch(nil), err
 	}
@@ -21,7 +21,7 @@ func (m *hasKeyMatcher) Match(v any) (*Result, error) {
 	return &Result{
 		OK: value != nil,
 		DescribeFailure: func() string {
-			return hint(m.Name(), printExpected(m.Path))
+			return hint(m.Name(), printExpected(m.path))
 		},
 	}, nil
 }
@@ -37,5 +37,5 @@ func (m *hasKeyMatcher) OnMockServed() error {
 //	HaveKey("name") will return true
 //	HaveKey("address.street") will return false.
 func HaveKey(path string) Matcher {
-	return &hasKeyMatcher{Path: path}
+	return &hasKeyMatcher{path: path}
 }

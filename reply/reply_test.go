@@ -13,8 +13,7 @@ import (
 )
 
 var (
-	_testMock = &mMock{}
-	_req, _   = http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
+	_req, _ = http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 )
 
 type jsonData struct {
@@ -55,7 +54,7 @@ func TestReply(t *testing.T) {
 		ExpireCookie(http.Cookie{Name: "cookie_test_remove"}).
 		Body([]byte("hi")).
 		Delay(5*time.Second).
-		Build(_req, _testMock, nil)
+		Build(nil, _req)
 
 	assert.Nil(t, err)
 
@@ -77,7 +76,7 @@ func TestStdReply_BodyString(t *testing.T) {
 	res, err := New().
 		Status(http.StatusCreated).
 		BodyString("text").
-		Build(_req, _testMock, nil)
+		Build(nil, _req)
 
 	assert.Nil(t, err)
 
@@ -98,7 +97,7 @@ func TestStdReply_BodyJSON(t *testing.T) {
 		res, err := New().
 			Status(http.StatusCreated).
 			BodyJSON(model).
-			Build(_req, _testMock, nil)
+			Build(nil, _req)
 
 		assert.Nil(t, err)
 
@@ -113,7 +112,7 @@ func TestStdReply_BodyJSON(t *testing.T) {
 		res, err := New().
 			Status(http.StatusCreated).
 			BodyJSON(make(chan int)).
-			Build(_req, _testMock, nil)
+			Build(nil, _req)
 
 		assert.Nil(t, res)
 		assert.NotNil(t, err)
@@ -132,7 +131,7 @@ func TestStdReply_BodyReader(t *testing.T) {
 	res, err := New().
 		Status(http.StatusCreated).
 		BodyReader(f).
-		Build(_req, _testMock, nil)
+		Build(nil, _req)
 
 	assert.Nil(t, err)
 

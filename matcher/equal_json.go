@@ -7,7 +7,7 @@ import (
 )
 
 type equalJSONMatcher struct {
-	Expected any
+	expected any
 }
 
 func (m *equalJSONMatcher) Name() string {
@@ -15,7 +15,7 @@ func (m *equalJSONMatcher) Name() string {
 }
 
 func (m *equalJSONMatcher) Match(v any) (*Result, error) {
-	expectedAsJson, err := json.Marshal(m.Expected)
+	expectedAsJson, err := json.Marshal(m.expected)
 	if err != nil {
 		return mismatch(nil), err
 	}
@@ -31,7 +31,7 @@ func (m *equalJSONMatcher) Match(v any) (*Result, error) {
 		DescribeFailure: func() string {
 			return fmt.Sprintf("%s\nExpected:\n%s\nReceived:\n%s",
 				hint(m.Name()),
-				printExpected(m.Expected),
+				printExpected(m.expected),
 				printReceived(v),
 			)
 		},
@@ -44,5 +44,5 @@ func (m *equalJSONMatcher) OnMockServed() error {
 
 // EqualJSON returns true if matcher value is equal to the given parameter value.
 func EqualJSON(expected any) Matcher {
-	return &equalJSONMatcher{Expected: expected}
+	return &equalJSONMatcher{expected: expected}
 }
