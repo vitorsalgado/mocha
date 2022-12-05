@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/vitorsalgado/mocha/v3/cors"
 	"github.com/vitorsalgado/mocha/v3/hooks"
 	"github.com/vitorsalgado/mocha/v3/internal/mid"
 	"github.com/vitorsalgado/mocha/v3/reply"
@@ -71,7 +70,7 @@ func New(t TestingT, config ...*Config) *Mocha {
 	}
 
 	if conf.corsEnabled {
-		middlewares = append(middlewares, cors.New(conf.CORS))
+		middlewares = append(middlewares, corsMid(conf.CORS))
 	}
 
 	middlewares = append(middlewares, conf.Middlewares...)

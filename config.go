@@ -3,7 +3,6 @@ package mocha
 import (
 	"net/http"
 
-	"github.com/vitorsalgado/mocha/v3/cors"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -28,7 +27,7 @@ type Config struct {
 	Middlewares []func(http.Handler) http.Handler
 
 	// CORS defines CORS configurations.
-	CORS *cors.Config
+	CORS *CORSConfig
 
 	// Server defines a custom mock HTTP server.
 	Server Server
@@ -86,12 +85,12 @@ func (cb *Configurer) Middlewares(fn ...func(handler http.Handler) http.Handler)
 	return cb
 }
 
-// CORS configures CORS for the mock server.
-func (cb *Configurer) CORS(options ...*cors.Config) *Configurer {
+// CORS configures Cross Origin Resource Sharing for the mock server.
+func (cb *Configurer) CORS(options ...*CORSConfig) *Configurer {
 	if len(options) > 0 {
 		cb.conf.CORS = options[0]
 	} else {
-		cb.conf.CORS = cors.ConfigDefault
+		cb.conf.CORS = _defaultCORSConfig
 	}
 
 	cb.conf.corsEnabled = true
