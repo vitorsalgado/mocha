@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/goleak"
 
-	"github.com/vitorsalgado/mocha/v3/hooks"
 	"github.com/vitorsalgado/mocha/v3/internal/testmocks"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
@@ -301,8 +300,8 @@ func TestMocha_Subscribe(t *testing.T) {
 	f.On("OnRequestMatched", mock.Anything).Return()
 
 	m := New(t, Configure().LogLevel(LogSilently).Build()).CloseOnCleanup(t)
-	m.Subscribe(hooks.HookOnRequest, f.OnRequest)
-	m.Subscribe(hooks.HookOnRequestMatched, f.OnRequestMatched)
+	m.Subscribe(EventOnRequest, f.OnRequest)
+	m.Subscribe(EventOnRequestMatched, f.OnRequestMatched)
 	m.Start()
 
 	defer m.Close()

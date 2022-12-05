@@ -1,4 +1,4 @@
-package hooks
+package worker
 
 import (
 	"context"
@@ -7,14 +7,17 @@ import (
 	"sync/atomic"
 )
 
-type worker struct {
-	started atomic.Bool
-	queue   queue
-	hooks   map[hook][]func(e any)
+type JobType reflect.Type
+type Queue chan any
+
+type Worker struct {
+	Started atomic.Bool
+	Queue   Queue
+	Jobs    map[JobType][]func(e any)
 }
 
-func (w *worker) start(ctx context.Context) {
-	w.started.Store(true)
+func (w *Worker) Start(ctx context.Context) {
+	w.Started.Store(true)
 
 	go func() {
 		defer func() {
@@ -25,13 +28,13 @@ func (w *worker) start(ctx context.Context) {
 
 		for {
 			select {
-			case event, ok := <-w.queue:
+			case event, ok := <-w.Queue:
 				if !ok {
 					return
 				}
 
 				t := reflect.TypeOf(event)
-				fns, ok := w.hooks[t]
+				fns, ok := w.Jobs[t]
 				if !ok {
 					continue
 				}
@@ -40,8 +43,8 @@ func (w *worker) start(ctx context.Context) {
 					fn(event)
 				}
 			case <-ctx.Done():
-				close(w.queue)
-				w.started.Store(false)
+				close(w.Queue)
+				w.Started.Store(false)
 				return
 			}
 		}

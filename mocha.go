@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/vitorsalgado/mocha/v3/hooks"
 	"github.com/vitorsalgado/mocha/v3/internal/mid"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
@@ -22,7 +21,7 @@ type (
 		ctx     context.Context
 		cancel  context.CancelFunc
 		params  reply.Params
-		hooks   *hooks.Hooks
+		events  *eventListener
 		scopes  []*Scoped
 		mu      sync.Mutex
 	}
@@ -58,15 +57,15 @@ func New(t TestingT, config ...*Config) *Mocha {
 	middlewares := make([]func(handler http.Handler) http.Handler, 0)
 	middlewares = append(middlewares, mid.Recover)
 
-	hook := hooks.New()
+	events := newEvents()
 
 	if conf.LogLevel > LogSilently {
-		h := hooks.NewInternalEvents(t)
+		h := newInternalEvents(t)
 
-		hook.Subscribe(hooks.HookOnRequest, h.OnRequest)
-		hook.Subscribe(hooks.HookOnRequestMatched, h.OnRequestMatched)
-		hook.Subscribe(hooks.HookOnRequestNotMatched, h.OnRequestNotMatched)
-		hook.Subscribe(hooks.HookOnError, h.OnError)
+		events.Subscribe(EventOnRequest, h.OnRequest)
+		events.Subscribe(EventOnRequestMatched, h.OnRequestMatched)
+		events.Subscribe(EventOnRequestNotMatched, h.OnRequestNotMatched)
+		events.Subscribe(EventOnError, h.OnError)
 	}
 
 	if conf.corsEnabled {
@@ -82,7 +81,7 @@ func New(t TestingT, config ...*Config) *Mocha {
 
 	handler := mid.
 		Compose(middlewares...).
-		Root(newHandler(store, parsers, p, hook, t))
+		Root(newHandler(store, parsers, p, events, t))
 
 	if conf.Handler != nil {
 		handler = conf.Handler(handler)
@@ -109,7 +108,7 @@ func New(t TestingT, config ...*Config) *Mocha {
 		cancel:  cancel,
 		params:  p,
 		scopes:  make([]*Scoped, 0),
-		hooks:   hook,
+		events:  events,
 		T:       t}
 
 	return m
@@ -128,7 +127,7 @@ func (m *Mocha) Start() ServerInfo {
 		m.T.FailNow()
 	}
 
-	m.hooks.Start(m.ctx)
+	m.events.Start(m.ctx)
 
 	return info
 }
@@ -141,7 +140,7 @@ func (m *Mocha) StartTLS() ServerInfo {
 		m.T.FailNow()
 	}
 
-	m.hooks.Start(m.ctx)
+	m.events.Start(m.ctx)
 
 	return info
 }
@@ -193,7 +192,7 @@ func (m *Mocha) Subscribe(evt reflect.Type, fn func(payload any)) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	m.hooks.Subscribe(evt, fn)
+	m.events.Subscribe(evt, fn)
 }
 
 // Close closes the mock server.

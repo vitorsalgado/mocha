@@ -1,4 +1,4 @@
-package hooks
+package mocha
 
 import (
 	"fmt"
@@ -8,22 +8,15 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/colorize"
 )
 
-// Logger defines internal events logger contract.
-type Logger interface {
-	Logf(string, ...any)
+type internalEvents struct {
+	l TestingT
 }
 
-// InternalEvents implements default event handlers that logs event information.
-type InternalEvents struct {
-	l Logger
+func newInternalEvents(l TestingT) *internalEvents {
+	return &internalEvents{l: l}
 }
 
-// NewInternalEvents creates an internal event handlers.
-func NewInternalEvents(l Logger) *InternalEvents {
-	return &InternalEvents{l: l}
-}
-
-func (h *InternalEvents) OnRequest(evt any) {
+func (h *internalEvents) OnRequest(evt any) {
 	e := evt.(*OnRequest)
 
 	var b any
@@ -48,7 +41,7 @@ func (h *InternalEvents) OnRequest(evt any) {
 	)
 }
 
-func (h *InternalEvents) OnRequestMatched(evt any) {
+func (h *internalEvents) OnRequestMatched(evt any) {
 	e := evt.(*OnRequestMatch)
 
 	h.l.Logf("\n%s %s <--- %s %s\n%s %s\n\n%s%d %s\n\n%s: %dms\n%s:\n %s: %d\n %s: %v\n",
@@ -71,7 +64,7 @@ func (h *InternalEvents) OnRequestMatched(evt any) {
 	)
 }
 
-func (h *InternalEvents) OnRequestNotMatched(evt any) {
+func (h *internalEvents) OnRequestNotMatched(evt any) {
 	e := evt.(*OnRequestNotMatched)
 
 	builder := strings.Builder{}
@@ -98,7 +91,7 @@ func (h *InternalEvents) OnRequestNotMatched(evt any) {
 	h.l.Logf(builder.String())
 }
 
-func (h *InternalEvents) OnError(evt any) {
+func (h *internalEvents) OnError(evt any) {
 	e := evt.(*OnError)
 
 	h.l.Logf("\n%s %s <--- %s %s\n%s %s\n\n%s: %v",
