@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/vitorsalgado/mocha/v3/internal/autoid"
 	"github.com/vitorsalgado/mocha/v3/internal/colorize"
@@ -36,6 +37,9 @@ type Mock struct {
 	// Source describes the source of the mock. E.g.: if it wast built from a file,
 	// it will contain the filename.
 	Source string
+
+	// Delay sets the duration to delay sending the mocked response.
+	Delay time.Duration
 
 	expectations []*expectation
 	mu           *sync.Mutex

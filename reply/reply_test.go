@@ -2,12 +2,10 @@ package reply
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 	"os"
 	"path"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -53,14 +51,9 @@ func TestReply(t *testing.T) {
 		Cookie(http.Cookie{Name: "cookie_test"}).
 		ExpireCookie(http.Cookie{Name: "cookie_test_remove"}).
 		Body([]byte("hi")).
-		Delay(5*time.Second).
 		Build(nil, _req)
 
-	assert.Nil(t, err)
-
-	b, err := io.ReadAll(res.Body)
-
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, res.Status)
 	assert.Equal(t, []string{"dev", "qa"}, res.Header.Values("test"))
 	assert.Equal(t, "world", res.Header.Get("hello"))
@@ -68,8 +61,7 @@ func TestReply(t *testing.T) {
 	assert.Equal(t, "cookie_test", res.Cookies[0].Name)
 	assert.Equal(t, "cookie_test_remove", res.Cookies[1].Name)
 	assert.Equal(t, -1, res.Cookies[1].MaxAge)
-	assert.Equal(t, "hi", string(b))
-	assert.Equal(t, 5*time.Second, res.Delay)
+	assert.Equal(t, "hi", string(res.Body))
 }
 
 func TestStdReply_BodyString(t *testing.T) {
@@ -78,12 +70,8 @@ func TestStdReply_BodyString(t *testing.T) {
 		BodyString("text").
 		Build(nil, _req)
 
-	assert.Nil(t, err)
-
-	b, err := io.ReadAll(res.Body)
-
-	assert.Nil(t, err)
-	assert.Equal(t, "text", string(b))
+	assert.NoError(t, err)
+	assert.Equal(t, "text", string(res.Body))
 }
 
 func TestStdReply_BodyJSON(t *testing.T) {
@@ -102,7 +90,7 @@ func TestStdReply_BodyJSON(t *testing.T) {
 		assert.Nil(t, err)
 
 		b := jsonData{}
-		err = json.NewDecoder(res.Body).Decode(&b)
+		err = json.Unmarshal(res.Body, &b)
 
 		assert.Nil(t, err)
 		assert.Equal(t, model, b)
@@ -133,10 +121,6 @@ func TestStdReply_BodyReader(t *testing.T) {
 		BodyReader(f).
 		Build(nil, _req)
 
-	assert.Nil(t, err)
-
-	b, err := io.ReadAll(res.Body)
-
-	assert.Nil(t, err)
-	assert.Equal(t, "hello\nworld\n", string(b))
+	assert.NoError(t, err)
+	assert.Equal(t, "hello\nworld\n", string(res.Body))
 }

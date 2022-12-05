@@ -115,9 +115,8 @@ func TestResponseDelay(t *testing.T) {
 	delay := time.Duration(1250) * time.Millisecond
 
 	scoped := m.AddMocks(Get(URLPath("/test")).
-		Reply(reply.
-			OK().
-			Delay(delay)))
+		Delay(delay).
+		Reply(reply.OK()))
 
 	req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
 	res, err := req.Do()

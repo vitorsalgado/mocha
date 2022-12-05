@@ -1,7 +1,6 @@
 package mocha
 
 import (
-	"bufio"
 	"context"
 	"fmt"
 	"net/http"
@@ -62,6 +61,10 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	mock := result.Matched
 
+	if mock.Delay > 0 {
+		<-time.After(mock.Delay)
+	}
+
 	// request with reply vars
 	r = r.WithContext(
 		context.WithValue(
@@ -90,26 +93,16 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	mock.Inc()
 
 	if res.SendPending() {
-		// if a delay is set, it will wait before continuing serving the mocked response.
-		if res.Delay > 0 {
-			<-time.After(res.Delay)
-		}
-
-		for k := range res.Header {
-			w.Header().Add(k, res.Header.Get(k))
+		for k, v := range res.Header {
+			for _, vv := range v {
+				w.Header().Add(k, vv)
+			}
 		}
 
 		w.WriteHeader(res.Status)
 
 		if res.Body != nil {
-			scanner := bufio.NewScanner(res.Body)
-			for scanner.Scan() {
-				w.Write(scanner.Bytes())
-			}
-
-			if scanner.Err() != nil {
-				h.t.Logf("error writing response body: error=%v", scanner.Err())
-			}
+			w.Write(res.Body)
 		}
 	}
 

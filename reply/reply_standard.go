@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"strings"
-	"time"
 
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
@@ -135,27 +133,26 @@ func (rpl *StdReply) JSON() *StdReply {
 
 // Body defines the response body using a []byte,
 func (rpl *StdReply) Body(value []byte) *StdReply {
-	rpl.response.Body = bytes.NewReader(value)
+	rpl.response.Body = value
 	return rpl
 }
 
 // BodyString defines the response body using a string.
 func (rpl *StdReply) BodyString(value string) *StdReply {
-	rpl.response.Body = strings.NewReader(value)
+	rpl.response.Body = []byte(value)
 	rpl.Header(header.ContentType, mimetype.TextPlain)
 	return rpl
 }
 
 // BodyJSON defines the response body encoding the given value using json.Encoder.
 func (rpl *StdReply) BodyJSON(data any) *StdReply {
-	buf := &bytes.Buffer{}
-	err := json.NewEncoder(buf).Encode(data)
+	b, err := json.Marshal(data)
 	if err != nil {
 		rpl.err = err
 		return rpl
 	}
 
-	rpl.response.Body = buf
+	rpl.response.Body = b
 	rpl.Header(header.ContentType, mimetype.JSON)
 
 	return rpl
@@ -163,7 +160,14 @@ func (rpl *StdReply) BodyJSON(data any) *StdReply {
 
 // BodyReader defines the response body using the given io.Reader.
 func (rpl *StdReply) BodyReader(reader io.Reader) *StdReply {
-	rpl.response.Body = reader
+	b, err := io.ReadAll(reader)
+	if err != nil {
+		rpl.err = err
+		return rpl
+	}
+
+	rpl.response.Body = b
+
 	return rpl
 }
 
@@ -192,12 +196,6 @@ func (rpl *StdReply) Model(model any) *StdReply {
 	return rpl
 }
 
-// Delay sets a delay time before serving the stub Response.
-func (rpl *StdReply) Delay(duration time.Duration) *StdReply {
-	rpl.response.Delay = duration
-	return rpl
-}
-
 // Map adds Mapper that will be executed after the Response was built.
 func (rpl *StdReply) Map(mapper Mapper) *StdReply {
 	rpl.response.Mappers = append(rpl.response.Mappers, mapper)
@@ -219,7 +217,7 @@ func (rpl *StdReply) Build(_ http.ResponseWriter, r *http.Request) (*Response, e
 			return nil, err
 		}
 
-		rpl.response.Body = buf
+		rpl.response.Body = buf.Bytes()
 	}
 
 	return rpl.response, nil

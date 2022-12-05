@@ -2,6 +2,7 @@ package mocha
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
@@ -217,6 +218,12 @@ func (b *MockBuilder) ScenarioStateWillBe(newState string) *MockBuilder {
 // PostAction adds a post action to be executed after the mocked response is served.
 func (b *MockBuilder) PostAction(action PostAction) *MockBuilder {
 	b.mock.PostActions = append(b.mock.PostActions, action)
+	return b
+}
+
+// Delay sets a delay time before serving the mocked response.
+func (b *MockBuilder) Delay(duration time.Duration) *MockBuilder {
+	b.mock.Delay = duration
 	return b
 }
 

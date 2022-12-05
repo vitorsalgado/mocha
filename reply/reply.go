@@ -1,9 +1,7 @@
 package reply
 
 import (
-	"io"
 	"net/http"
-	"time"
 )
 
 // M implements mock data that should be available on reply build functions.
@@ -29,9 +27,13 @@ type Response struct {
 	Status  int
 	Header  http.Header
 	Cookies []*http.Cookie
-	Body    io.Reader
+	Body    []byte
 	Mappers []Mapper
-	Delay   time.Duration
+}
+
+// SendPending checks if response was already sent by the Reply implementation.
+func (r *Response) SendPending() bool {
+	return r != nil
 }
 
 // Mapper is the function definition to be used to map Mock Response before serving it.
@@ -41,9 +43,4 @@ type Mapper func(res *Response, args *MapperArgs) error
 type MapperArgs struct {
 	Request    *http.Request
 	Parameters Params
-}
-
-// SendPending checks if response was already sent by the Reply implementation.
-func (r *Response) SendPending() bool {
-	return r != nil
 }

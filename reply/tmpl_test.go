@@ -76,11 +76,6 @@ func TestReplyWithTemplate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	b, err = io.ReadAll(res.Body)
-	if err != nil {
-		t.Fatal(err)
-	}
-
 	assert.Equal(t, http.StatusOK, res.Status)
-	assert.Equal(t, "test\ndev\n", string(b))
+	assert.Equal(t, "test\ndev\n", string(res.Body))
 }

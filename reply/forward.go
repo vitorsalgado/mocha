@@ -1,7 +1,6 @@
 package reply
 
 import (
-	"bytes"
 	"io"
 	"net/http"
 	"net/url"
@@ -92,7 +91,7 @@ func (r *ProxyReply) StripSuffix(suffix string) *ProxyReply {
 }
 
 // Build builds a Reply based on the ProxyReply configuration.
-func (r *ProxyReply) Build(_ http.ResponseWriter, req *http.Request) (*Response, error) {
+func (r *ProxyReply) Build(w http.ResponseWriter, req *http.Request) (*Response, error) {
 	path := req.URL.Path
 
 	if r.trimPrefix != "" {
@@ -125,30 +124,28 @@ func (r *ProxyReply) Build(_ http.ResponseWriter, req *http.Request) (*Response,
 		return nil, err
 	}
 
-	response := &Response{
-		Status:  res.StatusCode,
-		Header:  res.Header,
-		Cookies: res.Cookies(),
-		Delay:   r.delay,
-	}
-
-	buf := &bytes.Buffer{}
-	_, err = io.Copy(buf, res.Body)
-	if err != nil {
-		return nil, err
-	}
-
-	response.Body = buf
-
 	for _, h := range forbiddenHeaders {
-		response.Header.Del(h)
+		res.Header.Del(h)
 	}
 
 	for key, values := range r.headers {
 		for _, value := range values {
-			response.Header.Add(key, value)
+			w.Header().Add(key, value)
 		}
 	}
 
-	return response, nil
+	for key, values := range res.Header {
+		for _, value := range values {
+			w.Header().Add(key, value)
+		}
+	}
+
+	w.WriteHeader(res.StatusCode)
+
+	_, err = io.Copy(w, res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
 }
