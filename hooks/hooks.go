@@ -44,7 +44,7 @@ func (h *Hooks) Start(ctx context.Context) {
 	h.queue = make(queue)
 	h.worker.queue = h.queue
 
-	h.worker.Start(ctx)
+	h.worker.start(ctx)
 }
 
 // Emit dispatches a new event.

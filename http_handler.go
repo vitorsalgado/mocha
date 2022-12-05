@@ -40,7 +40,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	parsedBody, err := parseRequestBody(r, h.bodyParsers)
 	if err != nil {
 		h.evt.Emit(&hooks.OnRequest{Request: er, StartedAt: start})
-		respondError(w, r, h.evt, err)
+		respondError(w, r, h.evt, fmt.Errorf("error parsing request body. reason=%w", err))
 		return
 	}
 
@@ -51,7 +51,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	info := &matcher.RequestInfo{Request: r, ParsedBody: parsedBody}
 	result, err := findMockForRequest(h.mocks, info)
 	if err != nil {
-		respondError(w, r, h.evt, err)
+		respondError(w, r, h.evt, fmt.Errorf("error trying to find a mock. reason=%w", err))
 		return
 	}
 
@@ -71,16 +71,16 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	res, err := result.Matched.Reply.Build(w, r)
 	if err != nil {
 		h.t.Logf(err.Error())
-		respondError(w, r, h.evt, err)
+		respondError(w, r, h.evt, fmt.Errorf("error building reply. reason=%w", err))
 		return
 	}
 
 	if res.SendPending() {
 		// map the response using mock mappers.
 		mapperArgs := &reply.MapperArgs{Request: r, Parameters: h.params}
-		for _, mapper := range res.Mappers {
+		for i, mapper := range res.Mappers {
 			if err = mapper(res, mapperArgs); err != nil {
-				respondError(w, r, h.evt, err)
+				respondError(w, r, h.evt, fmt.Errorf("error with response mapper[%d]. reason=%w", i, err))
 				return
 			}
 		}
@@ -125,7 +125,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for i, action := range mock.PostActions {
 		err = action.Run(paArgs)
 		if err != nil {
-			h.t.Logf("\nan error occurred running post action %d. error=%v", i, err)
+			h.t.Logf("\nerror running post action %d. error=%v", i, err)
 		}
 	}
 

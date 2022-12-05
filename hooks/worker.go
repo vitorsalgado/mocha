@@ -13,7 +13,7 @@ type worker struct {
 	hooks   map[hook][]func(e any)
 }
 
-func (w *worker) Start(ctx context.Context) {
+func (w *worker) start(ctx context.Context) {
 	w.started.Store(true)
 
 	go func() {

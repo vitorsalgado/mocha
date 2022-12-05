@@ -102,7 +102,7 @@ func (h *InternalEvents) OnError(evt any) {
 	e := evt.(*OnError)
 
 	h.l.Logf("\n%s %s <--- %s %s\n%s %s\n\n%s: %v",
-		colorize.RedBright(colorize.Bold("REQUEST DID NOT MATCH")),
+		colorize.RedBright(colorize.Bold("ERROR")),
 		time.Now().Format(time.RFC3339),
 		colorize.Red(e.Request.Method),
 		colorize.Red(e.Request.Path),
