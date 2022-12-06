@@ -10,13 +10,6 @@ import (
 func TestUrlPath(t *testing.T) {
 	u, _ := url.Parse("http://localhost:8080/test/hello")
 
-	t.Run("should accept a non pointer", func(t *testing.T) {
-		result, err := URLPath("/test/hello").Match(*u)
-
-		assert.Nil(t, err)
-		assert.True(t, result.OK)
-	})
-
 	t.Run("should accept a pointer", func(t *testing.T) {
 		result, err := URLPath("/test/hello").Match(u)
 
@@ -40,7 +33,7 @@ func TestUrlPath(t *testing.T) {
 	})
 
 	t.Run("should return false when it doesnt match", func(t *testing.T) {
-		result, err := URLPath("/test/bye").Match(*u)
+		result, err := URLPath("/test/bye").Match(u)
 
 		assert.Nil(t, err)
 		assert.False(t, result.OK)

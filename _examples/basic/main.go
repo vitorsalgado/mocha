@@ -28,7 +28,7 @@ func main() {
 		Header(header.ContentType, Equal("test")).
 		Header("any", AllOf(Contain("test"), EqualIgnoreCase("dev"))).
 		Reply(reply.OK().
-			BodyString("hello world").
+			PlainText("hello world").
 			Header("x-basic", "true")))
 
 	go func() {

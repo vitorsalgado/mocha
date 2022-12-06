@@ -137,8 +137,8 @@ func (rpl *StdReply) Body(value []byte) *StdReply {
 	return rpl
 }
 
-// BodyString defines the response body using a string.
-func (rpl *StdReply) BodyString(value string) *StdReply {
+// PlainText defines a text/plain response with the given text body.
+func (rpl *StdReply) PlainText(value string) *StdReply {
 	rpl.response.Body = []byte(value)
 	rpl.Header(header.ContentType, mimetype.TextPlain)
 	return rpl
@@ -190,8 +190,8 @@ func (rpl *StdReply) BodyTemplate(template any) *StdReply {
 	return rpl
 }
 
-// Model sets the template data to be used.
-func (rpl *StdReply) Model(model any) *StdReply {
+// TemplateModel sets the template data to be used.
+func (rpl *StdReply) TemplateModel(model any) *StdReply {
 	rpl.model = model
 	return rpl
 }

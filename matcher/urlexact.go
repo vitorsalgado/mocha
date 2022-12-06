@@ -6,15 +6,17 @@ import (
 	"strings"
 )
 
-type urlPathMatcher struct {
+// TODO: complete this
+
+type urlExactMatcher struct {
 	expected string
 }
 
-func (m *urlPathMatcher) Name() string {
+func (m *urlExactMatcher) Name() string {
 	return "URLPath"
 }
 
-func (m *urlPathMatcher) Match(v any) (*Result, error) {
+func (m *urlExactMatcher) Match(v any) (*Result, error) {
 	message := func() string {
 		return fmt.Sprintf(
 			"%s %s %s",
@@ -27,7 +29,7 @@ func (m *urlPathMatcher) Match(v any) (*Result, error) {
 	switch e := v.(type) {
 	case *url.URL:
 		return &Result{
-			OK:              strings.EqualFold(m.expected, e.Path),
+			OK:              strings.EqualFold(m.expected, e.String()),
 			DescribeFailure: message,
 		}, nil
 	case string:
@@ -36,18 +38,18 @@ func (m *urlPathMatcher) Match(v any) (*Result, error) {
 			return &Result{}, err
 		}
 
-		return &Result{OK: strings.EqualFold(m.expected, u.Path), DescribeFailure: message}, nil
+		return &Result{OK: strings.EqualFold(m.expected, u.String()), DescribeFailure: message}, nil
 
 	default:
 		panic("URLPath matcher only accepts the types: *url.URL | url.URL | string")
 	}
 }
 
-func (m *urlPathMatcher) OnMockServed() error {
+func (m *urlExactMatcher) OnMockServed() error {
 	return nil
 }
 
-// URLPath returns true if request URL path is equal to the expected path, ignoring case.
-func URLPath(expected string) Matcher {
+// URLExact matches the entire URL converted to string.
+func URLExact(expected string) Matcher {
 	return &urlPathMatcher{expected: expected}
 }

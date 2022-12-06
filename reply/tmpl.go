@@ -21,7 +21,7 @@ type TemplateData struct {
 	Request *http.Request
 
 	// Data is the model to be used with the given template.
-	// This value is set using the Model() function from StdReply.
+	// This value is set using the TemplateModel() function from StdReply.
 	Data any
 }
 

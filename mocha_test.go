@@ -37,7 +37,7 @@ func TestMocha(t *testing.T) {
 			Query("filter", Equal("all")).
 			Reply(reply.
 				Created().
-				BodyString("hello world")))
+				PlainText("hello world")))
 
 	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test?filter=all", nil)
 	req.Header.Add("test", "hello")
@@ -63,7 +63,7 @@ func TestMocha_NewBasic(t *testing.T) {
 		Get(URLPath("/test")).
 			Reply(reply.
 				Created().
-				BodyString("hello world")))
+				PlainText("hello world")))
 
 	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
 	res, err := http.DefaultClient.Do(req)
@@ -331,7 +331,7 @@ func TestMocha_Silently(t *testing.T) {
 		Get(URLPath("/test")).
 			Reply(reply.
 				Created().
-				BodyString("hello world")))
+				PlainText("hello world")))
 
 	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test?filter=all", nil)
 
@@ -360,7 +360,7 @@ func TestMocha_MatcherCompositions(t *testing.T) {
 			Query("filter", Is(Equal("all"))).
 			Reply(reply.
 				Created().
-				BodyString("hello world")))
+				PlainText("hello world")))
 
 	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test?filter=all", nil)
 	req.Header.Add("test", "hello")

@@ -58,10 +58,6 @@ func Options(m matcher.Matcher) *MockBuilder {
 	return Request().URL(m).Method(http.MethodOptions)
 }
 
-func newMockBuilder() *MockBuilder {
-	return Request()
-}
-
 // Name defines a name for the mock.
 // Useful for debug.
 func (b *MockBuilder) Name(name string) *MockBuilder {
@@ -97,6 +93,20 @@ func (b *MockBuilder) URL(m matcher.Matcher) *MockBuilder {
 		&expectation{
 			Target:        "url",
 			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.URL },
+			Matcher:       m,
+			Weight:        _weightRegular,
+		})
+
+	return b
+}
+
+// URLPath defines a matcher to be applied to the url.URL path.
+func (b *MockBuilder) URLPath(m matcher.Matcher) *MockBuilder {
+	b.mock.expectations = append(
+		b.mock.expectations,
+		&expectation{
+			Target:        "url",
+			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.URL.Path },
 			Matcher:       m,
 			Weight:        _weightRegular,
 		})
@@ -165,7 +175,7 @@ func (b *MockBuilder) FormField(field string, m matcher.Matcher) *MockBuilder {
 }
 
 // Repeat defines to total times that a mock should be served, if request matches.
-func (b *MockBuilder) Repeat(times int64) *MockBuilder {
+func (b *MockBuilder) Repeat(times int) *MockBuilder {
 	b.mock.expectations = append(b.mock.expectations,
 		&expectation{
 			Target:        "request",

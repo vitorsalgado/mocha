@@ -1,118 +1,43 @@
 package mocha
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
-	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
-	"sync"
+	"time"
 
 	"github.com/vitorsalgado/mocha/v3/matcher"
-)
-
-const (
-	_extJSON = "json"
-)
-
-type (
-	ExtSchema struct {
-		Name     string
-		Enabled  *bool
-		Priority int
-		Request  *ExtRequest
-	}
-
-	ExtRequest struct {
-		Method string
-		Query  map[string]any
-		Header map[string]any
-		Body   any
-	}
-
-	ExtScenario struct {
-		Name          string
-		RequiredState string
-	}
+	"github.com/vitorsalgado/mocha/v3/matcher/asm"
+	"github.com/vitorsalgado/mocha/v3/mod"
+	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 type Loader interface {
 	Load(app *Mocha) error
 }
 
-var _ Loader = (*FileLoader)(nil)
+var _RegExpAbsolutePath = regexp.MustCompile("^[a-zA-Z][a-zA-Z\\d+\\-.]*?:")
 
-type FileLoader struct {
-}
+func buildExternalMock(source string, ext *mod.ExternalSchema) (b Builder, err error) {
+	defer func() {
+		if recovery := recover(); recovery != nil {
+			b = nil
+			err = fmt.Errorf("%v", err)
+		}
+	}()
 
-func (l *FileLoader) Load(app *Mocha) error {
-	matches, err := filepath.Glob(app.Config.Pattern)
-	if err != nil {
-		return err
-	}
+	// build request
 
-	wg := sync.WaitGroup{}
-
-	for _, filename := range matches {
-		wg.Add(1)
-
-		go func(filename string) {
-			defer wg.Done()
-
-			file, err := os.Open(filename)
-			if err != nil {
-				app.T.Logf("error loading mock file %s. reason=%s", filename, err.Error())
-				return
-			}
-
-			v := &ExtSchema{}
-			err = decode(filename, file, v)
-			if err != nil {
-				app.T.Logf("error decoding mock file %s. reason=%s", filename, err.Error())
-				return
-			}
-
-			file.Close()
-
-			m, err := buildExternalMock(app.Config, filename, v)
-			if err != nil {
-				app.T.Logf("error building mock file %s. reason=%s", filename, err.Error())
-				return
-			}
-
-			app.AddMocks(m)
-
-			return
-		}(filename)
-	}
-
-	wg.Wait()
-
-	return nil
-}
-
-func decode(filename string, file io.ReadCloser, r *ExtSchema) error {
-	parts := strings.Split(filename, "/")
-	ext := parts[len(parts)-1]
-
-	switch ext {
-	case _extJSON:
-		err := json.NewDecoder(file).Decode(r)
-		return err
-	default:
-		err := json.NewDecoder(file).Decode(r)
-		return err
-	}
-}
-
-func buildExternalMock(config *Config, filename string, ext *ExtSchema) (Builder, error) {
-	builder := newMockBuilder()
+	builder := Request()
 
 	builder.Name(ext.Name)
 	builder.Priority(ext.Priority)
-	builder.mock.Source = filename
+
+	builder.mock.Source = source
 
 	if ext.Enabled == nil {
 		builder.mock.Enabled = true
@@ -120,312 +45,188 @@ func buildExternalMock(config *Config, filename string, ext *ExtSchema) (Builder
 		builder.mock.Enabled = *ext.Enabled
 	}
 
-	if ext.Request != nil {
+	if ext.Request.Method != "" {
 		builder.Method(ext.Request.Method)
+	}
 
-		for k, v := range ext.Request.Query {
-			m, err := discoverAndBuildMatcher(v)
+	if ext.Request.URL != nil {
+		urlConv, ok := ext.Request.URL.(string)
+		if ok {
+			if _RegExpAbsolutePath.MatchString(urlConv) {
+				builder.URL(matcher.EqualIgnoreCase(urlConv))
+			} else {
+				q := strings.Index(urlConv, "?")
+				if q < 0 {
+					builder.URL(matcher.URLPath(urlConv))
+				} else {
+					builder.URL(matcher.URLPath(urlConv[0:q]))
+				}
+			}
+		} else {
+			m, err := asm.BuildMatcher(ext.Request.URL)
 			if err != nil {
 				return nil, err
 			}
 
-			builder.Query(k, m)
+			builder.URL(m)
 		}
-
-		for k, v := range ext.Request.Header {
-			m, err := discoverAndBuildMatcher(v)
+	} else if ext.Request.URLMatch != "" {
+		builder.URL(matcher.Matches(ext.Request.URLMatch))
+	} else if ext.Request.URLPath != nil {
+		urlConv, ok := ext.Request.URL.(string)
+		if ok {
+			builder.URL(matcher.URLPath(urlConv))
+		} else {
+			m, err := asm.BuildMatcher(ext.Request.URL)
 			if err != nil {
 				return nil, err
 			}
 
-			builder.Header(k, m)
+			builder.URLPath(m)
 		}
+	} else if ext.Request.URLPathMatch != "" {
+		builder.URLPath(matcher.Matches(ext.Request.URLPathMatch))
+	}
+
+	for k, v := range ext.Request.Query {
+		m, err := asm.BuildMatcher(v)
+		if err != nil {
+			return nil, err
+		}
+
+		builder.Query(k, m)
+	}
+
+	for k, v := range ext.Request.Header {
+		m, err := asm.BuildMatcher(v)
+		if err != nil {
+			return nil, err
+		}
+
+		builder.Header(k, m)
 	}
 
 	if ext.Request.Body != nil {
+		m, err := asm.BuildMatcher(ext.Request.Body)
+		if err != nil {
+			return nil, err
+		}
 
+		builder.Body(m)
 	}
+
+	builder.
+		ScenarioIs(ext.Scenario.Name).
+		ScenarioStateIs(ext.Scenario.RequiredState).
+		ScenarioStateWillBe(ext.Scenario.NewState)
+
+	builder.Delay(time.Duration(ext.DelayInMs) * time.Millisecond)
+
+	if ext.Repeat != nil {
+		builder.Repeat(*ext.Repeat)
+	}
+
+	// build response
+
+	var rep reply.Reply
+
+	if ext.Response != nil {
+		rep, err = buildResponse(ext, ext.Response)
+		if err != nil {
+			return nil, err
+		}
+	} else if ext.RandomResponse != nil {
+		random := reply.Rand()
+		for _, r := range ext.RandomResponse.Responses {
+			rr, err := buildResponse(ext, &r)
+			if err != nil {
+				return nil, err
+			}
+
+			random.Add(rr)
+		}
+
+		rep = random
+	} else if ext.SequenceResponse != nil {
+		seq := reply.Seq()
+
+		if ext.SequenceResponse.AfterEnded != nil {
+			rr, err := buildResponse(ext, ext.SequenceResponse.AfterEnded)
+			if err != nil {
+				return nil, err
+			}
+
+			seq.AfterEnded(rr)
+		}
+
+		for _, r := range ext.SequenceResponse.Responses {
+			rr, err := buildResponse(ext, &r)
+			if err != nil {
+				return nil, err
+			}
+
+			seq.Add(rr)
+		}
+
+		rep = seq
+	} else {
+		rep = reply.OK()
+	}
+
+	builder.Reply(rep)
 
 	return builder, nil
 }
 
-func discoverAndBuildMatcher(v any) (m matcher.Matcher, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			m = nil
-			err = fmt.Errorf("panic=%v", r)
-			return
-		}
-	}()
+func buildResponse(ext *mod.ExternalSchema, response *mod.ExtRes) (reply.Reply, error) {
+	res := reply.New()
+	res.Status(valueOr(response.Status, http.StatusOK))
 
-	t := reflect.TypeOf(v)
-	switch t.Kind() {
-	case reflect.String:
-		return matcher.EqualIgnoreCase(v.(string)), nil
-	case reflect.Slice:
-		val := reflect.ValueOf(v)
-		if val.Len() == 0 {
-			return nil, fmt.Errorf("array must equal or greather than 1")
-		}
-
-		mk, ok := val.Index(0).Interface().(string)
-		if !ok {
-			return nil, fmt.Errorf("first index must be the matcher name")
-		}
-
-		mk = strings.ToLower(mk)
-
-		return buildMatcher(mk, val.Slice(1, val.Len()).Interface())
-	default:
-		return nil, fmt.Errorf("unsupported type")
+	for k, v := range response.Header {
+		res.Header(k, v)
 	}
+
+	if response.BodyFile != "" {
+		file, err := os.Open(response.BodyFile)
+		if err != nil {
+			return nil, err
+		}
+
+		defer file.Close()
+
+		b, err := io.ReadAll(file)
+		if err != nil {
+			return nil, err
+		}
+
+		if response.Template {
+			res.BodyTemplate(string(b)).TemplateModel(response.TemplateModel)
+		} else {
+			res.Body(b)
+		}
+	} else {
+		switch e := response.Body.(type) {
+		case string:
+			if response.Template {
+				res.BodyTemplate(e).TemplateModel(response.TemplateModel)
+			} else {
+				res.Body([]byte(e))
+			}
+			break
+		case nil:
+			break
+		default:
+			res.BodyJSON(ext.Request.Body)
+		}
+	}
+
+	return res, nil
 }
 
-func extractMultiMatchers(v any) ([]matcher.Matcher, error) {
-	a, ok := v.([]any)
-	if !ok {
-		return nil, fmt.Errorf("only arrays")
+func valueOr[V any](v V, d V) V {
+	if any(v) == reflect.Zero(reflect.TypeOf(v)).Interface() {
+		return d
 	}
 
-	matchers := make([]matcher.Matcher, len(a))
-
-	for _, entry := range a {
-		mat, err := discoverAndBuildMatcher(entry)
-		if err != nil {
-			return nil, err
-		}
-
-		matchers = append(matchers, mat)
-	}
-
-	return matchers, nil
-}
-
-func buildMatcher(key string, args any) (m matcher.Matcher, err error) {
-	defer func() {
-		if recovery := recover(); recovery != nil {
-			m = nil
-			err = fmt.Errorf(
-				"panic parsing matcher=%s with args=%v. reason=%v",
-				key,
-				args,
-				recovery,
-			)
-
-			return
-		}
-	}()
-
-	switch strings.ToLower(key) {
-
-	case "all", "allof":
-		matchers, err := extractMultiMatchers(args)
-		if err != nil {
-			return nil, err
-		}
-
-		return matcher.AllOf(matchers...), nil
-
-	case "any", "anyof":
-		matchers, err := extractMultiMatchers(args)
-		if err != nil {
-			return nil, err
-		}
-
-		return matcher.AnyOf(matchers...), nil
-
-	case "contain", "contains":
-		return matcher.Contain(args), nil
-
-	case "both":
-		matchers, err := extractMultiMatchers(args)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(matchers) != 2 {
-			return nil, fmt.Errorf("required 2")
-		}
-
-		return matcher.Both(matchers[0], matchers[1]), nil
-
-	case "each":
-		m, err := discoverAndBuildMatcher(args)
-		if err != nil {
-			return nil, err
-		}
-
-		return matcher.Each(m), nil
-
-	case "either":
-		matchers, err := extractMultiMatchers(args)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(matchers) != 2 {
-			return nil, fmt.Errorf("required 2")
-		}
-
-		return matcher.Either(matchers[0], matchers[1]), nil
-
-	case "empty":
-		return matcher.Empty(), nil
-
-	case "equal", "equals":
-		return matcher.Equal(args), nil
-
-	case "equalignorecase", "equalsignorecase", "equalfold":
-		str, ok := args.(string)
-		if !ok {
-			return nil, fmt.Errorf("string required")
-		}
-
-		return matcher.EqualIgnoreCase(str), nil
-
-	case "equaljson":
-		return matcher.EqualJSON(args), nil
-
-	case "haskey", "havekey":
-		str, ok := args.(string)
-		if !ok {
-			return nil, fmt.Errorf("string required")
-		}
-
-		return matcher.HaveKey(str), nil
-
-	case "hasprefix", "startswith":
-		str, ok := args.(string)
-		if !ok {
-			return nil, fmt.Errorf("string required")
-		}
-
-		return matcher.HasPrefix(str), nil
-
-	case "hassuffix", "endswith":
-		str, ok := args.(string)
-		if !ok {
-			return nil, fmt.Errorf("string required")
-		}
-
-		return matcher.HasSuffix(str), nil
-
-	case "jsonpath":
-		a, ok := args.([]any)
-		if !ok {
-			return nil, fmt.Errorf("array")
-		}
-
-		if len(a) != 2 {
-			return nil, fmt.Errorf("")
-		}
-
-		chain, ok := a[0].(string)
-		if !ok {
-			return nil, fmt.Errorf("path string")
-		}
-
-		m, err := discoverAndBuildMatcher(a[1])
-		if err != nil {
-			return nil, err
-		}
-
-		return matcher.JSONPath(chain, m), nil
-
-	case "len":
-		num, ok := args.(float64)
-		if !ok {
-			return nil, fmt.Errorf("number required")
-		}
-
-		return matcher.HaveLen(int(num)), nil
-
-	case "lowercase":
-		m, err := discoverAndBuildMatcher(args)
-		if err != nil {
-			return nil, err
-		}
-
-		return matcher.ToLower(m), nil
-
-	case "regex":
-		str, ok := args.(string)
-		if !ok {
-			return nil, fmt.Errorf("string")
-		}
-
-		return matcher.Matches(str), nil
-
-	case "not":
-		m, err := discoverAndBuildMatcher(args)
-		if err != nil {
-			return nil, err
-		}
-
-		return matcher.Not(m), nil
-
-	case "present":
-		return matcher.Present(), nil
-
-	case "split":
-		a, ok := args.([]any)
-		if !ok {
-			return nil, fmt.Errorf("array")
-		}
-
-		if len(a) != 2 {
-			return nil, fmt.Errorf("")
-		}
-
-		separator, ok := a[0].(string)
-		if !ok {
-			return nil, fmt.Errorf("separator string")
-		}
-
-		m, err := discoverAndBuildMatcher(args)
-		if err != nil {
-			return nil, err
-		}
-
-		return matcher.Split(separator, m), nil
-
-	case "trim":
-		m, err := discoverAndBuildMatcher(args)
-		if err != nil {
-			return nil, err
-		}
-
-		return matcher.Trim(m), nil
-
-	case "uppercase":
-		m, err := discoverAndBuildMatcher(args)
-		if err != nil {
-			return nil, err
-		}
-
-		return matcher.ToUpper(m), nil
-
-	case "urlpath":
-		str, ok := args.(string)
-		if !ok {
-			return nil, fmt.Errorf("")
-		}
-
-		return matcher.URLPath(str), nil
-
-	case "xor":
-		matchers, err := extractMultiMatchers(args)
-		if err != nil {
-			return nil, err
-		}
-
-		if len(matchers) != 2 {
-			return nil, fmt.Errorf("required 2")
-		}
-
-		return matcher.XOR(matchers[0], matchers[1]), nil
-
-	default:
-		return nil, fmt.Errorf("unknown matcher key=%s", key)
-	}
+	return v
 }

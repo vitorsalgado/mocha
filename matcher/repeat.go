@@ -2,12 +2,13 @@ package matcher
 
 import (
 	"fmt"
-	"sync/atomic"
+	"sync"
 )
 
 type repeatMatcher struct {
-	max  int64
-	hits int64
+	max  int
+	hits int
+	mu   sync.Mutex
 }
 
 func (m *repeatMatcher) Name() string {
@@ -26,10 +27,14 @@ func (m *repeatMatcher) Match(_ any) (*Result, error) {
 }
 
 func (m *repeatMatcher) OnMockServed() error {
-	atomic.AddInt64(&m.hits, 1)
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	m.hits++
+
 	return nil
 }
 
-func Repeat(times int64) Matcher {
+func Repeat(times int) Matcher {
 	return &repeatMatcher{max: times}
 }

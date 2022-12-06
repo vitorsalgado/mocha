@@ -67,7 +67,7 @@ func TestReply(t *testing.T) {
 func TestStdReply_BodyString(t *testing.T) {
 	res, err := New().
 		Status(http.StatusCreated).
-		BodyString("text").
+		PlainText("text").
 		Build(nil, _req)
 
 	assert.NoError(t, err)

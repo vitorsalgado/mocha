@@ -42,7 +42,8 @@ type Config struct {
 	// Parameters sets a custom reply parameters store.
 	Parameters reply.Params
 
-	Pattern string
+	// FileMockPatterns configures glob patterns to load mock from the file system.
+	FileMockPatterns []string
 
 	corsEnabled bool
 }
@@ -123,8 +124,10 @@ func (cb *Configurer) Parameters(params reply.Params) *Configurer {
 	return cb
 }
 
-func (cb *Configurer) Pattern(pattern string) *Configurer {
-	cb.conf.Pattern = pattern
+// MockFilePatterns sets a custom Glob patterns to load mock from the file system.
+// Defaults to [testdata/*.mock.json, testdata/*.mock.yaml].
+func (cb *Configurer) MockFilePatterns(patterns ...string) *Configurer {
+	cb.conf.FileMockPatterns = patterns
 	return cb
 }
 

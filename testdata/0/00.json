@@ -8,6 +8,7 @@
       "page": ["allOf", "present", ["equal", 10]]
     },
     "body": [
+      "allOf",
       ["jsonpath", "name", ["equal", "john doe"]],
       [
         "jsonpath",

@@ -23,6 +23,7 @@ type (
 		params  reply.Params
 		events  *eventListener
 		scopes  []*Scoped
+		loaders []Loader
 		mu      sync.Mutex
 	}
 
@@ -99,6 +100,9 @@ func New(t TestingT, config ...*Config) *Mocha {
 		t.FailNow()
 	}
 
+	loaders := make([]Loader, 0)
+	loaders = append(loaders, &FileLoader{})
+
 	m := &Mocha{
 		Config: conf,
 
@@ -109,6 +113,7 @@ func New(t TestingT, config ...*Config) *Mocha {
 		params:  p,
 		scopes:  make([]*Scoped, 0),
 		events:  events,
+		loaders: loaders,
 		T:       t}
 
 	return m
@@ -127,6 +132,8 @@ func (m *Mocha) Start() ServerInfo {
 		m.T.FailNow()
 	}
 
+	m.Rebuild()
+
 	m.events.Start(m.ctx)
 
 	return info
@@ -139,6 +146,8 @@ func (m *Mocha) StartTLS() ServerInfo {
 		m.T.Errorf("failed to start a TLS mock server. reason=%v", err)
 		m.T.FailNow()
 	}
+
+	m.Rebuild()
 
 	m.events.Start(m.ctx)
 
@@ -155,7 +164,7 @@ func (m *Mocha) StartTLS() ServerInfo {
 //		Get(matcher.URLPath("/test")).
 //			Header("test", matcher.Equal("hello")).
 //			Query("filter", matcher.Equal("all")).
-//			Reply(reply.Created().BodyString("hello world")))
+//			Reply(reply.Created().PlainText("hello world")))
 //
 //	assert.True(T, scoped.Called())
 func (m *Mocha) AddMocks(builders ...Builder) *Scoped {
@@ -187,12 +196,30 @@ func (m *Mocha) URL() string {
 	return m.server.Info().URL
 }
 
+// Context returns internal context.Context.
+func (m *Mocha) Context() context.Context {
+	return m.ctx
+}
+
 // Subscribe add a new event listener.
 func (m *Mocha) Subscribe(evt reflect.Type, fn func(payload any)) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	m.events.Subscribe(evt, fn)
+}
+
+func (m *Mocha) Loader(loader Loader) {
+	m.loaders = append(m.loaders, loader)
+}
+
+func (m *Mocha) Rebuild() {
+	for _, loader := range m.loaders {
+		err := loader.Load(m)
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 // Close closes the mock server.

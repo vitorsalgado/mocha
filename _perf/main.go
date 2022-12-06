@@ -116,7 +116,7 @@ func main() {
 		Header(header.Accept, Contain(mimetype.TextPlain)).
 		Header("X-Scenario", Equal("1")).
 		Reply(reply.OK().
-			BodyString("ok").
+			PlainText("ok").
 			Header("X-Scenario-Result", "true")))
 
 	m.AddMocks(mocha.
