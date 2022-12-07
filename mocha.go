@@ -186,7 +186,7 @@ func (m *Mocha) AddMocks(builders ...Builder) *Scoped {
 	return scoped
 }
 
-// Parameters allows managing custom parameters that will be available inside matchers.
+// Parameters returns an editable parameters reply.Params that will be available when build a reply.Reply.
 func (m *Mocha) Parameters() reply.Params {
 	return m.params
 }
