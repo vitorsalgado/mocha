@@ -3,6 +3,7 @@ package mocha
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -27,7 +28,7 @@ func (l *FileLoader) Load(app *Mocha) error {
 	for _, pattern := range app.Config.FileMockPatterns {
 		m, err := filepath.Glob(pattern)
 		if err != nil {
-			return err
+			return fmt.Errorf("error searching mocks with the glob pattern %s. %w", pattern, err)
 		}
 
 		for _, s := range m {
@@ -44,67 +45,87 @@ func (l *FileLoader) Load(app *Mocha) error {
 		i++
 	}
 
-	c := &errContainer{}
+	cont := &errContainer{}
+	ch := make(chan string, len(matches))
 	wg := sync.WaitGroup{}
 	once := sync.Once{}
-	_, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	w := 5
+	ctx, cancel := context.WithCancel(app.Context())
+
+	if len(matches) < 5 {
+		w = len(matches)
+	}
+
+	for i := 0; i < w; i++ {
+		go func(c *errContainer) {
+			for {
+				select {
+				case filename, ok := <-ch:
+					if !ok {
+						return
+					}
+
+					fn := func(filename string, c *errContainer) error {
+						file, err := os.Open(filename)
+						if err != nil {
+							return fmt.Errorf("error opening mock file [%s]. %w", filename, err)
+						}
+
+						v, err := l.decode(filename, file)
+						if err != nil {
+							return fmt.Errorf("error decoding mock [%s]. %w", filename, err)
+						}
+
+						defer file.Close()
+
+						m, err := buildExternalMock(filename, v)
+						if err != nil {
+							return fmt.Errorf("error building mock [%s]. %w", filename, err)
+						}
+
+						app.AddMocks(m)
+
+						return nil
+					}
+
+					err := fn(filename, c)
+					if err != nil {
+						once.Do(func() {
+							c.err = err
+							wg.Done()
+							cancel()
+						})
+					} else {
+						wg.Done()
+					}
+
+				case <-ctx.Done():
+					return
+				}
+			}
+		}(cont)
+	}
 
 	for _, filename := range matches {
 		wg.Add(1)
-
-		go func(filename string, c *errContainer) {
-			defer wg.Done()
-
-			fn := func(filename string, c *errContainer) error {
-				file, err := os.Open(filename)
-				if err != nil {
-					app.T.Logf("error loading mock file %s. reason=%s", filename, err.Error())
-					return err
-				}
-
-				v, err := l.decode(filename, file)
-				if err != nil {
-					app.T.Logf("error decoding mock file %s. reason=%s", filename, err.Error())
-					return err
-				}
-
-				defer file.Close()
-
-				m, err := buildExternalMock(filename, v)
-				if err != nil {
-					app.T.Logf("error building mock file %s. reason=%s", filename, err.Error())
-					return err
-				}
-
-				app.AddMocks(m)
-
-				return nil
-			}
-
-			err := fn(filename, c)
-			if err != nil {
-				once.Do(func() {
-					c.err = err
-					cancel()
-				})
-			}
-		}(filename, c)
+		ch <- filename
 	}
 
 	wg.Wait()
+	cancel()
+	close(ch)
 
-	return c.err
+	return cont.err
 }
 
-func (l *FileLoader) decode(filename string, file io.ReadCloser) (r *mod.ExternalSchema, err error) {
+func (l *FileLoader) decode(filename string, file io.ReadCloser) (r *mod.ExtMock, err error) {
 	parts := strings.Split(filename, "/")
 	ext := parts[len(parts)-1]
 
 	switch ext {
 	// JSON is default
 	default:
-		r := &mod.ExternalSchema{}
+		r := &mod.ExtMock{}
 		err = json.NewDecoder(file).Decode(&r)
 		return r, err
 	}

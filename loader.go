@@ -16,23 +16,29 @@ import (
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
+// Loader is the interface that defines custom Mock loaders.
+// Usually, it is used to load external mocks, like from the file system.
 type Loader interface {
 	Load(app *Mocha) error
 }
 
 var _RegExpAbsolutePath = regexp.MustCompile("^[a-zA-Z][a-zA-Z\\d+\\-.]*?:")
 
-func buildExternalMock(source string, ext *mod.ExternalSchema) (b Builder, err error) {
+func buildExternalMock(source string, ext *mod.ExtMock) (b Builder, err error) {
 	defer func() {
 		if recovery := recover(); recovery != nil {
 			b = nil
-			err = fmt.Errorf("%v", err)
+			err = fmt.Errorf("panic %v", err)
 		}
 	}()
 
-	// build request
+	// Init building the mock specification
+	// --
 
 	builder := Request()
+
+	// Begin General
+	// --
 
 	builder.Name(ext.Name)
 	builder.Priority(ext.Priority)
@@ -44,6 +50,19 @@ func buildExternalMock(source string, ext *mod.ExternalSchema) (b Builder, err e
 	} else {
 		builder.mock.Enabled = *ext.Enabled
 	}
+
+	builder.
+		ScenarioIs(ext.Scenario.Name).
+		ScenarioStateIs(ext.Scenario.RequiredState).
+		ScenarioStateWillBe(ext.Scenario.NewState)
+
+	builder.Delay(time.Duration(ext.DelayInMs) * time.Millisecond)
+
+	// --
+	// End General
+
+	// Begin Request
+	// --
 
 	if ext.Request.Method != "" {
 		builder.Method(ext.Request.Method)
@@ -65,7 +84,7 @@ func buildExternalMock(source string, ext *mod.ExternalSchema) (b Builder, err e
 		} else {
 			m, err := asm.BuildMatcher(ext.Request.URL)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("[request.url] matchers error. %w", err)
 			}
 
 			builder.URL(m)
@@ -91,7 +110,8 @@ func buildExternalMock(source string, ext *mod.ExternalSchema) (b Builder, err e
 	for k, v := range ext.Request.Query {
 		m, err := asm.BuildMatcher(v)
 		if err != nil {
-			return nil, err
+			return nil,
+				fmt.Errorf("[request.query[%s]] matchers error. %w", k, err)
 		}
 
 		builder.Query(k, m)
@@ -100,7 +120,8 @@ func buildExternalMock(source string, ext *mod.ExternalSchema) (b Builder, err e
 	for k, v := range ext.Request.Header {
 		m, err := asm.BuildMatcher(v)
 		if err != nil {
-			return nil, err
+			return nil,
+				fmt.Errorf("[request.header[%s]] matchers error. %w", k, err)
 		}
 
 		builder.Header(k, m)
@@ -109,24 +130,18 @@ func buildExternalMock(source string, ext *mod.ExternalSchema) (b Builder, err e
 	if ext.Request.Body != nil {
 		m, err := asm.BuildMatcher(ext.Request.Body)
 		if err != nil {
-			return nil, err
+			return nil,
+				fmt.Errorf("[request.body] matchers error. %w", err)
 		}
 
 		builder.Body(m)
 	}
 
-	builder.
-		ScenarioIs(ext.Scenario.Name).
-		ScenarioStateIs(ext.Scenario.RequiredState).
-		ScenarioStateWillBe(ext.Scenario.NewState)
+	// --
+	// End Request
 
-	builder.Delay(time.Duration(ext.DelayInMs) * time.Millisecond)
-
-	if ext.Repeat != nil {
-		builder.Repeat(*ext.Repeat)
-	}
-
-	// build response
+	// Begin Response
+	// --
 
 	var rep reply.Reply
 
@@ -137,10 +152,11 @@ func buildExternalMock(source string, ext *mod.ExternalSchema) (b Builder, err e
 		}
 	} else if ext.RandomResponse != nil {
 		random := reply.Rand()
-		for _, r := range ext.RandomResponse.Responses {
+		for i, r := range ext.RandomResponse.Responses {
 			rr, err := buildResponse(ext, &r)
 			if err != nil {
-				return nil, err
+				return nil,
+					fmt.Errorf("[random_response.responses[%d]] building error. %w", i, err)
 			}
 
 			random.Add(rr)
@@ -153,16 +169,18 @@ func buildExternalMock(source string, ext *mod.ExternalSchema) (b Builder, err e
 		if ext.SequenceResponse.AfterEnded != nil {
 			rr, err := buildResponse(ext, ext.SequenceResponse.AfterEnded)
 			if err != nil {
-				return nil, err
+				return nil,
+					fmt.Errorf("[sequence_response.after_ended] building error. %w", err)
 			}
 
 			seq.AfterEnded(rr)
 		}
 
-		for _, r := range ext.SequenceResponse.Responses {
+		for i, r := range ext.SequenceResponse.Responses {
 			rr, err := buildResponse(ext, &r)
 			if err != nil {
-				return nil, err
+				return nil,
+					fmt.Errorf("[sequence_response.responses[%d]] building error. %w", i, err)
 			}
 
 			seq.Add(rr)
@@ -170,15 +188,20 @@ func buildExternalMock(source string, ext *mod.ExternalSchema) (b Builder, err e
 
 		rep = seq
 	} else {
+		// no response definition found.
+		// default to 200 (OK) with nothing more.
 		rep = reply.OK()
 	}
 
 	builder.Reply(rep)
 
+	// --
+	// End Response
+
 	return builder, nil
 }
 
-func buildResponse(ext *mod.ExternalSchema, response *mod.ExtRes) (reply.Reply, error) {
+func buildResponse(ext *mod.ExtMock, response *mod.ExtMockResponse) (reply.Reply, error) {
 	res := reply.New()
 	res.Status(valueOr(response.Status, http.StatusOK))
 
@@ -189,14 +212,22 @@ func buildResponse(ext *mod.ExternalSchema, response *mod.ExtRes) (reply.Reply, 
 	if response.BodyFile != "" {
 		file, err := os.Open(response.BodyFile)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf(
+				"[%s] error opening file. %w",
+				response.BodyFile,
+				err,
+			)
 		}
 
 		defer file.Close()
 
 		b, err := io.ReadAll(file)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf(
+				"[%s] error reading file content. %w",
+				response.BodyFile,
+				err,
+			)
 		}
 
 		if response.Template {

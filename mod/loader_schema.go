@@ -1,19 +1,19 @@
 package mod
 
-type ExternalSchema struct {
-	Name             string          `json:"name,omitempty"`
-	Enabled          *bool           `json:"enabled,omitempty"`
-	Priority         int             `json:"priority,omitempty"`
-	Repeat           *int            `json:"repeat,omitempty"`
-	Scenario         ExtState        `json:"scenario"`
-	Request          ExtReq          `json:"request"`
-	Response         *ExtRes         `json:"response,omitempty"`
-	RandomResponse   *ExtRandomRes   `json:"random_response,omitempty"`
-	SequenceResponse *ExtSequenceRes `json:"sequence_response,omitempty"`
-	DelayInMs        int             `json:"delay_in_ms,omitempty"`
+type ExtMock struct {
+	Name             string                   `json:"name,omitempty"`
+	Enabled          *bool                    `json:"enabled,omitempty"`
+	Priority         int                      `json:"priority,omitempty"`
+	Repeat           *int                     `json:"repeat,omitempty"`
+	Scenario         ExtMockScenario          `json:"scenario"`
+	Request          ExtMockRequest           `json:"request"`
+	Response         *ExtMockResponse         `json:"response,omitempty"`
+	RandomResponse   *ExtMockRandomResponse   `json:"random_response,omitempty"`
+	SequenceResponse *ExtMockSequenceResponse `json:"sequence_response,omitempty"`
+	DelayInMs        int                      `json:"delay_in_ms,omitempty"`
 }
 
-type ExtReq struct {
+type ExtMockRequest struct {
 	URL          any            `json:"url,omitempty"`
 	URLMatch     string         `json:"url_match,omitempty"`
 	URLPath      any            `json:"url_path,omitempty"`
@@ -24,13 +24,13 @@ type ExtReq struct {
 	Body         any            `json:"body,omitempty"`
 }
 
-type ExtState struct {
+type ExtMockScenario struct {
 	Name          string `json:"name,omitempty"`
 	RequiredState string `json:"required_state,omitempty"`
 	NewState      string `json:"new_state,omitempty"`
 }
 
-type ExtRes struct {
+type ExtMockResponse struct {
 	Status        int               `json:"status,omitempty"`
 	Header        map[string]string `json:"header,omitempty"`
 	Body          any               `json:"body,omitempty"`
@@ -39,11 +39,11 @@ type ExtRes struct {
 	TemplateModel any               `json:"template_model,omitempty"`
 }
 
-type ExtRandomRes struct {
-	Responses []ExtRes `json:"responses,omitempty"`
+type ExtMockRandomResponse struct {
+	Responses []ExtMockResponse `json:"responses,omitempty"`
 }
 
-type ExtSequenceRes struct {
-	Responses  []ExtRes `json:"responses,omitempty"`
-	AfterEnded *ExtRes  `json:"after_ended,omitempty"`
+type ExtMockSequenceResponse struct {
+	Responses  []ExtMockResponse `json:"responses,omitempty"`
+	AfterEnded *ExtMockResponse  `json:"after_ended,omitempty"`
 }
