@@ -1,6 +1,7 @@
 package mocha
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -74,70 +75,60 @@ func (b *MockBuilder) Priority(p int) *MockBuilder {
 
 // Method sets the HTTP request method to be matched.
 func (b *MockBuilder) Method(method string) *MockBuilder {
-	b.mock.expectations = append(
-		b.mock.expectations,
-		&expectation{
-			Target:        "method",
-			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Method },
-			Matcher:       matcher.EqualIgnoreCase(method),
-			Weight:        _weightNone,
-		})
+	b.appendExpectation(&expectation{
+		Target:        _targetMethod,
+		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Method },
+		Matcher:       matcher.EqualIgnoreCase(method),
+		Weight:        _weightNone,
+	})
 
 	return b
 }
 
 // URL defines a matcher to be applied to the http.Request url.URL.
 func (b *MockBuilder) URL(m matcher.Matcher) *MockBuilder {
-	b.mock.expectations = append(
-		b.mock.expectations,
-		&expectation{
-			Target:        "url",
-			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.URL },
-			Matcher:       m,
-			Weight:        _weightRegular,
-		})
+	b.appendExpectation(&expectation{
+		Target:        _targetURL,
+		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.URL },
+		Matcher:       m,
+		Weight:        _weightRegular,
+	})
 
 	return b
 }
 
 // URLPath defines a matcher to be applied to the url.URL path.
 func (b *MockBuilder) URLPath(m matcher.Matcher) *MockBuilder {
-	b.mock.expectations = append(
-		b.mock.expectations,
-		&expectation{
-			Target:        "url",
-			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.URL.Path },
-			Matcher:       m,
-			Weight:        _weightRegular,
-		})
+	b.appendExpectation(&expectation{
+		Target:        _targetURL,
+		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.URL.Path },
+		Matcher:       m,
+		Weight:        _weightRegular,
+	})
 
 	return b
 }
 
 // Header adds a matcher to a specific http.Header key.
 func (b *MockBuilder) Header(key string, m matcher.Matcher) *MockBuilder {
-	b.mock.expectations = append(
-		b.mock.expectations,
-		&expectation{
-			Target:        "header",
-			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Header.Get(key) },
-			Matcher:       m,
-			Weight:        _weightLow,
-		})
+	b.appendExpectation(&expectation{
+		Target:        _targetHeader,
+		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Header.Get(key) },
+		Matcher:       m,
+		Weight:        _weightLow,
+	})
 
 	return b
 }
 
 // Query defines a matcher to a specific query.
 func (b *MockBuilder) Query(key string, m matcher.Matcher) *MockBuilder {
-	b.mock.expectations = append(
-		b.mock.expectations,
-		&expectation{
-			Target:        "query",
-			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.URL.Query().Get(key) },
-			Matcher:       m,
-			Weight:        _weightVeryLow,
-		})
+	b.appendExpectation(&expectation{
+		Target:        _targetQuery,
+		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.URL.Query().Get(key) },
+		Matcher:       m,
+		Weight:        _weightVeryLow,
+	})
 
 	return b
 }
@@ -149,13 +140,12 @@ func (b *MockBuilder) Query(key string, m matcher.Matcher) *MockBuilder {
 //	m.Body(JSONPath("name", EqualTo("test")), JSONPath("address.street", ToContains("nowhere")))
 func (b *MockBuilder) Body(matcherList ...matcher.Matcher) *MockBuilder {
 	for _, m := range matcherList {
-		b.mock.expectations = append(b.mock.expectations,
-			&expectation{
-				Target:        "body",
-				ValueSelector: func(r *matcher.RequestInfo) any { return r.ParsedBody },
-				Matcher:       m,
-				Weight:        _weightHigh,
-			})
+		b.appendExpectation(&expectation{
+			Target:        _targetBody,
+			ValueSelector: func(r *matcher.RequestInfo) any { return r.ParsedBody },
+			Matcher:       m,
+			Weight:        _weightHigh,
+		})
 	}
 
 	return b
@@ -163,40 +153,35 @@ func (b *MockBuilder) Body(matcherList ...matcher.Matcher) *MockBuilder {
 
 // FormField defines a matcher for a specific form field by its key.
 func (b *MockBuilder) FormField(field string, m matcher.Matcher) *MockBuilder {
-	b.mock.expectations = append(b.mock.expectations,
-		&expectation{
-			Target:        "form",
-			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Form.Get(field) },
-			Matcher:       m,
-			Weight:        _weightVeryLow,
-		})
+	b.appendExpectation(&expectation{
+		Target:        _targetForm,
+		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Form.Get(field) },
+		Matcher:       m,
+		Weight:        _weightVeryLow,
+	})
 
 	return b
 }
 
 // Repeat defines to total times that a mock should be served, if request matches.
 func (b *MockBuilder) Repeat(times int) *MockBuilder {
-	b.mock.expectations = append(b.mock.expectations,
-		&expectation{
-			Target:        "request",
-			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request },
-			Matcher:       matcher.Repeat(times),
-			Weight:        _weightNone,
-		})
+	b.appendExpectation(&expectation{
+		Target:        _targetRequest,
+		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request },
+		Matcher:       matcher.Repeat(times),
+		Weight:        _weightNone,
+	})
 	return b
 }
 
 // RequestMatches defines matcher.Matcher to be applied to a http.Request.
 func (b *MockBuilder) RequestMatches(m matcher.Matcher) *MockBuilder {
-	b.mock.expectations = append(
-		b.mock.expectations,
-		&expectation{
-			Target:        "request",
-			ValueSelector: func(r *matcher.RequestInfo) any { return r.Request },
-			Matcher:       m,
-			Weight:        _weightLow,
-		})
-
+	b.appendExpectation(&expectation{
+		Target:        _targetRequest,
+		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request },
+		Matcher:       m,
+		Weight:        _weightLow,
+	})
 	return b
 }
 
@@ -265,17 +250,34 @@ func (b *MockBuilder) ReplyJust(status int, r *reply.StdReply) *MockBuilder {
 
 // Build builds a Mock with previously configured parameters.
 // Used internally by Mocha.
-func (b *MockBuilder) Build() *Mock {
-	if b.scenario != "" {
-		b.mock.expectations = append(b.mock.expectations,
-			&expectation{
-				Target: "scenario",
-				ValueSelector: func(r *matcher.RequestInfo) any {
-					return r.Request
-				},
-				Matcher: matcher.Scenario(b.scenario, b.scenarioRequiredState, b.scenarioNewState),
-			})
+func (b *MockBuilder) Build() (*Mock, error) {
+	if len(b.mock.expectations) == 0 {
+		return nil, fmt.Errorf("at least 1 request matcher must be set")
 	}
 
-	return b.mock
+	if b.mock.Reply == nil {
+		return nil,
+			fmt.Errorf("no reply set. use .Reply() or any equivalent to set the expected mock response")
+	}
+
+	err := b.mock.Reply.Prepare()
+	if err != nil {
+		return nil, err
+	}
+
+	if b.scenario != "" {
+		b.appendExpectation(&expectation{
+			Target: _targetRequest,
+			ValueSelector: func(r *matcher.RequestInfo) any {
+				return r.Request
+			},
+			Matcher: matcher.Scenario(b.scenario, b.scenarioRequiredState, b.scenarioNewState),
+		})
+	}
+
+	return b.mock, nil
+}
+
+func (b *MockBuilder) appendExpectation(e *expectation) {
+	b.mock.expectations = append(b.mock.expectations, e)
 }

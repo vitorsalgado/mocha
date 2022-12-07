@@ -14,12 +14,12 @@ import (
 
 func TestHTTPMethods(t *testing.T) {
 	m := mocha.New(t)
-	m.Start()
+	m.MustStart()
 
 	defer m.Close()
 
 	t.Run("should mock GET", func(t *testing.T) {
-		scoped := m.AddMocks(
+		scoped := m.MustMock(
 			mocha.Get(matcher.URLPath("/test")).
 				Reply(reply.OK()))
 
@@ -34,12 +34,12 @@ func TestHTTPMethods(t *testing.T) {
 		other, err := testutil.Post(m.URL()+"/test", nil).Do()
 
 		assert.NoError(t, err)
-		assert.Equal(t, http.StatusTeapot, other.StatusCode)
+		assert.Equal(t, mocha.StatusNoMockFound, other.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
 	})
 
 	t.Run("should mock POST", func(t *testing.T) {
-		scoped := m.AddMocks(
+		scoped := m.MustMock(
 			mocha.Post(matcher.URLPath("/test")).
 				Reply(reply.OK()))
 
@@ -48,7 +48,7 @@ func TestHTTPMethods(t *testing.T) {
 		res, err := testutil.Get(m.URL() + "/test").Do()
 
 		assert.NoError(t, err)
-		assert.Equal(t, http.StatusTeapot, res.StatusCode)
+		assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
 		assert.False(t, scoped.Called())
 
 		other, err := testutil.Post(m.URL()+"/test", nil).Do()
@@ -60,7 +60,7 @@ func TestHTTPMethods(t *testing.T) {
 	})
 
 	t.Run("should mock PUT", func(t *testing.T) {
-		scoped := m.AddMocks(
+		scoped := m.MustMock(
 			mocha.Put(matcher.URLPath("/test")).
 				Reply(reply.OK()))
 
@@ -69,7 +69,7 @@ func TestHTTPMethods(t *testing.T) {
 		res, err := testutil.Get(m.URL() + "/test").Do()
 
 		assert.NoError(t, err)
-		assert.Equal(t, http.StatusTeapot, res.StatusCode)
+		assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
 		assert.False(t, scoped.Called())
 
 		other, err := testutil.NewRequest(http.MethodPut, m.URL()+"/test", nil).Do()
@@ -81,7 +81,7 @@ func TestHTTPMethods(t *testing.T) {
 	})
 
 	t.Run("should mock DELETE", func(t *testing.T) {
-		scoped := m.AddMocks(
+		scoped := m.MustMock(
 			mocha.Delete(matcher.URLPath("/test")).
 				Reply(reply.OK()))
 
@@ -90,7 +90,7 @@ func TestHTTPMethods(t *testing.T) {
 		res, err := testutil.Get(m.URL() + "/test").Do()
 
 		assert.NoError(t, err)
-		assert.Equal(t, http.StatusTeapot, res.StatusCode)
+		assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
 		assert.False(t, scoped.Called())
 
 		other, err := testutil.NewRequest(http.MethodDelete, m.URL()+"/test", nil).Do()
@@ -102,7 +102,7 @@ func TestHTTPMethods(t *testing.T) {
 	})
 
 	t.Run("should mock PATCH", func(t *testing.T) {
-		scoped := m.AddMocks(
+		scoped := m.MustMock(
 			mocha.Patch(matcher.URLPath("/test")).
 				Reply(reply.OK()))
 
@@ -111,7 +111,7 @@ func TestHTTPMethods(t *testing.T) {
 		res, err := testutil.Get(m.URL() + "/test").Do()
 
 		assert.NoError(t, err)
-		assert.Equal(t, http.StatusTeapot, res.StatusCode)
+		assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
 		assert.False(t, scoped.Called())
 
 		other, err := testutil.NewRequest(http.MethodPatch, m.URL()+"/test", nil).Do()
@@ -123,7 +123,7 @@ func TestHTTPMethods(t *testing.T) {
 	})
 
 	t.Run("should mock HEAD", func(t *testing.T) {
-		scoped := m.AddMocks(
+		scoped := m.MustMock(
 			mocha.Head(matcher.URLPath("/test")).
 				Reply(reply.OK()))
 
@@ -132,7 +132,7 @@ func TestHTTPMethods(t *testing.T) {
 		res, err := testutil.Get(m.URL() + "/test").Do()
 
 		assert.NoError(t, err)
-		assert.Equal(t, http.StatusTeapot, res.StatusCode)
+		assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
 		assert.False(t, scoped.Called())
 
 		other, err := testutil.NewRequest(http.MethodHead, m.URL()+"/test", nil).Do()
@@ -144,7 +144,7 @@ func TestHTTPMethods(t *testing.T) {
 	})
 
 	t.Run("should mock OPTIONS", func(t *testing.T) {
-		scoped := m.AddMocks(
+		scoped := m.MustMock(
 			mocha.Options(matcher.URLPath("/test")).
 				Reply(reply.OK()))
 
@@ -153,7 +153,7 @@ func TestHTTPMethods(t *testing.T) {
 		res, err := testutil.Get(m.URL() + "/test").Do()
 
 		assert.NoError(t, err)
-		assert.Equal(t, http.StatusTeapot, res.StatusCode)
+		assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
 		assert.False(t, scoped.Called())
 
 		other, err := testutil.NewRequest(http.MethodOptions, m.URL()+"/test", nil).Do()

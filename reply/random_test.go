@@ -36,9 +36,7 @@ func TestRandomReplies(t *testing.T) {
 }
 
 func TestShouldReturnErrorWhenRandomDoesNotContainReplies(t *testing.T) {
-	res, err := Rand().Build(nil, nil)
-	assert.Nil(t, res)
-	assert.NotNil(t, err)
+	assert.Error(t, Rand().Prepare())
 }
 
 func TestRandWithCustom(t *testing.T) {

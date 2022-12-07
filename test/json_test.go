@@ -20,11 +20,11 @@ type jsonTestModel struct {
 func TestPostJSON(t *testing.T) {
 	t.Run("should match specific json body fields", func(t *testing.T) {
 		m := mocha.New(t)
-		m.Start()
+		m.MustStart()
 
 		defer m.Close()
 
-		scoped := m.AddMocks(mocha.Post(matcher.URLPath("/test")).
+		scoped := m.MustMock(mocha.Post(matcher.URLPath("/test")).
 			Header("test", matcher.Equal("hello")).
 			Body(
 				matcher.JSONPath("name", matcher.Equal("dev")), matcher.JSONPath("ok", matcher.Equal(true))).
@@ -43,11 +43,11 @@ func TestPostJSON(t *testing.T) {
 
 	t.Run("should match entire body using a struct", func(t *testing.T) {
 		m := mocha.New(t)
-		m.Start()
+		m.MustStart()
 
 		data := &jsonTestModel{OK: true, Name: "dev"}
 
-		scoped := m.AddMocks(mocha.Post(matcher.URLPath("/test")).
+		scoped := m.MustMock(mocha.Post(matcher.URLPath("/test")).
 			Header("test", matcher.Equal("hello")).
 			Body(matcher.EqualJSON(data)).
 			Reply(reply.OK()))
@@ -65,12 +65,12 @@ func TestPostJSON(t *testing.T) {
 
 	t.Run("should match entire body using a map", func(t *testing.T) {
 		m := mocha.New(t)
-		m.Start()
+		m.MustStart()
 
 		data1 := map[string]interface{}{"ok": true, "name": "dev"}
 		data2 := map[string]interface{}{"ok": true, "name": "dev"}
 
-		scoped := m.AddMocks(mocha.Post(matcher.URLPath("/test")).
+		scoped := m.MustMock(mocha.Post(matcher.URLPath("/test")).
 			Header("test", matcher.Equal("hello")).
 			Body(matcher.EqualJSON(data1)).
 			Reply(reply.OK()))
@@ -88,12 +88,12 @@ func TestPostJSON(t *testing.T) {
 
 	t.Run("should match entire body when comparing a struct and a map", func(t *testing.T) {
 		m := mocha.New(t)
-		m.Start()
+		m.MustStart()
 
 		toMatch := map[string]interface{}{"name": "dev", "ok": true}
 		data := jsonTestModel{Name: "dev", OK: true}
 
-		scoped := m.AddMocks(mocha.Post(matcher.URLPath("/test")).
+		scoped := m.MustMock(mocha.Post(matcher.URLPath("/test")).
 			Header("test", matcher.Equal("hello")).
 			Body(matcher.EqualJSON(toMatch)).
 			Reply(reply.OK()))
@@ -111,12 +111,12 @@ func TestPostJSON(t *testing.T) {
 
 	t.Run("should not match when the given json is different than the incoming request body", func(t *testing.T) {
 		m := mocha.New(t)
-		m.Start()
+		m.MustStart()
 
 		body := map[string]interface{}{"ok": true, "name": "dev"}
 		exp := map[string]interface{}{"ok": false, "name": "qa"}
 
-		scoped := m.AddMocks(mocha.Post(matcher.URLPath("/test")).
+		scoped := m.MustMock(mocha.Post(matcher.URLPath("/test")).
 			Header("test", matcher.Equal("hello")).
 			Body(matcher.EqualJSON(exp)).
 			Reply(reply.OK()))
@@ -129,6 +129,6 @@ func TestPostJSON(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NoError(t, res.Body.Close())
 		assert.False(t, scoped.Called())
-		assert.Equal(t, http.StatusTeapot, res.StatusCode)
+		assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
 	})
 }

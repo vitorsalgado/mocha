@@ -14,17 +14,17 @@ import (
 
 func TestPriority(t *testing.T) {
 	m := mocha.New(t)
-	m.Start()
+	m.MustStart()
 
 	defer m.Close()
 
-	one := m.AddMocks(mocha.Get(matcher.URLPath("/test")).
+	one := m.MustMock(mocha.Get(matcher.URLPath("/test")).
 		Priority(3).
 		Reply(reply.OK()))
-	two := m.AddMocks(mocha.Get(matcher.URLPath("/test")).
+	two := m.MustMock(mocha.Get(matcher.URLPath("/test")).
 		Priority(1).
 		Reply(reply.BadRequest()))
-	three := m.AddMocks(mocha.Get(matcher.URLPath("/test")).
+	three := m.MustMock(mocha.Get(matcher.URLPath("/test")).
 		Priority(100).
 		Reply(reply.Created()))
 

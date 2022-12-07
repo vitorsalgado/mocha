@@ -14,6 +14,12 @@ const (
 	LogVerbose
 )
 
+// Configurer lets users configure the Mock API.
+type Configurer interface {
+	// Apply applies a configuration.
+	Apply(conf *Config)
+}
+
 // Config holds Mocha mock server configurations.
 type Config struct {
 	// Addr defines a custom server address.
@@ -45,93 +51,110 @@ type Config struct {
 	// FileMockPatterns configures glob patterns to load mock from the file system.
 	FileMockPatterns []string
 
-	corsEnabled bool
+	Debug Debug
 }
 
-// Configurer is Config builder,
-// Use this to build Mocha options, instead of creating a new Config struct manually.
-type Configurer struct {
+// Apply copies the current Config struct values to the given Config parameter.
+// It allows the Config struct to be used as a Configurer.
+func (c *Config) Apply(conf *Config) {
+	conf.Addr = c.Addr
+	conf.BodyParsers = c.BodyParsers
+	conf.Middlewares = c.Middlewares
+	conf.CORS = c.CORS
+	conf.Server = c.Server
+	conf.Handler = c.Handler
+	conf.LogLevel = c.LogLevel
+	conf.Parameters = c.Parameters
+	conf.FileMockPatterns = c.FileMockPatterns
+	conf.Debug = c.Debug
+}
+
+// ConfigBuilder lets users create a Config with a fluent API.
+type ConfigBuilder struct {
 	conf *Config
 }
 
-var _configDefault = Configure().
-	LogLevel(LogVerbose).
-	Build()
-
-// Configure inits a new Configurer.
+// Configure inits a new ConfigBuilder.
 // Entrypoint to start a new custom configuration for Mocha mock servers.
-func Configure() *Configurer {
-	return &Configurer{conf: &Config{
-		LogLevel:    LogVerbose,
-		BodyParsers: make([]RequestBodyParser, 0),
-		Middlewares: make([]func(http.Handler) http.Handler, 0)}}
+func Configure() *ConfigBuilder {
+	return &ConfigBuilder{conf: defaultConfig()}
 }
 
 // Addr sets a custom address for the mock HTTP server.
-func (cb *Configurer) Addr(addr string) *Configurer {
+func (cb *ConfigBuilder) Addr(addr string) *ConfigBuilder {
 	cb.conf.Addr = addr
 	return cb
 }
 
 // RequestBodyParsers adds a custom list of RequestBodyParsers.
-func (cb *Configurer) RequestBodyParsers(bp ...RequestBodyParser) *Configurer {
+func (cb *ConfigBuilder) RequestBodyParsers(bp ...RequestBodyParser) *ConfigBuilder {
 	cb.conf.BodyParsers = append(cb.conf.BodyParsers, bp...)
 	return cb
 }
 
 // Middlewares adds custom middlewares to the mock server.
 // Use this to add custom request interceptors.
-func (cb *Configurer) Middlewares(fn ...func(handler http.Handler) http.Handler) *Configurer {
+func (cb *ConfigBuilder) Middlewares(fn ...func(handler http.Handler) http.Handler) *ConfigBuilder {
 	cb.conf.Middlewares = append(cb.conf.Middlewares, fn...)
 	return cb
 }
 
 // CORS configures Cross Origin Resource Sharing for the mock server.
-func (cb *Configurer) CORS(options ...*CORSConfig) *Configurer {
+func (cb *ConfigBuilder) CORS(options ...*CORSConfig) *ConfigBuilder {
 	if len(options) > 0 {
 		cb.conf.CORS = options[0]
 	} else {
 		cb.conf.CORS = _defaultCORSConfig
 	}
 
-	cb.conf.corsEnabled = true
-
 	return cb
 }
 
 // Server configures a custom HTTP mock Server.
-func (cb *Configurer) Server(srv Server) *Configurer {
+func (cb *ConfigBuilder) Server(srv Server) *ConfigBuilder {
 	cb.conf.Server = srv
 	return cb
 }
 
 // HandlerDecorator configures a custom HTTP handler using the default mock handler.
-func (cb *Configurer) HandlerDecorator(fn func(handler http.Handler) http.Handler) *Configurer {
+func (cb *ConfigBuilder) HandlerDecorator(fn func(handler http.Handler) http.Handler) *ConfigBuilder {
 	cb.conf.Handler = fn
 	return cb
 }
 
 // LogLevel configure the verbosity of informative logs.
 // Defaults to LogVerbose.
-func (cb *Configurer) LogLevel(l LogLevel) *Configurer {
+func (cb *ConfigBuilder) LogLevel(l LogLevel) *ConfigBuilder {
 	cb.conf.LogLevel = l
 	return cb
 }
 
 // Parameters sets a custom reply parameters store.
-func (cb *Configurer) Parameters(params reply.Params) *Configurer {
+func (cb *ConfigBuilder) Parameters(params reply.Params) *ConfigBuilder {
 	cb.conf.Parameters = params
 	return cb
 }
 
 // MockFilePatterns sets a custom Glob patterns to load mock from the file system.
 // Defaults to [testdata/*.mock.json, testdata/*.mock.yaml].
-func (cb *Configurer) MockFilePatterns(patterns ...string) *Configurer {
+func (cb *ConfigBuilder) MockFilePatterns(patterns ...string) *ConfigBuilder {
 	cb.conf.FileMockPatterns = patterns
 	return cb
 }
 
-// Build builds a new Config with previously configured values.
-func (cb *Configurer) Build() *Config {
-	return cb.conf
+func (cb *ConfigBuilder) Debug(debug Debug) *ConfigBuilder {
+	cb.conf.Debug = debug
+	return cb
+}
+
+// Apply builds a new Config with previously configured values.
+func (cb *ConfigBuilder) Apply(conf *Config) {
+	cb.conf.Apply(conf)
+}
+
+func defaultConfig() *Config {
+	return &Config{
+		LogLevel:    LogVerbose,
+		BodyParsers: make([]RequestBodyParser, 0),
+		Middlewares: make([]func(http.Handler) http.Handler, 0)}
 }

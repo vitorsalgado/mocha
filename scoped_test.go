@@ -28,7 +28,7 @@ func TestScoped(t *testing.T) {
 	assert.Equal(t, 3, len(scoped.ListAll()))
 	assert.Equal(t, m1, scoped.Get(m1.ID))
 
-	t.Run("should not return done when there is still pending mocks", func(t *testing.T) {
+	t.Run("should not return done when there is still pending store", func(t *testing.T) {
 		fakeT := testmocks.NewFakeNotifier()
 
 		assert.False(t, scoped.Called())
@@ -39,7 +39,7 @@ func TestScoped(t *testing.T) {
 		fakeT.AssertNumberOfCalls(t, "Errorf", 1)
 	})
 
-	t.Run("should return done when all mocks were called", func(t *testing.T) {
+	t.Run("should return done when all store were called", func(t *testing.T) {
 		fakeT := testmocks.NewFakeNotifier()
 
 		m1.Inc()
@@ -57,24 +57,24 @@ func TestScoped(t *testing.T) {
 		assert.False(t, scoped.IsPending())
 	})
 
-	t.Run("should return total hits from mocks", func(t *testing.T) {
+	t.Run("should return total hits from store", func(t *testing.T) {
 		assert.Equal(t, 3, scoped.Hits())
 	})
 
-	t.Run("should clean all mocks associated with scope when calling .Clean()", func(t *testing.T) {
+	t.Run("should clean all store associated with scope when calling .Clean()", func(t *testing.T) {
 		scoped.Clean()
 		assert.Equal(t, 0, len(scoped.ListPending()))
 		assert.False(t, scoped.IsPending())
 	})
 
-	t.Run("should only consider enabled mocks", func(t *testing.T) {
+	t.Run("should only consider enabled store", func(t *testing.T) {
 		m := New(t)
-		m.Start()
+		m.MustStart()
 
 		defer m.Close()
 
-		s1 := m.AddMocks(Get(matcher.URLPath("/test1")).Reply(reply.OK()))
-		s2 := m.AddMocks(
+		s1 := m.MustMock(Get(matcher.URLPath("/test1")).Reply(reply.OK()))
+		s2 := m.MustMock(
 			Get(matcher.URLPath("/test2")).Reply(reply.OK()),
 			Get(matcher.URLPath("/test3")).Reply(reply.OK()))
 
@@ -108,7 +108,7 @@ func TestScoped(t *testing.T) {
 			res, err := req.Do()
 
 			assert.NoError(t, err)
-			assert.Equal(t, http.StatusTeapot, res.StatusCode)
+			assert.Equal(t, StatusNoMockFound, res.StatusCode)
 
 			req = testutil.Get(fmt.Sprintf("%s/test2", m.URL()))
 			res, err = req.Do()
@@ -142,13 +142,13 @@ func TestScoped(t *testing.T) {
 			res, err := req.Do()
 
 			assert.NoError(t, err)
-			assert.Equal(t, http.StatusTeapot, res.StatusCode)
+			assert.Equal(t, StatusNoMockFound, res.StatusCode)
 
 			req = testutil.Get(fmt.Sprintf("%s/test3", m.URL()))
 			res, err = req.Do()
 
 			assert.NoError(t, err)
-			assert.Equal(t, http.StatusTeapot, res.StatusCode)
+			assert.Equal(t, StatusNoMockFound, res.StatusCode)
 		})
 	})
 }

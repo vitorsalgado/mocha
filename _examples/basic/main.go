@@ -19,10 +19,10 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	m := mocha.New(mocha.NewConsoleNotifier(), mocha.Configure().Addr(":8080").Build())
-	m.Start()
+	m := mocha.New(mocha.NewConsoleNotifier(), mocha.Configure().Addr(":8080"))
+	m.MustStart()
 
-	m.AddMocks(mocha.
+	m.MustMock(mocha.
 		Get(URLPath("/test")).
 		Header(header.Accept, Contain(mimetype.TextHTML)).
 		Header(header.ContentType, Equal("test")).

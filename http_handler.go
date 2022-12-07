@@ -15,21 +15,30 @@ import (
 )
 
 type mockHandler struct {
-	mocks       mockStore
-	bodyParsers []RequestBodyParser
-	params      reply.Params
-	evt         *eventListener
-	t           TestingT
+	store         mockStore
+	bodyParsers   []RequestBodyParser
+	params        reply.Params
+	eventListener *eventListener
+	t             TestingT
+	d             Debug
 }
 
 func newHandler(
-	storage mockStore,
+	store mockStore,
 	bodyParsers []RequestBodyParser,
 	params reply.Params,
 	evt *eventListener,
 	t TestingT,
+	d Debug,
 ) *mockHandler {
-	return &mockHandler{mocks: storage, bodyParsers: bodyParsers, params: params, evt: evt, t: t}
+	return &mockHandler{
+		store:         store,
+		bodyParsers:   bodyParsers,
+		params:        params,
+		eventListener: evt,
+		t:             t,
+		d:             d,
+	}
 }
 
 func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -38,24 +47,20 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	parsedBody, err := parseRequestBody(r, h.bodyParsers)
 	if err != nil {
-		h.evt.Emit(&OnRequest{Request: evtReq, StartedAt: start})
-		respondError(w, evtReq, h.evt, fmt.Errorf("error parsing request body. reason=%w", err))
+		h.eventListener.Emit(&OnRequest{Request: evtReq, StartedAt: start})
+		h.respondError(w, evtReq, fmt.Errorf("error parsing request body. reason=%w", err))
 		return
 	}
 
 	evtReq.Body = parsedBody
-	h.evt.Emit(&OnRequest{Request: evtReq, StartedAt: start})
+	h.eventListener.Emit(&OnRequest{Request: evtReq, StartedAt: start})
 
 	// match current request with all eligible stored matchers in order to find one mock.
 	info := &matcher.RequestInfo{Request: r, ParsedBody: parsedBody}
-	result, err := findMockForRequest(h.mocks, info)
-	if err != nil {
-		respondError(w, evtReq, h.evt, fmt.Errorf("error trying to find a mock. reason=%w", err))
-		return
-	}
+	result := findMockForRequest(h.store, info)
 
 	if !result.Matches {
-		respondNonMatched(w, evtReq, result, h.evt)
+		h.respondNonMatched(w, evtReq, result)
 		return
 	}
 
@@ -74,7 +79,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	res, err := result.Matched.Reply.Build(w, r)
 	if err != nil {
 		h.t.Logf(err.Error())
-		respondError(w, evtReq, h.evt, fmt.Errorf("error building reply. reason=%w", err))
+		h.respondError(w, evtReq, fmt.Errorf("error building reply. reason=%w", err))
 		return
 	}
 
@@ -83,7 +88,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		mapperArgs := &reply.MapperArgs{Request: r, Parameters: h.params}
 		for i, mapper := range res.Mappers {
 			if err = mapper(res, mapperArgs); err != nil {
-				respondError(w, evtReq, h.evt, fmt.Errorf("error with response mapper[%d]. reason=%w", i, err))
+				h.respondError(w, evtReq, fmt.Errorf("error with response mapper[%d]. reason=%w", i, err))
 				return
 			}
 		}
@@ -110,6 +115,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		err = exp.Matcher.OnMockServed()
 		if err != nil {
 			h.t.Logf("matcher %s .OnMockServed() returned the error=%v", exp.Matcher.Name(), err)
+			h.maybeDebug(err)
 		}
 	}
 
@@ -119,17 +125,18 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		err = action.Run(paArgs)
 		if err != nil {
 			h.t.Logf("\nerror running post action %d. error=%v", i, err)
+			h.maybeDebug(err)
 		}
 	}
 
-	h.evt.Emit(&OnRequestMatch{
+	h.eventListener.Emit(&OnRequestMatch{
 		Request:            evtReq,
 		ResponseDefinition: mod.EvtRes{Status: res.Status, Header: res.Header.Clone()},
 		Mock:               mod.EvtMk{ID: mock.ID, Name: mock.Name},
 		Elapsed:            time.Since(start)})
 }
 
-func respondNonMatched(w http.ResponseWriter, r mod.EvtReq, result *findResult, evt *eventListener) {
+func (h *mockHandler) respondNonMatched(w http.ResponseWriter, r *mod.EvtReq, result *findResult) {
 	e := &OnRequestNotMatched{Request: r, Result: mod.EvtResult{Details: make([]mod.EvtResultExt, 0)}}
 
 	if result.ClosestMatch != nil {
@@ -142,7 +149,7 @@ func respondNonMatched(w http.ResponseWriter, r mod.EvtReq, result *findResult, 
 			mod.EvtResultExt{Name: detail.Name, Description: detail.Desc, Target: detail.Target})
 	}
 
-	evt.Emit(e)
+	h.eventListener.Emit(e)
 
 	builder := strings.Builder{}
 	builder.WriteString("REQUEST DID NOT MATCH.\n")
@@ -160,20 +167,27 @@ func respondNonMatched(w http.ResponseWriter, r mod.EvtReq, result *findResult, 
 	}
 
 	w.Header().Add(header.ContentType, mimetype.TextPlain)
-	w.WriteHeader(http.StatusTeapot)
+	w.WriteHeader(StatusNoMockFound)
 	w.Write([]byte(builder.String()))
 }
 
-func respondError(w http.ResponseWriter, r mod.EvtReq, evt *eventListener, err error) {
-	evt.Emit(&OnError{Request: r, Err: err})
+func (h *mockHandler) respondError(w http.ResponseWriter, r *mod.EvtReq, err error) {
+	h.eventListener.Emit(&OnError{Request: r, Err: err})
+	h.maybeDebug(err)
 
 	w.Header().Add(header.ContentType, mimetype.TextPlain)
-	w.WriteHeader(http.StatusTeapot)
+	w.WriteHeader(StatusNoMockFound)
 	w.Write([]byte(fmt.Sprintf("EvtReq did not match. An error occurred.\n%v", err)))
 }
 
-func evtRequest(r *http.Request) mod.EvtReq {
-	return mod.EvtReq{
+func (h *mockHandler) maybeDebug(err error) {
+	if h.d != nil {
+		h.d(err)
+	}
+}
+
+func evtRequest(r *http.Request) *mod.EvtReq {
+	return &mod.EvtReq{
 		Method:     r.Method,
 		Path:       r.URL.Path,
 		RequestURI: r.RequestURI,

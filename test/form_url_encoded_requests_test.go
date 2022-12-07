@@ -17,11 +17,11 @@ import (
 
 func TestFormUrlEncoded(t *testing.T) {
 	m := mocha.New(t)
-	m.Start()
+	m.MustStart()
 
 	defer m.Close()
 
-	scoped := m.AddMocks(mocha.Post(matcher.URLPath("/test")).
+	scoped := m.MustMock(mocha.Post(matcher.URLPath("/test")).
 		FormField("var1", matcher.Equal("dev")).
 		FormField("var2", matcher.Contain("q")).
 		Reply(reply.OK()))

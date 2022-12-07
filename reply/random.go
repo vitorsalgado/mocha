@@ -37,13 +37,17 @@ func (mr *RandomReply) Add(reply ...Reply) *RandomReply {
 	return mr
 }
 
-// Build builds a response stub randomly based on previously added Reply implementations.
-func (mr *RandomReply) Build(w http.ResponseWriter, r *http.Request) (*Response, error) {
+func (mr *RandomReply) Prepare() error {
 	size := len(mr.replies)
 	if size == 0 {
-		return nil,
-			fmt.Errorf("you need to set at least one response when using random reply")
+		return fmt.Errorf("you need to set at least one response when using random reply")
 	}
+
+	return nil
+}
+
+// Build builds a response stub randomly based on previously added Reply implementations.
+func (mr *RandomReply) Build(w http.ResponseWriter, r *http.Request) (*Response, error) {
 
 	mr.mu.Lock()
 	defer mr.mu.Unlock()

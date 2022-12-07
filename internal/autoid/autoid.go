@@ -1,10 +1,17 @@
 package autoid
 
-import "sync/atomic"
+import (
+	"sync"
+)
 
 var id int32
+var mu sync.Mutex
 
 func Next() int {
-	atomic.AddInt32(&id, 1)
+	mu.Lock()
+	defer mu.Unlock()
+
+	id++
+
 	return int(id)
 }

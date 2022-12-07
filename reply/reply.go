@@ -12,7 +12,12 @@ type M struct {
 
 // Reply defines the contract to configure an HTTP responder.
 type Reply interface {
+	// Prepare runs once during mock building.
+	// Useful for pre-configurations or validations.
+	Prepare() error
+
 	// Build returns a Response stub to be served.
+	// Return Response nil if the HTTP response was rendered inside the Build function.
 	Build(w http.ResponseWriter, r *http.Request) (*Response, error)
 }
 

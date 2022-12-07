@@ -13,11 +13,11 @@ import (
 
 func TestRepeat(t *testing.T) {
 	m := mocha.New(t)
-	m.Start()
+	m.MustStart()
 
 	defer m.Close()
 
-	m.AddMocks(mocha.Get(matcher.URLPath("/test")).
+	m.MustMock(mocha.Get(matcher.URLPath("/test")).
 		Repeat(3).
 		Reply(reply.OK()))
 
@@ -31,5 +31,5 @@ func TestRepeat(t *testing.T) {
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 
 	res, _ = testutil.Get(m.URL() + "/test").Do()
-	assert.Equal(t, http.StatusTeapot, res.StatusCode)
+	assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
 }

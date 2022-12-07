@@ -14,7 +14,7 @@ help: ## show help
 
 .PHONY: test
 test: ## run tests
-	@go test -race -v ./... -race
+	@go test -timeout 60000ms -race -v ./... -race
 
 .PHONY: test-leaks
 test-leaks:

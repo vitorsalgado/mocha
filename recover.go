@@ -1,8 +1,7 @@
-package mid
+package mocha
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"runtime"
 
@@ -10,23 +9,36 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 )
 
-func Recover(next http.Handler) http.Handler {
+type recoverMid struct {
+	d   Debug
+	t   TestingT
+	evt *eventListener
+}
+
+func (h *recoverMid) Recover(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if recovery := recover(); recovery != nil {
 				buf := make([]byte, 1024)
 				buf = buf[:runtime.Stack(buf, false)]
 
-				log.Printf("panic=%v\n%s\n", recovery, buf)
+				err := fmt.Errorf("panic=%v\n%s\n", recovery, buf)
 
 				w.Header().Set(header.ContentType, mimetype.TextPlain)
 				w.WriteHeader(http.StatusTeapot)
 				w.Write([]byte(fmt.Sprintf(
-					"%d (%s) - Panic!\n\n%v",
+					"%d (%s) - Unexpected Error!\n\n%v",
 					http.StatusTeapot,
 					http.StatusText(http.StatusTeapot),
-					recovery,
+					err,
 				)))
+
+				h.evt.Emit(&OnError{Request: evtRequest(r), Err: err})
+				h.t.Logf(err.Error())
+
+				if h.d != nil {
+					h.d(err)
+				}
 			}
 		}()
 

@@ -2,6 +2,7 @@ package mocha
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"reflect"
 	"sync"
@@ -10,55 +11,62 @@ import (
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
-type (
-	// Mocha is the base for the mock server.
-	Mocha struct {
-		Config *Config
-		T      TestingT
+// StatusNoMockFound describes an HTTP response where no Mock was found.
+//
+// It uses http.StatusTeapot to reduce the chance of using the same
+// expected response from the actual server being mocked.
+// Basically, every request that doesn't match against to a Mock will return http.StatusTeapot.
+const StatusNoMockFound = http.StatusTeapot
 
-		server  Server
-		storage mockStore
-		ctx     context.Context
-		cancel  context.CancelFunc
-		params  reply.Params
-		events  *eventListener
-		scopes  []*Scoped
-		loaders []Loader
-		mu      sync.Mutex
-	}
+// Mocha is the base for the mock server.
+type Mocha struct {
+	Config *Config
+	T      TestingT
 
-	// TestingT is based on testing.T and allow mocha components to log information and errors.
-	TestingT interface {
-		Helper()
-		Logf(format string, a ...any)
-		Errorf(format string, a ...any)
-		FailNow()
-	}
+	server  Server
+	storage mockStore
+	ctx     context.Context
+	cancel  context.CancelFunc
+	params  reply.Params
+	events  *eventListener
+	scopes  []*Scoped
+	loaders []Loader
+	d       Debug
+	mu      sync.Mutex
+	id      int32
+}
 
-	// Cleanable allows marking mocha instance to be closed on test cleanup.
-	Cleanable interface {
-		Cleanup(func())
-	}
-)
+// TestingT is based on testing.T and allow mocha components to log information and errors.
+type TestingT interface {
+	Helper()
+	Logf(format string, a ...any)
+	Errorf(format string, a ...any)
+}
+
+// Cleanable allows marking mocha instance to be closed on test cleanup.
+type Cleanable interface {
+	Cleanup(func())
+}
 
 // New creates a new Mocha mock server with the given configurations.
-// Parameter config accepts a Config or a Configurer implementation.
-func New(t TestingT, config ...*Config) *Mocha {
-	conf := _configDefault
-	if len(config) > 0 {
-		conf = config[0]
+// Parameter config accepts a Config or a ConfigBuilder implementation.
+func New(t TestingT, config ...Configurer) *Mocha {
+	conf := defaultConfig()
+	for _, configurer := range config {
+		configurer.Apply(conf)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	store := newStore()
+	events := newEvents()
+
+	recovery := &recoverMid{d: conf.Debug, t: t, evt: events}
 	parsers := make([]RequestBodyParser, 0, len(conf.BodyParsers)+4)
 	parsers = append(parsers, conf.BodyParsers...)
 	parsers = append(parsers, &jsonBodyParser{}, &plainTextParser{}, &formURLEncodedParser{}, &bytesParser{})
 
 	middlewares := make([]func(handler http.Handler) http.Handler, 0)
-	middlewares = append(middlewares, mid.Recover)
-
-	events := newEvents()
+	middlewares = append(middlewares, recovery.Recover)
 
 	if conf.LogLevel > LogSilently {
 		h := newInternalEvents(t)
@@ -69,7 +77,7 @@ func New(t TestingT, config ...*Config) *Mocha {
 		events.Subscribe(EventOnError, h.OnError)
 	}
 
-	if conf.corsEnabled {
+	if conf.CORS != nil {
 		middlewares = append(middlewares, corsMid(conf.CORS))
 	}
 
@@ -82,7 +90,7 @@ func New(t TestingT, config ...*Config) *Mocha {
 
 	handler := mid.
 		Compose(middlewares...).
-		Root(newHandler(store, parsers, p, events, t))
+		Root(newHandler(store, parsers, p, events, t, conf.Debug))
 
 	if conf.Handler != nil {
 		handler = conf.Handler(handler)
@@ -96,8 +104,8 @@ func New(t TestingT, config ...*Config) *Mocha {
 
 	err := server.Configure(conf, handler)
 	if err != nil {
-		t.Errorf("failed to configure mock server. reason=%v", err)
-		t.FailNow()
+		t.Logf("failed to configure server. reason=%v", err)
+		panic(err)
 	}
 
 	loaders := make([]Loader, 0)
@@ -119,55 +127,78 @@ func New(t TestingT, config ...*Config) *Mocha {
 	return m
 }
 
-// NewBasic creates a new Mocha mock server with default configurations.
-func NewBasic() *Mocha {
+// Default creates a new mock server with default configurations.
+func Default() *Mocha {
 	return New(NewConsoleNotifier())
 }
 
 // Start starts the mock server.
-func (m *Mocha) Start() ServerInfo {
+func (m *Mocha) Start() (ServerInfo, error) {
 	info, err := m.server.Start()
 	if err != nil {
-		m.T.Errorf("failed to start mock server. reason=%v", err)
-		m.T.FailNow()
+		return ServerInfo{}, err
 	}
 
-	m.Rebuild()
+	err = m.onStart()
+	if err != nil {
+		return ServerInfo{}, err
+	}
 
-	m.events.Start(m.ctx)
+	return info, nil
+}
+
+// MustStart starts the mock server.
+// It fails immediately if any error occurs.
+func (m *Mocha) MustStart() ServerInfo {
+	info, err := m.Start()
+	if err != nil {
+		m.T.Logf("failed to start mock server. reason=%v", err)
+		panic(err)
+	}
 
 	return info
 }
 
-// StartTLS starts TLS from a server.
-func (m *Mocha) StartTLS() ServerInfo {
+// StartTLS starts TLS on a mock server.
+func (m *Mocha) StartTLS() (ServerInfo, error) {
 	info, err := m.server.StartTLS()
 	if err != nil {
-		m.T.Errorf("failed to start a TLS mock server. reason=%v", err)
-		m.T.FailNow()
+		return ServerInfo{}, err
 	}
 
-	m.Rebuild()
+	err = m.onStart()
+	if err != nil {
+		return ServerInfo{}, err
+	}
 
-	m.events.Start(m.ctx)
+	return info, nil
+}
+
+// MustStartTLS starts TLS on a mock server.
+// It fails immediately if any error occurs.
+func (m *Mocha) MustStartTLS() ServerInfo {
+	info, err := m.server.StartTLS()
+	if err != nil {
+		m.T.Logf("failed to start a TLS mock server. reason=%v", err)
+		panic(err)
+	}
 
 	return info
 }
 
-// AddMocks adds one or multiple request mocks.
+// Mock adds one or multiple request mocks.
 // It returns a Scoped instance that allows control of the added mocks and also checking if they were called or not.
-// The returned Scoped is useful for tests.
 //
 // Usage:
 //
-//	scoped := m.AddMocks(
+//	scoped := m.MustMock(
 //		Get(matcher.URLPath("/test")).
 //			Header("test", matcher.Equal("hello")).
 //			Query("filter", matcher.Equal("all")).
 //			Reply(reply.Created().PlainText("hello world")))
 //
 //	assert.True(T, scoped.Called())
-func (m *Mocha) AddMocks(builders ...Builder) *Scoped {
+func (m *Mocha) Mock(builders ...Builder) (*Scoped, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -175,13 +206,40 @@ func (m *Mocha) AddMocks(builders ...Builder) *Scoped {
 	added := make([]*Mock, size)
 
 	for i, b := range builders {
-		nm := b.Build()
+		nm, err := b.Build()
+		if err != nil {
+			return nil, fmt.Errorf("error building mock at index [%d]. %w", i, err)
+		}
+
 		m.storage.Save(nm)
 		added[i] = nm
 	}
 
 	scoped := scope(m.storage, added)
 	m.scopes = append(m.scopes, scoped)
+
+	return scoped, nil
+}
+
+// MustMock adds one or multiple request mocks.
+// It returns a Scoped instance that allows control of the added mocks and also checking if they were called or not.
+// It fails immediately if any error occurs.
+//
+// Usage:
+//
+//	scoped := m.MustMock(
+//		Get(matcher.URLPath("/test")).
+//			Header("test", matcher.Equal("hello")).
+//			Query("filter", matcher.Equal("all")).
+//			Reply(reply.Created().PlainText("hello world")))
+//
+//	assert.True(T, scoped.Called())
+func (m *Mocha) MustMock(builders ...Builder) *Scoped {
+	scoped, err := m.Mock(builders...)
+	if err != nil {
+		m.T.Logf(err.Error())
+		panic(err)
+	}
 
 	return scoped
 }
@@ -213,12 +271,26 @@ func (m *Mocha) Loader(loader Loader) {
 	m.loaders = append(m.loaders, loader)
 }
 
-func (m *Mocha) Rebuild() {
+// Rebuild rebuilds mock definitions.
+func (m *Mocha) Rebuild() error {
 	for _, loader := range m.loaders {
 		err := loader.Load(m)
 		if err != nil {
-			panic(err)
+			return err
 		}
+	}
+
+	return nil
+}
+
+// MustRebuild rebuilds mock definitions.
+// It fails immediately if any error occurs.
+func (m *Mocha) MustRebuild() {
+	err := m.Rebuild()
+
+	if err != nil {
+		m.T.Logf("error rebuild mock definitions. reason=%v", err.Error())
+		panic(err)
 	}
 }
 
@@ -232,8 +304,8 @@ func (m *Mocha) Close() {
 	}
 }
 
-// CloseOnCleanup adds mocha server Close to the Cleanup.
-func (m *Mocha) CloseOnCleanup(t Cleanable) *Mocha {
+// CloseOnT closes Server on t cleanup.
+func (m *Mocha) CloseOnT(t Cleanable) *Mocha {
 	t.Cleanup(func() { m.Close() })
 	return m
 }
@@ -263,6 +335,20 @@ func (m *Mocha) Disable() {
 	}
 }
 
+// Clean removes all scoped mocks.
+func (m *Mocha) Clean() {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	for _, s := range m.scopes {
+		s.Clean()
+	}
+}
+
+// --
+// Assertions
+// --
+
 // AssertCalled asserts that all mocks associated with this instance were called at least once.
 func (m *Mocha) AssertCalled(t TestingT) bool {
 	t.Helper()
@@ -271,7 +357,7 @@ func (m *Mocha) AssertCalled(t TestingT) bool {
 
 	for i, s := range m.scopes {
 		if s.IsPending() {
-			t.Logf("\nscope #%d\n", i)
+			t.Logf("\nscope [%d]\n", i)
 			s.AssertCalled(t)
 			result = false
 		}
@@ -288,7 +374,7 @@ func (m *Mocha) AssertNotCalled(t TestingT) bool {
 
 	for i, s := range m.scopes {
 		if !s.IsPending() {
-			t.Logf("\nscope #%d\n", i)
+			t.Logf("\nscope [%d]\n", i)
 			s.AssertNotCalled(t)
 			result = false
 		}
@@ -310,4 +396,19 @@ func (m *Mocha) AssertHits(t TestingT, expected int) bool {
 	}
 
 	return true
+}
+
+// --
+// Internals
+// --
+
+func (m *Mocha) onStart() error {
+	err := m.Rebuild()
+	if err != nil {
+		return err
+	}
+
+	m.events.StartListening(m.ctx)
+
+	return nil
 }

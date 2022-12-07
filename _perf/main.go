@@ -108,10 +108,10 @@ func main() {
 		mocha.Configure().
 			HandlerDecorator(h).
 			Server(&Srv{}).
-			Addr(":8080").Build())
-	m.Start()
+			Addr(":8080"))
+	m.MustStart()
 
-	m.AddMocks(mocha.
+	m.MustMock(mocha.
 		Get(URLPath("/test")).
 		Header(header.Accept, Contain(mimetype.TextPlain)).
 		Header("X-Scenario", Equal("1")).
@@ -119,7 +119,7 @@ func main() {
 			PlainText("ok").
 			Header("X-Scenario-Result", "true")))
 
-	m.AddMocks(mocha.
+	m.MustMock(mocha.
 		Post(URLPath("/test")).
 		Header(header.ContentType, Contain(mimetype.JSON)).
 		Body(AllOf(

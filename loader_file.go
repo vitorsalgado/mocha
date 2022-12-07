@@ -16,6 +16,7 @@ import (
 var _ Loader = (*FileLoader)(nil)
 
 type FileLoader struct {
+	mu sync.Mutex
 }
 
 type errContainer struct {
@@ -23,7 +24,10 @@ type errContainer struct {
 }
 
 func (l *FileLoader) Load(app *Mocha) error {
-	set := make(map[string]struct{})
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	filenames := make(map[string]struct{})
 
 	for _, pattern := range app.Config.FileMockPatterns {
 		m, err := filepath.Glob(pattern)
@@ -32,28 +36,21 @@ func (l *FileLoader) Load(app *Mocha) error {
 		}
 
 		for _, s := range m {
-			if _, ok := set[s]; !ok {
-				set[s] = struct{}{}
+			if _, ok := filenames[s]; !ok {
+				filenames[s] = struct{}{}
 			}
 		}
 	}
 
-	matches := make([]string, len(set))
-	i := 0
-	for k := range set {
-		matches[i] = k
-		i++
-	}
-
 	cont := &errContainer{}
-	ch := make(chan string, len(matches))
+	ch := make(chan string, len(filenames))
 	wg := sync.WaitGroup{}
 	once := sync.Once{}
 	w := 5
 	ctx, cancel := context.WithCancel(app.Context())
 
-	if len(matches) < 5 {
-		w = len(matches)
+	if len(filenames) < w {
+		w = len(filenames)
 	}
 
 	for i := 0; i < w; i++ {
@@ -83,7 +80,7 @@ func (l *FileLoader) Load(app *Mocha) error {
 							return fmt.Errorf("error building mock [%s]. %w", filename, err)
 						}
 
-						app.AddMocks(m)
+						app.MustMock(m)
 
 						return nil
 					}
@@ -106,7 +103,7 @@ func (l *FileLoader) Load(app *Mocha) error {
 		}(cont)
 	}
 
-	for _, filename := range matches {
+	for filename := range filenames {
 		wg.Add(1)
 		ch <- filename
 	}

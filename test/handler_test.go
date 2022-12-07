@@ -29,11 +29,11 @@ func TestHandlerReply(t *testing.T) {
 	m := mocha.New(t)
 	m.Parameters().Set(key, msg)
 
-	m.Start()
+	m.MustStart()
 
 	defer m.Close()
 
-	m.AddMocks(mocha.Get(matcher.URLPath("/test")).
+	m.MustMock(mocha.Get(matcher.URLPath("/test")).
 		Reply(reply.Handler(fn)),
 	)
 

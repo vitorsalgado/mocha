@@ -33,6 +33,8 @@ type ProxyReply struct {
 	delay                time.Duration
 	trimPrefix           string
 	trimSuffix           string
+
+	path string
 }
 
 // Forward inits a ProxyReply with the given target URL.
@@ -89,6 +91,8 @@ func (r *ProxyReply) StripSuffix(suffix string) *ProxyReply {
 	r.trimSuffix = suffix
 	return r
 }
+
+func (r *ProxyReply) Prepare() error { return nil }
 
 // Build builds a Reply based on the ProxyReply configuration.
 func (r *ProxyReply) Build(w http.ResponseWriter, req *http.Request) (*Response, error) {

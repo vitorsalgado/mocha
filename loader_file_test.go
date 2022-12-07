@@ -7,7 +7,8 @@ import (
 )
 
 func TestFileLoader_Load(t *testing.T) {
-	app := New(t, Configure().MockFilePatterns("testdata/0/*mock.json", "testdata/0/*.json").Build())
+	app := New(t,
+		Configure().MockFilePatterns("testdata/0/*mock.json", "testdata/0/*.json"))
 	loader := &FileLoader{}
 
 	err := loader.Load(app)

@@ -20,7 +20,7 @@ func TestMiddlewaresComposition(t *testing.T) {
 		w.Write([]byte(msg))
 	}
 
-	ts := httptest.NewServer(Compose(one, two, Recover).Root(http.HandlerFunc(fn)))
+	ts := httptest.NewServer(Compose(one, two).Root(http.HandlerFunc(fn)))
 	defer ts.Close()
 
 	res, err := http.Get(ts.URL)

@@ -30,6 +30,16 @@ func (mr *SequentialReply) Add(reply ...Reply) *SequentialReply {
 	return mr
 }
 
+func (mr *SequentialReply) Prepare() error {
+	size := len(mr.replies)
+
+	if size == 0 {
+		return fmt.Errorf("you need to set at least one response when using multiple response builder")
+	}
+
+	return nil
+}
+
 // Build builds a new response based on current mock.Mock call sequence.
 // When the sequence is over, it will return an error or a previously configured reply for this scenario.
 func (mr *SequentialReply) Build(w http.ResponseWriter, r *http.Request) (*Response, error) {

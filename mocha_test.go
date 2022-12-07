@@ -27,11 +27,11 @@ func TestMain(m *testing.M) {
 
 func TestMocha(t *testing.T) {
 	m := New(t)
-	m.Start()
+	m.MustStart()
 
 	defer m.Close()
 
-	scoped := m.AddMocks(
+	scoped := m.MustMock(
 		Get(URLPath("/test")).
 			Header("test", Equal("hello")).
 			Query("filter", Equal("all")).
@@ -54,12 +54,12 @@ func TestMocha(t *testing.T) {
 }
 
 func TestMocha_NewBasic(t *testing.T) {
-	m := NewBasic()
-	m.Start()
+	m := Default()
+	m.MustStart()
 
 	defer m.Close()
 
-	scoped := m.AddMocks(
+	scoped := m.MustMock(
 		Get(URLPath("/test")).
 			Reply(reply.
 				Created().
@@ -79,11 +79,11 @@ func TestMocha_NewBasic(t *testing.T) {
 
 func TestResponseMapper(t *testing.T) {
 	m := New(t)
-	m.Start()
+	m.MustStart()
 
 	defer m.Close()
 
-	scoped := m.AddMocks(Get(URLPath("/test")).
+	scoped := m.MustMock(Get(URLPath("/test")).
 		Reply(reply.
 			OK().
 			Map(func(r *reply.Response, rma *reply.MapperArgs) error {
@@ -106,14 +106,14 @@ func TestResponseMapper(t *testing.T) {
 
 func TestResponseDelay(t *testing.T) {
 	m := New(t)
-	m.Start()
+	m.MustStart()
 
 	defer m.Close()
 
 	start := time.Now()
 	delay := time.Duration(1250) * time.Millisecond
 
-	scoped := m.AddMocks(Get(URLPath("/test")).
+	scoped := m.MustMock(Get(URLPath("/test")).
 		Delay(delay).
 		Reply(reply.OK()))
 
@@ -132,12 +132,12 @@ func TestResponseDelay(t *testing.T) {
 
 func TestErrors(t *testing.T) {
 	m := New(t)
-	m.Start()
+	m.MustStart()
 
 	defer m.Close()
 
 	t.Run("should log errors on reply", func(t *testing.T) {
-		scoped := m.AddMocks(Get(URLPath("/test1")).
+		scoped := m.MustMock(Get(URLPath("/test1")).
 			ReplyFunc(func(_ http.ResponseWriter, r *http.Request) (*reply.Response, error) {
 				return nil, fmt.Errorf("failed to build a response")
 			}))
@@ -146,33 +146,35 @@ func TestErrors(t *testing.T) {
 
 		assert.Nil(t, err)
 		assert.False(t, scoped.Called())
-		assert.Equal(t, http.StatusTeapot, res.StatusCode)
+		assert.Equal(t, StatusNoMockFound, res.StatusCode)
 	})
 
 	t.Run("should log errors from matchers", func(t *testing.T) {
-		scoped := m.AddMocks(Get(URLPath("/test2")).
-			Header("test", Func(
-				func(_ any) (bool, error) {
-					return false, fmt.Errorf("failed")
-				})))
+		scoped := m.MustMock(
+			Get(URLPath("/test2")).
+				Header("test", Func(
+					func(_ any) (bool, error) {
+						return false, fmt.Errorf("failed")
+					})).
+				Reply(reply.OK()))
 
 		res, err := testutil.Get(fmt.Sprintf("%s/test2", m.URL())).Do()
 
 		assert.Nil(t, err)
 		assert.False(t, scoped.Called())
-		assert.Equal(t, http.StatusTeapot, res.StatusCode)
+		assert.Equal(t, StatusNoMockFound, res.StatusCode)
 	})
 }
 
 func TestMocha_Assertions(t *testing.T) {
 	m := New(t)
-	m.Start()
+	m.MustStart()
 
 	defer m.Close()
 
 	fakeT := testmocks.NewFakeNotifier()
 
-	scoped := m.AddMocks(
+	scoped := m.MustMock(
 		Get(URLPath("/test-ok")).
 			Reply(reply.OK()))
 
@@ -195,11 +197,11 @@ func TestMocha_Assertions(t *testing.T) {
 
 func TestMocha_Enable_Disable(t *testing.T) {
 	m := New(t)
-	m.Start()
+	m.MustStart()
 
 	defer m.Close()
 
-	m.AddMocks(
+	m.MustMock(
 		Get(URLPath("/test-1")).
 			Reply(reply.OK()),
 		Get(URLPath("/test-2")).
@@ -217,12 +219,12 @@ func TestMocha_Enable_Disable(t *testing.T) {
 	res, err = testutil.Get(m.URL() + "/test-1").Do()
 
 	assert.NoError(t, err)
-	assert.Equal(t, http.StatusTeapot, res.StatusCode)
+	assert.Equal(t, StatusNoMockFound, res.StatusCode)
 
 	res, err = testutil.Get(m.URL() + "/test-2").Do()
 
 	assert.NoError(t, err)
-	assert.Equal(t, http.StatusTeapot, res.StatusCode)
+	assert.Equal(t, StatusNoMockFound, res.StatusCode)
 
 	// re-enable mocks again
 	m.Enable()
@@ -241,11 +243,11 @@ func TestMocha_Enable_Disable(t *testing.T) {
 func TestMocha_ReplyJust(t *testing.T) {
 	t.Run("should return status set on first parameter", func(t *testing.T) {
 		m := New(t)
-		m.Start()
+		m.MustStart()
 
 		defer m.Close()
 
-		scoped := m.AddMocks(
+		scoped := m.MustMock(
 			Post(URLPath("/test")).
 				ReplyJust(http.StatusCreated, reply.New().Header("test", "ok")))
 
@@ -259,11 +261,11 @@ func TestMocha_ReplyJust(t *testing.T) {
 
 	t.Run("should overwrite status", func(t *testing.T) {
 		m := New(t)
-		m.Start()
+		m.MustStart()
 
 		defer m.Close()
 
-		scoped := m.AddMocks(
+		scoped := m.MustMock(
 			Post(URLPath("/test")).
 				ReplyJust(http.StatusCreated, reply.OK().Header("test", "ok")))
 
@@ -299,14 +301,14 @@ func TestMocha_Subscribe(t *testing.T) {
 	f.On("OnRequest", mock.Anything).Return()
 	f.On("OnRequestMatched", mock.Anything).Return()
 
-	m := New(t, Configure().LogLevel(LogSilently).Build()).CloseOnCleanup(t)
+	m := New(t, Configure().LogLevel(LogSilently)).CloseOnT(t)
 	m.Subscribe(EventOnRequest, f.OnRequest)
 	m.Subscribe(EventOnRequestMatched, f.OnRequestMatched)
-	m.Start()
+	m.MustStart()
 
 	defer m.Close()
 
-	scoped := m.AddMocks(
+	scoped := m.MustMock(
 		Get(URLPath("/test")).
 			Reply(reply.OK()))
 
@@ -322,12 +324,12 @@ func TestMocha_Subscribe(t *testing.T) {
 }
 
 func TestMocha_Silently(t *testing.T) {
-	m := New(t, Configure().LogLevel(LogSilently).Build())
-	m.Start()
+	m := New(t, Configure().LogLevel(LogSilently))
+	m.MustStart()
 
 	defer m.Close()
 
-	scoped := m.AddMocks(
+	scoped := m.MustMock(
 		Get(URLPath("/test")).
 			Reply(reply.
 				Created().
@@ -350,11 +352,11 @@ func TestMocha_Silently(t *testing.T) {
 
 func TestMocha_MatcherCompositions(t *testing.T) {
 	m := New(t)
-	m.Start()
+	m.MustStart()
 
 	defer m.Close()
 
-	scoped := m.AddMocks(
+	scoped := m.MustMock(
 		Get(URLPath("/test")).
 			Header("test", Should(Be(Equal("hello")))).
 			Query("filter", Is(Equal("all"))).
@@ -374,4 +376,20 @@ func TestMocha_MatcherCompositions(t *testing.T) {
 	assert.True(t, scoped.Called())
 	assert.Equal(t, 201, res.StatusCode)
 	assert.Equal(t, string(body), "hello world")
+}
+
+func TestMocha_NoReply(t *testing.T) {
+	m := New(t)
+
+	scoped, err := m.Mock(Get(URLPath("/test")))
+	assert.Nil(t, scoped)
+	assert.Error(t, err)
+}
+
+func TestMocha_NoMatchers(t *testing.T) {
+	m := New(t)
+
+	scoped, err := m.Mock(Request())
+	assert.Nil(t, scoped)
+	assert.Error(t, err)
 }

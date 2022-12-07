@@ -13,12 +13,12 @@ import (
 )
 
 func TestCORS(t *testing.T) {
-	m := mocha.New(t, mocha.Configure().CORS().Build())
-	m.Start()
+	m := mocha.New(t, mocha.Configure().CORS())
+	m.MustStart()
 
 	defer m.Close()
 
-	m.AddMocks(mocha.Get(matcher.URLPath("/test")).
+	m.MustMock(mocha.Get(matcher.URLPath("/test")).
 		Reply(reply.OK()))
 
 	corsReq := testutil.NewRequest(http.MethodOptions, m.URL()+"/test", nil)

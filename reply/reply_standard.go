@@ -125,22 +125,9 @@ func (rpl *StdReply) ExpireCookie(cookie http.Cookie) *StdReply {
 	return rpl
 }
 
-// JSON sets the response to application/json.
-func (rpl *StdReply) JSON() *StdReply {
-	rpl.Header(header.ContentType, mimetype.JSON)
-	return rpl
-}
-
 // Body defines the response body using a []byte,
 func (rpl *StdReply) Body(value []byte) *StdReply {
 	rpl.response.Body = value
-	return rpl
-}
-
-// PlainText defines a text/plain response with the given text body.
-func (rpl *StdReply) PlainText(value string) *StdReply {
-	rpl.response.Body = []byte(value)
-	rpl.Header(header.ContentType, mimetype.TextPlain)
 	return rpl
 }
 
@@ -190,6 +177,19 @@ func (rpl *StdReply) BodyTemplate(template any) *StdReply {
 	return rpl
 }
 
+// JSON sets the response to application/json.
+func (rpl *StdReply) JSON() *StdReply {
+	rpl.Header(header.ContentType, mimetype.JSON)
+	return rpl
+}
+
+// PlainText defines a text/plain response with the given text body.
+func (rpl *StdReply) PlainText(value string) *StdReply {
+	rpl.response.Body = []byte(value)
+	rpl.Header(header.ContentType, mimetype.TextPlain)
+	return rpl
+}
+
 // TemplateModel sets the template data to be used.
 func (rpl *StdReply) TemplateModel(model any) *StdReply {
 	rpl.model = model
@@ -200,6 +200,14 @@ func (rpl *StdReply) TemplateModel(model any) *StdReply {
 func (rpl *StdReply) Map(mapper Mapper) *StdReply {
 	rpl.response.Mappers = append(rpl.response.Mappers, mapper)
 	return rpl
+}
+
+func (rpl *StdReply) Prepare() error {
+	if rpl.err != nil {
+		return rpl.err
+	}
+
+	return nil
 }
 
 // Build builds a Response based on StdReply definition.

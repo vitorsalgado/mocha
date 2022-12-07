@@ -26,14 +26,14 @@ func (act *action) Run(a *mocha.PostActionArgs) error {
 func TestPostAction(t *testing.T) {
 	t.Run("should call registered post action", func(t *testing.T) {
 		m := mocha.New(t)
-		m.Start()
+		m.MustStart()
 
 		defer m.Close()
 
 		act := &action{}
 		act.On("Run", mock.Anything).Return(nil)
 
-		scope := m.AddMocks(mocha.Get(matcher.URLPath("/test")).
+		scope := m.MustMock(mocha.Get(matcher.URLPath("/test")).
 			PostAction(act).
 			Reply(reply.OK()))
 
@@ -48,14 +48,14 @@ func TestPostAction(t *testing.T) {
 
 	t.Run("should not be affected by errors on registered post actions", func(t *testing.T) {
 		m := mocha.New(t)
-		m.Start()
+		m.MustStart()
 
 		defer m.Close()
 
 		act := &action{}
 		act.On("Run", mock.Anything).Return(fmt.Errorf("failed to run post action"))
 
-		scope := m.AddMocks(mocha.Get(matcher.URLPath("/test")).
+		scope := m.MustMock(mocha.Get(matcher.URLPath("/test")).
 			PostAction(act).
 			Reply(reply.OK()))
 

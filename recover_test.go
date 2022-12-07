@@ -1,6 +1,7 @@
-package mid
+package mocha
 
 import (
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -11,12 +12,19 @@ import (
 )
 
 func TestRecover(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	msg := "error test"
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		panic(msg)
 	}
 
-	ts := httptest.NewServer(Recover(http.HandlerFunc(fn)))
+	evt := newEvents()
+	evt.StartListening(ctx)
+
+	rm := &recoverMid{d: func(err error) {}, t: t, evt: evt}
+	ts := httptest.NewServer(rm.Recover(http.HandlerFunc(fn)))
 	defer ts.Close()
 
 	res, err := http.Get(ts.URL)

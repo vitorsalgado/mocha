@@ -13,13 +13,13 @@ import (
 )
 
 func TestHandler_GetById(t *testing.T) {
-	m := mocha.New(t).CloseOnCleanup(t)
-	m.Start()
+	m := mocha.New(t).CloseOnT(t)
+	m.MustStart()
 
 	id := "super-id"
 	customer := Customer{ID: id, Name: "nice-name"}
 
-	m.AddMocks(mocha.
+	m.MustMock(mocha.
 		Get(URLPath(fmt.Sprintf("/customers/%s", id))).
 		Header(headerAccept, Equal(contentTypeJSON)).
 		Header(headerContentType, Equal(contentTypeJSON)).

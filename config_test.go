@@ -57,15 +57,12 @@ func TestConfig(t *testing.T) {
 			addr = "127.0.0.1:3000"
 		}
 
-		m := New(t, Configure().
-			Addr(addr).
-			Build()).
-			CloseOnCleanup(t)
-		m.Start()
+		m := New(t, Configure().Addr(addr)).CloseOnT(t)
+		m.MustStart()
 
 		defer m.Close()
 
-		scoped := m.AddMocks(
+		scoped := m.MustMock(
 			Get(matcher.URLPath("/test")).
 				Reply(reply.OK()))
 
@@ -79,14 +76,12 @@ func TestConfig(t *testing.T) {
 	})
 
 	t.Run("request body parsers from config should take precedence", func(t *testing.T) {
-		m := New(t, Configure().
-			RequestBodyParsers(&testBodyParser{}).
-			Build())
-		m.Start()
+		m := New(t, Configure().RequestBodyParsers(&testBodyParser{}))
+		m.MustStart()
 
 		defer m.Close()
 
-		scoped := m.AddMocks(Post(matcher.URLPath("/test")).
+		scoped := m.MustMock(Post(matcher.URLPath("/test")).
 			Body(matcher.Equal(10)).
 			Reply(reply.OK()))
 
@@ -113,14 +108,12 @@ func TestConfig(t *testing.T) {
 				})
 		}
 
-		m := New(t, Configure().
-			Middlewares(middleware).
-			Build())
-		m.Start()
+		m := New(t, Configure().Middlewares(middleware))
+		m.MustStart()
 
 		defer m.Close()
 
-		scoped := m.AddMocks(
+		scoped := m.MustMock(
 			Get(matcher.URLPath("/test")).
 				Reply(reply.OK()))
 
@@ -134,14 +127,12 @@ func TestConfig(t *testing.T) {
 	})
 
 	t.Run("configure custom server", func(t *testing.T) {
-		m := New(t, Configure().
-			Server(&customTestServer{decorated: newServer()}).
-			Build())
-		m.Start()
+		m := New(t, Configure().Server(&customTestServer{decorated: newServer()}))
+		m.MustStart()
 
 		defer m.Close()
 
-		scoped := m.AddMocks(
+		scoped := m.MustMock(
 			Get(matcher.URLPath("/test")).
 				Reply(reply.OK()))
 

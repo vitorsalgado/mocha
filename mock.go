@@ -47,7 +47,7 @@ type Mock struct {
 }
 
 type Builder interface {
-	Build() *Mock
+	Build() (*Mock, error)
 }
 
 // PostActionArgs represents the arguments that will be passed to every PostAction implementation
@@ -63,6 +63,17 @@ type PostAction interface {
 	// Run runs the PostAction implementation.
 	Run(args *PostActionArgs) error
 }
+
+// target constants to help debug unmatched requests.
+const (
+	_targetRequest = "request(no specific field)"
+	_targetMethod  = "method"
+	_targetURL     = "url"
+	_targetHeader  = "header"
+	_targetQuery   = "query"
+	_targetBody    = "body"
+	_targetForm    = "form"
+)
 
 type (
 	// valueSelector defines a function that will be used to extract RequestInfo value and provide it to matcher instances.
@@ -108,7 +119,7 @@ type (
 // weight helps to detect the closest mock match.
 type weight int
 
-// Enums of weight.
+// Enum of weight.
 const (
 	_weightNone weight = iota
 	_weightLow  weight = iota * 2

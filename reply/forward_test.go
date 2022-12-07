@@ -130,7 +130,7 @@ func TestForward(t *testing.T) {
 		assert.Equal(t, http.StatusOK, w.Code)
 	})
 
-	t.Run("should panic if provide raw target cannot be parsed to a URL", func(t *testing.T) {
+	t.Run("should panic if the given raw target cannot be parsed to a URL", func(t *testing.T) {
 		assert.Panics(t, func() {
 			Forward(" https://fail test  ")
 		})

@@ -20,13 +20,13 @@ var (
 
 // OnRequest event is triggered every time a request arrives at the mock handler.
 type OnRequest struct {
-	Request   mod.EvtReq
+	Request   *mod.EvtReq
 	StartedAt time.Time
 }
 
 // OnRequestMatch event is triggered when a mock is found for a request.
 type OnRequestMatch struct {
-	Request            mod.EvtReq
+	Request            *mod.EvtReq
 	ResponseDefinition mod.EvtRes
 	Mock               mod.EvtMk
 	Elapsed            time.Duration
@@ -35,13 +35,13 @@ type OnRequestMatch struct {
 
 // OnRequestNotMatched event is triggered when no mocks are found for a request.
 type OnRequestNotMatched struct {
-	Request mod.EvtReq
+	Request *mod.EvtReq
 	Result  mod.EvtResult
 }
 
 // OnError event is triggered when an error occurs during request matching.
 type OnError struct {
-	Request mod.EvtReq
+	Request *mod.EvtReq
 	Err     error
 }
 
@@ -60,8 +60,8 @@ func newEvents() *eventListener {
 	return h
 }
 
-// Start starts background event listener.
-func (h *eventListener) Start(ctx context.Context) {
+// StartListening starts background event listener.
+func (h *eventListener) StartListening(ctx context.Context) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 

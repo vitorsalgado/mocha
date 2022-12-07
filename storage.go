@@ -19,6 +19,9 @@ type mockStore interface {
 	// Delete removes a Mock by its ID.
 	Delete(id int)
 
+	// DeleteBySource removes mocks by its source.
+	DeleteBySource(source string)
+
 	// Flush removes all stored mocks.
 	Flush()
 }
@@ -64,6 +67,18 @@ func (repo *builtInStore) Delete(id int) {
 	index := -1
 	for i, m := range repo.data {
 		if m.ID == id {
+			index = i
+			break
+		}
+	}
+
+	repo.data = repo.data[:index+copy(repo.data[index:], repo.data[index+1:])]
+}
+
+func (repo *builtInStore) DeleteBySource(source string) {
+	index := -1
+	for i, m := range repo.data {
+		if m.Source == source {
 			index = i
 			break
 		}
