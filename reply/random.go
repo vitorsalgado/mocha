@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
-	"time"
+	"sync"
 )
 
 var _ Reply = (*RandomReply)(nil)
@@ -13,14 +13,22 @@ var _ Reply = (*RandomReply)(nil)
 type RandomReply struct {
 	replies []Reply
 	r       *rand.Rand
+	mu      sync.Mutex
 }
 
 // Rand inits a new RandomReply.
 func Rand(reply ...Reply) *RandomReply {
 	return &RandomReply{
 		replies: reply,
-		r:       rand.New(rand.NewSource(time.Now().UnixNano())),
 	}
+}
+
+// RandWithCustom creates a new RandomReply with a custom *rand.Rand.
+func RandWithCustom(random *rand.Rand, reply ...Reply) *RandomReply {
+	r := Rand(reply...)
+	r.r = random
+
+	return r
 }
 
 // Add adds a new Reply to the random list.
@@ -37,7 +45,16 @@ func (mr *RandomReply) Build(w http.ResponseWriter, r *http.Request) (*Response,
 			fmt.Errorf("you need to set at least one response when using random reply")
 	}
 
-	index := mr.r.Intn(len(mr.replies)-1) + 0
+	mr.mu.Lock()
+	defer mr.mu.Unlock()
+
+	var index int
+	if mr.r == nil {
+		index = rand.Intn(len(mr.replies)-1) + 0
+	} else {
+		index = mr.r.Intn(len(mr.replies)-1) + 0
+	}
+
 	reply := mr.replies[index]
 
 	return reply.Build(w, r)
