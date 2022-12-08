@@ -3,11 +3,10 @@ package matcher
 import (
 	"fmt"
 	"net/url"
-	"strings"
 )
 
 type urlPathMatcher struct {
-	expected string
+	matcher Matcher
 }
 
 func (m *urlPathMatcher) Name() string {
@@ -15,32 +14,46 @@ func (m *urlPathMatcher) Name() string {
 }
 
 func (m *urlPathMatcher) Match(v any) (*Result, error) {
-	message := func() string {
-		return fmt.Sprintf(
-			"%s %s %s",
-			hint(m.Name(), printExpected(m.expected)),
-			_separator,
-			printReceived(m),
-		)
+	message := func(failure string) func() string {
+		return func() string {
+			return fmt.Sprintf(
+				"%s %s %s",
+				hint(m.Name()),
+				_separator,
+				failure,
+			)
+		}
 	}
+
+	var value any
 
 	switch e := v.(type) {
 	case *url.URL:
-		return &Result{
-			OK:              strings.EqualFold(m.expected, e.Path),
-			DescribeFailure: message,
-		}, nil
+		value = e.Path
 	case string:
 		u, err := url.Parse(e)
 		if err != nil {
 			return &Result{}, err
 		}
 
-		return &Result{OK: strings.EqualFold(m.expected, u.Path), DescribeFailure: message}, nil
+		value = u.Path
+	case fmt.Stringer:
+		u, err := url.Parse(e.String())
+		if err != nil {
+			return &Result{}, err
+		}
 
+		value = u.Path
 	default:
 		panic("URLPath matcher only accepts the types: *url.URL | url.URL | string")
 	}
+
+	res, err := m.matcher.Match(value)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Result{OK: res.OK, DescribeFailure: message(res.DescribeFailure())}, nil
 }
 
 func (m *urlPathMatcher) OnMockServed() error {
@@ -49,5 +62,10 @@ func (m *urlPathMatcher) OnMockServed() error {
 
 // URLPath returns true if request URL path is equal to the expected path, ignoring case.
 func URLPath(expected string) Matcher {
-	return &urlPathMatcher{expected: expected}
+	return URLPathMatch(EqualIgnoreCase(expected))
+}
+
+// URLPathMatch applies the provided matcher to the URL path.
+func URLPathMatch(matcher Matcher) Matcher {
+	return &urlPathMatcher{matcher: matcher}
 }

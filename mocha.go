@@ -9,6 +9,7 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3/internal/mid"
 	"github.com/vitorsalgado/mocha/v3/internal/notifier"
+	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -32,9 +33,7 @@ type Mocha struct {
 	events  *eventListener
 	scopes  []*Scoped
 	loaders []Loader
-	d       Debug
 	mu      sync.Mutex
-	id      int32
 }
 
 // TestingT is based on testing.T and allow mocha components to log information and errors.
@@ -66,6 +65,7 @@ func New(t TestingT, config ...Configurer) *Mocha {
 	events := newEvents()
 
 	recovery := &recoverMid{d: conf.Debug, t: t, evt: events}
+
 	parsers := make([]RequestBodyParser, 0, len(conf.RequestBodyParsers)+4)
 	parsers = append(parsers, conf.RequestBodyParsers...)
 	parsers = append(parsers, &jsonBodyParser{}, &plainTextParser{}, &formURLEncodedParser{}, &bytesParser{})
@@ -348,6 +348,14 @@ func (m *Mocha) Clean() {
 	for _, s := range m.scopes {
 		s.Clean()
 	}
+}
+
+// --
+// Mock Builders (Syntax Sugar)
+// --
+
+func (m *Mocha) GET(matcher matcher.Matcher) *MockBuilder {
+	return Request().URL(matcher).Method(http.MethodGet)
 }
 
 // --

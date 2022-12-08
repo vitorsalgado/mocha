@@ -21,7 +21,7 @@ type Loader interface {
 	Load(app *Mocha) error
 }
 
-var _RegExpAbsolutePath = regexp.MustCompile("^[a-zA-Z][a-zA-Z\\d+\\-.]*?:")
+var _RegExpAbsolutePath = regexp.MustCompile(`[a-zA-Z][a-zA-Z\\d+\-.]*?:`)
 
 func buildExternalMock(source string, ext *mod.ExtMock) (b Builder, err error) {
 	defer func() {
@@ -242,7 +242,6 @@ func buildResponse(ext *mod.ExtMock, response *mod.ExtMockResponse) (reply.Reply
 			} else {
 				res.Body([]byte(e))
 			}
-			break
 		case nil:
 			break
 		default:

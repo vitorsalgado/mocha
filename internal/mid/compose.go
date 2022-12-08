@@ -7,7 +7,7 @@ type Middlewares struct {
 }
 
 func Compose(handlers ...func(handler http.Handler) http.Handler) Middlewares {
-	return Middlewares{handlers: append(([]func(handler http.Handler) http.Handler)(nil), handlers...)}
+	return Middlewares{handlers: handlers}
 }
 
 func (m Middlewares) Root(root http.Handler) http.Handler {

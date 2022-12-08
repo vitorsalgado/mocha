@@ -7,35 +7,36 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestUrlPath(t *testing.T) {
+func TestURLPath(t *testing.T) {
 	u, _ := url.Parse("http://localhost:8080/test/hello")
 
-	t.Run("should accept a pointer", func(t *testing.T) {
-		result, err := URLPath("/test/hello").Match(u)
+	testCases := []struct {
+		name     string
+		path     string
+		expected bool
+	}{
+		{"should accept a pointer", "/test/hello", true},
+		{"should accept a string", "/test/hello", true},
+		{"should return false when it doesnt match", "/test/bye", false},
+	}
 
-		assert.Nil(t, err)
-		assert.True(t, result.OK)
-	})
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := URLPath(tt.path).Match(u)
 
-	t.Run("should accept a string", func(t *testing.T) {
-		su := "http://localhost:8080/test/hello"
+			assert.Nil(t, err)
+			assert.Equal(t, tt.expected, result.OK)
 
-		result, err := URLPath("/test/hello").Match(su)
+			result, err = URLPathMatch(Contain(tt.path)).Match(u)
 
-		assert.Nil(t, err)
-		assert.True(t, result.OK)
-	})
+			assert.Nil(t, err)
+			assert.Equal(t, tt.expected, result.OK)
+		})
+	}
 
 	t.Run("should panic when providing a type that is not handled by URLPath", func(t *testing.T) {
 		assert.Panics(t, func() {
 			_, _ = URLPath("/test/hello").Match(10)
 		})
-	})
-
-	t.Run("should return false when it doesnt match", func(t *testing.T) {
-		result, err := URLPath("/test/bye").Match(u)
-
-		assert.Nil(t, err)
-		assert.False(t, result.OK)
 	})
 }

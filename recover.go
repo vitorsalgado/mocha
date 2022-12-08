@@ -22,7 +22,7 @@ func (h *recoverMid) Recover(next http.Handler) http.Handler {
 				buf := make([]byte, 1024)
 				buf = buf[:runtime.Stack(buf, false)]
 
-				err := fmt.Errorf("panic=%v\n%s\n", recovery, buf)
+				err := fmt.Errorf("panic=%v\n%s", recovery, buf)
 
 				w.Header().Set(header.ContentType, mimetype.TextPlain)
 				w.WriteHeader(http.StatusTeapot)

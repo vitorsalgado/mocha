@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 )
 
 var _ Reply = (*ProxyReply)(nil)
@@ -30,11 +29,8 @@ type ProxyReply struct {
 	headers              http.Header
 	proxyHeaders         http.Header
 	proxyHeadersToRemove []string
-	delay                time.Duration
 	trimPrefix           string
 	trimSuffix           string
-
-	path string
 }
 
 // Forward inits a ProxyReply with the given target URL.
