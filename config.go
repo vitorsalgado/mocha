@@ -29,6 +29,9 @@ type Configurer interface {
 	Apply(conf *Config)
 }
 
+// Debug is a function to help debug server unexpected errors.
+type Debug func(err error)
+
 // Config holds Mocha mock server configurations.
 type Config struct {
 	// Addr defines a custom server address.

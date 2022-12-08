@@ -1,4 +1,4 @@
-package mocha
+package test
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/vitorsalgado/mocha/v3"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
@@ -44,22 +45,22 @@ func TestMocha_Debug_SimpleError(t *testing.T) {
 		return expected
 	}}
 
-	m := New(t,
-		Configure().
+	m := mocha.New(t,
+		mocha.Configure().
 			RequestBodyParsers(rbp).
 			Debug(d.OnError))
 	m.MustStart()
 
 	defer m.Close()
 
-	m.MustMock(Post(URLPath("/test")).
+	m.MustMock(mocha.Post(URLPath("/test")).
 		ReplyJust(http.StatusOK, nil))
 
 	req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", strings.NewReader("hello"))
 	res, err := http.DefaultClient.Do(req)
 
 	assert.NoError(t, err)
-	assert.Equal(t, StatusNoMockFound, res.StatusCode)
+	assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
 	d.AssertExpectations(t)
 }
 
@@ -80,22 +81,22 @@ func TestMocha_Debug_Panic(t *testing.T) {
 		cancel()
 	}
 
-	m := New(t,
-		Configure().
+	m := mocha.New(t,
+		mocha.Configure().
 			RequestBodyParsers(rbp).
 			Debug(fn))
 	m.MustStart()
 
 	defer m.Close()
 
-	m.MustMock(Post(URLPath("/test")).
+	m.MustMock(mocha.Post(URLPath("/test")).
 		ReplyJust(http.StatusOK, nil))
 
 	req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", strings.NewReader("hello"))
 	res, err := http.DefaultClient.Do(req)
 
 	assert.NoError(t, err)
-	assert.Equal(t, StatusNoMockFound, res.StatusCode)
+	assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
 
 	<-ctx.Done()
 
