@@ -10,7 +10,7 @@ type equalIgnoreCaseMatcher struct {
 }
 
 func (m *equalIgnoreCaseMatcher) Name() string {
-	return "EqualFold"
+	return "EqualIgnoreCase"
 }
 
 func (m *equalIgnoreCaseMatcher) Match(v any) (*Result, error) {

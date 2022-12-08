@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/matcher/asm"
 	"github.com/vitorsalgado/mocha/v3/mod"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
@@ -82,7 +81,7 @@ func buildExternalMock(source string, ext *mod.ExtMock) (b Builder, err error) {
 				}
 			}
 		} else {
-			m, err := asm.BuildMatcher(ext.Request.URL)
+			m, err := matcher.BuildMatcher(ext.Request.URL)
 			if err != nil {
 				return nil, fmt.Errorf("[request.url] matchers error. %w", err)
 			}
@@ -96,7 +95,7 @@ func buildExternalMock(source string, ext *mod.ExtMock) (b Builder, err error) {
 		if ok {
 			builder.URL(matcher.URLPath(urlConv))
 		} else {
-			m, err := asm.BuildMatcher(ext.Request.URL)
+			m, err := matcher.BuildMatcher(ext.Request.URL)
 			if err != nil {
 				return nil, err
 			}
@@ -108,7 +107,7 @@ func buildExternalMock(source string, ext *mod.ExtMock) (b Builder, err error) {
 	}
 
 	for k, v := range ext.Request.Query {
-		m, err := asm.BuildMatcher(v)
+		m, err := matcher.BuildMatcher(v)
 		if err != nil {
 			return nil,
 				fmt.Errorf("[request.query[%s]] matchers error. %w", k, err)
@@ -118,7 +117,7 @@ func buildExternalMock(source string, ext *mod.ExtMock) (b Builder, err error) {
 	}
 
 	for k, v := range ext.Request.Header {
-		m, err := asm.BuildMatcher(v)
+		m, err := matcher.BuildMatcher(v)
 		if err != nil {
 			return nil,
 				fmt.Errorf("[request.header[%s]] matchers error. %w", k, err)
@@ -128,7 +127,7 @@ func buildExternalMock(source string, ext *mod.ExtMock) (b Builder, err error) {
 	}
 
 	if ext.Request.Body != nil {
-		m, err := asm.BuildMatcher(ext.Request.Body)
+		m, err := matcher.BuildMatcher(ext.Request.Body)
 		if err != nil {
 			return nil,
 				fmt.Errorf("[request.body] matchers error. %w", err)

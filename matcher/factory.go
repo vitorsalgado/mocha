@@ -1,11 +1,9 @@
-package asm
+package matcher
 
 import (
 	"fmt"
 	"reflect"
 	"strings"
-
-	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
 const (
@@ -43,7 +41,7 @@ const (
 	_mXOR              = "xor"
 )
 
-func BuildMatcher(v any) (m matcher.Matcher, err error) {
+func BuildMatcher(v any) (m Matcher, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			m = nil
@@ -55,7 +53,7 @@ func BuildMatcher(v any) (m matcher.Matcher, err error) {
 	t := reflect.TypeOf(v)
 	switch t.Kind() {
 	case reflect.String:
-		return matcher.EqualIgnoreCase(v.(string)), nil
+		return EqualIgnoreCase(v.(string)), nil
 	case reflect.Slice:
 		val := reflect.ValueOf(v)
 		if val.Len() == 0 {
@@ -74,18 +72,18 @@ func BuildMatcher(v any) (m matcher.Matcher, err error) {
 
 		return discoverAndBuild(strings.ToLower(mk), val.Slice(1, val.Len()).Interface())
 	default:
-		return matcher.Equal(v), nil
+		return Equal(v), nil
 	}
 }
 
-func extractMultipleMatchers(v any) ([]matcher.Matcher, error) {
+func extractMultipleMatchers(v any) ([]Matcher, error) {
 	a, ok := v.([]any)
 	if !ok {
 		return nil,
 			fmt.Errorf("attempt to build multiple matchers using non-array type. got=%v", v)
 	}
 
-	matchers := make([]matcher.Matcher, len(a))
+	matchers := make([]Matcher, len(a))
 
 	for i, entry := range a {
 		mat, err := BuildMatcher(entry)
@@ -100,7 +98,7 @@ func extractMultipleMatchers(v any) ([]matcher.Matcher, error) {
 	return matchers, nil
 }
 
-func discoverAndBuild(key string, args any) (m matcher.Matcher, err error) {
+func discoverAndBuild(key string, args any) (m Matcher, err error) {
 	defer func() {
 		if recovery := recover(); recovery != nil {
 			m = nil
@@ -124,7 +122,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, err error) {
 				fmt.Errorf("[%s, %s] error building matcher list. %w", _mAll, _mAllOf, err)
 		}
 
-		return matcher.AllOf(matchers...), nil
+		return AllOf(matchers...), nil
 
 	case _mAny, _mAnyOf:
 		matchers, err := extractMultipleMatchers(args)
@@ -133,10 +131,10 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, err error) {
 				fmt.Errorf("[%s, %s] error building matcher list. %w", _mAny, _mAnyOf, err)
 		}
 
-		return matcher.AnyOf(matchers...), nil
+		return AnyOf(matchers...), nil
 
 	case _mContain, _mContains:
-		return matcher.Contain(args), nil
+		return Contain(args), nil
 
 	case _mBoth:
 		matchers, err := extractMultipleMatchers(args)
@@ -162,7 +160,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, err error) {
 				fmt.Errorf("[%s] error building second matcher. %w", _mBoth, err)
 		}
 
-		return matcher.Both(m1, m2), nil
+		return Both(m1, m2), nil
 
 	case _mEach:
 		m, err := BuildMatcher(args)
@@ -170,7 +168,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, err error) {
 			return nil, fmt.Errorf("[%s] building error. %w", _mEach, err)
 		}
 
-		return matcher.Each(m), nil
+		return Each(m), nil
 
 	case _mEither:
 		matchers, err := extractMultipleMatchers(args)
@@ -194,13 +192,13 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, err error) {
 				fmt.Errorf("[%s] error building second matcher. %w", _mEither, err)
 		}
 
-		return matcher.Either(m1, m2), nil
+		return Either(m1, m2), nil
 
 	case _mEmpty:
-		return matcher.Empty(), nil
+		return Empty(), nil
 
 	case _mEqual, _mEqualTo:
-		return matcher.Equal(args), nil
+		return Equal(args), nil
 
 	case _mEqualIgnoreCase, _mEqualsIgnoreCase, _mEqualFold:
 		str, ok := args.(string)
@@ -213,10 +211,10 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, err error) {
 				)
 		}
 
-		return matcher.EqualIgnoreCase(str), nil
+		return EqualIgnoreCase(str), nil
 
 	case _mEqualJSON:
-		return matcher.EqualJSON(args), nil
+		return EqualJSON(args), nil
 
 	case _mHasKey:
 		str, ok := args.(string)
@@ -229,7 +227,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, err error) {
 				)
 		}
 
-		return matcher.HaveKey(str), nil
+		return HaveKey(str), nil
 
 	case _mHasPrefix, _mStartsWith:
 		str, ok := args.(string)
@@ -243,7 +241,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, err error) {
 				)
 		}
 
-		return matcher.HasPrefix(str), nil
+		return HasPrefix(str), nil
 
 	case _mHasSuffix, _mEndsWith:
 		str, ok := args.(string)
@@ -257,7 +255,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, err error) {
 				)
 		}
 
-		return matcher.HasSuffix(str), nil
+		return HasSuffix(str), nil
 
 	case _mJSONPath:
 		a, ok := args.([]any)
@@ -286,7 +284,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, err error) {
 			return nil, fmt.Errorf("[%s] building error. %w", _mJSONPath, err)
 		}
 
-		return matcher.JSONPath(chain, m), nil
+		return JSONPath(chain, m), nil
 
 	case _mLen:
 		num, ok := args.(float64)
@@ -295,7 +293,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, err error) {
 				fmt.Errorf("[%s] expects an integer argument. got=%d", _mLen, args)
 		}
 
-		return matcher.HaveLen(int(num)), nil
+		return HaveLen(int(num)), nil
 
 	case _mLowerCase:
 		m, err := BuildMatcher(args)
@@ -304,7 +302,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, err error) {
 				fmt.Errorf("[%s] error building. %w", _mLowerCase, err)
 		}
 
-		return matcher.ToLower(m), nil
+		return ToLower(m), nil
 
 	case _mRegex:
 		str, ok := args.(string)
@@ -313,7 +311,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, err error) {
 				fmt.Errorf("[%s] expects a string argument. got=%v", _mRegex, args)
 		}
 
-		return matcher.Matches(str), nil
+		return Matches(str), nil
 
 	case _mNot:
 		m, err := BuildMatcher(args)
@@ -322,10 +320,10 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, err error) {
 				fmt.Errorf("[%s] error building. %w", _mNot, err)
 		}
 
-		return matcher.Not(m), nil
+		return Not(m), nil
 
 	case _mPresent:
-		return matcher.Present(), nil
+		return Present(), nil
 
 	case _mSplit:
 		a, ok := args.([]any)
@@ -350,7 +348,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, err error) {
 				fmt.Errorf("[%s] error building. %w", _mSplit, err)
 		}
 
-		return matcher.Split(separator, m), nil
+		return Split(separator, m), nil
 
 	case _mTrim:
 		m, err := BuildMatcher(args)
@@ -359,7 +357,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, err error) {
 				fmt.Errorf("[%s] error building. %w", _mTrim, err)
 		}
 
-		return matcher.Trim(m), nil
+		return Trim(m), nil
 
 	case _mUpperCase:
 		m, err := BuildMatcher(args)
@@ -367,7 +365,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, err error) {
 			return nil, fmt.Errorf("[%s] building error. %w", _mUpperCase, err)
 		}
 
-		return matcher.ToUpper(m), nil
+		return ToUpper(m), nil
 
 	case _mURLPath:
 		str, ok := args.(string)
@@ -376,7 +374,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, err error) {
 				fmt.Errorf("[%s] matcher expects a string argument. got=%v", _mURLPath, args)
 		}
 
-		return matcher.URLPath(str), nil
+		return URLPath(str), nil
 
 	case _mXOR:
 		matchers, err := extractMultipleMatchers(args)
@@ -400,7 +398,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, err error) {
 				fmt.Errorf("[%s] error building second conditon. %w", _mXOR, err)
 		}
 
-		return matcher.XOR(m1, m2), nil
+		return XOR(m1, m2), nil
 
 	default:
 		return nil, fmt.Errorf("unknown matcher key=%s", key)
