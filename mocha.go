@@ -61,15 +61,15 @@ func New(t TestingT, config ...Configurer) *Mocha {
 	events := newEvents()
 
 	recovery := &recoverMid{d: conf.Debug, t: t, evt: events}
-	parsers := make([]RequestBodyParser, 0, len(conf.BodyParsers)+4)
-	parsers = append(parsers, conf.BodyParsers...)
+	parsers := make([]RequestBodyParser, 0, len(conf.RequestBodyParsers)+4)
+	parsers = append(parsers, conf.RequestBodyParsers...)
 	parsers = append(parsers, &jsonBodyParser{}, &plainTextParser{}, &formURLEncodedParser{}, &bytesParser{})
 
 	middlewares := make([]func(handler http.Handler) http.Handler, 0)
 	middlewares = append(middlewares, recovery.Recover)
 
 	if conf.LogLevel > LogSilently {
-		h := newInternalEvents(t)
+		h := newInternalEvents(t, conf.LogLevel)
 
 		events.Subscribe(EventOnRequest, h.OnRequest)
 		events.Subscribe(EventOnRequestMatched, h.OnRequestMatched)
@@ -92,8 +92,8 @@ func New(t TestingT, config ...Configurer) *Mocha {
 		Compose(middlewares...).
 		Root(newHandler(store, parsers, p, events, t, conf.Debug))
 
-	if conf.Handler != nil {
-		handler = conf.Handler(handler)
+	if conf.HandlerDecorator != nil {
+		handler = conf.HandlerDecorator(handler)
 	}
 
 	server := conf.Server
