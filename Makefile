@@ -39,9 +39,10 @@ vet: ## check go code
 fmt: ## run gofmt in all project files
 	@go fmt ./...
 
-.PHONY: check
-check: vet ## check source code
+.PHONY: lint
+lint: vet ## run linters
 	@staticcheck ./...
+	@golangci-lint run
 
 .PHONY: deps
 deps: ## check dependencies

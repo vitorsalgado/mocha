@@ -32,9 +32,6 @@ jobs:
         with:
           version: latest
 
-      - name: vet
-        run: make vet
-
       - name: test
         run: make cov
 
