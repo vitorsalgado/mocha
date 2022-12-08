@@ -80,7 +80,10 @@ func (l *FileLoader) Load(app *Mocha) error {
 							return fmt.Errorf("error building mock [%s]. %w", filename, err)
 						}
 
-						app.MustMock(m)
+						_, err = app.Mock(m)
+						if err != nil {
+							return err
+						}
 
 						return nil
 					}
