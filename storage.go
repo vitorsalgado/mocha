@@ -22,6 +22,10 @@ type mockStore interface {
 	// DeleteBySource removes mocks by its source.
 	DeleteBySource(source string)
 
+	// DeleteExternal removes mocks set by external components, like Loader.
+	// Mostly used internally.
+	DeleteExternal()
+
 	// Flush removes all stored mocks.
 	Flush()
 }
@@ -79,6 +83,18 @@ func (repo *builtInStore) DeleteBySource(source string) {
 	index := -1
 	for i, m := range repo.data {
 		if m.Source == source {
+			index = i
+			break
+		}
+	}
+
+	repo.data = repo.data[:index+copy(repo.data[index:], repo.data[index+1:])]
+}
+
+func (repo *builtInStore) DeleteExternal() {
+	index := -1
+	for i, m := range repo.data {
+		if m.Source != "" {
 			index = i
 			break
 		}

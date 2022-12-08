@@ -76,10 +76,10 @@ func New(t TestingT, config ...Configurer) *Mocha {
 	if conf.LogLevel > LogSilently {
 		h := newInternalEvents(t, conf.LogLevel)
 
-		events.Subscribe(EventOnRequest, h.OnRequest)
-		events.Subscribe(EventOnRequestMatched, h.OnRequestMatched)
-		events.Subscribe(EventOnRequestNotMatched, h.OnRequestNotMatched)
-		events.Subscribe(EventOnError, h.OnError)
+		_ = events.Subscribe(EventOnRequest, h.OnRequest)
+		_ = events.Subscribe(EventOnRequestMatched, h.OnRequestMatched)
+		_ = events.Subscribe(EventOnRequestNotMatched, h.OnRequestNotMatched)
+		_ = events.Subscribe(EventOnError, h.OnError)
 	}
 
 	if conf.CORS != nil {
@@ -113,11 +113,15 @@ func New(t TestingT, config ...Configurer) *Mocha {
 		panic(err)
 	}
 
-	loaders := make([]Loader, 0)
-	loaders = append(loaders, &FileLoader{})
+	loaders := make([]Loader, len(conf.Loaders)+1 /* number of internal loaders */)
+	loaders[0] = &FileLoader{}
+	for i, loader := range conf.Loaders {
+		loaders[i+1] = loader
+	}
 
-	m := &Mocha{
+	return &Mocha{
 		Config: conf,
+		T:      t,
 
 		server:  server,
 		storage: store,
@@ -127,9 +131,7 @@ func New(t TestingT, config ...Configurer) *Mocha {
 		scopes:  make([]*Scoped, 0),
 		events:  events,
 		loaders: loaders,
-		T:       t}
-
-	return m
+	}
 }
 
 // Default creates a new mock server with default configurations.
@@ -265,19 +267,28 @@ func (m *Mocha) Context() context.Context {
 }
 
 // Subscribe add a new event listener.
-func (m *Mocha) Subscribe(evt reflect.Type, fn func(payload any)) {
+func (m *Mocha) Subscribe(evt reflect.Type, fn func(payload any)) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	m.events.Subscribe(evt, fn)
+	return m.events.Subscribe(evt, fn)
 }
 
-func (m *Mocha) Loader(loader Loader) {
-	m.loaders = append(m.loaders, loader)
+// MustSubscribe add a new event listener.
+// Panics if any errors occur.
+func (m *Mocha) MustSubscribe(evt reflect.Type, fn func(payload any)) {
+	err := m.Subscribe(evt, fn)
+	if err != nil {
+		panic(err)
+	}
 }
 
-// Rebuild rebuilds mock definitions.
-func (m *Mocha) Rebuild() error {
+// Reload reloads mock set external sources, like Loader.
+// Coded mocks will be kept.
+func (m *Mocha) Reload() error {
+	// remove mocks set by Loaders and then, reload, keeping the ones set via code.
+	m.storage.DeleteExternal()
+
 	for _, loader := range m.loaders {
 		err := loader.Load(m)
 		if err != nil {
@@ -288,10 +299,11 @@ func (m *Mocha) Rebuild() error {
 	return nil
 }
 
-// MustRebuild rebuilds mock definitions.
-// It fails immediately if any error occurs.
-func (m *Mocha) MustRebuild() {
-	err := m.Rebuild()
+// MustReload reloads mock set external sources, like Loader.
+// Coded mocks will be kept.
+// It panics if any error occurs.
+func (m *Mocha) MustReload() {
+	err := m.Reload()
 
 	if err != nil {
 		m.T.Logf("error rebuild mock definitions. reason=%v", err.Error())
@@ -416,7 +428,7 @@ func (m *Mocha) AssertHits(t TestingT, expected int) bool {
 // --
 
 func (m *Mocha) onStart() error {
-	err := m.Rebuild()
+	err := m.Reload()
 	if err != nil {
 		return err
 	}

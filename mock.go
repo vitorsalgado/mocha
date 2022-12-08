@@ -180,6 +180,11 @@ func (m *Mock) Disable() {
 	m.Enabled = false
 }
 
+// Build allow users use Mock as a Builder.
+func (m *Mock) Build() (*Mock, error) {
+	return m, nil
+}
+
 // requestMatches checks if current Mock matches against a list of expectations.
 // Will iterate through all expectations even if it doesn't match early.
 func (m *Mock) requestMatches(ri *matcher.RequestInfo, expectations []*expectation) *matchResult {

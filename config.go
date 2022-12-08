@@ -63,6 +63,10 @@ type Config struct {
 	// Files configures glob patterns to load mock from the file system.
 	Files []string
 
+	// Loaders configures additional loaders.
+	Loaders []Loader
+
+	// Debug configures a debug function.
 	Debug Debug
 }
 
@@ -78,6 +82,7 @@ func (c *Config) Apply(conf *Config) {
 	conf.LogLevel = c.LogLevel
 	conf.Parameters = c.Parameters
 	conf.Files = c.Files
+	conf.Loaders = c.Loaders
 	conf.Debug = c.Debug
 }
 
@@ -167,6 +172,12 @@ func (cb *ConfigBuilder) Files(patterns ...string) *ConfigBuilder {
 	return cb
 }
 
+// Loader configures an additional Loader.
+func (cb *ConfigBuilder) Loader(loader Loader) *ConfigBuilder {
+	cb.conf.Loaders = append(cb.conf.Loaders, loader)
+	return cb
+}
+
 // Debug allows users to set a function that will be called on unexpected errors.
 // This is to help debugging.
 func (cb *ConfigBuilder) Debug(debug Debug) *ConfigBuilder {
@@ -238,6 +249,11 @@ func WithFiles(patterns ...string) Configurer {
 // Use WithFiles to keep the default internal pattern.
 func WithNewFiles(patterns ...string) Configurer {
 	return configFunc(func(c *Config) { c.Files = patterns })
+}
+
+// WithLoader adds a new Loader to the configuration.
+func WithLoader(loader Loader) Configurer {
+	return configFunc(func(c *Config) { c.Loaders = append(c.Loaders, loader) })
 }
 
 // WithDebug configures a Debug function.

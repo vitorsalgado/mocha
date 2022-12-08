@@ -183,3 +183,14 @@ func TestMock_Matches(t *testing.T) {
 		assert.Equal(t, 4, res.Weight)
 	})
 }
+
+func TestMock_Build(t *testing.T) {
+	m := newMock()
+	m.Inc()
+	m.Disable()
+
+	mm, err := m.Build()
+
+	assert.NoError(t, err)
+	assert.Equal(t, m, mm)
+}

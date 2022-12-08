@@ -2,6 +2,7 @@ package mocha
 
 import (
 	"context"
+	"fmt"
 	"reflect"
 	"sync"
 	"time"
@@ -54,7 +55,13 @@ type eventListener struct {
 
 func newEvents() *eventListener {
 	h := &eventListener{}
+
 	h.jobs = map[worker.JobType][]func(e any){}
+	h.jobs[EventOnRequest] = make([]func(e any), 0)
+	h.jobs[EventOnRequestMatched] = make([]func(e any), 0)
+	h.jobs[EventOnRequestNotMatched] = make([]func(e any), 0)
+	h.jobs[EventOnError] = make([]func(e any), 0)
+
 	h.w = &worker.Worker{Jobs: h.jobs}
 
 	return h
@@ -64,10 +71,6 @@ func newEvents() *eventListener {
 func (h *eventListener) StartListening(ctx context.Context) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-
-	if h.w.Started.Load() {
-		return
-	}
 
 	h.queue = make(worker.Queue)
 	h.w.Queue = h.queue
@@ -91,15 +94,17 @@ func (h *eventListener) Emit(event any) {
 // - OnRequestMatch
 // - OnRequestNotMatched
 // - OnError
-func (h *eventListener) Subscribe(eventType reflect.Type, fn func(e any)) {
+func (h *eventListener) Subscribe(eventType reflect.Type, fn func(e any)) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
 	_, ok := h.jobs[eventType]
 
 	if !ok {
-		h.jobs[eventType] = []func(e any){fn}
-	} else {
-		h.jobs[eventType] = append(h.jobs[eventType], fn)
+		return fmt.Errorf("unknown event type %s", eventType.Name())
 	}
+
+	h.jobs[eventType] = append(h.jobs[eventType], fn)
+
+	return nil
 }

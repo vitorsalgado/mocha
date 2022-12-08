@@ -4,21 +4,17 @@ import (
 	"context"
 	"log"
 	"reflect"
-	"sync/atomic"
 )
 
 type JobType reflect.Type
 type Queue chan any
 
 type Worker struct {
-	Started atomic.Bool
-	Queue   Queue
-	Jobs    map[JobType][]func(e any)
+	Queue Queue
+	Jobs  map[JobType][]func(e any)
 }
 
 func (w *Worker) Start(ctx context.Context) {
-	w.Started.Store(true)
-
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
@@ -44,7 +40,6 @@ func (w *Worker) Start(ctx context.Context) {
 				}
 			case <-ctx.Done():
 				close(w.Queue)
-				w.Started.Store(false)
 				return
 			}
 		}

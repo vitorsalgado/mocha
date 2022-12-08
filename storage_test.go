@@ -38,4 +38,16 @@ func TestInMemoryStorage(t *testing.T) {
 	mocks = st.FetchAll()
 
 	assert.Len(t, mocks, 0)
+
+	st.Save(&Mock{ID: 10, Name: "mock_ext_1", Enabled: true, mu: &sync.Mutex{}, Priority: 0, Source: "ext"})
+	st.Save(&Mock{ID: 11, Name: "mock_11", Enabled: true, mu: &sync.Mutex{}, Priority: 0})
+
+	assert.Len(t, st.FetchAll(), 2)
+
+	st.DeleteExternal()
+
+	mocks = st.FetchAll()
+
+	assert.Len(t, mocks, 1)
+	assert.Equal(t, 11, mocks[0].ID)
 }

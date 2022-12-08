@@ -158,6 +158,7 @@ func TestConfig_WithFunctions(t *testing.T) {
 		WithLogLevel(LogInfo),
 		WithParams(reply.Parameters()),
 		WithFiles("test", "dev"),
+		WithLoader(&FileLoader{}),
 		WithDebug(func(err error) {}))
 	conf := m.Config
 
@@ -169,6 +170,7 @@ func TestConfig_WithFunctions(t *testing.T) {
 	assert.Equal(t, LogInfo, conf.LogLevel)
 	assert.Equal(t, reply.Parameters(), conf.Parameters)
 	assert.Equal(t, []string{ConfigMockFilePattern, "test", "dev"}, conf.Files)
+	assert.Len(t, conf.Loaders, 1)
 	assert.NotNil(t, conf.Debug)
 }
 
