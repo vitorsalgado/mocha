@@ -1,4 +1,4 @@
-package mocha
+package notifier
 
 import (
 	"testing"
@@ -7,6 +7,6 @@ import (
 )
 
 func TestNotifier_Helper(t *testing.T) {
-	n := NewConsoleNotifier()
+	n := NewConsole()
 	assert.NotPanics(t, n.Helper)
 }

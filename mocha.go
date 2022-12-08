@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/vitorsalgado/mocha/v3/internal/mid"
+	"github.com/vitorsalgado/mocha/v3/internal/notifier"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
@@ -51,6 +52,10 @@ type Cleanable interface {
 // New creates a new Mocha mock server with the given configurations.
 // Parameter config accepts a Config or a ConfigBuilder implementation.
 func New(t TestingT, config ...Configurer) *Mocha {
+	if t == nil {
+		t = notifier.NewConsole()
+	}
+
 	conf := defaultConfig()
 	for _, configurer := range config {
 		configurer.Apply(conf)
@@ -129,7 +134,7 @@ func New(t TestingT, config ...Configurer) *Mocha {
 
 // Default creates a new mock server with default configurations.
 func Default() *Mocha {
-	return New(NewConsoleNotifier())
+	return New(notifier.NewConsole())
 }
 
 // Start starts the mock server.

@@ -17,6 +17,7 @@ import (
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
+	"github.com/vitorsalgado/mocha/v3/internal/notifier"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
@@ -104,7 +105,7 @@ func main() {
 		})
 	}
 
-	m := mocha.New(mocha.NewConsoleNotifier(),
+	m := mocha.New(notifier.NewConsole(),
 		mocha.Configure().
 			HandlerDecorator(h).
 			Server(&Srv{}).
