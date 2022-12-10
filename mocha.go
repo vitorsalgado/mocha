@@ -24,6 +24,7 @@ const StatusNoMockFound = http.StatusTeapot
 type Mocha struct {
 	Config *Config
 	T      TestingT
+	Name   string
 
 	server  Server
 	storage mockStore
@@ -100,7 +101,7 @@ func New(t TestingT, config ...Configurer) *Mocha {
 
 	handler := mid.
 		Compose(middlewares...).
-		Root(newHandler(store, parsers, params, p, events, t, conf.Debug))
+		Root(newHandler(conf.Name, store, parsers, params, p, events, t, conf.Debug))
 
 	if conf.HandlerDecorator != nil {
 		handler = conf.HandlerDecorator(handler)
@@ -326,8 +327,9 @@ func (m *Mocha) Close() {
 	}
 }
 
-// CloseOnT closes Server on t cleanup.
-func (m *Mocha) CloseOnT(t Cleanable) *Mocha {
+// CloseWithT register Server Close function on TestingT Cleanup().
+// Useful to close the server when tests finishes.
+func (m *Mocha) CloseWithT(t Cleanable) *Mocha {
 	t.Cleanup(func() { m.Close() })
 	return m
 }

@@ -13,7 +13,7 @@ import (
 )
 
 func TestHandler_GetById(t *testing.T) {
-	m := mocha.New(t).CloseOnT(t)
+	m := mocha.New(t).CloseWithT(t)
 	m.MustStart()
 
 	id := "super-id"

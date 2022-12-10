@@ -34,6 +34,10 @@ type Debug func(err error)
 
 // Config holds Mocha mock server configurations.
 type Config struct {
+	// Name sets a name to the mock server.
+	// Adds more context for when you have more mocks APIs configured.
+	Name string
+
 	// Addr defines a custom server address.
 	Addr string
 
@@ -76,6 +80,7 @@ type Config struct {
 // Apply copies the current Config struct values to the given Config parameter.
 // It allows the Config struct to be used as a Configurer.
 func (c *Config) Apply(conf *Config) {
+	conf.Name = c.Name
 	conf.Addr = c.Addr
 	conf.RequestBodyParsers = c.RequestBodyParsers
 	conf.Middlewares = c.Middlewares
@@ -112,6 +117,12 @@ func defaultConfig() *Config {
 // Entrypoint to start a new custom configuration for Mocha mock servers.
 func Configure() *ConfigBuilder {
 	return &ConfigBuilder{conf: defaultConfig()}
+}
+
+// Name sets a name to the mock server.
+func (cb *ConfigBuilder) Name(name string) *ConfigBuilder {
+	cb.conf.Name = name
+	return cb
 }
 
 // Addr sets a custom address for the mock HTTP server.
@@ -212,6 +223,11 @@ func (cb *ConfigBuilder) Apply(conf *Config) {
 // --
 // Config Functions
 // --
+
+// WithName sets a name to the mock server.
+func WithName(name string) Configurer {
+	return configFunc(func(c *Config) { c.Name = name })
+}
 
 // WithAddr configures the server address.
 func WithAddr(addr string) Configurer {

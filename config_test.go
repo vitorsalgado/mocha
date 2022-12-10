@@ -57,7 +57,7 @@ func TestConfig(t *testing.T) {
 			addr = "127.0.0.1:3000"
 		}
 
-		m := New(t, Configure().Addr(addr)).CloseOnT(t)
+		m := New(t, Configure().Addr(addr)).CloseWithT(t)
 		m.MustStart()
 
 		defer m.Close()
@@ -147,8 +147,10 @@ func TestConfig(t *testing.T) {
 
 func TestConfig_WithFunctions(t *testing.T) {
 	addr := ":3000"
+	nm := "test"
 
 	m := New(t,
+		WithName(nm),
 		WithAddr(addr),
 		WithRequestBodyParsers(&jsonBodyParser{}, &plainTextParser{}),
 		WithMiddlewares(),
@@ -159,9 +161,11 @@ func TestConfig_WithFunctions(t *testing.T) {
 		WithParams(reply.Parameters()),
 		WithFiles("test", "dev"),
 		WithLoader(&FileLoader{}),
-		WithDebug(func(err error) {}))
+		WithDebug(func(err error) {}),
+		WithProxy(&ProxyConfig{}, &ProxyConfig{}))
 	conf := m.Config
 
+	assert.Equal(t, nm, conf.Name)
 	assert.Equal(t, addr, conf.Addr)
 	assert.Len(t, conf.RequestBodyParsers, 2)
 	assert.Len(t, conf.Middlewares, 0)
@@ -172,12 +176,11 @@ func TestConfig_WithFunctions(t *testing.T) {
 	assert.Equal(t, []string{ConfigMockFilePattern, "test", "dev"}, conf.Files)
 	assert.Len(t, conf.Loaders, 1)
 	assert.NotNil(t, conf.Debug)
+	assert.NotNil(t, conf.Proxy)
 }
 
 func TestWithNewFiles(t *testing.T) {
-	m := New(t,
-		WithNewFiles("test", "dev"))
-	conf := m.Config
+	m := New(t, WithNewFiles("test", "dev"))
 
-	assert.Equal(t, []string{"test", "dev"}, conf.Files)
+	assert.Equal(t, []string{"test", "dev"}, m.Config.Files)
 }

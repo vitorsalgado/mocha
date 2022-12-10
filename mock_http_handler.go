@@ -15,6 +15,7 @@ import (
 )
 
 type mockHandler struct {
+	name          string
 	store         mockStore
 	bodyParsers   []RequestBodyParser
 	params        reply.Params
@@ -25,6 +26,7 @@ type mockHandler struct {
 }
 
 func newHandler(
+	name string,
 	store mockStore,
 	bodyParsers []RequestBodyParser,
 	params reply.Params,
@@ -34,6 +36,7 @@ func newHandler(
 	d Debug,
 ) *mockHandler {
 	return &mockHandler{
+		name:          name,
 		store:         store,
 		bodyParsers:   bodyParsers,
 		params:        params,
