@@ -302,8 +302,8 @@ func TestMocha_Subscribe(t *testing.T) {
 	f.On("OnRequestMatched", mock.Anything).Return()
 
 	m := New(t, Configure().LogLevel(LogSilently)).CloseOnT(t)
-	m.Subscribe(EventOnRequest, f.OnRequest)
-	m.Subscribe(EventOnRequestMatched, f.OnRequestMatched)
+	m.MustSubscribe(EventOnRequest, f.OnRequest)
+	m.MustSubscribe(EventOnRequestMatched, f.OnRequestMatched)
 	m.MustStart()
 
 	defer m.Close()

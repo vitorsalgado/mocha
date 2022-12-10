@@ -66,6 +66,9 @@ type Config struct {
 	// Loaders configures additional loaders.
 	Loaders []Loader
 
+	// Proxy configures the mock server as a proxy.
+	Proxy *ProxyConfig
+
 	// Debug configures a debug function.
 	Debug Debug
 }
@@ -83,6 +86,7 @@ func (c *Config) Apply(conf *Config) {
 	conf.Parameters = c.Parameters
 	conf.Files = c.Files
 	conf.Loaders = c.Loaders
+	conf.Proxy = c.Proxy
 	conf.Debug = c.Debug
 }
 
@@ -185,6 +189,20 @@ func (cb *ConfigBuilder) Debug(debug Debug) *ConfigBuilder {
 	return cb
 }
 
+// Proxy configures the mock server as a proxy server.
+// Non-Matched requests will be routed based on the proxy configuration.
+func (cb *ConfigBuilder) Proxy(options ...ProxyConfigurer) *ConfigBuilder {
+	opts := &ProxyConfig{}
+
+	for _, option := range options {
+		option.Apply(opts)
+	}
+
+	cb.conf.Proxy = opts
+
+	return cb
+}
+
 // Apply builds a new Config with previously configured values.
 func (cb *ConfigBuilder) Apply(conf *Config) {
 	cb.conf.Apply(conf)
@@ -259,4 +277,17 @@ func WithLoader(loader Loader) Configurer {
 // WithDebug configures a Debug function.
 func WithDebug(d Debug) Configurer {
 	return configFunc(func(c *Config) { c.Debug = d })
+}
+
+// WithProxy configures the mock server as a proxy server.
+func WithProxy(options ...ProxyConfigurer) Configurer {
+	return configFunc(func(c *Config) {
+		opts := &ProxyConfig{}
+
+		for _, option := range options {
+			option.Apply(opts)
+		}
+
+		c.Proxy = opts
+	})
 }

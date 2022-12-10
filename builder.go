@@ -112,7 +112,7 @@ func (b *MockBuilder) URLPath(m matcher.Matcher) *MockBuilder {
 // Header adds a matcher to a specific http.Header key.
 func (b *MockBuilder) Header(key string, m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
-		Target:        _targetHeader,
+		Target:        fmt.Sprintf("%s(%s)", _targetHeader, key),
 		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Header.Get(key) },
 		Matcher:       m,
 		Weight:        _weightLow,
@@ -124,7 +124,7 @@ func (b *MockBuilder) Header(key string, m matcher.Matcher) *MockBuilder {
 // Query defines a matcher to a specific query.
 func (b *MockBuilder) Query(key string, m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
-		Target:        _targetQuery,
+		Target:        fmt.Sprintf("%s(%s)", _targetQuery, key),
 		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.URL.Query().Get(key) },
 		Matcher:       m,
 		Weight:        _weightVeryLow,
@@ -154,7 +154,7 @@ func (b *MockBuilder) Body(matcherList ...matcher.Matcher) *MockBuilder {
 // FormField defines a matcher for a specific form field by its key.
 func (b *MockBuilder) FormField(field string, m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
-		Target:        _targetForm,
+		Target:        fmt.Sprintf("%s(%s)", _targetForm, field),
 		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Form.Get(field) },
 		Matcher:       m,
 		Weight:        _weightVeryLow,

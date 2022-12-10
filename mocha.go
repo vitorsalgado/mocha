@@ -88,14 +88,19 @@ func New(t TestingT, config ...Configurer) *Mocha {
 
 	middlewares = append(middlewares, conf.Middlewares...)
 
-	p := reply.Parameters()
+	params := reply.Parameters()
 	if conf.Parameters != nil {
-		p = conf.Parameters
+		params = conf.Parameters
+	}
+
+	var p *proxy
+	if conf.Proxy != nil {
+		p = newProxy(conf.Proxy, events)
 	}
 
 	handler := mid.
 		Compose(middlewares...).
-		Root(newHandler(store, parsers, p, events, t, conf.Debug))
+		Root(newHandler(store, parsers, params, p, events, t, conf.Debug))
 
 	if conf.HandlerDecorator != nil {
 		handler = conf.HandlerDecorator(handler)
@@ -127,7 +132,7 @@ func New(t TestingT, config ...Configurer) *Mocha {
 		storage: store,
 		ctx:     ctx,
 		cancel:  cancel,
-		params:  p,
+		params:  params,
 		scopes:  make([]*Scoped, 0),
 		events:  events,
 		loaders: loaders,

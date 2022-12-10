@@ -18,6 +18,7 @@ type mockHandler struct {
 	store         mockStore
 	bodyParsers   []RequestBodyParser
 	params        reply.Params
+	proxy         *proxy
 	eventListener *eventListener
 	t             TestingT
 	d             Debug
@@ -27,6 +28,7 @@ func newHandler(
 	store mockStore,
 	bodyParsers []RequestBodyParser,
 	params reply.Params,
+	proxy *proxy,
 	evt *eventListener,
 	t TestingT,
 	d Debug,
@@ -35,6 +37,7 @@ func newHandler(
 		store:         store,
 		bodyParsers:   bodyParsers,
 		params:        params,
+		proxy:         proxy,
 		eventListener: evt,
 		t:             t,
 		d:             d,
@@ -60,6 +63,12 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	result := findMockForRequest(h.store, info)
 
 	if !result.Matches {
+		if h.proxy != nil {
+			// proxy non-matched requests.
+			h.proxy.ServeHTTP(w, r)
+			return
+		}
+
 		h.respondNonMatched(w, evtReq, result)
 		return
 	}
