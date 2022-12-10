@@ -152,7 +152,7 @@ func TestConfig_WithFunctions(t *testing.T) {
 		WithAddr(addr),
 		WithRequestBodyParsers(&jsonBodyParser{}, &plainTextParser{}),
 		WithMiddlewares(),
-		WithCORS(_defaultCORSConfig),
+		WithCORS(&_defaultCORSConfig),
 		WithServer(&httpTestServer{}),
 		WithHandlerDecorator(func(handler http.Handler) http.Handler { return handler }),
 		WithLogLevel(LogInfo),
@@ -165,7 +165,7 @@ func TestConfig_WithFunctions(t *testing.T) {
 	assert.Equal(t, addr, conf.Addr)
 	assert.Len(t, conf.RequestBodyParsers, 2)
 	assert.Len(t, conf.Middlewares, 0)
-	assert.Equal(t, _defaultCORSConfig, conf.CORS)
+	assert.Equal(t, &_defaultCORSConfig, conf.CORS)
 	assert.NotNil(t, conf.HandlerDecorator)
 	assert.Equal(t, LogInfo, conf.LogLevel)
 	assert.Equal(t, reply.Parameters(), conf.Parameters)

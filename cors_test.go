@@ -30,7 +30,7 @@ func TestCORS(t *testing.T) {
 				AllowOrigin("*").
 				MaxAge(10).
 				AllowCredentials(true).
-				Build())).Root(http.HandlerFunc(handler)))
+				build())).Root(http.HandlerFunc(handler)))
 		defer ts.Close()
 
 		// check preflight request
@@ -66,7 +66,7 @@ func TestCORS(t *testing.T) {
 				AllowMethods("GET", "POST").
 				AllowOrigin("*").
 				SuccessStatusCode(http.StatusBadRequest).
-				Build())).Root(http.HandlerFunc(handler)))
+				build())).Root(http.HandlerFunc(handler)))
 		defer ts.Close()
 
 		req, _ := http.NewRequest(http.MethodOptions, ts.URL, nil)
@@ -83,7 +83,7 @@ func TestCORS(t *testing.T) {
 			mid.Compose(corsMid(CORS().
 				AllowMethods("GET", "POST").
 				AllowOrigin("http://localhost:8080", "http://localhost:8081").
-				Build())).Root(http.HandlerFunc(handler)))
+				build())).Root(http.HandlerFunc(handler)))
 		defer ts.Close()
 
 		req, _ := http.NewRequest(http.MethodOptions, ts.URL, nil)
@@ -99,7 +99,7 @@ func TestCORS(t *testing.T) {
 		ts := httptest.NewServer(
 			mid.Compose(corsMid(CORS().
 				AllowOrigin("").
-				Build())).Root(http.HandlerFunc(handler)))
+				build())).Root(http.HandlerFunc(handler)))
 		defer ts.Close()
 
 		req, _ := http.NewRequest(http.MethodOptions, ts.URL, nil)

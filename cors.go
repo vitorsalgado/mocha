@@ -19,7 +19,23 @@ type CORSConfig struct {
 	SuccessStatusCode int
 }
 
-var _defaultCORSConfig = &CORSConfig{
+// CORSConfigurer lets users configure CORS.
+type CORSConfigurer interface {
+	Apply(opts *CORSConfig)
+}
+
+// Apply allows CORSConfig to be used as a CORSConfigurer
+func (c *CORSConfig) Apply(opts *CORSConfig) {
+	opts.AllowedOrigin = c.AllowedOrigin
+	opts.AllowCredentials = c.AllowCredentials
+	opts.AllowedMethods = c.AllowedMethods
+	opts.AllowedHeaders = c.AllowedHeaders
+	opts.ExposeHeaders = c.ExposeHeaders
+	opts.MaxAge = c.MaxAge
+	opts.SuccessStatusCode = c.SuccessStatusCode
+}
+
+var _defaultCORSConfig = CORSConfig{
 	AllowedOrigin: "*",
 	AllowedMethods: strings.Join([]string{
 		http.MethodGet,
@@ -36,66 +52,65 @@ var _defaultCORSConfig = &CORSConfig{
 	SuccessStatusCode: http.StatusNoContent,
 }
 
-// CORSOptionsBuilder facilitates building corsMid options.
-type CORSOptionsBuilder struct {
+// CORSConfigBuilder facilitates building corsMid options.
+type CORSConfigBuilder struct {
 	options *CORSConfig
 	origins []string
 }
 
 // CORS inits a CORSConfig builder for a fluent configuration.
-func CORS() *CORSOptionsBuilder {
-	return &CORSOptionsBuilder{
+func CORS() *CORSConfigBuilder {
+	return &CORSConfigBuilder{
 		origins: make([]string, 0),
 		options: &CORSConfig{SuccessStatusCode: http.StatusNoContent}}
 }
 
 // SuccessStatusCode sets a custom status code returned on corsMid Options request.
 // If none is specified, the default status code is http.StatusNoContent.
-func (b *CORSOptionsBuilder) SuccessStatusCode(code int) *CORSOptionsBuilder {
+func (b *CORSConfigBuilder) SuccessStatusCode(code int) *CORSConfigBuilder {
 	b.options.SuccessStatusCode = code
 	return b
 }
 
 // MaxAge sets corsMid max age.
-func (b *CORSOptionsBuilder) MaxAge(maxAge int) *CORSOptionsBuilder {
+func (b *CORSConfigBuilder) MaxAge(maxAge int) *CORSConfigBuilder {
 	b.options.MaxAge = maxAge
 	return b
 }
 
 // AllowOrigin sets allowed origins.
-func (b *CORSOptionsBuilder) AllowOrigin(origin ...string) *CORSOptionsBuilder {
+func (b *CORSConfigBuilder) AllowOrigin(origin ...string) *CORSConfigBuilder {
 	b.origins = append(b.origins, origin...)
 	return b
 }
 
 // AllowCredentials sets "Access-Control-Allow-Credentials" header.
-func (b *CORSOptionsBuilder) AllowCredentials(allow bool) *CORSOptionsBuilder {
+func (b *CORSConfigBuilder) AllowCredentials(allow bool) *CORSConfigBuilder {
 	b.options.AllowCredentials = allow
 	return b
 }
 
 // ExposeHeaders sets "Access-Control-Expose-Header" header.
-func (b *CORSOptionsBuilder) ExposeHeaders(headers ...string) *CORSOptionsBuilder {
+func (b *CORSConfigBuilder) ExposeHeaders(headers ...string) *CORSConfigBuilder {
 	b.options.ExposeHeaders = strings.Join(headers, ",")
 	return b
 }
 
 // AllowedHeaders sets allowed headers.
 // It will set the header "Access-Control-Allow-Header".
-func (b *CORSOptionsBuilder) AllowedHeaders(headers ...string) *CORSOptionsBuilder {
+func (b *CORSConfigBuilder) AllowedHeaders(headers ...string) *CORSConfigBuilder {
 	b.options.AllowedHeaders = strings.Join(headers, ",")
 	return b
 }
 
 // AllowMethods sets the allowed HTTP methods.
 // The header "Access-Control-Allow-Methods" will be used.
-func (b *CORSOptionsBuilder) AllowMethods(methods ...string) *CORSOptionsBuilder {
+func (b *CORSConfigBuilder) AllowMethods(methods ...string) *CORSConfigBuilder {
 	b.options.AllowedMethods = strings.Join(methods, ",")
 	return b
 }
 
-// Build returns an Option with previously configured values.
-func (b *CORSOptionsBuilder) Build() *CORSConfig {
+func (b *CORSConfigBuilder) build() *CORSConfig {
 	if len(b.origins) > 0 {
 		if len(b.origins) == 1 {
 			b.options.AllowedOrigin = b.origins[0]
@@ -107,9 +122,14 @@ func (b *CORSOptionsBuilder) Build() *CORSConfig {
 	return b.options
 }
 
+// Apply builds CORS configurations based on previous settings set via the builder.
+func (b *CORSConfigBuilder) Apply(opts *CORSConfig) {
+	b.build().Apply(opts)
+}
+
 func corsMid(options *CORSConfig) func(http.Handler) http.Handler {
 	if options == nil {
-		options = _defaultCORSConfig
+		options = &_defaultCORSConfig
 	}
 
 	return func(next http.Handler) http.Handler {

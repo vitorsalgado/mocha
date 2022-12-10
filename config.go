@@ -134,12 +134,13 @@ func (cb *ConfigBuilder) Middlewares(fn ...func(handler http.Handler) http.Handl
 }
 
 // CORS configures Cross Origin Resource Sharing for the mock server.
-func (cb *ConfigBuilder) CORS(options ...*CORSConfig) *ConfigBuilder {
-	if len(options) > 0 {
-		cb.conf.CORS = options[0]
-	} else {
-		cb.conf.CORS = _defaultCORSConfig
+func (cb *ConfigBuilder) CORS(options ...CORSConfigurer) *ConfigBuilder {
+	opts := &_defaultCORSConfig
+	for _, option := range options {
+		option.Apply(opts)
 	}
+
+	cb.conf.CORS = opts
 
 	return cb
 }
@@ -228,8 +229,15 @@ func WithMiddlewares(middlewares ...func(handler http.Handler) http.Handler) Con
 }
 
 // WithCORS configures CORS.
-func WithCORS(opts *CORSConfig) Configurer {
-	return configFunc(func(c *Config) { c.CORS = opts })
+func WithCORS(opts ...CORSConfigurer) Configurer {
+	return configFunc(func(c *Config) {
+		options := &_defaultCORSConfig
+		for _, option := range opts {
+			option.Apply(options)
+		}
+
+		c.CORS = options
+	})
 }
 
 // WithServer configures a custom mock HTTP Server.
