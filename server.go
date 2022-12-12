@@ -13,9 +13,9 @@ type ServerInfo struct {
 
 // Server defines HTTP mock server operations.
 type Server interface {
-	// Configure configures the HTTP mock.
-	// It is the first method called by Mocha during initialization.
-	Configure(*Config, http.Handler) error
+	// Setup configures the HTTP mock.
+	// It is the first method called during initialization.
+	Setup(*Config, http.Handler) error
 
 	// Start starts a server.
 	Start() (ServerInfo, error)
@@ -23,7 +23,7 @@ type Server interface {
 	// StartTLS starts a TLS server.
 	StartTLS() (ServerInfo, error)
 
-	// Close the server.
+	// Close closes the server.
 	Close() error
 
 	// Info returns server information.
@@ -39,7 +39,7 @@ func newServer() Server {
 	return &httpTestServer{info: ServerInfo{}}
 }
 
-func (s *httpTestServer) Configure(config *Config, handler http.Handler) error {
+func (s *httpTestServer) Setup(config *Config, handler http.Handler) error {
 	s.server = httptest.NewUnstartedServer(handler)
 	s.server.EnableHTTP2 = true
 

@@ -1,23 +1,28 @@
 package mocha
 
 import (
-	"bytes"
 	"io"
 	"net"
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/vitorsalgado/mocha/v3/event"
+	"github.com/vitorsalgado/mocha/v3/internal/header"
 )
 
 // ProxyConfig configures proxy.
 type ProxyConfig struct {
-	// ProxyVia configures the proxy address to route requests
+	// Target configures the proxy address to route requests
 	// by the actual proxy being set.
 	// You need to set this configuration in your custom Transport, if one is provided.
-	ProxyVia *url.URL
+	Target string
+
+	// Timeout is the timeout used when calling the proxy client.
+	Timeout time.Duration
 
 	// Transport sets a custom http.RoundTripper.
-	// ProxyVia config will be ignored. Set it manually in your http.RoundTripper implementation.
+	// Target config will be ignored. Set it manually in your http.RoundTripper implementation.
 	// If none is provided, a default one will be used.
 	Transport http.RoundTripper
 }
@@ -29,41 +34,46 @@ type ProxyConfigurer interface {
 
 // Apply allows ProxyConfig to be used as a Configurer.
 func (p *ProxyConfig) Apply(c *ProxyConfig) {
-	c.ProxyVia = p.ProxyVia
+	c.Target = p.Target
 	c.Transport = p.Transport
+	c.Timeout = p.Timeout
 }
+
+var _defaultProxyConfig = ProxyConfig{Timeout: 10 * time.Second}
 
 type proxy struct {
-	conf *ProxyConfig
-	rec  *record
-	e    *eventListener
+	conf     *ProxyConfig
+	listener *event.Listener
 }
 
-func newProxy(conf *ProxyConfig, events *eventListener, rec *record) *proxy {
+func newProxy(conf *ProxyConfig, events *event.Listener) *proxy {
 	if conf.Transport == nil {
 		transport := &http.Transport{}
-		if conf.ProxyVia != nil {
-			transport.Proxy = http.ProxyURL(conf.ProxyVia)
+		if conf.Target != "" {
+			u, err := url.Parse(conf.Target)
+			if err != nil {
+				panic(err)
+			}
+
+			transport.Proxy = http.ProxyURL(u)
 		}
 
-		timeout := 15 * time.Second
-
-		transport.TLSHandshakeTimeout = timeout
-		transport.IdleConnTimeout = timeout
-		transport.ExpectContinueTimeout = timeout
-		transport.ResponseHeaderTimeout = timeout
+		transport.TLSHandshakeTimeout = 15 * time.Second
+		transport.IdleConnTimeout = 15 * time.Second
+		transport.ExpectContinueTimeout = 1 * time.Second
+		transport.ResponseHeaderTimeout = conf.Timeout
 
 		conf.Transport = transport
 	}
 
-	return &proxy{conf: conf, e: events, rec: rec}
+	return &proxy{conf: conf, listener: events}
 }
 
-func (p *proxy) Proxy(w http.ResponseWriter, r *http.Request, reqBody []byte) {
+func (p *proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodConnect {
 		p.handleTunneling(w, r)
 	} else {
-		p.handleHTTP(w, r, reqBody)
+		p.handleHTTP(w, r)
 	}
 }
 
@@ -76,15 +86,15 @@ func (p *proxy) handleTunneling(w http.ResponseWriter, r *http.Request) {
 
 	in, _, err := hijacker.Hijack()
 	if err != nil {
-		p.e.Emit(&OnError{Request: evtRequest(r), Err: err})
+		p.listener.Emit(&event.OnError{Request: event.FromRequest(r), Err: err})
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 	}
 
 	defer in.Close()
 
-	out, err := net.DialTimeout("tcp", r.Host, 10*time.Second)
+	out, err := net.DialTimeout("tcp", r.Host, 5*time.Second)
 	if err != nil {
-		p.e.Emit(&OnError{Request: evtRequest(r), Err: err})
+		p.listener.Emit(&event.OnError{Request: event.FromRequest(r), Err: err})
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
@@ -104,27 +114,19 @@ func (p *proxy) handleTunneling(w http.ResponseWriter, r *http.Request) {
 
 	err = <-errCh
 	if err != nil {
-		p.e.Emit(&OnError{Request: evtRequest(r), Err: err})
+		p.listener.Emit(&event.OnError{Request: event.FromRequest(r), Err: err})
 	}
 }
 
-func (p *proxy) handleHTTP(w http.ResponseWriter, r *http.Request, reqBody []byte) {
+func (p *proxy) handleHTTP(w http.ResponseWriter, r *http.Request) {
+	r.Header.Del(header.Connection)
+
 	res, err := p.conf.Transport.RoundTrip(r)
 	if err != nil {
-		p.e.Emit(&OnError{Request: evtRequest(r), Err: err})
+		p.listener.Emit(&event.OnError{Request: event.FromRequest(r), Err: err})
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
-
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		p.e.Emit(&OnError{Request: evtRequest(r), Err: err})
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	res.Body.Close()
-	res.Body = io.NopCloser(bytes.NewBuffer(body))
 
 	defer res.Body.Close()
 
@@ -135,16 +137,9 @@ func (p *proxy) handleHTTP(w http.ResponseWriter, r *http.Request, reqBody []byt
 	}
 
 	w.WriteHeader(res.StatusCode)
-	w.Write(body)
 
-	// no record, just finish.
-	if p.rec == nil {
-		return
+	_, err = io.Copy(w, res.Body)
+	if err != nil {
+		p.listener.Emit(&event.OnError{Request: event.FromRequest(r), Err: err})
 	}
-
-	p.rec.record(&recArgs{
-		request: recRequest{
-			path: r.URL.Path, method: r.Method, header: r.Header.Clone(), query: r.URL.Query(), body: reqBody},
-		response: recResponse{
-			status: res.StatusCode, header: res.Header.Clone(), body: reqBody}})
 }

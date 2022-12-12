@@ -7,7 +7,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/v3/internal/testmocks"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
@@ -23,16 +22,16 @@ func TestScoped(t *testing.T) {
 	repo.Save(m2)
 	repo.Save(m3)
 
-	scoped := scope(repo, repo.FetchAll())
+	scoped := scope(repo, repo.GetAll())
 
-	assert.Equal(t, 3, len(scoped.ListAll()))
+	assert.Equal(t, 3, len(scoped.GetAll()))
 	assert.Equal(t, m1, scoped.Get(m1.ID))
 
 	t.Run("should not return done when there is still pending store", func(t *testing.T) {
-		fakeT := testmocks.NewFakeNotifier()
+		fakeT := NewFakeNotifier()
 
-		assert.False(t, scoped.Called())
-		assert.Equal(t, 3, len(scoped.ListPending()))
+		assert.False(t, scoped.HasBeenCalled())
+		assert.Equal(t, 3, len(scoped.GetPending()))
 		assert.True(t, scoped.IsPending())
 
 		scoped.AssertCalled(fakeT)
@@ -40,11 +39,11 @@ func TestScoped(t *testing.T) {
 	})
 
 	t.Run("should return done when all store were called", func(t *testing.T) {
-		fakeT := testmocks.NewFakeNotifier()
+		fakeT := NewFakeNotifier()
 
 		m1.Inc()
 
-		assert.False(t, scoped.Called())
+		assert.False(t, scoped.HasBeenCalled())
 		scoped.AssertCalled(fakeT)
 
 		m2.Inc()
@@ -52,18 +51,19 @@ func TestScoped(t *testing.T) {
 
 		fakeT.AssertNumberOfCalls(t, "Errorf", 1)
 		assert.True(t, scoped.AssertCalled(t))
-		assert.True(t, scoped.Called())
-		assert.Equal(t, 0, len(scoped.ListPending()))
+		assert.True(t, scoped.HasBeenCalled())
+		assert.Equal(t, 0, len(scoped.GetPending()))
 		assert.False(t, scoped.IsPending())
 	})
 
 	t.Run("should return total hits from store", func(t *testing.T) {
 		assert.Equal(t, 3, scoped.Hits())
+		scoped.AssertCalls(t, 3)
 	})
 
 	t.Run("should clean all store associated with scope when calling .Clean()", func(t *testing.T) {
 		scoped.Clean()
-		assert.Equal(t, 0, len(scoped.ListPending()))
+		assert.Equal(t, 0, len(scoped.GetPending()))
 		assert.False(t, scoped.IsPending())
 	})
 
@@ -97,8 +97,8 @@ func TestScoped(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 
-			assert.True(t, s1.Called())
-			assert.True(t, s2.Called())
+			assert.True(t, s1.HasBeenCalled())
+			assert.True(t, s2.HasBeenCalled())
 		})
 
 		t.Run("disabled", func(t *testing.T) {
@@ -122,6 +122,8 @@ func TestScoped(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Equal(t, 1, s1.Hits())
+
+			s1.AssertCalls(t, 1)
 		})
 
 		t.Run("enabling previously disabled", func(t *testing.T) {
@@ -133,6 +135,8 @@ func TestScoped(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Equal(t, 2, s1.Hits())
+
+			s1.AssertCalls(t, 2)
 		})
 
 		t.Run("disabling multiple", func(t *testing.T) {

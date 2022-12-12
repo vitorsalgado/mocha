@@ -20,7 +20,7 @@ func TestHandler_GetById(t *testing.T) {
 	customer := Customer{ID: id, Name: "nice-name"}
 
 	m.MustMock(mocha.
-		Get(URLPath(fmt.Sprintf("/customers/%s", id))).
+		Get(URLPathf("/customers/%s", id)).
 		Header(headerAccept, Equal(contentTypeJSON)).
 		Header(headerContentType, Equal(contentTypeJSON)).
 		Reply(reply.OK().BodyJSON(customer)))

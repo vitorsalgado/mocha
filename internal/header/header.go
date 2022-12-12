@@ -8,6 +8,7 @@ const (
 	Vary          = "Vary"
 	Origin        = "Origin"
 	ContentLength = "Content-length"
+	Connection    = "Connection"
 
 	AccessControlAllowOrigin      = "Access-Control-Allow-Origin"
 	AccessControlAllowMethods     = "Access-Control-Allow-Methods"

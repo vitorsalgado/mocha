@@ -67,7 +67,16 @@ func (m *containsMatcher) OnMockServed() error {
 	return nil
 }
 
-// Contain returns true when the expected value is contained in the matcher argument.
+func (m *containsMatcher) Spec() any {
+	return []any{_mContain, m.expected}
+}
+
+// Contain returns true when the items value is contained in the matcher argument.
 func Contain(expected any) Matcher {
 	return &containsMatcher{expected: expected}
+}
+
+// Containf returns true when the items value is contained in the matcher argument.
+func Containf(format string, a ...any) Matcher {
+	return &containsMatcher{expected: fmt.Sprintf(format, a...)}
 }

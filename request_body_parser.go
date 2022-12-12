@@ -24,9 +24,9 @@ type RequestBodyParser interface {
 
 // parseRequestBody tests given parsers until it finds one that can parse the request body.
 // User provided RequestBodyParser takes precedence.
-func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (any, []byte, error) {
+func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (parsedBody any, rawBody []byte, err error) {
 	if r.Body != nil && r.Method != http.MethodGet && r.Method != http.MethodHead {
-		b, err := io.ReadAll(r.Body)
+		rawBody, err = io.ReadAll(r.Body)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -36,18 +36,18 @@ func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (any, []byte
 			return nil, nil, err
 		}
 
-		r.Body = io.NopCloser(bytes.NewBuffer(b))
+		r.Body = io.NopCloser(bytes.NewBuffer(rawBody))
 
 		contentType := r.Header.Get(header.ContentType)
 
 		for _, parse := range parsers {
 			if parse.CanParse(contentType, r) {
-				body, err := parse.Parse(b, r)
+				parsedBody, err = parse.Parse(rawBody, r)
 				if err != nil {
 					return nil, nil, err
 				}
 
-				return body, b, nil
+				return parsedBody, rawBody, nil
 			}
 		}
 	}
@@ -63,7 +63,7 @@ func (parser *jsonBodyParser) CanParse(content string, _ *http.Request) bool {
 }
 
 func (parser *jsonBodyParser) Parse(body []byte, _ *http.Request) (data any, err error) {
-	err = json.Unmarshal(body, &data)
+	err = json.NewDecoder(bytes.NewBuffer(body)).Decode(&data)
 	return data, err
 }
 
@@ -94,13 +94,9 @@ func (parser *plainTextParser) Parse(body []byte, _ *http.Request) (any, error) 
 	return string(body), nil
 }
 
-// bytesParser is default parser when none can parse.
-type bytesParser struct{}
+// noopParser is default parser and runs when none is selected.
+// It basically returns the body []byte.
+type noopParser struct{}
 
-func (parser *bytesParser) CanParse(_ string, _ *http.Request) bool {
-	return true
-}
-
-func (parser *bytesParser) Parse(body []byte, _ *http.Request) (any, error) {
-	return body, nil
-}
+func (parser *noopParser) CanParse(_ string, _ *http.Request) bool         { return true }
+func (parser *noopParser) Parse(body []byte, _ *http.Request) (any, error) { return body, nil }

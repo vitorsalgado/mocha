@@ -43,6 +43,10 @@ func (m *regExpMatcher) OnMockServed() error {
 	return nil
 }
 
+func (m *regExpMatcher) Spec() any {
+	return []any{_mRegex, m.expression}
+}
+
 // Matches returns true then the given regular expression matches matcher argument.
 // It accepts a string or a regexp.Regexp.
 func Matches(expression any) Matcher {

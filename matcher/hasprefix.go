@@ -33,6 +33,10 @@ func (m *hasPrefixMatcher) OnMockServed() error {
 	return nil
 }
 
+func (m *hasPrefixMatcher) Spec() any {
+	return []any{_mHasPrefix, m.prefix}
+}
+
 // HasPrefix returns true if the matcher argument starts with the given prefix.
 func HasPrefix(prefix string) Matcher {
 	return &hasPrefixMatcher{prefix: prefix}

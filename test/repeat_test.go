@@ -18,7 +18,7 @@ func TestRepeat(t *testing.T) {
 	defer m.Close()
 
 	m.MustMock(mocha.Get(matcher.URLPath("/test")).
-		Repeat(3).
+		Times(3).
 		Reply(reply.OK()))
 
 	res, _ := testutil.Get(m.URL() + "/test").Do()

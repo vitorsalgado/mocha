@@ -32,7 +32,7 @@ func TestPriority(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-	assert.False(t, one.Called())
-	assert.True(t, two.Called())
-	assert.False(t, three.Called())
+	assert.False(t, one.HasBeenCalled())
+	assert.True(t, two.HasBeenCalled())
+	assert.False(t, three.HasBeenCalled())
 }

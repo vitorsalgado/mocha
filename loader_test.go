@@ -8,11 +8,11 @@ import (
 
 func TestFileLoader_Load(t *testing.T) {
 	app := New(t,
-		Configure().Files("testdata/0/*mock.json", "testdata/0/*.json"))
+		Configure().Dirs("testdata/0/*mock.json", "testdata/0/*.json"))
 	loader := &FileLoader{}
 
 	err := loader.Load(app)
 
 	assert.NoError(t, err)
-	assert.Equal(t, 2, len(app.storage.FetchAll()))
+	assert.Equal(t, 2, len(app.storage.GetAll()))
 }

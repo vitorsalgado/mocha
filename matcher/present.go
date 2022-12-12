@@ -36,6 +36,10 @@ func (m *bePresentMatcher) OnMockServed() error {
 	return nil
 }
 
+func (m *bePresentMatcher) Spec() any {
+	return _mPresent
+}
+
 // Present checks if matcher argument contains a value that is not nil or the zero value for the argument type.
 func Present() Matcher {
 	return &bePresentMatcher{}

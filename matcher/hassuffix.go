@@ -33,6 +33,10 @@ func (m *hasSuffixMatcher) OnMockServed() error {
 	return nil
 }
 
+func (m *hasSuffixMatcher) Spec() any {
+	return []any{_mHasSuffix, m.suffix}
+}
+
 // HasSuffix returns true when matcher argument ends with the given suffix.
 func HasSuffix(suffix string) Matcher {
 	return &hasSuffixMatcher{suffix: suffix}

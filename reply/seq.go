@@ -11,6 +11,7 @@ var _ Reply = (*SequentialReply)(nil)
 type SequentialReply struct {
 	replyOnNotFound Reply
 	replies         []Reply
+	hits            int
 }
 
 // Seq creates a new SequentialReply.
@@ -40,12 +41,16 @@ func (mr *SequentialReply) Prepare() error {
 	return nil
 }
 
+func (mr *SequentialReply) Spec() []any {
+	return []any{}
+}
+
 // Build builds a new response based on current mock.Mock call sequence.
 // When the sequence is over, it will return an error or a previously configured reply for this scenario.
 func (mr *SequentialReply) Build(w http.ResponseWriter, r *http.Request) (*Response, error) {
 	arg := r.Context().Value(KArg).(*Arg)
 	size := len(mr.replies)
-	hits := arg.M.Hits
+	hits := arg.MockInfo.Hits
 
 	if size == 0 {
 		return nil,

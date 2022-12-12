@@ -34,8 +34,16 @@ func (m *equalIgnoreCaseMatcher) OnMockServed() error {
 	return nil
 }
 
-// EqualIgnoreCase returns true if expected value is equal to matcher value, ignoring case.
-// EqualIgnoreCase uses strings.EqualFold function.
+func (m *equalIgnoreCaseMatcher) Spec() any {
+	return []any{_mEqualIgnoreCase, m.expected}
+}
+
+// EqualIgnoreCase returns true if items value is equal to matcher value, ignoring case.
 func EqualIgnoreCase(expected string) Matcher {
 	return &equalIgnoreCaseMatcher{expected: expected}
+}
+
+// EqualIgnoreCasef returns true if items value is equal to matcher value, ignoring case.
+func EqualIgnoreCasef(format string, a ...any) Matcher {
+	return EqualIgnoreCase(fmt.Sprintf(format, a...))
 }

@@ -14,6 +14,10 @@ func (m *notMatcher) Name() string {
 
 func (m *notMatcher) Match(v any) (*Result, error) {
 	result, err := m.matcher.Match(v)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Result{
 		OK: !result.OK,
 		DescribeFailure: func() string {
@@ -23,11 +27,15 @@ func (m *notMatcher) Match(v any) (*Result, error) {
 				result.DescribeFailure(),
 			)
 		},
-	}, err
+	}, nil
 }
 
 func (m *notMatcher) OnMockServed() error {
 	return m.matcher.OnMockServed()
+}
+
+func (m *notMatcher) Spec() any {
+	return []any{_mNot, m.matcher.Spec()}
 }
 
 // Not negates the provided matcher.

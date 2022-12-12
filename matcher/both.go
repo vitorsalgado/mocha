@@ -50,6 +50,10 @@ func (m *bothMatcher) OnMockServed() error {
 	return multiOnMockServed(m.first, m.second)
 }
 
+func (m *bothMatcher) Spec() any {
+	return []any{_mBoth, []any{m.first.Spec(), m.second.Spec()}}
+}
+
 // Both matches true when both given matchers evaluates to true.
 func Both(first Matcher, second Matcher) Matcher {
 	m := &bothMatcher{first: first, second: second}

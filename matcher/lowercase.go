@@ -35,6 +35,10 @@ func (m *lowerCaseMatcher) OnMockServed() error {
 	return m.matcher.OnMockServed()
 }
 
+func (m *lowerCaseMatcher) Spec() any {
+	return []any{_mLowerCase, m.matcher.Spec()}
+}
+
 // ToLower lower case matcher string argument before submitting it to provided matcher.
 func ToLower(matcher Matcher) Matcher {
 	return &lowerCaseMatcher{matcher: matcher}

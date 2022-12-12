@@ -1,4 +1,4 @@
-package mocha
+package recover
 
 import (
 	"context"
@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/vitorsalgado/mocha/v3/event"
 )
 
 func TestRecover(t *testing.T) {
@@ -20,11 +22,10 @@ func TestRecover(t *testing.T) {
 		panic(msg)
 	}
 
-	evt := newEvents()
+	evt := event.New()
 	evt.StartListening(ctx)
 
-	rm := &recoverMid{d: func(err error) {}, t: t, evt: evt}
-	ts := httptest.NewServer(rm.Recover(http.HandlerFunc(fn)))
+	ts := httptest.NewServer(New(t).Recover(http.HandlerFunc(fn)))
 	defer ts.Close()
 
 	res, err := http.Get(ts.URL)

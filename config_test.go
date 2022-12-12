@@ -30,8 +30,8 @@ type customTestServer struct {
 	decorated Server
 }
 
-func (s *customTestServer) Configure(config *Config, handler http.Handler) error {
-	return s.decorated.Configure(config, handler)
+func (s *customTestServer) Setup(config *Config, handler http.Handler) error {
+	return s.decorated.Setup(config, handler)
 }
 
 func (s *customTestServer) Start() (ServerInfo, error) {
@@ -63,14 +63,14 @@ func TestConfig(t *testing.T) {
 		defer m.Close()
 
 		scoped := m.MustMock(
-			Get(matcher.URLPath("/test")).
+			Getf("/test").
 				Reply(reply.OK()))
 
 		req := testutil.Get(m.URL() + "/test")
 		res, err := req.Do()
 
 		assert.NoError(t, err)
-		assert.True(t, scoped.Called())
+		assert.True(t, scoped.HasBeenCalled())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Contains(t, m.server.Info().URL, addr)
 	})
@@ -92,7 +92,7 @@ func TestConfig(t *testing.T) {
 		res, err := req.Do()
 
 		assert.NoError(t, err)
-		assert.True(t, scoped.Called())
+		assert.True(t, scoped.HasBeenCalled())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
 
@@ -121,7 +121,7 @@ func TestConfig(t *testing.T) {
 		res, err := req.Do()
 
 		assert.NoError(t, err)
-		assert.False(t, scoped.Called())
+		assert.False(t, scoped.HasBeenCalled())
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 		assert.Equal(t, "true", res.Header.Get("intercepted"))
 	})
@@ -140,7 +140,7 @@ func TestConfig(t *testing.T) {
 		res, err := req.Do()
 
 		assert.NoError(t, err)
-		assert.True(t, scoped.Called())
+		assert.True(t, scoped.HasBeenCalled())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
 }
@@ -159,10 +159,10 @@ func TestConfig_WithFunctions(t *testing.T) {
 		WithHandlerDecorator(func(handler http.Handler) http.Handler { return handler }),
 		WithLogLevel(LogInfo),
 		WithParams(reply.Parameters()),
-		WithFiles("test", "dev"),
+		WithDirs("test", "dev"),
 		WithLoader(&FileLoader{}),
-		WithDebug(func(err error) {}),
-		WithProxy(&ProxyConfig{}, &ProxyConfig{}))
+		WithProxy(&ProxyConfig{}, &ProxyConfig{}),
+		WithConfigurers(&builtInConfigurer{}))
 	conf := m.Config
 
 	assert.Equal(t, nm, conf.Name)
@@ -173,14 +173,14 @@ func TestConfig_WithFunctions(t *testing.T) {
 	assert.NotNil(t, conf.HandlerDecorator)
 	assert.Equal(t, LogInfo, conf.LogLevel)
 	assert.Equal(t, reply.Parameters(), conf.Parameters)
-	assert.Equal(t, []string{ConfigMockFilePattern, "test", "dev"}, conf.Files)
+	assert.Equal(t, []string{ConfigMockFilePattern, "test", "dev"}, conf.Directories)
 	assert.Len(t, conf.Loaders, 1)
-	assert.NotNil(t, conf.Debug)
 	assert.NotNil(t, conf.Proxy)
+	assert.Len(t, conf.Configurers, 1)
 }
 
 func TestWithNewFiles(t *testing.T) {
-	m := New(t, WithNewFiles("test", "dev"))
+	m := New(t, WithNewDirs("test", "dev"))
 
-	assert.Equal(t, []string{"test", "dev"}, m.Config.Files)
+	assert.Equal(t, []string{"test", "dev"}, m.Config.Directories)
 }

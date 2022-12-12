@@ -5,17 +5,17 @@ import (
 	"sync"
 )
 
-type repeatMatcher struct {
+type timesMatcher struct {
 	max  int
 	hits int
 	mu   sync.Mutex
 }
 
-func (m *repeatMatcher) Name() string {
-	return "Repeat"
+func (m *timesMatcher) Name() string {
+	return "Times"
 }
 
-func (m *repeatMatcher) Match(_ any) (*Result, error) {
+func (m *timesMatcher) Match(_ any) (*Result, error) {
 	return &Result{OK: m.hits < m.max, DescribeFailure: func() string {
 		return fmt.Sprintf(
 			"%s %s %s",
@@ -26,7 +26,7 @@ func (m *repeatMatcher) Match(_ any) (*Result, error) {
 	}}, nil
 }
 
-func (m *repeatMatcher) OnMockServed() error {
+func (m *timesMatcher) OnMockServed() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -35,6 +35,10 @@ func (m *repeatMatcher) OnMockServed() error {
 	return nil
 }
 
+func (m *timesMatcher) Spec() any {
+	return []any{"times", m.max}
+}
+
 func Repeat(times int) Matcher {
-	return &repeatMatcher{max: times}
+	return &timesMatcher{max: times}
 }

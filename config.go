@@ -26,11 +26,8 @@ const (
 // Configurer lets users configure the Mock API.
 type Configurer interface {
 	// Apply applies a configuration.
-	Apply(conf *Config)
+	Apply(conf *Config) error
 }
-
-// Debug is a function to help debug server unexpected errors.
-type Debug func(err error)
 
 // Config holds Mocha mock server configurations.
 type Config struct {
@@ -64,8 +61,8 @@ type Config struct {
 	// Parameters sets a custom reply parameters store.
 	Parameters reply.Params
 
-	// Files configures glob patterns to load mock from the file system.
-	Files []string
+	// Directories configures glob patterns to load mock from the file system.
+	Directories []string
 
 	// Loaders configures additional loaders.
 	Loaders []Loader
@@ -73,15 +70,17 @@ type Config struct {
 	// Proxy configures the mock server as a proxy.
 	Proxy *ProxyConfig
 
+	// Record configures Mock Request/Response recording.
+	// Needs to be used with Proxy.
 	Record *RecordConfig
 
-	// Debug configures a debug function.
-	Debug Debug
+	// Configurers allow setting additional Config loaders.
+	Configurers []Configurer
 }
 
 // Apply copies the current Config struct values to the given Config parameter.
 // It allows the Config struct to be used as a Configurer.
-func (c *Config) Apply(conf *Config) {
+func (c *Config) Apply(conf *Config) error {
 	conf.Name = c.Name
 	conf.Addr = c.Addr
 	conf.RequestBodyParsers = c.RequestBodyParsers
@@ -91,35 +90,46 @@ func (c *Config) Apply(conf *Config) {
 	conf.HandlerDecorator = c.HandlerDecorator
 	conf.LogLevel = c.LogLevel
 	conf.Parameters = c.Parameters
-	conf.Files = c.Files
+	conf.Directories = c.Directories
 	conf.Loaders = c.Loaders
 	conf.Proxy = c.Proxy
 	conf.Record = c.Record
-	conf.Debug = c.Debug
+	conf.Configurers = c.Configurers
+
+	return nil
 }
+
+// IsRecording check if Request/Response recording is enabled.
+func (c *Config) IsRecording() bool { return c.Record != nil }
 
 // configFunc is a helper to build config functions.
 type configFunc func(config *Config)
 
-func (f configFunc) Apply(config *Config) { f(config) }
+func (f configFunc) Apply(config *Config) error {
+	f(config)
+	return nil
+}
 
 // ConfigBuilder lets users create a Config with a fluent API.
 type ConfigBuilder struct {
 	conf *Config
 }
 
-func defaultConfig() *Config {
+func newConfig() *Config {
 	return &Config{
 		LogLevel:           LogVerbose,
+		Directories:        []string{ConfigMockFilePattern},
 		RequestBodyParsers: make([]RequestBodyParser, 0),
-		Files:              []string{ConfigMockFilePattern},
-		Middlewares:        make([]func(http.Handler) http.Handler, 0)}
+		Middlewares:        make([]func(http.Handler) http.Handler, 0),
+		Loaders:            make([]Loader, 0),
+		Configurers:        make([]Configurer, 0),
+	}
 }
 
 // Configure inits a new ConfigBuilder.
 // Entrypoint to start a new custom configuration for Mocha mock servers.
 func Configure() *ConfigBuilder {
-	return &ConfigBuilder{conf: defaultConfig()}
+	return &ConfigBuilder{conf: newConfig()}
 }
 
 // Name sets a name to the mock server.
@@ -184,23 +194,16 @@ func (cb *ConfigBuilder) Parameters(params reply.Params) *ConfigBuilder {
 	return cb
 }
 
-// Files sets a custom Glob patterns to load mock from the file system.
+// Dirs sets a custom Glob patterns to load mock from the file system.
 // Defaults to [testdata/*.mock.json, testdata/*.mock.yaml].
-func (cb *ConfigBuilder) Files(patterns ...string) *ConfigBuilder {
-	cb.conf.Files = patterns
+func (cb *ConfigBuilder) Dirs(patterns ...string) *ConfigBuilder {
+	cb.conf.Directories = patterns
 	return cb
 }
 
 // Loader configures an additional Loader.
 func (cb *ConfigBuilder) Loader(loader Loader) *ConfigBuilder {
 	cb.conf.Loaders = append(cb.conf.Loaders, loader)
-	return cb
-}
-
-// Debug allows users to set a function that will be called on unexpected errors.
-// This is to help debugging.
-func (cb *ConfigBuilder) Debug(debug Debug) *ConfigBuilder {
-	cb.conf.Debug = debug
 	return cb
 }
 
@@ -231,9 +234,14 @@ func (cb *ConfigBuilder) Record(options ...RecordConfigurer) *ConfigBuilder {
 	return cb
 }
 
+func (cb *ConfigBuilder) Use(configurer ...Configurer) *ConfigBuilder {
+	cb.conf.Configurers = append(cb.conf.Configurers, configurer...)
+	return cb
+}
+
 // Apply builds a new Config with previously configured values.
-func (cb *ConfigBuilder) Apply(conf *Config) {
-	cb.conf.Apply(conf)
+func (cb *ConfigBuilder) Apply(conf *Config) error {
+	return cb.conf.Apply(conf)
 }
 
 // --
@@ -293,30 +301,25 @@ func WithParams(params reply.Params) Configurer {
 	return configFunc(func(c *Config) { c.Parameters = params })
 }
 
-// WithFiles configures directories to search for local mocks.
+// WithDirs configures directories to search for local mocks.
 // Pass a list of glob patterns supported by Go Standard Library.
 // This method keeps the default mock filename pattern, [testdata/*mock.json].
-// to overwrite the default mock filename pattern, use WithNewFiles.
-func WithFiles(patterns ...string) Configurer {
-	return configFunc(func(c *Config) { c.Files = append(c.Files, patterns...) })
+// to overwrite the default mock filename pattern, use WithNewDirs.
+func WithDirs(patterns ...string) Configurer {
+	return configFunc(func(c *Config) { c.Directories = append(c.Directories, patterns...) })
 }
 
-// WithNewFiles configures directories to search for local mocks,
+// WithNewDirs configures directories to search for local mocks,
 // overwriting the default internal mock filename pattern.
 // Pass a list of glob patterns supported by Go Standard Library.
-// Use WithFiles to keep the default internal pattern.
-func WithNewFiles(patterns ...string) Configurer {
-	return configFunc(func(c *Config) { c.Files = patterns })
+// Use WithDirs to keep the default internal pattern.
+func WithNewDirs(patterns ...string) Configurer {
+	return configFunc(func(c *Config) { c.Directories = patterns })
 }
 
 // WithLoader adds a new Loader to the configuration.
 func WithLoader(loader Loader) Configurer {
 	return configFunc(func(c *Config) { c.Loaders = append(c.Loaders, loader) })
-}
-
-// WithDebug configures a Debug function.
-func WithDebug(d Debug) Configurer {
-	return configFunc(func(c *Config) { c.Debug = d })
 }
 
 // WithProxy configures the mock server as a proxy server.
@@ -330,4 +333,9 @@ func WithProxy(options ...ProxyConfigurer) Configurer {
 
 		c.Proxy = opts
 	})
+}
+
+// WithConfigurers sets.
+func WithConfigurers(configurers ...Configurer) Configurer {
+	return configFunc(func(c *Config) { c.Configurers = append(c.Configurers, configurers...) })
 }

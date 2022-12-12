@@ -3,6 +3,7 @@ package reply
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 
@@ -108,8 +109,8 @@ func (rpl *StdReply) Header(key, value string) *StdReply {
 }
 
 // Cookie adds a http.Cookie to the Response.
-func (rpl *StdReply) Cookie(cookie http.Cookie) *StdReply {
-	rpl.response.Cookies = append(rpl.response.Cookies, &cookie)
+func (rpl *StdReply) Cookie(cookie *http.Cookie) *StdReply {
+	rpl.response.Cookies = append(rpl.response.Cookies, cookie)
 	return rpl
 }
 
@@ -185,8 +186,8 @@ func (rpl *StdReply) PlainText(value string) *StdReply {
 	return rpl
 }
 
-// TemplateModel sets the template data to be used.
-func (rpl *StdReply) TemplateModel(model any) *StdReply {
+// BodyTemplateModel sets the template data to be used.
+func (rpl *StdReply) BodyTemplateModel(model any) *StdReply {
 	rpl.model = model
 	return rpl
 }
@@ -197,6 +198,15 @@ func (rpl *StdReply) Prepare() error {
 	}
 
 	return nil
+}
+
+func (rpl *StdReply) Spec() []any {
+	return []any{"response", map[string]any{
+		"status":  rpl.response.Status,
+		"header":  rpl.response.Header,
+		"body":    string(rpl.response.Body),
+		"cookies": fmt.Sprintf("%v", rpl.response.Cookies),
+	}}
 }
 
 // Build builds a Response based on StdReply definition.

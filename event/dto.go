@@ -1,4 +1,4 @@
-package mod
+package event
 
 import (
 	"fmt"
@@ -15,6 +15,10 @@ type EvtReq struct {
 	Body       []byte
 }
 
+func (r *EvtReq) FullURL() string {
+	return fmt.Sprintf("%s%s", r.Host, r.RequestURI)
+}
+
 // EvtRes defines HTTP EvtRes information to be logged.
 type EvtRes struct {
 	Status int
@@ -24,7 +28,7 @@ type EvtRes struct {
 
 // EvtMk defines core.EvtMk information to be logged.
 type EvtMk struct {
-	ID   int
+	ID   string
 	Name string
 }
 
@@ -40,8 +44,4 @@ type EvtResultExt struct {
 	Name        string
 	Target      string
 	Description string
-}
-
-func (r *EvtReq) FullURL() string {
-	return fmt.Sprintf("%s%s", r.Host, r.RequestURI)
 }

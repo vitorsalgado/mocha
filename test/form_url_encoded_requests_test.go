@@ -37,5 +37,5 @@ func TestFormUrlEncoded(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NoError(t, res.Body.Close())
-	assert.True(t, scoped.Called())
+	assert.True(t, scoped.HasBeenCalled())
 }

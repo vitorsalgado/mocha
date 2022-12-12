@@ -1,4 +1,4 @@
-package mocha
+package event
 
 import (
 	"fmt"
@@ -8,16 +8,20 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/colorize"
 )
 
-type internalEvents struct {
-	l     TestingT
-	level LogLevel
+type L interface {
+	Logf(format string, a ...any)
 }
 
-func newInternalEvents(l TestingT, level LogLevel) *internalEvents {
-	return &internalEvents{l: l, level: level}
+type InternalListener struct {
+	l       L
+	verbose bool
 }
 
-func (h *internalEvents) OnRequest(evt any) {
+func NewInternalListener(l L, verbose bool) *InternalListener {
+	return &InternalListener{l: l, verbose: verbose}
+}
+
+func (h *InternalListener) OnRequest(evt any) {
 	e := evt.(*OnRequest)
 
 	builder := strings.Builder{}
@@ -31,7 +35,7 @@ func (h *internalEvents) OnRequest(evt any) {
 		colorize.Blue("Headers"),
 		e.Request.Header))
 
-	if h.level == LogVerbose {
+	if h.verbose {
 		builder.WriteString("\n")
 
 		if len(e.Request.Body) > 0 {
@@ -43,7 +47,7 @@ func (h *internalEvents) OnRequest(evt any) {
 	h.l.Logf(builder.String())
 }
 
-func (h *internalEvents) OnRequestMatched(evt any) {
+func (h *InternalListener) OnRequestMatched(evt any) {
 	e := evt.(*OnRequestMatch)
 
 	builder := strings.Builder{}
@@ -60,8 +64,8 @@ func (h *internalEvents) OnRequestMatched(evt any) {
 		nm = "<unnamed>"
 	}
 
-	if h.level == LogVerbose {
-		builder.WriteString(fmt.Sprintf("\n%s %d %s\n%s %dms\n%s\n %s %d\n %s %v\n",
+	if h.verbose {
+		builder.WriteString(fmt.Sprintf("\n%s %s %s\n%s %dms\n%s\n %s %d\n %s %v\n",
 			colorize.Bold("Mock:"),
 			e.Mock.ID,
 			nm,
@@ -82,7 +86,7 @@ func (h *internalEvents) OnRequestMatched(evt any) {
 	h.l.Logf(builder.String())
 }
 
-func (h *internalEvents) OnRequestNotMatched(evt any) {
+func (h *InternalListener) OnRequestNotMatched(evt any) {
 	e := evt.(*OnRequestNotMatched)
 
 	builder := strings.Builder{}
@@ -95,11 +99,11 @@ func (h *internalEvents) OnRequestNotMatched(evt any) {
 		e.Request.FullURL()))
 
 	if e.Result.HasClosestMatch {
-		builder.WriteString(fmt.Sprintf("%s: %d %s\n\n",
+		builder.WriteString(fmt.Sprintf("%s: %s %s\n\n",
 			colorize.Bold("Closest Match"), e.Result.ClosestMatch.ID, e.Result.ClosestMatch.Name))
 	}
 
-	if h.level == LogVerbose {
+	if h.verbose {
 		builder.WriteString(fmt.Sprintf("%s:\n", colorize.Bold("Mismatches")))
 
 		for _, detail := range e.Result.Details {
@@ -111,7 +115,7 @@ func (h *internalEvents) OnRequestNotMatched(evt any) {
 	h.l.Logf(builder.String())
 }
 
-func (h *internalEvents) OnError(evt any) {
+func (h *InternalListener) OnError(evt any) {
 	e := evt.(*OnError)
 
 	h.l.Logf("\n%s %s <--- %s %s\n%s %s\n\n%s: %v",

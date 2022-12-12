@@ -46,6 +46,10 @@ func (mr *RandomReply) Prepare() error {
 	return nil
 }
 
+func (mr *RandomReply) Spec() []any {
+	return []any{}
+}
+
 // Build builds a response stub randomly based on previously added Reply implementations.
 func (mr *RandomReply) Build(w http.ResponseWriter, r *http.Request) (*Response, error) {
 

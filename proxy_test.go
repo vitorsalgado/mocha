@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
@@ -40,8 +41,7 @@ func TestProxy_ViaProxy(t *testing.T) {
 	p.MustStart()
 	scope1 := p.MustMock(Get(URLPath("/test")).Reply(reply.Accepted()))
 
-	u1, _ := url.Parse(p.URL())
-	v := New(t, WithProxy(&ProxyConfig{ProxyVia: u1})).CloseWithT(t)
+	v := New(t, WithProxy(&ProxyConfig{Target: p.URL()})).CloseWithT(t)
 	v.MustStart()
 	scope2 := v.MustMock(Get(URLPath("/unknown")).Reply(reply.NoContent()))
 

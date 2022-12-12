@@ -12,8 +12,8 @@ var _ Reply = (*ProxyReply)(nil)
 var forbiddenHeaders = []string{
 	"Connection",
 	"Keep-Alive",
-	"Proxy-Authenticate",
-	"Proxy-Authorization",
+	"ServeHTTP-Authenticate",
+	"ServeHTTP-Authorization",
 	"TE",
 	"Trailers",
 	"Transfer-Encoding",
@@ -90,8 +90,12 @@ func (r *ProxyReply) StripSuffix(suffix string) *ProxyReply {
 
 func (r *ProxyReply) Prepare() error { return nil }
 
+func (r *ProxyReply) Spec() []any {
+	return []any{}
+}
+
 // Build builds a Reply based on the ProxyReply configuration.
-func (r *ProxyReply) Build(_ http.ResponseWriter, req *http.Request) (*Response, error) {
+func (r *ProxyReply) Build(w http.ResponseWriter, req *http.Request) (*Response, error) {
 	path := req.URL.Path
 
 	if r.trimPrefix != "" {
@@ -128,29 +132,24 @@ func (r *ProxyReply) Build(_ http.ResponseWriter, req *http.Request) (*Response,
 		res.Header.Del(h)
 	}
 
-	h := http.Header{}
-
 	for key, values := range r.headers {
 		for _, value := range values {
-			h.Add(key, value)
+			w.Header().Add(key, value)
 		}
 	}
 
 	for key, values := range res.Header {
 		for _, value := range values {
-			h.Add(key, value)
+			w.Header().Add(key, value)
 		}
 	}
 
-	body, err := io.ReadAll(res.Body)
+	w.WriteHeader(res.StatusCode)
+
+	_, err = io.Copy(w, res.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	return &Response{
-		Status:  res.StatusCode,
-		Header:  res.Header.Clone(),
-		Cookies: res.Cookies(),
-		Body:    body,
-	}, nil
+	return nil, nil
 }

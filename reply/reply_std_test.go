@@ -10,17 +10,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-var (
-	_req, _ = http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
-)
-
-type jsonData struct {
-	Name   string `json:"name"`
-	Job    string `json:"job"`
-	Active bool   `json:"active"`
-}
-
 func TestReplyFactories(t *testing.T) {
+	assert.Equal(t, http.StatusOK, Status(http.StatusOK).response.Status)
 	assert.Equal(t, http.StatusOK, OK().response.Status)
 	assert.Equal(t, http.StatusCreated, Created().response.Status)
 	assert.Equal(t, http.StatusAccepted, Accepted().response.Status)
@@ -48,7 +39,7 @@ func TestReply(t *testing.T) {
 		Header("test", "dev").
 		Header("test", "qa").
 		Header("hello", "world").
-		Cookie(http.Cookie{Name: "cookie_test"}).
+		Cookie(&http.Cookie{Name: "cookie_test"}).
 		ExpireCookie(http.Cookie{Name: "cookie_test_remove"}).
 		Body([]byte("hi")).
 		Build(nil, _req)
@@ -75,6 +66,12 @@ func TestStdReply_BodyString(t *testing.T) {
 }
 
 func TestStdReply_BodyJSON(t *testing.T) {
+	type jsonData struct {
+		Name   string `json:"name"`
+		Job    string `json:"job"`
+		Active bool   `json:"active"`
+	}
+
 	t.Run("should convert struct to json", func(t *testing.T) {
 		model := jsonData{
 			Name:   "the name",

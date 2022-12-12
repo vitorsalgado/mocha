@@ -2,13 +2,19 @@ package mocha
 
 import (
 	"fmt"
+	"net/http"
+	"os"
+	"path"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/v3/matcher"
+	"github.com/vitorsalgado/mocha/v3/internal/header"
+	"github.com/vitorsalgado/mocha/v3/reply"
+
+	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
 func TestRace(t *testing.T) {
@@ -54,18 +60,18 @@ func TestMock(t *testing.T) {
 	})
 
 	t.Run("should return called when it was hit", func(t *testing.T) {
-		assert.False(t, m.Called())
+		assert.False(t, m.HasBeenCalled())
 		m.Inc()
-		assert.True(t, m.Called())
+		assert.True(t, m.HasBeenCalled())
 
 		m.Dec()
-		assert.False(t, m.Called())
+		assert.False(t, m.HasBeenCalled())
 	})
 }
 
 func TestMock_Matches(t *testing.T) {
 	m := newMock()
-	params := &matcher.RequestInfo{}
+	params := &RequestInfo{}
 
 	cases := []struct {
 		name     string
@@ -103,8 +109,8 @@ func TestMock_Matches(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			res := m.requestMatches(params, []*expectation{{
-				Matcher: matcher.Equal(tc.value),
-				ValueSelector: func(r *matcher.RequestInfo) any {
+				Matcher: Equal(tc.value),
+				ValueSelector: func(r *RequestInfo) any {
 					return tc.selector
 				},
 			}})
@@ -115,10 +121,10 @@ func TestMock_Matches(t *testing.T) {
 	t.Run("should return not matched and error when one of expectations returns error", func(t *testing.T) {
 		// string
 		res := m.requestMatches(params, []*expectation{{
-			Matcher: matcher.Func(func(_ any) (bool, error) {
+			Matcher: Func(func(_ any) (bool, error) {
 				return false, fmt.Errorf("fail")
 			}),
-			ValueSelector: func(r *matcher.RequestInfo) any {
+			ValueSelector: func(r *RequestInfo) any {
 				return "dev"
 			},
 		}})
@@ -129,22 +135,22 @@ func TestMock_Matches(t *testing.T) {
 		// any
 		res := m.requestMatches(params, []*expectation{
 			{
-				Matcher: matcher.Equal("test"),
-				ValueSelector: func(r *matcher.RequestInfo) any {
+				Matcher: Equal("test"),
+				ValueSelector: func(r *RequestInfo) any {
 					return "test"
 				},
 				Weight: 2,
 			},
 			{
-				Matcher: matcher.Equal("test"),
-				ValueSelector: func(r *matcher.RequestInfo) any {
+				Matcher: Equal("test"),
+				ValueSelector: func(r *RequestInfo) any {
 					return "test"
 				},
 				Weight: 1,
 			},
 			{
-				Matcher: matcher.Equal(10.0),
-				ValueSelector: func(r *matcher.RequestInfo) any {
+				Matcher: Equal(10.0),
+				ValueSelector: func(r *RequestInfo) any {
 					return 10.0
 				},
 				Weight: 2,
@@ -158,22 +164,22 @@ func TestMock_Matches(t *testing.T) {
 		// any
 		res := m.requestMatches(params, []*expectation{
 			{
-				Matcher: matcher.Equal("test"),
-				ValueSelector: func(r *matcher.RequestInfo) any {
+				Matcher: Equal("test"),
+				ValueSelector: func(r *RequestInfo) any {
 					return "test"
 				},
 				Weight: 2,
 			},
 			{
-				Matcher: matcher.Equal("test"),
-				ValueSelector: func(r *matcher.RequestInfo) any {
+				Matcher: Equal("test"),
+				ValueSelector: func(r *RequestInfo) any {
 					return "dev"
 				},
 				Weight: 1,
 			},
 			{
-				Matcher: matcher.Equal(10.0),
-				ValueSelector: func(r *matcher.RequestInfo) any {
+				Matcher: Equal(10.0),
+				ValueSelector: func(r *RequestInfo) any {
 					return 10.0
 				},
 				Weight: 2,
@@ -193,4 +199,43 @@ func TestMock_Build(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, m, mm)
+}
+
+func TestMock_MarshalJSON(t *testing.T) {
+	file, err := os.Open(path.Join("testdata", "data.json"))
+	assert.NoError(t, err)
+
+	defer file.Close()
+
+	// jzon := make(map[string]any)
+	// err = json.NewDecoder(file).Decode(&jzon)
+	// assert.NoError(t, err)
+
+	m, err := Request().
+		URLPath(Equal("/test")).
+		Method(http.MethodPost).
+		Query("q", EqualIgnoreCase("dev")).
+		Query("sort", Equal("asc")).
+		Header(header.ContentType, Contain("json")).
+		Header(header.Accept, Contain("json")).
+		Body(JSONPath("name", Equal("no-one"))).
+		Body(JSONPath("active", Equal(true))).
+		Times(5).
+		Reply(reply.OK().
+			BodyReader(file).
+			Header("x-test", "ok").
+			Header("x-dev", "nok").
+			Cookie(&http.Cookie{Name: "hello", Value: "world"}).
+			Cookie(&http.Cookie{Name: "hi", Value: "bye"})).
+		Build()
+
+	assert.NoError(t, err)
+	assert.NotNil(t, m)
+
+	b, err := m.MarshalJSON()
+
+	assert.NoError(t, err)
+	assert.NotNil(t, b)
+
+	fmt.Println(string(b))
 }

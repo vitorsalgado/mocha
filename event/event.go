@@ -1,4 +1,4 @@
-package mocha
+package event
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/vitorsalgado/mocha/v3/internal/worker"
-	"github.com/vitorsalgado/mocha/v3/mod"
 )
 
 // Event Types.
@@ -21,39 +20,39 @@ var (
 
 // OnRequest event is triggered every time a request arrives at the mock handler.
 type OnRequest struct {
-	Request   *mod.EvtReq
+	Request   *EvtReq
 	StartedAt time.Time
 }
 
 // OnRequestMatch event is triggered when a mock is found for a request.
 type OnRequestMatch struct {
-	Request            *mod.EvtReq
-	ResponseDefinition mod.EvtRes
-	Mock               mod.EvtMk
+	Request            *EvtReq
+	ResponseDefinition EvtRes
+	Mock               EvtMk
 	Elapsed            time.Duration
 }
 
 // OnRequestNotMatched event is triggered when no mocks are found for a request.
 type OnRequestNotMatched struct {
-	Request *mod.EvtReq
-	Result  mod.EvtResult
+	Request *EvtReq
+	Result  EvtResult
 }
 
 // OnError event is triggered when an error occurs during request matching.
 type OnError struct {
-	Request *mod.EvtReq
+	Request *EvtReq
 	Err     error
 }
 
-type eventListener struct {
+type Listener struct {
 	w     *worker.Worker
 	queue worker.Queue
 	jobs  map[worker.JobType][]func(e any)
 	mu    sync.Mutex
 }
 
-func newEvents() *eventListener {
-	h := &eventListener{}
+func New() *Listener {
+	h := &Listener{}
 
 	h.jobs = map[worker.JobType][]func(e any){}
 	h.jobs[EventOnRequest] = make([]func(e any), 0)
@@ -67,7 +66,7 @@ func newEvents() *eventListener {
 }
 
 // StartListening starts background event listener.
-func (h *eventListener) StartListening(ctx context.Context) {
+func (h *Listener) StartListening(ctx context.Context) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
@@ -83,7 +82,7 @@ func (h *eventListener) StartListening(ctx context.Context) {
 // - OnRequestMatch
 // - OnRequestNotMatched
 // - OnError
-func (h *eventListener) Emit(event any) {
+func (h *Listener) Emit(event any) {
 	h.queue <- event
 }
 
@@ -93,7 +92,7 @@ func (h *eventListener) Emit(event any) {
 // - OnRequestMatch
 // - OnRequestNotMatched
 // - OnError
-func (h *eventListener) Subscribe(eventType reflect.Type, fn func(e any)) error {
+func (h *Listener) Subscribe(eventType reflect.Type, fn func(e any)) error {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 

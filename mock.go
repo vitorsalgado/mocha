@@ -1,12 +1,14 @@
 package mocha
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync"
 	"time"
 
-	"github.com/vitorsalgado/mocha/v3/internal/autoid"
+	"github.com/google/uuid"
+
 	"github.com/vitorsalgado/mocha/v3/internal/colorize"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
@@ -16,7 +18,7 @@ import (
 // This is core entity of this project, mostly features works based on it.
 type Mock struct {
 	// ID is unique identifier for a Mock
-	ID int
+	ID string
 
 	// Name is an optional metadata. It helps to find and debug mocks.
 	Name string
@@ -38,13 +40,14 @@ type Mock struct {
 	// it will contain the filename.
 	Source string
 
-	// Delay sets the duration to delay sending the mocked response.
+	// Delay sets the duration to delay serving the mocked response.
 	Delay time.Duration
 
+	// Mappers stores response mappers associated with this Mock.
 	Mappers []Mapper
 
 	expectations []*expectation
-	mu           *sync.Mutex
+	mu           sync.Mutex
 	hits         int
 }
 
@@ -75,17 +78,6 @@ type MapperArgs struct {
 	Parameters reply.Params
 }
 
-// target constants to help debug unmatched requests.
-const (
-	_targetRequest = "request(no specific field)"
-	_targetMethod  = "method"
-	_targetURL     = "url"
-	_targetHeader  = "header"
-	_targetQuery   = "query"
-	_targetBody    = "body"
-	_targetForm    = "form"
-)
-
 type (
 	// valueSelector defines a function that will be used to extract RequestInfo value and provide it to matcher instances.
 	valueSelector func(r *matcher.RequestInfo) any
@@ -94,7 +86,9 @@ type (
 	expectation struct {
 		// Target is an optional metadata that describes the target of the matcher.
 		// Example: the target could have the "header", meaning that the matcher will be applied to one request header.
-		Target string
+		Target target
+
+		Key string
 
 		// Matcher associated with this expectation.
 		Matcher matcher.Matcher
@@ -121,7 +115,7 @@ type (
 	// mismatchDetail gives more ctx about why a matcher did not match.
 	mismatchDetail struct {
 		Name   string
-		Target string
+		Target target
 		Desc   string
 		Err    error
 	}
@@ -142,12 +136,12 @@ const (
 // newMock returns a new Mock with default values set.
 func newMock() *Mock {
 	return &Mock{
-		ID:           autoid.Next(),
+		ID:           uuid.New().String(),
 		Enabled:      true,
 		expectations: make([]*expectation, 0),
 		PostActions:  make([]PostAction, 0),
 
-		mu: &sync.Mutex{},
+		mu: sync.Mutex{},
 	}
 }
 
@@ -170,8 +164,8 @@ func (m *Mock) Hits() int {
 	return m.hits
 }
 
-// Called checks if the Mock was called at least once.
-func (m *Mock) Called() bool {
+// HasBeenCalled checks if the Mock was called at least once.
+func (m *Mock) HasBeenCalled() bool {
 	return m.hits > 0
 }
 
@@ -196,6 +190,60 @@ func (m *Mock) Build() (*Mock, error) {
 	return m, nil
 }
 
+// MarshalJSON marshal Mock to a JSON that can be loaded later by this mock server.
+func (m *Mock) MarshalJSON() ([]byte, error) {
+	ext := make(map[string]any)
+	fields := make([]any, 0)
+
+	headers := make(map[string]any)
+	queries := make(map[string]any)
+	body := make([]any, 0)
+
+	for _, e := range m.expectations {
+		switch e.Target {
+		case _targetMethod:
+			ext["method"] = e.Matcher.Spec()
+		case _targetURL:
+			ext[e.Key] = e.Matcher.Spec()
+		case _targetQuery:
+			queries[e.Key] = e.Matcher.Spec()
+		case _targetHeader:
+			headers[e.Key] = e.Matcher.Spec()
+		case _targetForm:
+			fields = append(fields, e.Matcher.Spec())
+		case _targetBody:
+			body = append(body, e.Matcher.Spec())
+		case _targetRequest:
+			mm := e.Matcher.Spec()
+			if mm == nil {
+				continue
+			}
+
+			arr, ok := mm.([]any)
+			if !ok {
+				return nil, fmt.Errorf("must be an array")
+			}
+
+			f := arr[0].(string)
+			v := arr[1]
+
+			ext[f] = v
+		}
+	}
+
+	ext["body"] = body
+	ext["header"] = headers
+	ext["query"] = queries
+
+	res := m.Reply.Spec()
+	f := res[0].(string)
+	v := res[1]
+
+	ext[f] = v
+
+	return json.MarshalIndent(ext, "", " ")
+}
+
 // requestMatches checks if current Mock matches against a list of expectations.
 // Will iterate through all expectations even if it doesn't match early.
 func (m *Mock) requestMatches(ri *matcher.RequestInfo, expectations []*expectation) *matchResult {
@@ -204,7 +252,11 @@ func (m *Mock) requestMatches(ri *matcher.RequestInfo, expectations []*expectati
 	details := make([]mismatchDetail, 0)
 
 	for _, exp := range expectations {
-		val := exp.ValueSelector(ri)
+		var val any
+		if exp.ValueSelector != nil {
+			val = exp.ValueSelector(ri)
+		}
+
 		result, err := doMatches(exp, val)
 
 		if err != nil {

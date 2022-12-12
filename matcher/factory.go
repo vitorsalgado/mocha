@@ -29,9 +29,11 @@ const (
 	_mEqualsIgnoreCase = "equalsignorecase"
 	_mEqualFold        = "equalfold"
 	_mJSONPath         = "jsonpath"
+	_mField            = "field"
 	_mLen              = "len"
 	_mLowerCase        = "lowercase"
 	_mRegex            = "regex"
+	_mSome             = "some"
 	_mNot              = "not"
 	_mPresent          = "present"
 	_mSplit            = "split"
@@ -54,7 +56,7 @@ func BuildMatcher(v any) (m Matcher, err error) {
 	switch t.Kind() {
 	case reflect.String:
 		return EqualIgnoreCase(v.(string)), nil
-	case reflect.Slice:
+	case reflect.Slice, reflect.Array:
 		val := reflect.ValueOf(v)
 		if val.Len() == 0 {
 			return nil,
@@ -115,6 +117,7 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 
 	switch strings.ToLower(key) {
 
+	// TODO: use one
 	case _mAll, _mAllOf:
 		matchers, err := extractMultipleMatchers(args)
 		if err != nil {
@@ -124,6 +127,7 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 
 		return AllOf(matchers...), nil
 
+		// TODO: use one
 	case _mAny, _mAnyOf:
 		matchers, err := extractMultipleMatchers(args)
 		if err != nil {
@@ -133,6 +137,7 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 
 		return AnyOf(matchers...), nil
 
+		// TODO: use one
 	case _mContain, _mContains:
 		return Contain(args), nil
 
@@ -197,9 +202,11 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 	case _mEmpty:
 		return Empty(), nil
 
+		// TODO: use one
 	case _mEqual, _mEqualTo:
 		return Equal(args), nil
 
+		// TODO: use one
 	case _mEqualIgnoreCase, _mEqualsIgnoreCase, _mEqualFold:
 		str, ok := args.(string)
 		if !ok {
@@ -229,6 +236,7 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 
 		return HaveKey(str), nil
 
+		// TODO: use one
 	case _mHasPrefix, _mStartsWith:
 		str, ok := args.(string)
 		if !ok {
@@ -243,6 +251,7 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 
 		return HasPrefix(str), nil
 
+		// TODO: use one
 	case _mHasSuffix, _mEndsWith:
 		str, ok := args.(string)
 		if !ok {
@@ -257,7 +266,8 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 
 		return HasSuffix(str), nil
 
-	case _mJSONPath:
+		// TODO: use one
+	case _mJSONPath, _mField:
 		a, ok := args.([]any)
 		if !ok {
 			return nil,
@@ -304,15 +314,6 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 
 		return ToLower(m), nil
 
-	case _mRegex:
-		str, ok := args.(string)
-		if !ok {
-			return nil,
-				fmt.Errorf("[%s] expects a string argument. got=%v", _mRegex, args)
-		}
-
-		return Matches(str), nil
-
 	case _mNot:
 		m, err := BuildMatcher(args)
 		if err != nil {
@@ -325,6 +326,18 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 	case _mPresent:
 		return Present(), nil
 
+	case _mRegex:
+		str, ok := args.(string)
+		if !ok {
+			return nil,
+				fmt.Errorf("[%s] expects a string argument. got=%v", _mRegex, args)
+		}
+
+		return Matches(str), nil
+
+	case _mSome:
+		return Some(args.([]any)), nil
+
 	case _mSplit:
 		a, ok := args.([]any)
 		if !ok {
@@ -336,13 +349,13 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 				fmt.Errorf("[%s] expects two arguments. 1: Matcher, 2: Separator. got=%d", _mSplit, len(a))
 		}
 
-		separator, ok := a[1].(string)
+		separator, ok := a[0].(string)
 		if !ok {
 			return nil,
 				fmt.Errorf("[%s] second parameter must be a string. got=%v", _mSplit, a[1])
 		}
 
-		m, err := BuildMatcher(a[0])
+		m, err := BuildMatcher(a[1])
 		if err != nil {
 			return nil,
 				fmt.Errorf("[%s] error building. %w", _mSplit, err)

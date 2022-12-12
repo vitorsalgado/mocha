@@ -35,6 +35,10 @@ func (m *upperCaseMatcher) OnMockServed() error {
 	return m.matcher.OnMockServed()
 }
 
+func (m *upperCaseMatcher) Spec() any {
+	return []any{_mUpperCase, m.matcher.Spec()}
+}
+
 // ToUpper upper case matcher string argument before submitting it to provided matcher.
 func ToUpper(matcher Matcher) Matcher {
 	return &upperCaseMatcher{matcher: matcher}

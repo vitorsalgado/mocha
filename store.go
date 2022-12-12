@@ -5,29 +5,31 @@ import (
 	"sync"
 )
 
+var _ mockStore = (*builtInStore)(nil)
+
 // mockStore is the definition for Mock repository.
 type mockStore interface {
 	// Save saves the Mock.
 	Save(mock *Mock)
 
-	// FetchEligible returns mocks that can be matched against requests.
-	FetchEligible() []*Mock
+	// Get returns a Mock by ID.
+	Get(id string) *Mock
 
-	// FetchAll returns all stored Mock instances.
-	FetchAll() []*Mock
+	// GetEligible returns mocks that are eligible to be matched and served.
+	GetEligible() []*Mock
+
+	// GetAll returns all stored Mock instances.
+	GetAll() []*Mock
 
 	// Delete removes a Mock by its ID.
-	Delete(id int)
-
-	// DeleteBySource removes mocks by its source.
-	DeleteBySource(source string)
+	Delete(id string)
 
 	// DeleteExternal removes mocks set by external components, like Loader.
 	// Mostly used internally.
 	DeleteExternal()
 
-	// Flush removes all stored mocks.
-	Flush()
+	// DeleteAll removes all stored mocks.
+	DeleteAll()
 }
 
 type builtInStore struct {
@@ -51,7 +53,17 @@ func (repo *builtInStore) Save(mock *Mock) {
 	})
 }
 
-func (repo *builtInStore) FetchEligible() []*Mock {
+func (repo *builtInStore) Get(id string) *Mock {
+	for _, datum := range repo.data {
+		if datum.ID == id {
+			return datum
+		}
+	}
+
+	return nil
+}
+
+func (repo *builtInStore) GetEligible() []*Mock {
 	mocks := make([]*Mock, 0)
 
 	for _, mock := range repo.data {
@@ -63,11 +75,11 @@ func (repo *builtInStore) FetchEligible() []*Mock {
 	return mocks
 }
 
-func (repo *builtInStore) FetchAll() []*Mock {
+func (repo *builtInStore) GetAll() []*Mock {
 	return repo.data
 }
 
-func (repo *builtInStore) Delete(id int) {
+func (repo *builtInStore) Delete(id string) {
 	index := -1
 	for i, m := range repo.data {
 		if m.ID == id {
@@ -79,14 +91,6 @@ func (repo *builtInStore) Delete(id int) {
 	repo.data = repo.data[:index+copy(repo.data[index:], repo.data[index+1:])]
 }
 
-func (repo *builtInStore) DeleteBySource(source string) {
-	for i, m := range repo.data {
-		if m.Source == source {
-			repo.data = repo.data[:i+copy(repo.data[i:], repo.data[i+1:])]
-		}
-	}
-}
-
 func (repo *builtInStore) DeleteExternal() {
 	for i, m := range repo.data {
 		if m.Source != "" {
@@ -95,7 +99,7 @@ func (repo *builtInStore) DeleteExternal() {
 	}
 }
 
-func (repo *builtInStore) Flush() {
+func (repo *builtInStore) DeleteAll() {
 	repo.data = nil
 	repo.data = make([]*Mock, 0)
 }

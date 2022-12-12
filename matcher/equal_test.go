@@ -7,7 +7,7 @@ import (
 )
 
 func TestEqual(t *testing.T) {
-	t.Run("should compare expected string with nil value", func(t *testing.T) {
+	t.Run("should compare items string with nil value", func(t *testing.T) {
 		exp := "test"
 		res, err := Equal(&exp).Match(nil)
 

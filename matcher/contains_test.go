@@ -26,25 +26,25 @@ func TestContains(t *testing.T) {
 			false,
 		},
 		{
-			"should return true when expected value is contained in the given slice",
+			"should return true when items value is contained in the given slice",
 			"dev",
 			[]string{"dev", "qa"},
 			true,
 		},
 		{
-			"should return false when expected value is not contained in the given slice",
+			"should return false when items value is not contained in the given slice",
 			"po",
 			[]string{"dev", "qa"},
 			false,
 		},
 		{
-			"should return true when expected value is a key present in the given map",
+			"should return true when items value is a key present in the given map",
 			"dev",
 			map[string]string{"dev": "ok", "qa": "nok"},
 			true,
 		},
 		{
-			"should return false when expected value is a key not present in the given map",
+			"should return false when items value is a key not present in the given map",
 			"unknown",
 			map[string]string{"dev": "ok", "qa": "nok"},
 			false,
@@ -58,4 +58,10 @@ func TestContains(t *testing.T) {
 			assert.Equal(t, tc.result, result.OK)
 		})
 	}
+}
+
+func TestContainf(t *testing.T) {
+	result, err := Containf("%s", "qa").Match("dev and qa")
+	assert.Nil(t, err)
+	assert.True(t, result.OK)
 }

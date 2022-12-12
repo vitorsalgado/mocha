@@ -30,7 +30,16 @@ func (m *equalMatcher) OnMockServed() error {
 	return nil
 }
 
+func (m *equalMatcher) Spec() any {
+	return []any{_mEqual, m.expected}
+}
+
 // Equal returns true if matcher value is equal to the given parameter value.
 func Equal(expected any) Matcher {
 	return &equalMatcher{expected: expected}
+}
+
+// Equalf returns true if matcher value is equal to the given parameter value.
+func Equalf(format string, a ...any) Matcher {
+	return &equalMatcher{expected: fmt.Sprintf(format, a...)}
 }

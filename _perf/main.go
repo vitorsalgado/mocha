@@ -28,7 +28,7 @@ type Srv struct {
 	info mocha.ServerInfo
 }
 
-func (s *Srv) Configure(config *mocha.Config, handler http.Handler) error {
+func (s *Srv) Setup(config *mocha.Config, handler http.Handler) error {
 	http.HandleFunc("/", handler.ServeHTTP)
 
 	s.h = handler

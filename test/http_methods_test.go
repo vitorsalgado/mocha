@@ -49,14 +49,14 @@ func TestHTTPMethods(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
-		assert.False(t, scoped.Called())
+		assert.False(t, scoped.HasBeenCalled())
 
 		other, err := testutil.Post(m.URL()+"/test", nil).Do()
 
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, other.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
-		assert.True(t, scoped.Called())
+		assert.True(t, scoped.HasBeenCalled())
 	})
 
 	t.Run("should mock PUT", func(t *testing.T) {
@@ -70,14 +70,14 @@ func TestHTTPMethods(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
-		assert.False(t, scoped.Called())
+		assert.False(t, scoped.HasBeenCalled())
 
 		other, err := testutil.NewRequest(http.MethodPut, m.URL()+"/test", nil).Do()
 
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, other.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
-		assert.True(t, scoped.Called())
+		assert.True(t, scoped.HasBeenCalled())
 	})
 
 	t.Run("should mock DELETE", func(t *testing.T) {
@@ -91,14 +91,14 @@ func TestHTTPMethods(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
-		assert.False(t, scoped.Called())
+		assert.False(t, scoped.HasBeenCalled())
 
 		other, err := testutil.NewRequest(http.MethodDelete, m.URL()+"/test", nil).Do()
 
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, other.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
-		assert.True(t, scoped.Called())
+		assert.True(t, scoped.HasBeenCalled())
 	})
 
 	t.Run("should mock PATCH", func(t *testing.T) {
@@ -112,14 +112,14 @@ func TestHTTPMethods(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
-		assert.False(t, scoped.Called())
+		assert.False(t, scoped.HasBeenCalled())
 
 		other, err := testutil.NewRequest(http.MethodPatch, m.URL()+"/test", nil).Do()
 
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, other.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
-		assert.True(t, scoped.Called())
+		assert.True(t, scoped.HasBeenCalled())
 	})
 
 	t.Run("should mock HEAD", func(t *testing.T) {
@@ -133,34 +133,13 @@ func TestHTTPMethods(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
-		assert.False(t, scoped.Called())
+		assert.False(t, scoped.HasBeenCalled())
 
 		other, err := testutil.NewRequest(http.MethodHead, m.URL()+"/test", nil).Do()
 
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, other.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
-		assert.True(t, scoped.Called())
-	})
-
-	t.Run("should mock OPTIONS", func(t *testing.T) {
-		scoped := m.MustMock(
-			mocha.Options(matcher.URLPath("/test")).
-				Reply(reply.OK()))
-
-		defer scoped.Clean()
-
-		res, err := testutil.Get(m.URL() + "/test").Do()
-
-		assert.NoError(t, err)
-		assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
-		assert.False(t, scoped.Called())
-
-		other, err := testutil.NewRequest(http.MethodOptions, m.URL()+"/test", nil).Do()
-
-		assert.NoError(t, err)
-		assert.Equal(t, http.StatusOK, other.StatusCode)
-		assert.Equal(t, 1, scoped.Hits())
-		assert.True(t, scoped.Called())
+		assert.True(t, scoped.HasBeenCalled())
 	})
 }

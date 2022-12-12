@@ -69,7 +69,7 @@ func TestReplyWithTemplate(t *testing.T) {
 		BodyTemplate(NewTextTemplate().
 			FuncMap(template.FuncMap{"trim": strings.TrimSpace}).
 			Template(string(b))).
-		TemplateModel(data).
+		BodyTemplateModel(data).
 		Build(nil, _req)
 
 	if err != nil {

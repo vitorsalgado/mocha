@@ -33,6 +33,10 @@ func (m *funcMatcher) OnMockServed() error {
 	return nil
 }
 
+func (m *funcMatcher) Spec() any {
+	return nil
+}
+
 // Func creates an anonymous Matcher using the given function.
 func Func(fn func(v any) (bool, error)) Matcher {
 	return &funcMatcher{fn: fn}

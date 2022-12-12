@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-const _noColorEnv = "MOCHA_NO_COLOR"
+const _noColorEnv = "NO_COLOR"
 
 type style int
 
@@ -42,7 +42,7 @@ const (
 	StyleUnderline
 )
 
-// Additional Text Styles
+// Configurers Text Styles
 const (
 	StyleInverse style = iota + 7
 	StyleHidden

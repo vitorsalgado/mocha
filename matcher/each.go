@@ -82,6 +82,10 @@ func (m *eachMatcher) OnMockServed() error {
 	return m.matcher.OnMockServed()
 }
 
+func (m *eachMatcher) Spec() any {
+	return []any{_mEach, m.matcher.Spec()}
+}
+
 func Each(matcher Matcher) Matcher {
 	return &eachMatcher{matcher: matcher}
 }

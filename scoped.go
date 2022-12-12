@@ -1,7 +1,6 @@
 package mocha
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -15,8 +14,8 @@ func scope(repo mockStore, mocks []*Mock) *Scoped {
 	return &Scoped{storage: repo, mocks: mocks}
 }
 
-// Get returns a mock with the provided id.
-func (s *Scoped) Get(id int) *Mock {
+// Get returns a Mock with the given id.
+func (s *Scoped) Get(id string) *Mock {
 	for _, mock := range s.mocks {
 		if mock.ID == id {
 			return mock
@@ -26,15 +25,39 @@ func (s *Scoped) Get(id int) *Mock {
 	return nil
 }
 
-// ListAll returns all store scoped in this instance.
-func (s *Scoped) ListAll() []*Mock {
+// GetAll returns all Mock(s) Scoped in this instance.
+func (s *Scoped) GetAll() []*Mock {
 	return s.mocks
 }
 
-// Called returns true if all scoped store were called at least once.
-func (s *Scoped) Called() bool {
+// GetPending returns all Mock(s) that were not called at least once.
+func (s *Scoped) GetPending() []*Mock {
+	ret := make([]*Mock, 0)
 	for _, m := range s.mocks {
-		if !m.Called() {
+		if !m.HasBeenCalled() {
+			ret = append(ret, m)
+		}
+	}
+
+	return ret
+}
+
+// GetCalled returns all store that were called.
+func (s *Scoped) GetCalled() []*Mock {
+	ret := make([]*Mock, 0)
+	for _, m := range s.mocks {
+		if m.HasBeenCalled() {
+			ret = append(ret, m)
+		}
+	}
+
+	return ret
+}
+
+// HasBeenCalled returns true if all Scoped Mock(s) were called at least once.
+func (s *Scoped) HasBeenCalled() bool {
+	for _, m := range s.mocks {
+		if !m.HasBeenCalled() {
 			return false
 		}
 	}
@@ -42,35 +65,11 @@ func (s *Scoped) Called() bool {
 	return true
 }
 
-// ListPending returns all store that were not called at least once.
-func (s *Scoped) ListPending() []*Mock {
-	ret := make([]*Mock, 0)
-	for _, m := range s.mocks {
-		if !m.Called() {
-			ret = append(ret, m)
-		}
-	}
-
-	return ret
-}
-
-// ListCalled returns all store that were called.
-func (s *Scoped) ListCalled() []*Mock {
-	ret := make([]*Mock, 0)
-	for _, m := range s.mocks {
-		if m.Called() {
-			ret = append(ret, m)
-		}
-	}
-
-	return ret
-}
-
 // IsPending returns true when there are one or more store that were not called at least once.
 func (s *Scoped) IsPending() bool {
 	pending := false
 	for _, m := range s.mocks {
-		if !m.Called() {
+		if !m.HasBeenCalled() {
 			pending = true
 			break
 		}
@@ -96,7 +95,7 @@ func (s *Scoped) Enable() {
 
 // Clean all scoped store.
 func (s *Scoped) Clean() {
-	ids := make([]int, len(s.mocks))
+	ids := make([]string, len(s.mocks))
 
 	for i, m := range s.mocks {
 		ids[i] = m.ID
@@ -109,48 +108,6 @@ func (s *Scoped) Clean() {
 	s.mocks = make([]*Mock, 0)
 }
 
-// AssertCalled reports an error if there are still pending store.
-func (s *Scoped) AssertCalled(t TestingT) bool {
-	t.Helper()
-
-	if s.IsPending() {
-		b := strings.Builder{}
-		pending := s.ListPending()
-		size := len(pending)
-
-		for _, p := range pending {
-			b.WriteString(fmt.Sprintf("	mock: %d %s\n", p.ID, p.Name))
-		}
-
-		t.Errorf("\nthere are still %d store that were not called.\npending:\n%s", size, b.String())
-
-		return false
-	}
-
-	return true
-}
-
-// AssertNotCalled reports an error if any mock was called.
-func (s *Scoped) AssertNotCalled(t TestingT) bool {
-	t.Helper()
-
-	if !s.IsPending() {
-		b := strings.Builder{}
-		called := s.ListCalled()
-		size := len(called)
-
-		for _, p := range called {
-			b.WriteString(fmt.Sprintf("	mock: %d %s\n", p.ID, p.Name))
-		}
-
-		t.Errorf("\nthere are %d store that were called at least once.\ncalled:\n%s", size, b.String())
-
-		return false
-	}
-
-	return true
-}
-
 // Hits returns the sum of the scoped store calls.
 func (s *Scoped) Hits() int {
 	total := 0
@@ -159,4 +116,70 @@ func (s *Scoped) Hits() int {
 	}
 
 	return total
+}
+
+// AssertCalled reports an error if there are still pending store.
+func (s *Scoped) AssertCalled(t TestingT) bool {
+	t.Helper()
+
+	if !s.IsPending() {
+		return true
+	}
+
+	b := strings.Builder{}
+	pending := s.GetPending()
+	size := len(pending)
+
+	for _, p := range pending {
+		b.WriteString("  mock [")
+		b.WriteString(p.ID)
+		b.WriteString("] ")
+		b.WriteString(p.Name)
+		b.WriteString("\n")
+	}
+
+	t.Errorf("\nthere are still [%d] mocks that were not called.\npending:\n%s", size, b.String())
+
+	return false
+}
+
+// AssertNotCalled reports an error if any mock was called.
+func (s *Scoped) AssertNotCalled(t TestingT) bool {
+	t.Helper()
+
+	if s.IsPending() {
+		return true
+	}
+
+	b := strings.Builder{}
+	called := s.GetCalled()
+	size := len(called)
+
+	for _, p := range called {
+		b.WriteString("  mock [")
+		b.WriteString(p.ID)
+		b.WriteString("] ")
+		b.WriteString(p.Name)
+		b.WriteString("\n")
+	}
+
+	t.Errorf("\nthere are [%d] mocks that were called at least once.\ncalled:\n%s", size, b.String())
+
+	return false
+}
+
+// AssertCalls asserts that the sum of matched request hits
+// is equal to the given expected value.
+func (s *Scoped) AssertCalls(t TestingT, expected int) bool {
+	t.Helper()
+
+	hits := s.Hits()
+
+	if hits == expected {
+		return true
+	}
+
+	t.Errorf("\nexpected [%d] matched request hits. got [%d]", expected, hits)
+
+	return false
 }

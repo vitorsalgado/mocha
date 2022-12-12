@@ -7,7 +7,9 @@ import (
 	"reflect"
 	"sync"
 
+	"github.com/vitorsalgado/mocha/v3/event"
 	"github.com/vitorsalgado/mocha/v3/internal/mid"
+	"github.com/vitorsalgado/mocha/v3/internal/mid/recover"
 	"github.com/vitorsalgado/mocha/v3/internal/notifier"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
@@ -26,16 +28,18 @@ type Mocha struct {
 	T      TestingT
 	Name   string
 
-	server  Server
-	storage mockStore
-	ctx     context.Context
-	cancel  context.CancelFunc
-	params  reply.Params
-	events  *eventListener
-	scopes  []*Scoped
-	loaders []Loader
-	rec     *record
-	mu      sync.Mutex
+	server             Server
+	storage            mockStore
+	ctx                context.Context
+	cancel             context.CancelFunc
+	requestBodyParsers []RequestBodyParser
+	params             reply.Params
+	listener           *event.Listener
+	scopes             []*Scoped
+	loaders            []Loader
+	rec                *record
+	mu                 sync.Mutex
+	proxy              *proxy
 }
 
 // TestingT is based on testing.T and allow mocha components to log information and errors.
@@ -52,36 +56,53 @@ type Cleanable interface {
 
 // New creates a new Mocha mock server with the given configurations.
 // Parameter config accepts a Config or a ConfigBuilder implementation.
-func New(t TestingT, config ...Configurer) *Mocha {
+func New(t TestingT, config ...Configurer) (m *Mocha) {
+	m = &Mocha{}
+
 	if t == nil {
 		t = notifier.NewConsole()
 	}
 
-	conf := defaultConfig()
-	for _, configurer := range config {
-		configurer.Apply(conf)
+	conf := newConfig()
+	for i, configurer := range config {
+		err := configurer.Apply(conf)
+		if err != nil {
+			t.Logf("error applying configuration [%d]. reason=%s", i, err.Error())
+			panic(err)
+		}
+	}
+
+	// Add the built-in configurer by default.
+	if len(conf.Configurers) == 0 {
+		conf.Configurers = append(conf.Configurers, BuiltInConfigurer())
+	}
+
+	for i, configurer := range conf.Configurers {
+		err := configurer.Apply(conf)
+		if err != nil {
+			t.Logf("error applying config [%d]. reason: %s", i, err.Error())
+			panic(err)
+		}
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
 	store := newStore()
-	events := newEvents()
-
-	recovery := &recoverMid{d: conf.Debug, t: t, evt: events}
+	events := event.New()
 
 	parsers := make([]RequestBodyParser, 0, len(conf.RequestBodyParsers)+4)
 	parsers = append(parsers, conf.RequestBodyParsers...)
-	parsers = append(parsers, &jsonBodyParser{}, &plainTextParser{}, &formURLEncodedParser{}, &bytesParser{})
+	parsers = append(parsers, &jsonBodyParser{}, &plainTextParser{}, &formURLEncodedParser{}, &noopParser{})
 
 	middlewares := make([]func(handler http.Handler) http.Handler, 0)
-	middlewares = append(middlewares, recovery.Recover)
+	middlewares = append(middlewares, recover.New(t).Recover)
 
 	if conf.LogLevel > LogSilently {
-		h := newInternalEvents(t, conf.LogLevel)
+		h := event.NewInternalListener(t, conf.LogLevel == LogVerbose)
 
-		_ = events.Subscribe(EventOnRequest, h.OnRequest)
-		_ = events.Subscribe(EventOnRequestMatched, h.OnRequestMatched)
-		_ = events.Subscribe(EventOnRequestNotMatched, h.OnRequestNotMatched)
-		_ = events.Subscribe(EventOnError, h.OnError)
+		_ = events.Subscribe(event.EventOnRequest, h.OnRequest)
+		_ = events.Subscribe(event.EventOnRequestMatched, h.OnRequestMatched)
+		_ = events.Subscribe(event.EventOnRequestNotMatched, h.OnRequestNotMatched)
+		_ = events.Subscribe(event.EventOnError, h.OnError)
 	}
 
 	if conf.CORS != nil {
@@ -102,12 +123,12 @@ func New(t TestingT, config ...Configurer) *Mocha {
 
 	var p *proxy
 	if conf.Proxy != nil {
-		p = newProxy(conf.Proxy, events, rec)
+		p = newProxy(conf.Proxy, events)
 	}
 
 	handler := mid.
 		Compose(middlewares...).
-		Root(newHandler(conf, store, parsers, params, p, events, rec, t, conf.Debug))
+		Root(&mockHandler{m})
 
 	if conf.HandlerDecorator != nil {
 		handler = conf.HandlerDecorator(handler)
@@ -119,7 +140,7 @@ func New(t TestingT, config ...Configurer) *Mocha {
 		server = newServer()
 	}
 
-	err := server.Configure(conf, handler)
+	err := server.Setup(conf, handler)
 	if err != nil {
 		t.Logf("failed to configure server. reason=%v", err)
 		panic(err)
@@ -131,20 +152,21 @@ func New(t TestingT, config ...Configurer) *Mocha {
 		loaders[i+1] = loader
 	}
 
-	return &Mocha{
-		Config: conf,
-		T:      t,
+	m.Config = conf
+	m.T = t
+	m.server = server
+	m.storage = store
+	m.ctx = ctx
+	m.cancel = cancel
+	m.params = params
+	m.listener = events
+	m.scopes = make([]*Scoped, 0)
+	m.loaders = loaders
+	m.rec = rec
+	m.proxy = p
+	m.requestBodyParsers = parsers
 
-		server:  server,
-		storage: store,
-		ctx:     ctx,
-		cancel:  cancel,
-		params:  params,
-		scopes:  make([]*Scoped, 0),
-		events:  events,
-		loaders: loaders,
-		rec:     rec,
-	}
+	return
 }
 
 // Default creates a new mock server with default configurations.
@@ -217,7 +239,7 @@ func (m *Mocha) MustStartTLS() ServerInfo {
 //			Query("filter", matcher.Equal("all")).
 //			Reply(reply.Created().PlainText("hello world")))
 //
-//	assert.True(T, scoped.Called())
+//	assert.True(T, scoped.HasBeenCalled())
 func (m *Mocha) Mock(builders ...Builder) (*Scoped, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -253,7 +275,7 @@ func (m *Mocha) Mock(builders ...Builder) (*Scoped, error) {
 //			Query("filter", matcher.Equal("all")).
 //			Reply(reply.Created().PlainText("hello world")))
 //
-//	assert.True(T, scoped.Called())
+//	assert.True(T, scoped.HasBeenCalled())
 func (m *Mocha) MustMock(builders ...Builder) *Scoped {
 	scoped, err := m.Mock(builders...)
 	if err != nil {
@@ -284,7 +306,7 @@ func (m *Mocha) Subscribe(evt reflect.Type, fn func(payload any)) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	return m.events.Subscribe(evt, fn)
+	return m.listener.Subscribe(evt, fn)
 }
 
 // MustSubscribe add a new event listener.
@@ -426,19 +448,20 @@ func (m *Mocha) AssertNotCalled(t TestingT) bool {
 	return result
 }
 
-// AssertHits asserts that the sum of matched request hits
+// AssertCalls asserts that the sum of matched request hits
 // is equal to the given expected value.
-func (m *Mocha) AssertHits(t TestingT, expected int) bool {
+func (m *Mocha) AssertCalls(t TestingT, expected int) bool {
 	t.Helper()
 
 	hits := m.Hits()
 
-	if hits < expected {
-		t.Errorf("\nexpected %d matched request hits. got %d", expected, hits)
-		return false
+	if hits == expected {
+		return true
 	}
 
-	return true
+	t.Errorf("\nexpected [%d] matched request hits. got [%d]", expected, hits)
+
+	return false
 }
 
 // --
@@ -451,7 +474,7 @@ func (m *Mocha) onStart() error {
 		return err
 	}
 
-	m.events.StartListening(m.ctx)
+	m.listener.StartListening(m.ctx)
 
 	if m.rec != nil {
 		m.rec.startRecording(m.ctx)

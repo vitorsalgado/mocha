@@ -2,8 +2,9 @@ package mocha
 
 import (
 	"context"
-	"encoding/json"
+	"encoding/hex"
 	"fmt"
+	"hash/fnv"
 	"log"
 	"mime"
 	"net/http"
@@ -14,16 +15,19 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/spf13/viper"
+
 	"github.com/vitorsalgado/mocha/v3/internal/header"
-	"github.com/vitorsalgado/mocha/v3/mod"
 )
 
 var _regexNoSpecialCharacters = regexp.MustCompile("[^a-z0-9]")
 var _defaultRecordConfig = RecordConfig{
-	SaveDir:           "testdata",
-	Save:              false,
-	RecRequestHeaders: []string{"accept", "content-type"},
-	RecResponseHeaders: []string{
+	SaveDir:        "testdata/_mocks",
+	SaveExtension:  "json",
+	SaveBodyToFile: false,
+	Save:           false,
+	RequestHeaders: []string{"accept", "content-type"},
+	ResponseHeaders: []string{
 		"content-type",
 		"link",
 		"content-length",
@@ -32,10 +36,12 @@ var _defaultRecordConfig = RecordConfig{
 }
 
 type RecordConfig struct {
-	RecRequestHeaders  []string
-	RecResponseHeaders []string
-	Save               bool
-	SaveDir            string
+	RequestHeaders  []string
+	ResponseHeaders []string
+	Save            bool
+	SaveDir         string
+	SaveExtension   string
+	SaveBodyToFile  bool
 }
 
 type RecordConfigurer interface {
@@ -43,9 +49,11 @@ type RecordConfigurer interface {
 }
 
 func (r *RecordConfig) Apply(opts *RecordConfig) {
+	opts.Save = r.Save
 	opts.SaveDir = r.SaveDir
-	opts.RecResponseHeaders = r.RecResponseHeaders
-	opts.RecRequestHeaders = r.RecRequestHeaders
+	opts.SaveBodyToFile = r.SaveBodyToFile
+	opts.ResponseHeaders = r.ResponseHeaders
+	opts.RequestHeaders = r.RequestHeaders
 }
 
 type recArgs struct {
@@ -93,7 +101,10 @@ func (r *record) startRecording(ctx context.Context) {
 					return
 				}
 
-				r.process(a)
+				err := r.process(a)
+				if err != nil {
+					log.Println(err)
+				}
 
 			case <-ctx.Done():
 				close(r.in)
@@ -103,120 +114,133 @@ func (r *record) startRecording(ctx context.Context) {
 	}()
 }
 
-func (r *record) record(arg *recArgs) {
-	r.in <- arg
+func (r *record) record(
+	req *http.Request,
+	parsedReqBody []byte,
+	res *http.Response,
+	parsedResBody []byte,
+) {
+	input := &recArgs{
+		request: recRequest{
+			path:   req.URL.Path,
+			method: req.Method,
+			header: req.Header.Clone(),
+			query:  req.URL.Query(),
+			body:   parsedReqBody,
+		},
+		response: recResponse{
+			status: res.StatusCode,
+			header: res.Header.Clone(),
+			body:   parsedResBody,
+		},
+	}
+
+	go func() { r.in <- input }()
 }
 
 func (r *record) stop() {
 	r.cancel()
 }
 
-func (r *record) process(arg *recArgs) {
-	out := &mod.ExtMock{}
-	out.Response = &mod.ExtMockResponse{}
-	out.Response.Header = make(map[string]string)
+func (r *record) process(arg *recArgs) error {
+	v := viper.New()
+	v.AddConfigPath(r.config.SaveDir)
+	v.SetConfigType(r.config.SaveExtension)
 
-	sanitized := strings.ReplaceAll(arg.request.path, " ", "-")
-	sanitized = strings.TrimPrefix(_regexNoSpecialCharacters.ReplaceAllString(sanitized, "-"), "-")
-	name := fmt.Sprintf("%s-%s", arg.request.method, sanitized)
+	v.Set(_fRequestURLPath, arg.request.path)
+	v.Set(_fRequestMethod, arg.request.method)
+	v.Set(_fResponseStatus, arg.response.status)
 
-	out.Request.URL = arg.request.path
-	out.Request.Method = arg.request.method
+	requestHeaders := make(map[string]string)
+	responseHeaders := make(map[string]string)
+	query := make(map[string]string, len(arg.request.query))
+	hasResBody := len(arg.response.body) > 0
+	bsha := ""
 
-	if len(r.config.RecRequestHeaders) > 0 {
-		for _, h := range r.config.RecRequestHeaders {
-			v := arg.request.header.Get(h)
-			if v != "" {
-				out.Request.Header[h] = v
-			}
+	for _, h := range r.config.RequestHeaders {
+		v := arg.request.header.Get(h)
+		if v != "" {
+			requestHeaders[h] = v
 		}
 	}
 
-	if len(r.config.RecResponseHeaders) > 0 {
-		for _, h := range r.config.RecResponseHeaders {
-			v := arg.response.header.Get(h)
-			if v != "" {
-				out.Response.Header[h] = v
-			}
+	for _, h := range r.config.ResponseHeaders {
+		v := arg.response.header.Get(h)
+		if v != "" {
+			responseHeaders[h] = v
 		}
 	}
 
 	for k := range arg.request.query {
-		out.Request.Query[k] = arg.request.query.Get(k)
+		query[k] = arg.request.query.Get(k)
 	}
 
 	if len(arg.request.body) > 0 {
-		out.Request.Body = []any{"equal", string(arg.request.body)}
-	}
+		v.Set(_fRequestBody, []string{"equal", string(arg.request.body)})
 
-	out.Response.Status = arg.response.status
+		h := fnv.New64()
+		h.Write(arg.request.body)
+		bsha = hex.EncodeToString(h.Sum(nil))
+	}
 
 	contentType := arg.request.header.Get(header.ContentType)
 	if strings.Contains(contentType, ";") {
 		contentType = strings.TrimSpace(contentType[:strings.Index(contentType, ";")])
 	}
-	ext, err := mime.ExtensionsByType(contentType)
-	if err != nil {
-		log.Print(err)
+	ext, _ := mime.ExtensionsByType(contentType)
+
+	nm := strings.ReplaceAll(arg.request.path, " ", "-")
+	nm = strings.TrimPrefix(_regexNoSpecialCharacters.ReplaceAllString(nm, "-"), "-")
+	if bsha != "" {
+		nm += "--" + bsha
 	}
 
-	dst := r.config.SaveDir
-	if !path.IsAbs(r.config.SaveDir) {
-		wd, _ := os.Getwd()
-		dst = path.Join(wd, dst)
-	}
+	name := fmt.Sprintf("%s-%s", arg.request.method, nm)
+	mockFile := path.Join(r.config.SaveDir, fmt.Sprintf("%s.mock.json", name))
 
-	mockFile := path.Join(dst, fmt.Sprintf("%s.mock.json", name))
-	mockBodyFile := ""
-
-	_, err = os.Stat(mockFile)
+	_, err := os.Stat(mockFile)
 	exists := true
 	if err != nil {
 		exists = false
 	}
 
 	if exists {
-		log.Printf("file %s exists.\n", mockFile)
-		return
+		return fmt.Errorf("file %s exists.\n", mockFile)
 	}
 
-	if len(arg.response.body) > 0 {
-		if len(ext) > 0 {
-			mockBodyFile = name + ext[0]
+	if hasResBody {
+		if r.config.SaveBodyToFile {
+			mockBodyFile := name + ".bin"
+			if len(ext) > 0 {
+				mockBodyFile = name + ext[0]
+			}
+
+			b, err := os.Create(path.Join(r.config.SaveDir, mockBodyFile))
+			if err != nil {
+				return err
+			}
+
+			defer b.Close()
+
+			_, err = b.Write(arg.response.body)
+			if err != nil {
+				return err
+			}
+
+			v.Set(_fResponseBodyFile, mockBodyFile)
 		} else {
-			mockBodyFile = name + ".bin"
+			v.Set(_fResponseBody, string(arg.response.body))
 		}
+	}
 
-		b, err := os.Create(path.Join(dst, mockBodyFile))
+	if r.config.Save {
+		err = v.WriteConfigAs(mockFile)
 		if err != nil {
-			log.Println(err)
-			return
+			return err
 		}
-
-		defer b.Close()
-
-		_, err = b.Write(arg.response.body)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-
-		out.Response.BodyFile = mockBodyFile
 	}
 
-	file, err := os.Create(mockFile)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	defer file.Close()
-
-	err = json.NewEncoder(file).Encode(out)
-	if err != nil {
-		log.Println(err)
-		return
-	}
+	return nil
 }
 
 type recordConfigFunc func(config *RecordConfig)

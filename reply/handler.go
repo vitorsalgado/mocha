@@ -16,6 +16,10 @@ func Handler(h http.HandlerFunc) *HandlerReply {
 
 func (h *HandlerReply) Prepare() error { return nil }
 
+func (h *HandlerReply) Spec() []any {
+	return []any{}
+}
+
 func (h *HandlerReply) Build(w http.ResponseWriter, r *http.Request) (*Response, error) {
 	h.h(w, r)
 	return nil, nil

@@ -1,1 +1,0 @@
-brew "golangci-lint"

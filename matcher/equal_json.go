@@ -42,6 +42,10 @@ func (m *equalJSONMatcher) OnMockServed() error {
 	return nil
 }
 
+func (m *equalJSONMatcher) Spec() any {
+	return []any{_mEqual, m.expected}
+}
+
 // EqualJSON returns true if matcher value is equal to the given parameter value.
 func EqualJSON(expected any) Matcher {
 	return &equalJSONMatcher{expected: expected}

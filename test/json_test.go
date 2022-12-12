@@ -24,7 +24,7 @@ func TestPostJSON(t *testing.T) {
 
 		defer m.Close()
 
-		scoped := m.MustMock(mocha.Post(matcher.URLPath("/test")).
+		scoped := m.MustMock(mocha.Postf("/test").
 			Header("test", matcher.Equal("hello")).
 			Body(
 				matcher.JSONPath("name", matcher.Equal("dev")), matcher.JSONPath("ok", matcher.Equal(true))).
@@ -37,7 +37,7 @@ func TestPostJSON(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NoError(t, res.Body.Close())
-		assert.True(t, scoped.Called())
+		assert.True(t, scoped.HasBeenCalled())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
 
@@ -59,7 +59,7 @@ func TestPostJSON(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NoError(t, res.Body.Close())
-		assert.True(t, scoped.Called())
+		assert.True(t, scoped.HasBeenCalled())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
 
@@ -82,7 +82,7 @@ func TestPostJSON(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NoError(t, res.Body.Close())
-		assert.True(t, scoped.Called())
+		assert.True(t, scoped.HasBeenCalled())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
 
@@ -105,7 +105,7 @@ func TestPostJSON(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NoError(t, res.Body.Close())
-		assert.True(t, scoped.Called())
+		assert.True(t, scoped.HasBeenCalled())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
 
@@ -128,7 +128,7 @@ func TestPostJSON(t *testing.T) {
 
 		assert.NoError(t, err)
 		assert.NoError(t, res.Body.Close())
-		assert.False(t, scoped.Called())
+		assert.False(t, scoped.HasBeenCalled())
 		assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
 	})
 }

@@ -30,6 +30,10 @@ func (m *hasKeyMatcher) OnMockServed() error {
 	return nil
 }
 
+func (m *hasKeyMatcher) Spec() any {
+	return []any{_mHasKey, m.path}
+}
+
 // HaveKey returns true if the JSON key in the given path is present.
 // Example:
 //

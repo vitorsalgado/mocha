@@ -29,9 +29,19 @@ func Get(m matcher.Matcher) *MockBuilder {
 	return Request().URL(m).Method(http.MethodGet)
 }
 
+// Getf inits a mock for GET method.
+func Getf(path string, a ...any) *MockBuilder {
+	return Request().URLPathf(path, a...).Method(http.MethodGet)
+}
+
 // Post inits a mock for Post method.
 func Post(m matcher.Matcher) *MockBuilder {
 	return Request().URL(m).Method(http.MethodPost)
+}
+
+// Postf inits a mock for Post method.
+func Postf(path string, a ...any) *MockBuilder {
+	return Request().URLPathf(path, a...).Method(http.MethodPost)
 }
 
 // Put inits a mock for Put method.
@@ -39,9 +49,19 @@ func Put(m matcher.Matcher) *MockBuilder {
 	return Request().URL(m).Method(http.MethodPut)
 }
 
+// Putf inits a mock for Put method.
+func Putf(path string, a ...any) *MockBuilder {
+	return Request().URLPathf(path, a...).Method(http.MethodPut)
+}
+
 // Patch inits a mock for Patch method.
 func Patch(u matcher.Matcher) *MockBuilder {
 	return Request().URL(u).Method(http.MethodPatch)
+}
+
+// Patchf inits a mock for Patch method.
+func Patchf(path string, a ...any) *MockBuilder {
+	return Request().URLPathf(path, a...).Method(http.MethodPatch)
 }
 
 // Delete inits a mock for Delete method.
@@ -49,14 +69,19 @@ func Delete(m matcher.Matcher) *MockBuilder {
 	return Request().URL(m).Method(http.MethodDelete)
 }
 
+// Deletef inits a mock for Delete method.
+func Deletef(path string, a ...any) *MockBuilder {
+	return Request().URLPathf(path, a...).Method(http.MethodDelete)
+}
+
 // Head inits a mock for Head method.
 func Head(m matcher.Matcher) *MockBuilder {
 	return Request().URL(m).Method(http.MethodHead)
 }
 
-// Options inits a mock for Options method.
-func Options(m matcher.Matcher) *MockBuilder {
-	return Request().URL(m).Method(http.MethodOptions)
+// Headf inits a mock for Head method.
+func Headf(path string, a ...any) *MockBuilder {
+	return Request().URLPathf(path, a...).Method(http.MethodHead)
 }
 
 // Name defines a name for the mock.
@@ -74,11 +99,33 @@ func (b *MockBuilder) Priority(p int) *MockBuilder {
 }
 
 // Method sets the HTTP request method to be matched.
-func (b *MockBuilder) Method(method string) *MockBuilder {
+func (b *MockBuilder) Method(methods ...string) *MockBuilder {
+	var m matcher.Matcher
+	if len(methods) == 0 {
+		panic(".Method() requires at least one HTTP Method")
+	} else if len(methods) == 1 {
+		m = matcher.EqualIgnoreCase(methods[0])
+	} else {
+		m = matcher.Some(methods)
+	}
+
 	b.appendExpectation(&expectation{
 		Target:        _targetMethod,
 		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Method },
-		Matcher:       matcher.EqualIgnoreCase(method),
+		Matcher:       m,
+		Weight:        _weightNone,
+	})
+
+	return b
+}
+
+// MethodMatches defines a matcher.Matcher for the request method.
+// Useful to set a Mock for multiple HTTP Request methods.
+func (b *MockBuilder) MethodMatches(m matcher.Matcher) *MockBuilder {
+	b.appendExpectation(&expectation{
+		Target:        _targetMethod,
+		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Method },
+		Matcher:       m,
 		Weight:        _weightNone,
 	})
 
@@ -89,6 +136,7 @@ func (b *MockBuilder) Method(method string) *MockBuilder {
 func (b *MockBuilder) URL(m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetURL,
+		Key:           "url",
 		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.URL },
 		Matcher:       m,
 		Weight:        _weightRegular,
@@ -97,10 +145,17 @@ func (b *MockBuilder) URL(m matcher.Matcher) *MockBuilder {
 	return b
 }
 
+// URLf sets a matcher to the http.Request url.URL that compares the http.Request url.URL with given value.
+// The expected value will be formatted with the provided format specifier.
+func (b *MockBuilder) URLf(format string, a ...any) *MockBuilder {
+	return b.URL(matcher.Equal(fmt.Sprintf(format, a...)))
+}
+
 // URLPath defines a matcher to be applied to the url.URL path.
 func (b *MockBuilder) URLPath(m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetURL,
+		Key:           "url_path",
 		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.URL.Path },
 		Matcher:       m,
 		Weight:        _weightRegular,
@@ -109,10 +164,17 @@ func (b *MockBuilder) URLPath(m matcher.Matcher) *MockBuilder {
 	return b
 }
 
+// URLPathf sets a Matcher that compares the http.Request url.URL path with given value, ignoring case.
+// The expected value will be formatted with the provided format specifier.
+func (b *MockBuilder) URLPathf(format string, a ...any) *MockBuilder {
+	return b.URLPath(matcher.Equal(fmt.Sprintf(format, a...)))
+}
+
 // Header adds a matcher to a specific http.Header key.
 func (b *MockBuilder) Header(key string, m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
-		Target:        fmt.Sprintf("%s(%s)", _targetHeader, key),
+		Target:        _targetHeader,
+		Key:           key,
 		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Header.Get(key) },
 		Matcher:       m,
 		Weight:        _weightLow,
@@ -121,10 +183,16 @@ func (b *MockBuilder) Header(key string, m matcher.Matcher) *MockBuilder {
 	return b
 }
 
+// Headerf adds a matcher to a specific http.Header key.
+func (b *MockBuilder) Headerf(key string, value string, a ...any) *MockBuilder {
+	return b.Header(key, matcher.Equal(fmt.Sprintf(value, a...)))
+}
+
 // Query defines a matcher to a specific query.
 func (b *MockBuilder) Query(key string, m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
-		Target:        fmt.Sprintf("%s(%s)", _targetQuery, key),
+		Target:        _targetQuery,
+		Key:           key,
 		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.URL.Query().Get(key) },
 		Matcher:       m,
 		Weight:        _weightVeryLow,
@@ -133,20 +201,32 @@ func (b *MockBuilder) Query(key string, m matcher.Matcher) *MockBuilder {
 	return b
 }
 
+// Queryf defines a matcher to a specific query.
+func (b *MockBuilder) Queryf(key string, value string, a ...any) *MockBuilder {
+	return b.Query(key, matcher.Equal(fmt.Sprintf(value, a...)))
+}
+
 // Body adds matchers to the request body.
 // If request contains a JSON body, you can provide multiple matchers to several fields.
 // Example:
 //
 //	m.Body(JSONPath("name", EqualTo("test")), JSONPath("address.street", ToContains("nowhere")))
 func (b *MockBuilder) Body(matcherList ...matcher.Matcher) *MockBuilder {
-	for _, m := range matcherList {
-		b.appendExpectation(&expectation{
-			Target:        _targetBody,
-			ValueSelector: func(r *matcher.RequestInfo) any { return r.ParsedBody },
-			Matcher:       m,
-			Weight:        _weightHigh,
-		})
+	var m matcher.Matcher
+	if len(matcherList) == 0 {
+		panic(".Body() func requires at least one matcher.Matcher")
+	} else if len(matcherList) == 1 {
+		m = matcherList[0]
+	} else {
+		m = matcher.AllOf(matcherList...)
 	}
+
+	b.appendExpectation(&expectation{
+		Target:        _targetBody,
+		ValueSelector: func(r *matcher.RequestInfo) any { return r.ParsedBody },
+		Matcher:       m,
+		Weight:        _weightHigh,
+	})
 
 	return b
 }
@@ -154,7 +234,8 @@ func (b *MockBuilder) Body(matcherList ...matcher.Matcher) *MockBuilder {
 // FormField defines a matcher for a specific form field by its key.
 func (b *MockBuilder) FormField(field string, m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
-		Target:        fmt.Sprintf("%s(%s)", _targetForm, field),
+		Target:        _targetForm,
+		Key:           field,
 		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Form.Get(field) },
 		Matcher:       m,
 		Weight:        _weightVeryLow,
@@ -163,13 +244,17 @@ func (b *MockBuilder) FormField(field string, m matcher.Matcher) *MockBuilder {
 	return b
 }
 
-// Repeat defines to total times that a mock should be served, if request matches.
-func (b *MockBuilder) Repeat(times int) *MockBuilder {
+// FormFieldf defines a matcher for a specific form field by its key.
+func (b *MockBuilder) FormFieldf(field string, value string, a ...any) *MockBuilder {
+	return b.FormField(field, matcher.Equal(fmt.Sprintf(value, a...)))
+}
+
+// Times defines to total times that a mock should be served, if request matches.
+func (b *MockBuilder) Times(times int) *MockBuilder {
 	b.appendExpectation(&expectation{
-		Target:        _targetRequest,
-		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request },
-		Matcher:       matcher.Repeat(times),
-		Weight:        _weightNone,
+		Target:  _targetRequest,
+		Matcher: matcher.Repeat(times),
+		Weight:  _weightNone,
 	})
 	return b
 }
@@ -222,7 +307,8 @@ func (b *MockBuilder) Delay(duration time.Duration) *MockBuilder {
 	return b
 }
 
-// Map adds Mapper that will be executed after the Response was built.
+// Map adds a Mapper that allows modifying the response after it was built.
+// Multiple mappers can be added.
 func (b *MockBuilder) Map(mapper Mapper) *MockBuilder {
 	b.mock.Mappers = append(b.mock.Mappers, mapper)
 	return b
@@ -242,15 +328,10 @@ func (b *MockBuilder) ReplyFunc(
 	return b
 }
 
-// ReplyJust sets the mock to return a simple response with the given status code.
-// Optionally, you can provide a reply as well.
-func (b *MockBuilder) ReplyJust(status int, r *reply.StdReply) *MockBuilder {
-	if r == nil {
-		b.mock.Reply = reply.Status(status)
-	} else {
-		b.mock.Reply = r.Status(status)
-	}
-
+// Enabled define if the Mock will enabled or disabled.
+// All mocks are enabled by default.
+func (b *MockBuilder) Enabled(enabled bool) *MockBuilder {
+	b.mock.Enabled = enabled
 	return b
 }
 
@@ -273,10 +354,7 @@ func (b *MockBuilder) Build() (*Mock, error) {
 
 	if b.scenario != "" {
 		b.appendExpectation(&expectation{
-			Target: _targetRequest,
-			ValueSelector: func(r *matcher.RequestInfo) any {
-				return r.Request
-			},
+			Target:  _targetRequest,
 			Matcher: matcher.Scenario(b.scenario, b.scenarioRequiredState, b.scenarioNewState),
 		})
 	}

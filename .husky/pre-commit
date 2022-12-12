@@ -3,4 +3,4 @@
 
 [ -n "$CI" ] && exit 0
 
-npx --no-install lint-staged
+npx --no-install lint-staged --config etc/lint-staged.config.cjs

@@ -1,6 +1,7 @@
 package mocha
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"os"
@@ -8,13 +9,17 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 func TestRecording_WithWebProxy(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	dir := t.TempDir()
-	p := New(t, Configure().Proxy().Record(WithRecordDir(dir)))
+	p := New(t, Configure().Proxy().Record(&RecordConfig{SaveDir: dir, Save: true, SaveBodyToFile: true}))
 	p.MustStart()
 	scope1 := p.MustMock(Get(URLPath("/test")).Reply(reply.Accepted()))
 
@@ -37,12 +42,12 @@ func TestRecording_WithWebProxy(t *testing.T) {
 	scope1.AssertCalled(t)
 	scope2.AssertCalled(t)
 
-	time.Sleep(1 * time.Second)
+	<-ctx.Done()
 
 	entries, err := os.ReadDir(dir)
 
 	assert.NoError(t, err)
-	assert.Len(t, entries, 2)
+	assert.Len(t, entries, 1)
 
 	p.Close()
 	m.Close()

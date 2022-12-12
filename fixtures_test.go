@@ -1,6 +1,10 @@
-package testmocks
+package mocha
 
-import "github.com/stretchr/testify/mock"
+import (
+	"github.com/stretchr/testify/mock"
+)
+
+var _ TestingT = (*FakeNotifier)(nil)
 
 type FakeNotifier struct{ mock.Mock }
 
@@ -24,8 +28,4 @@ func (m *FakeNotifier) Logf(format string, args ...any) {
 
 func (m *FakeNotifier) Errorf(format string, args ...any) {
 	m.Called(format, args)
-}
-
-func (m *FakeNotifier) FailNow() {
-	m.Called()
 }
