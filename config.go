@@ -73,6 +73,8 @@ type Config struct {
 	// Proxy configures the mock server as a proxy.
 	Proxy *ProxyConfig
 
+	Record *RecordConfig
+
 	// Debug configures a debug function.
 	Debug Debug
 }
@@ -92,6 +94,7 @@ func (c *Config) Apply(conf *Config) {
 	conf.Files = c.Files
 	conf.Loaders = c.Loaders
 	conf.Proxy = c.Proxy
+	conf.Record = c.Record
 	conf.Debug = c.Debug
 }
 
@@ -211,6 +214,19 @@ func (cb *ConfigBuilder) Proxy(options ...ProxyConfigurer) *ConfigBuilder {
 	}
 
 	cb.conf.Proxy = opts
+
+	return cb
+}
+
+// Record configures recording.
+func (cb *ConfigBuilder) Record(options ...RecordConfigurer) *ConfigBuilder {
+	opts := &_defaultRecordConfig
+
+	for _, option := range options {
+		option.Apply(opts)
+	}
+
+	cb.conf.Record = opts
 
 	return cb
 }

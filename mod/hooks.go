@@ -12,13 +12,14 @@ type EvtReq struct {
 	RequestURI string
 	Host       string
 	Header     http.Header
-	Body       any
+	Body       []byte
 }
 
 // EvtRes defines HTTP EvtRes information to be logged.
 type EvtRes struct {
 	Status int
 	Header http.Header
+	Body   []byte
 }
 
 // EvtMk defines core.EvtMk information to be logged.

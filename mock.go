@@ -41,6 +41,8 @@ type Mock struct {
 	// Delay sets the duration to delay sending the mocked response.
 	Delay time.Duration
 
+	Mappers []Mapper
+
 	expectations []*expectation
 	mu           *sync.Mutex
 	hits         int
@@ -62,6 +64,15 @@ type PostActionArgs struct {
 type PostAction interface {
 	// Run runs the PostAction implementation.
 	Run(args *PostActionArgs) error
+}
+
+// Mapper is the function definition to be used to map Mock Response before serving it.
+type Mapper func(res *reply.Response, args *MapperArgs) error
+
+// MapperArgs represents the expected arguments for every Mapper.
+type MapperArgs struct {
+	Request    *http.Request
+	Parameters reply.Params
 }
 
 // target constants to help debug unmatched requests.

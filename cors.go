@@ -110,6 +110,11 @@ func (b *CORSConfigBuilder) AllowMethods(methods ...string) *CORSConfigBuilder {
 	return b
 }
 
+// Apply builds CORS configurations based on previous settings set via the builder.
+func (b *CORSConfigBuilder) Apply(opts *CORSConfig) {
+	b.build().Apply(opts)
+}
+
 func (b *CORSConfigBuilder) build() *CORSConfig {
 	if len(b.origins) > 0 {
 		if len(b.origins) == 1 {
@@ -120,11 +125,6 @@ func (b *CORSConfigBuilder) build() *CORSConfig {
 	}
 
 	return b.options
-}
-
-// Apply builds CORS configurations based on previous settings set via the builder.
-func (b *CORSConfigBuilder) Apply(opts *CORSConfig) {
-	b.build().Apply(opts)
 }
 
 func corsMid(options *CORSConfig) func(http.Handler) http.Handler {

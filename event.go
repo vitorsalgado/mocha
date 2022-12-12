@@ -31,7 +31,6 @@ type OnRequestMatch struct {
 	ResponseDefinition mod.EvtRes
 	Mock               mod.EvtMk
 	Elapsed            time.Duration
-	Body               any
 }
 
 // OnRequestNotMatched event is triggered when no mocks are found for a request.

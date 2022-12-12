@@ -85,11 +85,11 @@ func TestResponseMapper(t *testing.T) {
 
 	scoped := m.MustMock(Get(URLPath("/test")).
 		Reply(reply.
-			OK().
-			Map(func(r *reply.Response, rma *reply.MapperArgs) error {
-				r.Header.Add("x-test", rma.Request.Header.Get("x-param"))
-				return nil
-			})))
+			OK()).
+		Map(func(r *reply.Response, rma *MapperArgs) error {
+			r.Header.Add("x-test", rma.Request.Header.Get("x-param"))
+			return nil
+		}))
 
 	req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
 	req.Header("x-param", "dev")

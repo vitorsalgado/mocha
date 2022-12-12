@@ -222,6 +222,12 @@ func (b *MockBuilder) Delay(duration time.Duration) *MockBuilder {
 	return b
 }
 
+// Map adds Mapper that will be executed after the Response was built.
+func (b *MockBuilder) Map(mapper Mapper) *MockBuilder {
+	b.mock.Mappers = append(b.mock.Mappers, mapper)
+	return b
+}
+
 // Reply defines a response mock to be served if this mock matches to a request.
 func (b *MockBuilder) Reply(rep reply.Reply) *MockBuilder {
 	b.mock.Reply = rep

@@ -5,7 +5,7 @@ type ExtMock struct {
 	Enabled          *bool                    `json:"enabled,omitempty"`
 	Priority         int                      `json:"priority,omitempty"`
 	Repeat           *int                     `json:"repeat,omitempty"`
-	Scenario         ExtMockScenario          `json:"scenario"`
+	Scenario         *ExtMockScenario         `json:"scenario,omitempty"`
 	Request          ExtMockRequest           `json:"request"`
 	Response         *ExtMockResponse         `json:"response,omitempty"`
 	RandomResponse   *ExtMockRandomResponse   `json:"random_response,omitempty"`

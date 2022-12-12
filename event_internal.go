@@ -32,17 +32,12 @@ func (h *internalEvents) OnRequest(evt any) {
 		e.Request.Header))
 
 	if h.level == LogVerbose {
-		var b any
-		switch t := e.Request.Body.(type) {
-		case []byte:
-			b = string(t)
-		default:
-			b = t
-		}
-
 		builder.WriteString("\n")
-		builder.WriteString(colorize.Blue("Body: "))
-		builder.WriteString(fmt.Sprintf("%v\n", b))
+
+		if len(e.Request.Body) > 0 {
+			builder.WriteString(colorize.Blue("Body: "))
+			builder.WriteString(fmt.Sprintf("%v\n", string(e.Request.Body)))
+		}
 	}
 
 	h.l.Logf(builder.String())
@@ -60,18 +55,28 @@ func (h *internalEvents) OnRequestMatched(evt any) {
 		e.Request.Method,
 		e.Request.FullURL()))
 
+	nm := e.Mock.Name
+	if nm == "" {
+		nm = "<unnamed>"
+	}
+
 	if h.level == LogVerbose {
-		builder.WriteString(fmt.Sprintf("\n%s%d %s\n\n%s: %dms\n%s:\n %s: %d\n %s: %v\n",
-			colorize.Bold("Mock: "),
+		builder.WriteString(fmt.Sprintf("\n%s %d %s\n%s %dms\n%s\n %s %d\n %s %v\n",
+			colorize.Bold("Mock:"),
 			e.Mock.ID,
-			e.Mock.Name,
-			colorize.Green("Took"),
+			nm,
+			colorize.Green("Took:"),
 			e.Elapsed.Milliseconds(),
-			colorize.Green("Response Definition"),
-			colorize.Green("Status"),
+			colorize.Green("Response"),
+			colorize.Green("Status:"),
 			e.ResponseDefinition.Status,
-			colorize.Green("Headers"),
+			colorize.Green("Headers:"),
 			e.ResponseDefinition.Header))
+
+		if len(e.ResponseDefinition.Body) > 0 {
+			builder.WriteString(
+				fmt.Sprintf(" %s %s\n", colorize.Green("Body:"), string(e.ResponseDefinition.Body)))
+		}
 	}
 
 	h.l.Logf(builder.String())

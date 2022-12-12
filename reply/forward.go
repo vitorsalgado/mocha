@@ -91,7 +91,7 @@ func (r *ProxyReply) StripSuffix(suffix string) *ProxyReply {
 func (r *ProxyReply) Prepare() error { return nil }
 
 // Build builds a Reply based on the ProxyReply configuration.
-func (r *ProxyReply) Build(w http.ResponseWriter, req *http.Request) (*Response, error) {
+func (r *ProxyReply) Build(_ http.ResponseWriter, req *http.Request) (*Response, error) {
 	path := req.URL.Path
 
 	if r.trimPrefix != "" {
@@ -128,24 +128,29 @@ func (r *ProxyReply) Build(w http.ResponseWriter, req *http.Request) (*Response,
 		res.Header.Del(h)
 	}
 
+	h := http.Header{}
+
 	for key, values := range r.headers {
 		for _, value := range values {
-			w.Header().Add(key, value)
+			h.Add(key, value)
 		}
 	}
 
 	for key, values := range res.Header {
 		for _, value := range values {
-			w.Header().Add(key, value)
+			h.Add(key, value)
 		}
 	}
 
-	w.WriteHeader(res.StatusCode)
-
-	_, err = io.Copy(w, res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	return nil, nil
+	return &Response{
+		Status:  res.StatusCode,
+		Header:  res.Header.Clone(),
+		Cookies: res.Cookies(),
+		Body:    body,
+	}, nil
 }

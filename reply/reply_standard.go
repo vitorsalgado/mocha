@@ -31,13 +31,8 @@ const (
 // New creates a new StdReply. Prefer to use factory functions for each status code.
 func New() *StdReply {
 	return &StdReply{
-		response: &Response{
-			Cookies: make([]*http.Cookie, 0),
-			Header:  make(http.Header),
-			Mappers: make([]Mapper, 0),
-		},
-		bodyType: _bodyDefault,
-	}
+		response: &Response{Cookies: make([]*http.Cookie, 0), Header: make(http.Header)},
+		bodyType: _bodyDefault}
 }
 
 // Status creates a new Reply with the given HTTP status code.
@@ -193,12 +188,6 @@ func (rpl *StdReply) PlainText(value string) *StdReply {
 // TemplateModel sets the template data to be used.
 func (rpl *StdReply) TemplateModel(model any) *StdReply {
 	rpl.model = model
-	return rpl
-}
-
-// Map adds Mapper that will be executed after the Response was built.
-func (rpl *StdReply) Map(mapper Mapper) *StdReply {
-	rpl.response.Mappers = append(rpl.response.Mappers, mapper)
 	return rpl
 }
 

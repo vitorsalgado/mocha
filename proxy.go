@@ -1,6 +1,7 @@
 package mocha
 
 import (
+	"bytes"
 	"io"
 	"net"
 	"net/http"
@@ -34,10 +35,11 @@ func (p *ProxyConfig) Apply(c *ProxyConfig) {
 
 type proxy struct {
 	conf *ProxyConfig
+	rec  *record
 	e    *eventListener
 }
 
-func newProxy(conf *ProxyConfig, events *eventListener) *proxy {
+func newProxy(conf *ProxyConfig, events *eventListener, rec *record) *proxy {
 	if conf.Transport == nil {
 		transport := &http.Transport{}
 		if conf.ProxyVia != nil {
@@ -54,14 +56,14 @@ func newProxy(conf *ProxyConfig, events *eventListener) *proxy {
 		conf.Transport = transport
 	}
 
-	return &proxy{conf: conf, e: events}
+	return &proxy{conf: conf, e: events, rec: rec}
 }
 
-func (p *proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (p *proxy) Proxy(w http.ResponseWriter, r *http.Request, reqBody []byte) {
 	if r.Method == http.MethodConnect {
 		p.handleTunneling(w, r)
 	} else {
-		p.handleHTTP(w, r)
+		p.handleHTTP(w, r, reqBody)
 	}
 }
 
@@ -106,13 +108,23 @@ func (p *proxy) handleTunneling(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (p *proxy) handleHTTP(w http.ResponseWriter, r *http.Request) {
+func (p *proxy) handleHTTP(w http.ResponseWriter, r *http.Request, reqBody []byte) {
 	res, err := p.conf.Transport.RoundTrip(r)
 	if err != nil {
 		p.e.Emit(&OnError{Request: evtRequest(r), Err: err})
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		p.e.Emit(&OnError{Request: evtRequest(r), Err: err})
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	res.Body.Close()
+	res.Body = io.NopCloser(bytes.NewBuffer(body))
 
 	defer res.Body.Close()
 
@@ -123,9 +135,16 @@ func (p *proxy) handleHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(res.StatusCode)
+	w.Write(body)
 
-	_, err = io.Copy(w, res.Body)
-	if err != nil {
-		p.e.Emit(&OnError{Request: evtRequest(r), Err: err})
+	// no record, just finish.
+	if p.rec == nil {
+		return
 	}
+
+	p.rec.record(&recArgs{
+		request: recRequest{
+			path: r.URL.Path, method: r.Method, header: r.Header.Clone(), query: r.URL.Query(), body: reqBody},
+		response: recResponse{
+			status: res.StatusCode, header: res.Header.Clone(), body: reqBody}})
 }

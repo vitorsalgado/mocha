@@ -33,19 +33,9 @@ type Response struct {
 	Header  http.Header
 	Cookies []*http.Cookie
 	Body    []byte
-	Mappers []Mapper
 }
 
 // SendPending checks if response was already sent by the Reply implementation.
 func (r *Response) SendPending() bool {
 	return r != nil
-}
-
-// Mapper is the function definition to be used to map Mock Response before serving it.
-type Mapper func(res *Response, args *MapperArgs) error
-
-// MapperArgs represents the expected arguments for every Mapper.
-type MapperArgs struct {
-	Request    *http.Request
-	Parameters Params
 }

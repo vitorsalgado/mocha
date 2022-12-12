@@ -34,6 +34,7 @@ type Mocha struct {
 	events  *eventListener
 	scopes  []*Scoped
 	loaders []Loader
+	rec     *record
 	mu      sync.Mutex
 }
 
@@ -94,14 +95,19 @@ func New(t TestingT, config ...Configurer) *Mocha {
 		params = conf.Parameters
 	}
 
+	var rec *record
+	if conf.Record != nil {
+		rec = newRecord(conf.Record)
+	}
+
 	var p *proxy
 	if conf.Proxy != nil {
-		p = newProxy(conf.Proxy, events)
+		p = newProxy(conf.Proxy, events, rec)
 	}
 
 	handler := mid.
 		Compose(middlewares...).
-		Root(newHandler(conf.Name, store, parsers, params, p, events, t, conf.Debug))
+		Root(newHandler(conf, store, parsers, params, p, events, rec, t, conf.Debug))
 
 	if conf.HandlerDecorator != nil {
 		handler = conf.HandlerDecorator(handler)
@@ -137,6 +143,7 @@ func New(t TestingT, config ...Configurer) *Mocha {
 		scopes:  make([]*Scoped, 0),
 		events:  events,
 		loaders: loaders,
+		rec:     rec,
 	}
 }
 
@@ -289,7 +296,7 @@ func (m *Mocha) MustSubscribe(evt reflect.Type, fn func(payload any)) {
 	}
 }
 
-// Reload reloads mock set external sources, like Loader.
+// Reload reloads mocks from external sources, like Loader.
 // Coded mocks will be kept.
 func (m *Mocha) Reload() error {
 	// remove mocks set by Loaders and then, reload, keeping the ones set via code.
@@ -305,7 +312,7 @@ func (m *Mocha) Reload() error {
 	return nil
 }
 
-// MustReload reloads mock set external sources, like Loader.
+// MustReload reloads mocks from external sources, like Loader.
 // Coded mocks will be kept.
 // It panics if any error occurs.
 func (m *Mocha) MustReload() {
@@ -334,7 +341,7 @@ func (m *Mocha) CloseWithT(t Cleanable) *Mocha {
 	return m
 }
 
-// Hits returns the total request hits.
+// Hits returns the total matched request hits.
 func (m *Mocha) Hits() int {
 	hits := 0
 
@@ -367,6 +374,10 @@ func (m *Mocha) Clean() {
 	for _, s := range m.scopes {
 		s.Clean()
 	}
+}
+
+func (m *Mocha) StopRecording() {
+	m.rec.stop()
 }
 
 // --
@@ -415,7 +426,7 @@ func (m *Mocha) AssertNotCalled(t TestingT) bool {
 	return result
 }
 
-// AssertHits asserts that the sum of request hits for mocks
+// AssertHits asserts that the sum of matched request hits
 // is equal to the given expected value.
 func (m *Mocha) AssertHits(t TestingT, expected int) bool {
 	t.Helper()
@@ -423,7 +434,7 @@ func (m *Mocha) AssertHits(t TestingT, expected int) bool {
 	hits := m.Hits()
 
 	if hits < expected {
-		t.Errorf("\nexpected %d request hits. got %d", expected, hits)
+		t.Errorf("\nexpected %d matched request hits. got %d", expected, hits)
 		return false
 	}
 
@@ -441,6 +452,10 @@ func (m *Mocha) onStart() error {
 	}
 
 	m.events.StartListening(m.ctx)
+
+	if m.rec != nil {
+		m.rec.startRecording(m.ctx)
+	}
 
 	return nil
 }

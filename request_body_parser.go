@@ -24,16 +24,16 @@ type RequestBodyParser interface {
 
 // parseRequestBody tests given parsers until it finds one that can parse the request body.
 // User provided RequestBodyParser takes precedence.
-func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (any, error) {
+func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (any, []byte, error) {
 	if r.Body != nil && r.Method != http.MethodGet && r.Method != http.MethodHead {
 		b, err := io.ReadAll(r.Body)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		err = r.Body.Close()
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		r.Body = io.NopCloser(bytes.NewBuffer(b))
@@ -44,15 +44,15 @@ func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (any, error)
 			if parse.CanParse(contentType, r) {
 				body, err := parse.Parse(b, r)
 				if err != nil {
-					return nil, err
+					return nil, nil, err
 				}
 
-				return body, nil
+				return body, b, nil
 			}
 		}
 	}
 
-	return nil, nil
+	return nil, nil, nil
 }
 
 // jsonBodyParser parses requests with content type header containing "application/json"
