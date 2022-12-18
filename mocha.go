@@ -24,10 +24,9 @@ const StatusNoMockFound = http.StatusTeapot
 
 // Mocha is the base for the mock server.
 type Mocha struct {
-	Config *Config
-	T      TestingT
-	Name   string
-
+	t                  TestingT
+	name               string
+	config             *Config
 	server             Server
 	storage            mockStore
 	ctx                context.Context
@@ -68,19 +67,6 @@ func New(t TestingT, config ...Configurer) (m *Mocha) {
 		err := configurer.Apply(conf)
 		if err != nil {
 			t.Logf("error applying configuration [%d]. reason=%s", i, err.Error())
-			panic(err)
-		}
-	}
-
-	// Add the built-in configurer by default.
-	if len(conf.Configurers) == 0 {
-		conf.Configurers = append(conf.Configurers, BuiltInConfigurer())
-	}
-
-	for i, configurer := range conf.Configurers {
-		err := configurer.Apply(conf)
-		if err != nil {
-			t.Logf("error applying config [%d]. reason: %s", i, err.Error())
 			panic(err)
 		}
 	}
@@ -152,8 +138,8 @@ func New(t TestingT, config ...Configurer) (m *Mocha) {
 		loaders[i+1] = loader
 	}
 
-	m.Config = conf
-	m.T = t
+	m.config = conf
+	m.t = t
 	m.server = server
 	m.storage = store
 	m.ctx = ctx
@@ -170,8 +156,8 @@ func New(t TestingT, config ...Configurer) (m *Mocha) {
 }
 
 // Default creates a new mock server with default configurations.
-func Default() *Mocha {
-	return New(notifier.NewConsole())
+func Default(config ...Configurer) *Mocha {
+	return New(nil, config...)
 }
 
 // Start starts the mock server.
@@ -194,7 +180,7 @@ func (m *Mocha) Start() (ServerInfo, error) {
 func (m *Mocha) MustStart() ServerInfo {
 	info, err := m.Start()
 	if err != nil {
-		m.T.Logf("failed to start mock server. reason=%v", err)
+		m.t.Logf("failed to start mock server. reason=%v", err)
 		panic(err)
 	}
 
@@ -221,7 +207,7 @@ func (m *Mocha) StartTLS() (ServerInfo, error) {
 func (m *Mocha) MustStartTLS() ServerInfo {
 	info, err := m.server.StartTLS()
 	if err != nil {
-		m.T.Logf("failed to start a TLS mock server. reason=%v", err)
+		m.t.Logf("failed to start a TLS mock server. reason=%v", err)
 		panic(err)
 	}
 
@@ -239,7 +225,7 @@ func (m *Mocha) MustStartTLS() ServerInfo {
 //			Query("filter", matcher.Equal("all")).
 //			Reply(reply.Created().PlainText("hello world")))
 //
-//	assert.True(T, scoped.HasBeenCalled())
+//	assert.True(t, scoped.HasBeenCalled())
 func (m *Mocha) Mock(builders ...Builder) (*Scoped, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
@@ -275,11 +261,11 @@ func (m *Mocha) Mock(builders ...Builder) (*Scoped, error) {
 //			Query("filter", matcher.Equal("all")).
 //			Reply(reply.Created().PlainText("hello world")))
 //
-//	assert.True(T, scoped.HasBeenCalled())
+//	assert.True(t, scoped.HasBeenCalled())
 func (m *Mocha) MustMock(builders ...Builder) *Scoped {
 	scoped, err := m.Mock(builders...)
 	if err != nil {
-		m.T.Logf(err.Error())
+		m.t.Logf(err.Error())
 		panic(err)
 	}
 
@@ -299,6 +285,11 @@ func (m *Mocha) URL() string {
 // Context returns internal context.Context.
 func (m *Mocha) Context() context.Context {
 	return m.ctx
+}
+
+// Config returns the mock server configurations.
+func (m *Mocha) Config() Config {
+	return *m.config
 }
 
 // Subscribe add a new event listener.
@@ -341,7 +332,7 @@ func (m *Mocha) MustReload() {
 	err := m.Reload()
 
 	if err != nil {
-		m.T.Logf("error rebuild mock definitions. reason=%v", err.Error())
+		m.t.Logf("error rebuild mock definitions. reason=%v", err.Error())
 		panic(err)
 	}
 }
@@ -352,7 +343,7 @@ func (m *Mocha) Close() {
 
 	err := m.server.Close()
 	if err != nil {
-		m.T.Logf(err.Error())
+		m.t.Logf(err.Error())
 	}
 }
 

@@ -8,9 +8,17 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestViperConfigLoader_Load(t *testing.T) {
-	cl := BuiltInConfigurer()
+func TestLocalConfig(t *testing.T) {
+	c := WithLocal().(*localConfigurer)
+
+	assert.Equal(t, DefaultConfigFileName, c.filename)
+	assert.Equal(t, DefaultConfigDirectories, c.paths)
+}
+
+func TestLocalConfig_Apply(t *testing.T) {
+	cl := WithLocalCustomized(".moairc.test.json", []string{"testdata"})
 	config := &Config{}
+
 	err := cl.Apply(config)
 	require.NoError(t, err)
 

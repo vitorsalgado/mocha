@@ -73,9 +73,6 @@ type Config struct {
 	// Record configures Mock Request/Response recording.
 	// Needs to be used with Proxy.
 	Record *RecordConfig
-
-	// Configurers allow setting additional Config loaders.
-	Configurers []Configurer
 }
 
 // Apply copies the current Config struct values to the given Config parameter.
@@ -94,15 +91,11 @@ func (c *Config) Apply(conf *Config) error {
 	conf.Loaders = c.Loaders
 	conf.Proxy = c.Proxy
 	conf.Record = c.Record
-	conf.Configurers = c.Configurers
 
 	return nil
 }
 
-// IsRecording check if Request/Response recording is enabled.
-func (c *Config) IsRecording() bool { return c.Record != nil }
-
-// configFunc is a helper to build config functions.
+// configFunc is a helper to build Configurer instances with functions.
 type configFunc func(config *Config)
 
 func (f configFunc) Apply(config *Config) error {
@@ -122,7 +115,6 @@ func newConfig() *Config {
 		RequestBodyParsers: make([]RequestBodyParser, 0),
 		Middlewares:        make([]func(http.Handler) http.Handler, 0),
 		Loaders:            make([]Loader, 0),
-		Configurers:        make([]Configurer, 0),
 	}
 }
 
@@ -234,18 +226,13 @@ func (cb *ConfigBuilder) Record(options ...RecordConfigurer) *ConfigBuilder {
 	return cb
 }
 
-func (cb *ConfigBuilder) Use(configurer ...Configurer) *ConfigBuilder {
-	cb.conf.Configurers = append(cb.conf.Configurers, configurer...)
-	return cb
-}
-
 // Apply builds a new Config with previously configured values.
 func (cb *ConfigBuilder) Apply(conf *Config) error {
 	return cb.conf.Apply(conf)
 }
 
 // --
-// Config Functions
+// config Functions
 // --
 
 // WithName sets a name to the mock server.
@@ -333,9 +320,4 @@ func WithProxy(options ...ProxyConfigurer) Configurer {
 
 		c.Proxy = opts
 	})
-}
-
-// WithConfigurers sets.
-func WithConfigurers(configurers ...Configurer) Configurer {
-	return configFunc(func(c *Config) { c.Configurers = append(c.Configurers, configurers...) })
 }

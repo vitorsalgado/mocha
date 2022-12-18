@@ -161,9 +161,8 @@ func TestConfig_WithFunctions(t *testing.T) {
 		WithParams(reply.Parameters()),
 		WithDirs("test", "dev"),
 		WithLoader(&FileLoader{}),
-		WithProxy(&ProxyConfig{}, &ProxyConfig{}),
-		WithConfigurers(&builtInConfigurer{}))
-	conf := m.Config
+		WithProxy(&ProxyConfig{}, &ProxyConfig{}))
+	conf := m.Config()
 
 	assert.Equal(t, nm, conf.Name)
 	assert.Equal(t, addr, conf.Addr)
@@ -176,11 +175,10 @@ func TestConfig_WithFunctions(t *testing.T) {
 	assert.Equal(t, []string{ConfigMockFilePattern, "test", "dev"}, conf.Directories)
 	assert.Len(t, conf.Loaders, 1)
 	assert.NotNil(t, conf.Proxy)
-	assert.Len(t, conf.Configurers, 1)
 }
 
 func TestWithNewFiles(t *testing.T) {
 	m := New(t, WithNewDirs("test", "dev"))
 
-	assert.Equal(t, []string{"test", "dev"}, m.Config.Directories)
+	assert.Equal(t, []string{"test", "dev"}, m.config.Directories)
 }

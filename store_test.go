@@ -14,7 +14,7 @@ func TestInMemoryStorage(t *testing.T) {
 	st.Save(&Mock{ID: "3", Name: "mock_3", Enabled: true, mu: sync.Mutex{}, Priority: 2})
 
 	m := st.GetAll()[0]
-	assert.Equal(t, m.ID, 1)
+	assert.Equal(t, m.ID, "1")
 	assert.Equal(t, m.Name, "mock_1")
 
 	m.Disable()
@@ -31,7 +31,7 @@ func TestInMemoryStorage(t *testing.T) {
 
 	mocks = st.GetEligible()
 	assert.Len(t, mocks, 1)
-	assert.Equal(t, 3, mocks[0].ID)
+	assert.Equal(t, "3", mocks[0].ID)
 
 	st.DeleteAll()
 
@@ -49,5 +49,5 @@ func TestInMemoryStorage(t *testing.T) {
 	mocks = st.GetAll()
 
 	assert.Len(t, mocks, 1)
-	assert.Equal(t, 11, mocks[0].ID)
+	assert.Equal(t, "11", mocks[0].ID)
 }
