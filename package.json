@@ -1,7 +1,7 @@
 {
   "name": "mocha",
   "version": "3.0.1",
-  "author": "Vitor Hugo Salgado <vsalgadopb@gmail.com>",
+  "author": "vitorsalgado",
   "license": "MIT",
   "homepage": "https://github.com/vitorsalgado/mocha#readme",
   "scripts": {
