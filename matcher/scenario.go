@@ -66,7 +66,7 @@ func (m *scenarioMatcher) Match(_ any) (*Result, error) {
 
 	scn, ok := m.store.fetchByName(m.nm)
 	if !ok {
-		return &Result{OK: true}, nil
+		return &Result{Pass: true}, nil
 	}
 
 	message := func() string {
@@ -79,10 +79,10 @@ func (m *scenarioMatcher) Match(_ any) (*Result, error) {
 	}
 
 	if scn.state == m.requiredState {
-		return &Result{OK: true}, nil
+		return &Result{Pass: true}, nil
 	}
 
-	return &Result{OK: false, DescribeFailure: message}, nil
+	return &Result{Pass: false, Message: message}, nil
 }
 
 func (m *scenarioMatcher) OnMockServed() error {

@@ -72,7 +72,7 @@ func (h *InternalListener) OnRequestMatched(evt any) {
 			colorize.Green("Took:"),
 			e.Elapsed.Milliseconds(),
 			colorize.Green("Response"),
-			colorize.Green("Status:"),
+			colorize.Green("StatusCode:"),
 			e.ResponseDefinition.Status,
 			colorize.Green("Headers:"),
 			e.ResponseDefinition.Header))

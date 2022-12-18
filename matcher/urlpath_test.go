@@ -25,12 +25,12 @@ func TestURLPath(t *testing.T) {
 			result, err := URLPath(tt.path).Match(u)
 
 			assert.Nil(t, err)
-			assert.Equal(t, tt.expected, result.OK)
+			assert.Equal(t, tt.expected, result.Pass)
 
 			result, err = URLPathMatch(Contain(tt.path)).Match(u)
 
 			assert.Nil(t, err)
-			assert.Equal(t, tt.expected, result.OK)
+			assert.Equal(t, tt.expected, result.Pass)
 		})
 	}
 

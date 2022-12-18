@@ -11,13 +11,13 @@ func TestHasSuffix(t *testing.T) {
 		result, err := HasSuffix("world").Match("hello world")
 
 		assert.Nil(t, err)
-		assert.True(t, result.OK)
+		assert.True(t, result.Pass)
 	})
 
 	t.Run("should return true when string hasn't suffix", func(t *testing.T) {
 		result, err := HasSuffix("hello").Match("hello world")
 
 		assert.Nil(t, err)
-		assert.False(t, result.OK)
+		assert.False(t, result.Pass)
 	})
 }

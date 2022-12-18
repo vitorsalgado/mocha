@@ -27,11 +27,11 @@ func (m *splitMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		OK: result.OK,
-		DescribeFailure: func() string {
+		Pass: result.Pass,
+		Message: func() string {
 			return fmt.Sprintf("%s %s",
 				hint(m.Name(), printExpected(txt)),
-				result.DescribeFailure(),
+				result.Message(),
 			)
 		},
 	}, nil

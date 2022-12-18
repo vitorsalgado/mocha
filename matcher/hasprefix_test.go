@@ -11,13 +11,13 @@ func TestHasPrefix(t *testing.T) {
 		result, err := HasPrefix("hello").Match("hello world")
 
 		assert.Nil(t, err)
-		assert.True(t, result.OK)
+		assert.True(t, result.Pass)
 	})
 
 	t.Run("should return true when string hasn't prefix", func(t *testing.T) {
 		result, err := HasPrefix("world").Match("hello world")
 
 		assert.Nil(t, err)
-		assert.False(t, result.OK)
+		assert.False(t, result.Pass)
 	})
 }

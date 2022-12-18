@@ -14,7 +14,7 @@ func TestPeek(t *testing.T) {
 
 		assert.NotNil(t, err)
 		assert.Equal(t, actionErr, err)
-		assert.False(t, result.OK)
+		assert.False(t, result.Pass)
 	})
 
 	t.Run("should execute action before returning provided matcher result", func(t *testing.T) {
@@ -22,7 +22,7 @@ func TestPeek(t *testing.T) {
 		result, err := Peek(Equal("test"), func(v any) error { c = v.(string); return nil }).Match("test")
 
 		assert.Nil(t, err)
-		assert.True(t, result.OK)
+		assert.True(t, result.Pass)
 		assert.Equal(t, "test", c)
 	})
 }

@@ -28,11 +28,11 @@ func (m *regExpMatcher) Match(v any) (*Result, error) {
 	switch e := m.expression.(type) {
 	case string:
 		match, err := regexp.Match(e, []byte(txt))
-		return &Result{OK: match, DescribeFailure: msg}, err
+		return &Result{Pass: match, Message: msg}, err
 	case regexp.Regexp:
-		return &Result{OK: e.Match([]byte(txt)), DescribeFailure: msg}, nil
+		return &Result{Pass: e.Match([]byte(txt)), Message: msg}, nil
 	case *regexp.Regexp:
-		return &Result{OK: e.Match([]byte(txt)), DescribeFailure: msg}, nil
+		return &Result{Pass: e.Match([]byte(txt)), Message: msg}, nil
 	default:
 		return mismatch(nil), fmt.Errorf("regular expression matcher does not accept the expression of type %s",
 			reflect.TypeOf(v).Name())

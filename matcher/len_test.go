@@ -11,5 +11,5 @@ func TestLen(t *testing.T) {
 	result, err := HaveLen(15).Match(str)
 
 	assert.Nil(t, err)
-	assert.True(t, result.OK)
+	assert.True(t, result.Pass)
 }

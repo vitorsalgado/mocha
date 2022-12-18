@@ -19,7 +19,7 @@ func TestRecording_WithWebProxy(t *testing.T) {
 	defer cancel()
 
 	dir := t.TempDir()
-	p := New(t, Configure().Proxy().Record(&RecordConfig{SaveDir: dir, Save: true, SaveBodyToFile: true}))
+	p := New(t, Configure().Name("proxy").Proxy().Record(&RecordConfig{SaveDir: dir, Save: true, SaveBodyToFile: true}))
 	p.MustStart()
 	scope1 := p.MustMock(Get(URLPath("/test")).Reply(reply.Accepted()))
 

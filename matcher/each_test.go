@@ -11,7 +11,7 @@ func TestEach_Slice(t *testing.T) {
 	r, err := Each(HasPrefix("test")).Match(s)
 
 	assert.NoError(t, err)
-	assert.True(t, r.OK)
+	assert.True(t, r.Pass)
 }
 
 func TestEach_Slice_NotPass(t *testing.T) {
@@ -19,7 +19,7 @@ func TestEach_Slice_NotPass(t *testing.T) {
 	r, err := Each(HasPrefix("test")).Match(s)
 
 	assert.NoError(t, err)
-	assert.False(t, r.OK)
+	assert.False(t, r.Pass)
 }
 
 func TestEach_Map(t *testing.T) {
@@ -27,7 +27,7 @@ func TestEach_Map(t *testing.T) {
 	r, err := Each(HasPrefix("test")).Match(m)
 
 	assert.NoError(t, err)
-	assert.True(t, r.OK)
+	assert.True(t, r.Pass)
 }
 
 func TestEach_Map_NotPass(t *testing.T) {
@@ -35,5 +35,5 @@ func TestEach_Map_NotPass(t *testing.T) {
 	r, err := Each(HasPrefix("test")).Match(m)
 
 	assert.NoError(t, err)
-	assert.False(t, r.OK)
+	assert.False(t, r.Pass)
 }

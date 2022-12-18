@@ -202,7 +202,7 @@ func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
 	// --
 	// End Request
 
-	// Begin Response
+	// Begin ResponseStub
 	// --
 
 	var rep reply.Reply
@@ -282,14 +282,14 @@ func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
 		rep = seq
 	} else {
 		// no response definition found.
-		// default to 200 (OK) with nothing more.
+		// default to 200 (Pass) with nothing more.
 		rep = reply.OK()
 	}
 
 	b.builder.Reply(rep)
 
 	// --
-	// End Response
+	// End ResponseStub
 
 	return b.builder.Build()
 }

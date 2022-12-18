@@ -18,9 +18,9 @@ type Reply interface {
 
 	Spec() []any
 
-	// Build returns a Response stub to be served.
-	// Return Response nil if the HTTP response was rendered inside the Build function.
-	Build(w http.ResponseWriter, r *http.Request) (*Response, error)
+	// Build returns a ResponseStub stub to be served.
+	// Return ResponseStub nil if the HTTP response was rendered inside the Build function.
+	Build(w http.ResponseWriter, r *http.Request) (*ResponseStub, error)
 }
 
 // Arg groups extra parameters to build a Reply.
@@ -29,15 +29,10 @@ type Arg struct {
 	Params   Params
 }
 
-// Response defines the HTTP response that will be served once a Mock is matched for an HTTP Request.
-type Response struct {
-	Status  int
-	Header  http.Header
-	Cookies []*http.Cookie
-	Body    []byte
-}
-
-// Sent checks if response was already sent by the Reply implementation.
-func (r *Response) Sent() bool {
-	return r != nil
+// ResponseStub defines the HTTP response that will be served once a Mock is matched for an HTTP Request.
+type ResponseStub struct {
+	StatusCode int
+	Header     http.Header
+	Cookies    []*http.Cookie
+	Body       []byte
 }

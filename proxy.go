@@ -7,8 +7,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/vitorsalgado/mocha/v3/event"
 	"github.com/vitorsalgado/mocha/v3/internal/header"
+	"github.com/vitorsalgado/mocha/v3/x/event"
 )
 
 // ProxyConfig configures proxy.

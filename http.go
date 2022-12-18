@@ -9,13 +9,23 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vitorsalgado/mocha/v3/event"
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/httpx"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
-	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
+	"github.com/vitorsalgado/mocha/v3/x/event"
 )
+
+type response struct {
+	Closest *closest         `json:"closest,omitempty"`
+	Details []mismatchDetail `json:"details,omitempty"`
+	Error   error            `json:"error,omitempty"`
+}
+
+type closest struct {
+	ID   string `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
+}
 
 type mockHandler struct {
 	app *Mocha
@@ -23,9 +33,9 @@ type mockHandler struct {
 
 func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
-	evtReq := h.toEvent(r)
+	evtReq := event.FromRequest(r)
 
-	w = httpx.DecorateWriter(w)
+	w = httpx.Wrap(w)
 
 	parsedBody, rawBody, err := parseRequestBody(r, h.app.requestBodyParsers)
 	if err != nil {
@@ -38,18 +48,27 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.app.listener.Emit(&event.OnRequest{Request: evtReq, StartedAt: start})
 
 	// match current request with all eligible stored matchers in order to find one mock.
-	info := &matcher.RequestInfo{Request: r, ParsedBody: parsedBody}
+	info := &values{Request: r, ParsedBody: parsedBody}
 	result := findMockForRequest(h.app.storage, info)
 
-	if !result.Matches {
+	if !result.Pass {
 		if h.app.proxy != nil {
 			// proxy non-matched requests.
 			h.app.proxy.ServeHTTP(w, r)
+			res, err := h.buildResponseFromWriter(w)
+			if err != nil {
+				h.app.t.Logf(err.Error())
+				return
+			}
+
+			if h.app.rec != nil {
+				h.app.rec.record(r, rawBody, res)
+			}
+			return
+		} else {
+			h.onNoMatches(w, evtReq, result)
 			return
 		}
-
-		h.respondNonMatched(w, evtReq, result)
-		return
 	}
 
 	mock := result.Matched
@@ -73,9 +92,9 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	mock.Inc()
 
-	if res.Sent() {
+	if res != nil {
 		// map the response using mock mappers.
-		mapperArgs := &MapperArgs{Request: r, Parameters: h.app.params}
+		mapperArgs := &MapperIn{Request: r, Parameters: h.app.params}
 		for i, mapper := range mock.Mappers {
 			if err = mapper(res, mapperArgs); err != nil {
 				mock.Dec()
@@ -90,10 +109,20 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		w.WriteHeader(res.Status)
+		for _, cookie := range res.Cookies {
+			http.SetCookie(w, cookie)
+		}
+
+		w.WriteHeader(res.StatusCode)
 
 		if res.Body != nil {
 			w.Write(res.Body)
+		}
+
+		res, err = h.buildResponseFromWriter(w)
+		if err != nil {
+			h.app.t.Logf(err.Error())
+			return
 		}
 	}
 
@@ -104,10 +133,9 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// run post actions.
-	paArgs := &PostActionArgs{Request: r, Response: res, Mock: mock, Params: h.app.params}
+	input := &PostActionIn{Request: r, Response: res, Params: h.app.params}
 	for i, action := range mock.PostActions {
-		err = action.Run(paArgs)
+		err = action.Run(input)
 		if err != nil {
 			h.app.t.Logf("\nerror running post action [%d]. error=%v", i, err)
 		}
@@ -115,28 +143,16 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	h.app.listener.Emit(&event.OnRequestMatch{
 		Request:            evtReq,
-		ResponseDefinition: event.EvtRes{Status: res.Status, Header: res.Header.Clone()},
+		ResponseDefinition: event.EvtRes{Status: res.StatusCode, Header: res.Header},
 		Mock:               event.EvtMk{ID: mock.ID, Name: mock.Name},
 		Elapsed:            time.Since(start)})
 
-	if h.app.rec != nil {
-		rw := w.(*httpx.Rw)
-		recorded := rw.Result()
-
-		defer recorded.Body.Close()
-
-		body, err := io.ReadAll(recorded.Body)
-		if err != nil {
-			h.app.t.Errorf(fmt.Sprintf("error reading recorded body. reason=%s", err.Error()))
-			h.app.listener.Emit(&event.OnError{Request: evtReq, Err: err})
-			return
-		}
-
-		h.app.rec.record(r, rawBody, recorded, body)
+	if h.app.rec != nil && h.app.config.Proxy == nil {
+		h.app.rec.record(r, rawBody, res)
 	}
 }
 
-func (h *mockHandler) respondNonMatched(w http.ResponseWriter, r *event.EvtReq, result *findResult) {
+func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *event.EvtReq, result *findResult) {
 	e := &event.OnRequestNotMatched{Request: r, Result: event.EvtResult{Details: make([]event.EvtResultExt, 0)}}
 
 	if result.ClosestMatch != nil {
@@ -146,7 +162,7 @@ func (h *mockHandler) respondNonMatched(w http.ResponseWriter, r *event.EvtReq, 
 
 	for _, detail := range result.MismatchDetails {
 		e.Result.Details = append(e.Result.Details, event.EvtResultExt{
-			Name:        detail.Name,
+			Name:        detail.MatchersName,
 			Description: detail.Desc,
 			Target:      strconv.FormatInt(int64(detail.Target), 10),
 		})
@@ -166,11 +182,11 @@ func (h *mockHandler) respondNonMatched(w http.ResponseWriter, r *event.EvtReq, 
 
 	for _, detail := range result.MismatchDetails {
 		builder.WriteString(fmt.Sprintf("%s, reason=%s, applied-to=%v\n",
-			detail.Name, detail.Desc, detail.Target))
+			detail.MatchersName, detail.Desc, detail.Target))
 	}
 
 	w.Header().Add(header.ContentType, mimetype.TextPlain)
-	w.WriteHeader(StatusNoMockFound)
+	w.WriteHeader(StatusRequestDidNotMatch)
 	w.Write([]byte(builder.String()))
 }
 
@@ -179,16 +195,25 @@ func (h *mockHandler) onError(w http.ResponseWriter, r *event.EvtReq, err error)
 	h.app.listener.Emit(&event.OnError{Request: r, Err: err})
 
 	w.Header().Add(header.ContentType, mimetype.TextPlain)
-	w.WriteHeader(StatusNoMockFound)
-	w.Write([]byte(fmt.Sprintf("EvtReq did not match. An error occurred.\n%v", err)))
+	w.WriteHeader(StatusRequestDidNotMatch)
+	w.Write([]byte(fmt.Sprintf("An error occurred.\n%s", err.Error())))
 }
 
-func (h *mockHandler) toEvent(r *http.Request) *event.EvtReq {
-	return &event.EvtReq{
-		Method:     r.Method,
-		Path:       r.URL.Path,
-		RequestURI: r.RequestURI,
-		Host:       r.Host,
-		Header:     r.Header.Clone(),
+func (h *mockHandler) buildResponseFromWriter(w http.ResponseWriter) (*reply.ResponseStub, error) {
+	rw := w.(*httpx.Rw)
+	result := rw.Result()
+
+	body, err := io.ReadAll(result.Body)
+	if err != nil {
+		return nil, err
 	}
+
+	defer result.Body.Close()
+
+	return &reply.ResponseStub{
+		StatusCode: result.StatusCode,
+		Header:     result.Header,
+		Cookies:    result.Cookies(),
+		Body:       body,
+	}, nil
 }

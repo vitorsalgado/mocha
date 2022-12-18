@@ -19,8 +19,8 @@ func (m *equalIgnoreCaseMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		OK: strings.EqualFold(m.expected, v.(string)),
-		DescribeFailure: func() string {
+		Pass: strings.EqualFold(m.expected, v.(string)),
+		Message: func() string {
 			return fmt.Sprintf("%s %s %s",
 				hint(m.Name(), printExpected(m.expected)),
 				_separator,

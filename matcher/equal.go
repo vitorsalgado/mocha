@@ -15,8 +15,8 @@ func (m *equalMatcher) Name() string {
 
 func (m *equalMatcher) Match(v any) (*Result, error) {
 	return &Result{
-		OK: reflect.DeepEqual(m.expected, v),
-		DescribeFailure: func() string {
+		Pass: reflect.DeepEqual(m.expected, v),
+		Message: func() string {
 			return fmt.Sprintf("%s %s %v",
 				hint(m.Name(), printExpected(m.expected)),
 				_separator,

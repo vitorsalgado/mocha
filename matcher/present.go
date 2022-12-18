@@ -24,12 +24,12 @@ func (m *bePresentMatcher) Match(v any) (*Result, error) {
 
 	switch val.Kind() {
 	case reflect.String, reflect.Array, reflect.Slice, reflect.Map, reflect.Struct, reflect.Interface:
-		return &Result{OK: !val.IsZero(), DescribeFailure: message}, nil
+		return &Result{Pass: !val.IsZero(), Message: message}, nil
 	case reflect.Pointer:
-		return &Result{OK: !val.IsNil(), DescribeFailure: message}, nil
+		return &Result{Pass: !val.IsNil(), Message: message}, nil
 	}
 
-	return &Result{OK: true, DescribeFailure: message}, nil
+	return &Result{Pass: true, Message: message}, nil
 }
 
 func (m *bePresentMatcher) OnMockServed() error {

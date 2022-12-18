@@ -20,30 +20,30 @@ func TestHasKey(t *testing.T) {
 	}
 
 	result, err := HaveKey("name").Match(m)
-	assert.True(t, result.OK)
+	assert.True(t, result.Pass)
 	assert.Nil(t, err)
 
 	result, err = HaveKey("age").Match(m)
-	assert.True(t, result.OK)
+	assert.True(t, result.Pass)
 	assert.Nil(t, err)
 
 	result, err = HaveKey("address").Match(m)
-	assert.True(t, result.OK)
+	assert.True(t, result.Pass)
 	assert.Nil(t, err)
 
 	result, err = HaveKey("active").Match(m)
-	assert.True(t, result.OK)
+	assert.True(t, result.Pass)
 	assert.Nil(t, err)
 
 	result, err = HaveKey("zero").Match(m)
-	assert.True(t, result.OK)
+	assert.True(t, result.Pass)
 	assert.Nil(t, err)
 
 	result, err = HaveKey("options").Match(m)
-	assert.True(t, result.OK)
+	assert.True(t, result.Pass)
 	assert.Nil(t, err)
 
 	result, err = HaveKey("none").Match(m)
-	assert.False(t, result.OK)
+	assert.False(t, result.Pass)
 	assert.Nil(t, err)
 }

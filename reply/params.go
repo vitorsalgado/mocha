@@ -3,19 +3,19 @@ package reply
 // Params defines a contract for a generic parameters repository.
 type Params interface {
 	// Get returns the parameter by its key.
-	Get(key string) (any, bool)
+	Get(k string) (any, bool)
 
 	// GetAll returns all stored parameters.
 	GetAll() map[string]any
 
 	// Set sets a parameter.
-	Set(key string, dep any)
+	Set(k string, v any)
 
 	// Remove removes a parameter by its key.
-	Remove(key string)
+	Remove(k string)
 
 	// Has checks if a parameter with the given key exists.
-	Has(key string) bool
+	Has(k string) bool
 }
 
 type paramsStore struct {

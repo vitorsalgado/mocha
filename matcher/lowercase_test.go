@@ -10,5 +10,5 @@ func TestToLowerCase(t *testing.T) {
 	result, err := ToLower(Equal("test")).Match("TeST")
 
 	assert.Nil(t, err)
-	assert.True(t, result.OK)
+	assert.True(t, result.Pass)
 }

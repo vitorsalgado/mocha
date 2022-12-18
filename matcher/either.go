@@ -16,24 +16,24 @@ func (m *eitherMatcher) Name() string {
 func (m *eitherMatcher) Match(v any) (*Result, error) {
 	r1, err := m.first.Match(v)
 	if err != nil {
-		return &Result{OK: false}, err
+		return &Result{Pass: false}, err
 	}
 
 	r2, err := m.second.Match(v)
 	if err != nil {
-		return &Result{OK: false}, err
+		return &Result{Pass: false}, err
 	}
 
 	msg := func() string {
 		desc := ""
 
-		if !r1.OK {
-			desc = r1.DescribeFailure()
+		if !r1.Pass {
+			desc = r1.Message()
 		}
 
-		if !r2.OK {
+		if !r2.Pass {
 			desc += "\n\n"
-			desc += r2.DescribeFailure()
+			desc += r2.Message()
 		}
 
 		return fmt.Sprintf(
@@ -43,7 +43,7 @@ func (m *eitherMatcher) Match(v any) (*Result, error) {
 			desc)
 	}
 
-	return &Result{OK: r1.OK || r2.OK, DescribeFailure: msg}, nil
+	return &Result{Pass: r1.Pass || r2.Pass, Message: msg}, nil
 }
 
 func (m *eitherMatcher) OnMockServed() error {

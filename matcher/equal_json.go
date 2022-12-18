@@ -27,8 +27,8 @@ func (m *equalJSONMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		OK: reflect.DeepEqual(v, exp),
-		DescribeFailure: func() string {
+		Pass: reflect.DeepEqual(v, exp),
+		Message: func() string {
 			return fmt.Sprintf("%s\nExpected:\n%s\nReceived:\n%s",
 				hint(m.Name()),
 				printExpected(m.expected),

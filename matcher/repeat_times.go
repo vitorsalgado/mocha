@@ -16,7 +16,7 @@ func (m *timesMatcher) Name() string {
 }
 
 func (m *timesMatcher) Match(_ any) (*Result, error) {
-	return &Result{OK: m.hits < m.max, DescribeFailure: func() string {
+	return &Result{Pass: m.hits < m.max, Message: func() string {
 		return fmt.Sprintf(
 			"%s %s %s",
 			hint(m.Name(), printExpected(m.max)),

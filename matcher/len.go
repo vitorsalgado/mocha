@@ -16,8 +16,8 @@ func (m *lenMatcher) Match(v any) (*Result, error) {
 	value := reflect.ValueOf(v)
 
 	return &Result{
-		OK: value.Len() == m.length,
-		DescribeFailure: func() string {
+		Pass: value.Len() == m.length,
+		Message: func() string {
 			return hint(m.Name(), printExpected(m.length))
 		},
 	}, nil

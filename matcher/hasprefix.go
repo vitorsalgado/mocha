@@ -17,8 +17,8 @@ func (m *hasPrefixMatcher) Match(v any) (*Result, error) {
 	txt := v.(string)
 
 	return &Result{
-		OK: strings.HasPrefix(txt, m.prefix),
-		DescribeFailure: func() string {
+		Pass: strings.HasPrefix(txt, m.prefix),
+		Message: func() string {
 			return fmt.Sprintf(
 				"%s %s %s",
 				hint(m.Name(), printExpected(m.prefix)),

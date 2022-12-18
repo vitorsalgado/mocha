@@ -108,7 +108,7 @@ func TestScoped(t *testing.T) {
 			res, err := req.Do()
 
 			assert.NoError(t, err)
-			assert.Equal(t, StatusNoMockFound, res.StatusCode)
+			assert.Equal(t, StatusRequestDidNotMatch, res.StatusCode)
 
 			req = testutil.Get(fmt.Sprintf("%s/test2", m.URL()))
 			res, err = req.Do()
@@ -146,13 +146,13 @@ func TestScoped(t *testing.T) {
 			res, err := req.Do()
 
 			assert.NoError(t, err)
-			assert.Equal(t, StatusNoMockFound, res.StatusCode)
+			assert.Equal(t, StatusRequestDidNotMatch, res.StatusCode)
 
 			req = testutil.Get(fmt.Sprintf("%s/test3", m.URL()))
 			res, err = req.Do()
 
 			assert.NoError(t, err)
-			assert.Equal(t, StatusNoMockFound, res.StatusCode)
+			assert.Equal(t, StatusRequestDidNotMatch, res.StatusCode)
 		})
 	})
 }

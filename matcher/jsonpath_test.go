@@ -52,7 +52,7 @@ func TestJSONPathMatcher(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := JSONPath(tc.path, tc.matcher).Match(_json)
 			assert.Nil(t, err)
-			assert.Equal(t, tc.expected, res.OK)
+			assert.Equal(t, tc.expected, res.Pass)
 		})
 	}
 }
@@ -72,7 +72,7 @@ func TestJSONPathMatcher_Match_Errors(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := JSONPath(tc.path, tc.matcher).Match(_json)
 			assert.NotNil(t, err)
-			assert.False(t, res.OK)
+			assert.False(t, res.Pass)
 		})
 	}
 }

@@ -12,7 +12,7 @@ func TestEqual(t *testing.T) {
 		res, err := Equal(&exp).Match(nil)
 
 		assert.Nil(t, err)
-		assert.False(t, res.OK)
+		assert.False(t, res.Pass)
 	})
 
 	t.Run("should compare two byte arrays", func(t *testing.T) {
@@ -20,6 +20,6 @@ func TestEqual(t *testing.T) {
 		res, err := Equal(value).Match(value)
 
 		assert.Nil(t, err)
-		assert.True(t, res.OK)
+		assert.True(t, res.Pass)
 	})
 }

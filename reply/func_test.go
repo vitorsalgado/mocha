@@ -9,8 +9,8 @@ import (
 )
 
 func TestFunctionReply(t *testing.T) {
-	fn := func(http.ResponseWriter, *http.Request) (*Response, error) {
-		return &Response{Status: http.StatusAccepted}, nil
+	fn := func(http.ResponseWriter, *http.Request) (*ResponseStub, error) {
+		return &ResponseStub{StatusCode: http.StatusAccepted}, nil
 	}
 
 	r := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
@@ -18,5 +18,5 @@ func TestFunctionReply(t *testing.T) {
 	res, err := replier.Build(nil, r)
 
 	assert.Nil(t, err)
-	assert.Equal(t, res.Status, http.StatusAccepted)
+	assert.Equal(t, res.StatusCode, http.StatusAccepted)
 }

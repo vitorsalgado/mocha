@@ -1,69 +1,56 @@
 package reply
 
 import (
-	"context"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSequential(t *testing.T) {
 	t.Run("should return replies based configure sequence and return error when over", func(t *testing.T) {
-		ctx := context.WithValue(context.Background(), KArg, &Arg{MockInfo: MockInfo{1}})
-		req, _ := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080", nil)
+		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 		builder := Seq(InternalServerError(), BadRequest(), OK(), NotFound())
 
 		res, err := builder.Build(nil, req)
-		assert.Nil(t, err)
-		assert.Equal(t, http.StatusInternalServerError, res.Status)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
 
-		ctx = context.WithValue(context.Background(), KArg, &Arg{MockInfo: MockInfo{2}})
-		req, _ = http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080", nil)
+		res, err = builder.Build(nil, req)
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+
 		res, err = builder.Build(nil, req)
 		assert.Nil(t, err)
-		assert.Equal(t, http.StatusBadRequest, res.Status)
+		assert.Equal(t, http.StatusOK, res.StatusCode)
 
-		ctx = context.WithValue(context.Background(), KArg, &Arg{MockInfo: MockInfo{3}})
-		req, _ = http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080", nil)
 		res, err = builder.Build(nil, req)
 		assert.Nil(t, err)
-		assert.Equal(t, http.StatusOK, res.Status)
+		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-		ctx = context.WithValue(context.Background(), KArg, &Arg{MockInfo: MockInfo{4}})
-		req, _ = http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080", nil)
-		res, err = builder.Build(nil, req)
-		assert.Nil(t, err)
-		assert.Equal(t, http.StatusNotFound, res.Status)
-
-		ctx = context.WithValue(context.Background(), KArg, &Arg{MockInfo: MockInfo{5}})
-		req, _ = http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080", nil)
 		_, err = builder.Build(nil, req)
 		assert.NotNil(t, err)
 	})
 
 	t.Run("should return replies based configure sequence and return error when over", func(t *testing.T) {
-		ctx := context.WithValue(context.Background(), KArg, &Arg{MockInfo: MockInfo{0}})
-		_, _ = http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080", nil)
+		req, err := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
+		require.NoError(t, err)
+
 		builder := Seq().Add(OK()).AfterEnded(NotFound())
 
-		ctx = context.WithValue(context.Background(), KArg, &Arg{MockInfo: MockInfo{1}})
-		req, _ := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080", nil)
 		res, err := builder.Build(nil, req)
 		assert.Nil(t, err)
-		assert.Equal(t, http.StatusOK, res.Status)
+		assert.Equal(t, http.StatusOK, res.StatusCode)
 
-		ctx = context.WithValue(context.Background(), KArg, &Arg{MockInfo: MockInfo{2}})
-		req, _ = http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080", nil)
 		res, err = builder.Build(nil, req)
 		assert.Nil(t, err)
-		assert.Equal(t, http.StatusNotFound, res.Status)
+		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 	})
 }
 
 func TestShouldReturnErrorWhenSequenceDoesNotContainReplies(t *testing.T) {
-	ctx := context.WithValue(context.Background(), KArg, &Arg{MockInfo: MockInfo{0}})
-	req, _ := http.NewRequestWithContext(ctx, http.MethodGet, "http://localhost:8080", nil)
+	req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 	res, err := Seq().Build(nil, req)
 	assert.Nil(t, res)
 	assert.NotNil(t, err)

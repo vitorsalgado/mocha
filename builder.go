@@ -111,7 +111,7 @@ func (b *MockBuilder) Method(methods ...string) *MockBuilder {
 
 	b.appendExpectation(&expectation{
 		Target:        _targetMethod,
-		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Method },
+		ValueSelector: func(r *values) any { return r.Request.Method },
 		Matcher:       m,
 		Weight:        _weightNone,
 	})
@@ -124,7 +124,7 @@ func (b *MockBuilder) Method(methods ...string) *MockBuilder {
 func (b *MockBuilder) MethodMatches(m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetMethod,
-		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Method },
+		ValueSelector: func(r *values) any { return r.Request.Method },
 		Matcher:       m,
 		Weight:        _weightNone,
 	})
@@ -137,7 +137,7 @@ func (b *MockBuilder) URL(m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetURL,
 		Key:           "url",
-		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.URL },
+		ValueSelector: func(r *values) any { return r.Request.URL },
 		Matcher:       m,
 		Weight:        _weightRegular,
 	})
@@ -156,7 +156,7 @@ func (b *MockBuilder) URLPath(m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetURL,
 		Key:           "url_path",
-		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.URL.Path },
+		ValueSelector: func(r *values) any { return r.Request.URL.Path },
 		Matcher:       m,
 		Weight:        _weightRegular,
 	})
@@ -175,7 +175,7 @@ func (b *MockBuilder) Header(key string, m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetHeader,
 		Key:           key,
-		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Header.Get(key) },
+		ValueSelector: func(r *values) any { return r.Request.Header.Get(key) },
 		Matcher:       m,
 		Weight:        _weightLow,
 	})
@@ -193,7 +193,7 @@ func (b *MockBuilder) Query(key string, m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetQuery,
 		Key:           key,
-		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.URL.Query().Get(key) },
+		ValueSelector: func(r *values) any { return r.Request.URL.Query().Get(key) },
 		Matcher:       m,
 		Weight:        _weightVeryLow,
 	})
@@ -223,7 +223,7 @@ func (b *MockBuilder) Body(matcherList ...matcher.Matcher) *MockBuilder {
 
 	b.appendExpectation(&expectation{
 		Target:        _targetBody,
-		ValueSelector: func(r *matcher.RequestInfo) any { return r.ParsedBody },
+		ValueSelector: func(r *values) any { return r.ParsedBody },
 		Matcher:       m,
 		Weight:        _weightHigh,
 	})
@@ -236,7 +236,7 @@ func (b *MockBuilder) FormField(field string, m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetForm,
 		Key:           field,
-		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request.Form.Get(field) },
+		ValueSelector: func(r *values) any { return r.Request.Form.Get(field) },
 		Matcher:       m,
 		Weight:        _weightVeryLow,
 	})
@@ -263,7 +263,7 @@ func (b *MockBuilder) Times(times int) *MockBuilder {
 func (b *MockBuilder) RequestMatches(m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetRequest,
-		ValueSelector: func(r *matcher.RequestInfo) any { return r.Request },
+		ValueSelector: func(r *values) any { return r.Request },
 		Matcher:       m,
 		Weight:        _weightLow,
 	})
@@ -309,6 +309,7 @@ func (b *MockBuilder) Delay(duration time.Duration) *MockBuilder {
 
 // Map adds a Mapper that allows modifying the response after it was built.
 // Multiple mappers can be added.
+// Map doesn't work with reply.Forward or Proxy.
 func (b *MockBuilder) Map(mapper Mapper) *MockBuilder {
 	b.mock.Mappers = append(b.mock.Mappers, mapper)
 	return b
@@ -317,14 +318,6 @@ func (b *MockBuilder) Map(mapper Mapper) *MockBuilder {
 // Reply defines a response mock to be served if this mock matches to a request.
 func (b *MockBuilder) Reply(rep reply.Reply) *MockBuilder {
 	b.mock.Reply = rep
-	return b
-}
-
-// ReplyFunc defines a function to will build the response mock.
-func (b *MockBuilder) ReplyFunc(
-	fn func(http.ResponseWriter, *http.Request) (*reply.Response, error),
-) *MockBuilder {
-	b.mock.Reply = reply.Function(fn)
 	return b
 }
 

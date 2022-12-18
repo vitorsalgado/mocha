@@ -1,5 +1,3 @@
-BREW_EXISTS := $(shell brew --version 2>/dev/null)
-
 .ONESHELL:
 .DEFAULT_GOAL := help
 
@@ -20,7 +18,6 @@ test: ## run tests
 test-leaks:
 	@go test -c -o tests
 	@for test in $$(go test -list . | grep -E "^(Test|Example)"); do ./tests -test.run "^$$test\$$" &>/dev/null && echo -n "." || echo -e "\n$$test failed"; done
-
 
 .PHONY: bench
 bench: ## run benchmarks
@@ -53,17 +50,11 @@ download: ## download dependencies
 	@go mod download
 
 .PHONY: docs
-docs: ## show godocs
+docs: ## show documentation website locally
 	@echo navigate to: http://localhost:6060/pkg/github.com/vitorsalgado/mocha/v3
 	@godoc -http=:6060
 
-.PHONY: init
-init: tools ## prepare local development environment
-ifdef BREW_EXISTS
-	brew bundle
-endif
-
 .PHONY: tools
-tools:
+tools: ## install dev tools
 	@echo "tools"
 	@make -C tools

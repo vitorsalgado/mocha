@@ -17,13 +17,13 @@ func (m *someMatcher) Match(v any) (*Result, error) {
 			return nil, err
 		}
 
-		if res.OK {
+		if res.Pass {
 			return res, nil
 		}
 	}
 
 	return &Result{
-		DescribeFailure: func() string {
+		Message: func() string {
 			return fmt.Sprintf(
 				"%s %s value %v is not contained in the %v",
 				hint(m.Name(), m.items),

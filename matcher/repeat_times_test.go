@@ -13,23 +13,23 @@ func TestRepeat(t *testing.T) {
 	assert.NoError(t, rep.OnMockServed())
 
 	assert.NoError(t, err)
-	assert.True(t, res.OK)
+	assert.True(t, res.Pass)
 
 	res, err = rep.Match(nil)
 	assert.NoError(t, rep.OnMockServed())
 
 	assert.NoError(t, err)
-	assert.True(t, res.OK)
+	assert.True(t, res.Pass)
 
 	res, err = rep.Match(nil)
 	assert.NoError(t, rep.OnMockServed())
 
 	assert.NoError(t, err)
-	assert.False(t, res.OK)
+	assert.False(t, res.Pass)
 
 	res, err = rep.Match(nil)
 	assert.NoError(t, rep.OnMockServed())
 
 	assert.NoError(t, err)
-	assert.False(t, res.OK)
+	assert.False(t, res.Pass)
 }

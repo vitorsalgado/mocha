@@ -55,32 +55,42 @@ type Builder interface {
 	Build() (*Mock, error)
 }
 
-// PostActionArgs represents the arguments that will be passed to every PostAction implementation
-type PostActionArgs struct {
+// PostActionIn represents the arguments that will be passed to every PostAction implementation
+type PostActionIn struct {
 	Request  *http.Request
-	Response *reply.Response
-	Mock     *Mock
+	Response *reply.ResponseStub
 	Params   reply.Params
 }
 
 // PostAction defines the contract for an action that will be executed after serving a mocked HTTP response.
 type PostAction interface {
 	// Run runs the PostAction implementation.
-	Run(args *PostActionArgs) error
+	Run(args *PostActionIn) error
 }
 
-// Mapper is the function definition to be used to map Mock Response before serving it.
-type Mapper func(res *reply.Response, args *MapperArgs) error
+// Mapper is the function definition to be used to map Mock ResponseStub before serving it.
+// Mapper doesn't work with reply.Forward or Proxy.
+type Mapper func(res *reply.ResponseStub, args *MapperIn) error
 
-// MapperArgs represents the expected arguments for every Mapper.
-type MapperArgs struct {
+// MapperIn represents the expected arguments for every Mapper.
+type MapperIn struct {
 	Request    *http.Request
 	Parameters reply.Params
 }
 
 type (
-	// valueSelector defines a function that will be used to extract RequestInfo value and provide it to matcher instances.
-	valueSelector func(r *matcher.RequestInfo) any
+	// values groups HTTP request information to be passed to each Matcher.
+	values struct {
+		// Request is the actual http.Request.
+		Request *http.Request
+
+		// ParsedBody is http.Request parsed body.
+		// Value of parsed body can vary depending on the mocha.RequestBodyParser that parsed the request.
+		ParsedBody any
+	}
+
+	// valueSelector defines a function that will be used to extract the value that will be passed to the associated matcher.
+	valueSelector func(r *values) any
 
 	// expectation holds metadata related to one http.Request Matcher.
 	expectation struct {
@@ -102,22 +112,22 @@ type (
 
 	// matchResult holds information related to a matching operation.
 	matchResult struct {
-		// MismatchDetails is the list of non matches messages.
-		MismatchDetails []mismatchDetail
+		// Details is the list of non matches messages.
+		Details []mismatchDetail
 
 		// Weight for the matcher. It helps determine the closest match.
 		Weight int
 
-		// OK indicates whether it matched or not.
-		OK bool
+		// Pass indicates whether it matched or not.
+		Pass bool
 	}
 
 	// mismatchDetail gives more ctx about why a matcher did not match.
 	mismatchDetail struct {
-		Name   string
-		Target target
-		Desc   string
-		Err    error
+		MatchersName string
+		Target       target
+		Desc         string
+		Err          error
 	}
 )
 
@@ -246,7 +256,7 @@ func (m *Mock) MarshalJSON() ([]byte, error) {
 
 // requestMatches checks if current Mock matches against a list of expectations.
 // Will iterate through all expectations even if it doesn't match early.
-func (m *Mock) requestMatches(ri *matcher.RequestInfo, expectations []*expectation) *matchResult {
+func (m *Mock) requestMatches(ri *values, expectations []*expectation) *matchResult {
 	w := 0
 	ok := true
 	details := make([]mismatchDetail, 0)
@@ -262,8 +272,8 @@ func (m *Mock) requestMatches(ri *matcher.RequestInfo, expectations []*expectati
 		if err != nil {
 			ok = false
 			details = append(details, mismatchDetail{
-				Name:   exp.Matcher.Name(),
-				Target: exp.Target,
+				MatchersName: exp.Matcher.Name(),
+				Target:       exp.Target,
 				Desc: fmt.Sprintf(
 					"%s => Error: %s",
 					colorize.Bold(exp.Matcher.Name()),
@@ -275,19 +285,19 @@ func (m *Mock) requestMatches(ri *matcher.RequestInfo, expectations []*expectati
 			continue
 		}
 
-		if result.OK {
+		if result.Pass {
 			w += int(exp.Weight)
 		} else {
 			ok = false
 			details = append(details, mismatchDetail{
-				Name:   exp.Matcher.Name(),
-				Target: exp.Target,
-				Desc:   result.DescribeFailure(),
+				MatchersName: exp.Matcher.Name(),
+				Target:       exp.Target,
+				Desc:         result.Message(),
 			})
 		}
 	}
 
-	return &matchResult{OK: ok, Weight: w, MismatchDetails: details}
+	return &matchResult{Pass: ok, Weight: w, Details: details}
 }
 
 func doMatches(e *expectation, value any) (result *matcher.Result, err error) {

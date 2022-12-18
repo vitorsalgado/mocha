@@ -15,7 +15,7 @@ func TestTLS(t *testing.T) {
 	//
 	// scoped := m.MustMock(mocha.Get(matcher.URLPath("/test")).
 	// 	Header("test", matcher.Equal("hello")).
-	// 	Reply(reply.OK()))
+	// 	Reply(reply.Pass()))
 	//
 	// req := testutil.Get(m.URL() + "/test")
 	// req.Header("test", "hello")

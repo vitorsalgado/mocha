@@ -15,7 +15,7 @@ func TestAllOf(t *testing.T) {
 			Contain("tes")).
 			Match("test")
 		assert.Nil(t, err)
-		assert.True(t, result.OK)
+		assert.True(t, result.Pass)
 	})
 
 	t.Run("should return false when just one matcher evaluates to false", func(t *testing.T) {
@@ -26,7 +26,7 @@ func TestAllOf(t *testing.T) {
 			Contain("tes")).
 			Match("test")
 		assert.Nil(t, err)
-		assert.False(t, result.OK)
+		assert.False(t, result.Pass)
 	})
 
 	t.Run("should return false when all matchers evaluates to false", func(t *testing.T) {
@@ -37,12 +37,12 @@ func TestAllOf(t *testing.T) {
 			Contain("blah")).
 			Match("test")
 		assert.Nil(t, err)
-		assert.False(t, result.OK)
+		assert.False(t, result.Pass)
 	})
 
 	t.Run("mismatch description is not empty", func(t *testing.T) {
 		result, err := AllOf().Match("")
 		assert.NoError(t, err)
-		assert.NotEmpty(t, result.DescribeFailure())
+		assert.NotEmpty(t, result.Message())
 	})
 }

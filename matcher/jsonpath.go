@@ -32,8 +32,8 @@ func (m *jsonPathMatcher) Match(v any) (*Result, error) {
 		return &Result{}, err
 	}
 
-	return &Result{OK: r.OK, DescribeFailure: func() string {
-		return hint(m.Name(), printExpected(m.path), r.DescribeFailure())
+	return &Result{Pass: r.Pass, Message: func() string {
+		return hint(m.Name(), printExpected(m.path), r.Message())
 	}}, nil
 }
 

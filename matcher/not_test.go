@@ -13,13 +13,13 @@ func TestNot(t *testing.T) {
 		result, err := Not(Equal("dev")).Match(value)
 
 		assert.Nil(t, err)
-		assert.True(t, result.OK)
+		assert.True(t, result.Pass)
 	})
 
 	t.Run("should return false when value is equal", func(t *testing.T) {
 		result, err := Not(Equal("test")).Match(value)
 
 		assert.Nil(t, err)
-		assert.False(t, result.OK)
+		assert.False(t, result.Pass)
 	})
 }

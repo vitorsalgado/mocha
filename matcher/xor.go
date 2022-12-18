@@ -25,13 +25,13 @@ func (m *xorMatcher) Match(v any) (*Result, error) {
 	msg := func() string {
 		desc := ""
 
-		if !a.OK {
-			desc = a.DescribeFailure()
+		if !a.Pass {
+			desc = a.Message()
 		}
 
-		if !b.OK {
+		if !b.Pass {
 			desc += "\n\n"
-			desc += b.DescribeFailure()
+			desc += b.Message()
 		}
 
 		return fmt.Sprintf(
@@ -42,8 +42,8 @@ func (m *xorMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		OK:              a.OK != b.OK,
-		DescribeFailure: msg,
+		Pass:    a.Pass != b.Pass,
+		Message: msg,
 	}, nil
 }
 

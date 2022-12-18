@@ -13,9 +13,9 @@ import (
 
 var _ Reply = (*StdReply)(nil)
 
-// StdReply holds the configuration on how the Response should be built.
+// StdReply holds the configuration on how the ResponseStub should be built.
 type StdReply struct {
-	response *Response
+	response *ResponseStub
 	bodyType bodyType
 	template Template
 	model    any
@@ -32,7 +32,7 @@ const (
 // New creates a new StdReply. Prefer to use factory functions for each status code.
 func New() *StdReply {
 	return &StdReply{
-		response: &Response{Cookies: make([]*http.Cookie, 0), Header: make(http.Header)},
+		response: &ResponseStub{Cookies: make([]*http.Cookie, 0), Header: make(http.Header)},
 		bodyType: _bodyDefault}
 }
 
@@ -96,19 +96,19 @@ func ServiceUnavailable() *StdReply { return New().Status(http.StatusServiceUnav
 // GatewayTimeout creates a new Reply with http.StatusGatewayTimeout already.
 func GatewayTimeout() *StdReply { return New().Status(http.StatusGatewayTimeout) }
 
-// Status sets the HTTP status code for the Response.
+// Status sets the HTTP status code for the ResponseStub.
 func (rpl *StdReply) Status(status int) *StdReply {
-	rpl.response.Status = status
+	rpl.response.StatusCode = status
 	return rpl
 }
 
-// Header adds a header to the Response.
+// Header adds a header to the ResponseStub.
 func (rpl *StdReply) Header(key, value string) *StdReply {
 	rpl.response.Header.Add(key, value)
 	return rpl
 }
 
-// Cookie adds a http.Cookie to the Response.
+// Cookie adds a http.Cookie to the ResponseStub.
 func (rpl *StdReply) Cookie(cookie *http.Cookie) *StdReply {
 	rpl.response.Cookies = append(rpl.response.Cookies, cookie)
 	return rpl
@@ -202,15 +202,15 @@ func (rpl *StdReply) Prepare() error {
 
 func (rpl *StdReply) Spec() []any {
 	return []any{"response", map[string]any{
-		"status":  rpl.response.Status,
+		"status":  rpl.response.StatusCode,
 		"header":  rpl.response.Header,
 		"body":    string(rpl.response.Body),
 		"cookies": fmt.Sprintf("%v", rpl.response.Cookies),
 	}}
 }
 
-// Build builds a Response based on StdReply definition.
-func (rpl *StdReply) Build(_ http.ResponseWriter, r *http.Request) (*Response, error) {
+// Build builds a ResponseStub based on StdReply definition.
+func (rpl *StdReply) Build(_ http.ResponseWriter, r *http.Request) (*ResponseStub, error) {
 	if rpl.err != nil {
 		return nil, rpl.err
 	}

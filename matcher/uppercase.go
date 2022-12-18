@@ -21,11 +21,11 @@ func (m *upperCaseMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		OK: result.OK,
-		DescribeFailure: func() string {
+		Pass: result.Pass,
+		Message: func() string {
 			return fmt.Sprintf("%s %s",
 				hint(m.Name(), m.matcher.Name()),
-				result.DescribeFailure(),
+				result.Message(),
 			)
 		},
 	}, nil

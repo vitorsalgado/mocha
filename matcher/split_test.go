@@ -11,5 +11,5 @@ func TestSplit(t *testing.T) {
 	r, err := Split(",", Each(Trim(HasPrefix("test")))).Match(v)
 
 	assert.NoError(t, err)
-	assert.True(t, r.OK)
+	assert.True(t, r.Pass)
 }

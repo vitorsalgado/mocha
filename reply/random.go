@@ -51,7 +51,7 @@ func (mr *RandomReply) Spec() []any {
 }
 
 // Build builds a response stub randomly based on previously added Reply implementations.
-func (mr *RandomReply) Build(w http.ResponseWriter, r *http.Request) (*Response, error) {
+func (mr *RandomReply) Build(w http.ResponseWriter, r *http.Request) (*ResponseStub, error) {
 
 	mr.mu.Lock()
 	defer mr.mu.Unlock()

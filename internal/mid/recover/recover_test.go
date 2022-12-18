@@ -10,7 +10,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/v3/event"
+	"github.com/vitorsalgado/mocha/v3/x/event"
 )
 
 func TestRecover(t *testing.T) {

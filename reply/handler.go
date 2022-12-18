@@ -20,7 +20,7 @@ func (h *HandlerReply) Spec() []any {
 	return []any{}
 }
 
-func (h *HandlerReply) Build(w http.ResponseWriter, r *http.Request) (*Response, error) {
+func (h *HandlerReply) Build(w http.ResponseWriter, r *http.Request) (*ResponseStub, error) {
 	h.h(w, r)
 	return nil, nil
 }

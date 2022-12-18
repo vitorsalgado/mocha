@@ -76,6 +76,6 @@ func TestReplyWithTemplate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	assert.Equal(t, http.StatusOK, res.Status)
+	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.Equal(t, "test\ndev\n", string(res.Body))
 }

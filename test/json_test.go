@@ -129,6 +129,6 @@ func TestPostJSON(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NoError(t, res.Body.Close())
 		assert.False(t, scoped.HasBeenCalled())
-		assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
+		assert.Equal(t, mocha.StatusRequestDidNotMatch, res.StatusCode)
 	})
 }

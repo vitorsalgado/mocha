@@ -24,7 +24,7 @@ func TestRandomReplies(t *testing.T) {
 
 		contains := false
 		for _, status := range statuses {
-			if status == res.Status {
+			if status == res.StatusCode {
 				contains = true
 				break
 			}
@@ -57,7 +57,7 @@ func TestRandWithCustom(t *testing.T) {
 
 		contains := false
 		for _, status := range statuses {
-			if status == res.Status {
+			if status == res.StatusCode {
 				contains = true
 				break
 			}

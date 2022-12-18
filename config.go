@@ -3,15 +3,16 @@ package mocha
 import (
 	"net/http"
 
+	"github.com/vitorsalgado/mocha/v3/internal/colorize"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 type LogLevel int
 
 const (
-	// LogSilently disable all logs.
+	// LogSilently enable minimum log mode.
 	LogSilently LogLevel = iota
-	// LogInfo logs only informative messages, without too much details.
+	// LogInfo logs only informative messages, without too much Details.
 	LogInfo
 	// LogVerbose logs detailed information about requests, matches and non-matches.
 	LogVerbose
@@ -70,7 +71,7 @@ type Config struct {
 	// Proxy configures the mock server as a proxy.
 	Proxy *ProxyConfig
 
-	// Record configures Mock Request/Response recording.
+	// Record configures Mock Request/ResponseStub recording.
 	// Needs to be used with Proxy.
 	Record *RecordConfig
 }
@@ -320,4 +321,13 @@ func WithProxy(options ...ProxyConfigurer) Configurer {
 
 		c.Proxy = opts
 	})
+}
+
+// --
+// Globals
+// --
+
+// UseColors enable/disable terminal colors.
+func UseColors(value bool) {
+	colorize.UseColors(value)
 }

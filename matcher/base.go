@@ -1,20 +1,8 @@
 package matcher
 
-import "net/http"
-
 const (
 	_separator = "=>"
 )
-
-// RequestInfo implements HTTP request information to be passed to each Matcher.
-type RequestInfo struct {
-	// Request is the actual http.Request.
-	Request *http.Request
-
-	// ParsedBody is http.Request parsed body.
-	// Value of parsed body can vary depending on the mocha.RequestBodyParser that parsed the request.
-	ParsedBody any
-}
 
 // Matcher defines request matchers.
 // Request matchers are used to match requests in order to find a mock to serve a stub response.
@@ -34,20 +22,11 @@ type Matcher interface {
 	Spec() any
 }
 
+// Result represents a Matcher result.
 type Result struct {
-	OK              bool
-	DescribeFailure func() string
-}
+	// Pass defines if Matcher passed or not.
+	Pass bool
 
-// Values stores Matcher values and provides means to access then.
-type Values struct {
-	V any
-}
-
-func (v Values) Interface() any {
-	return v.V
-}
-
-func (v Values) String() string {
-	return v.V.(string)
+	// Message is function that should return the failure description.
+	Message func() string
 }

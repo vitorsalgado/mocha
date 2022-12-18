@@ -51,6 +51,7 @@ const (
 
 var (
 	_, noColor = os.LookupEnv(_noColorEnv)
+	useColors  = true
 )
 
 func Black(s string) string         { return stylize(s, ColorBlack, 39) }
@@ -79,10 +80,14 @@ func Inverse(s string) string       { return stylize(s, StyleInverse, 27) }
 func Hidden(s string) string        { return stylize(s, StyleHidden, 28) }
 func Strikethrough(s string) string { return stylize(s, StyleStrikethrough, 29) }
 
+func UseColors(value bool) {
+	useColors = value
+}
+
 func stylize(s string, open style, close int) string {
-	if noColor {
-		return s
+	if useColors && !noColor {
+		return fmt.Sprintf("\x1b[%dm%s\x1b[%dm", open, s, close)
 	}
 
-	return fmt.Sprintf("\x1b[%dm%s\x1b[%dm", open, s, close)
+	return s
 }

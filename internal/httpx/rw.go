@@ -12,7 +12,7 @@ type Rw struct {
 	w  http.ResponseWriter
 }
 
-func DecorateWriter(w http.ResponseWriter) *Rw {
+func Wrap(w http.ResponseWriter) *Rw {
 	return &Rw{w: w, rr: httptest.NewRecorder()}
 }
 

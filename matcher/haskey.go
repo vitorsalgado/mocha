@@ -19,8 +19,8 @@ func (m *hasKeyMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		OK: value != nil,
-		DescribeFailure: func() string {
+		Pass: value != nil,
+		Message: func() string {
 			return hint(m.Name(), printExpected(m.path))
 		},
 	}, nil

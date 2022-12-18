@@ -11,11 +11,10 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.uber.org/goleak"
 
-	"github.com/vitorsalgado/mocha/v3/event"
-
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
+	"github.com/vitorsalgado/mocha/v3/x/event"
 )
 
 func TestMain(m *testing.M) {
@@ -87,7 +86,7 @@ func TestResponseMapper(t *testing.T) {
 	scoped := m.MustMock(Get(URLPath("/test")).
 		Reply(reply.
 			OK()).
-		Map(func(r *reply.Response, rma *MapperArgs) error {
+		Map(func(r *reply.ResponseStub, rma *MapperIn) error {
 			r.Header.Add("x-test", rma.Request.Header.Get("x-param"))
 			return nil
 		}))
@@ -137,19 +136,6 @@ func TestErrors(t *testing.T) {
 
 	defer m.Close()
 
-	t.Run("should log errors on reply", func(t *testing.T) {
-		scoped := m.MustMock(Get(URLPath("/test1")).
-			ReplyFunc(func(_ http.ResponseWriter, r *http.Request) (*reply.Response, error) {
-				return nil, fmt.Errorf("failed to build a response")
-			}))
-
-		res, err := testutil.Get(fmt.Sprintf("%s/test1", m.URL())).Do()
-
-		assert.Nil(t, err)
-		assert.False(t, scoped.HasBeenCalled())
-		assert.Equal(t, StatusNoMockFound, res.StatusCode)
-	})
-
 	t.Run("should log errors from matchers", func(t *testing.T) {
 		scoped := m.MustMock(
 			Get(URLPath("/test2")).
@@ -163,7 +149,7 @@ func TestErrors(t *testing.T) {
 
 		assert.Nil(t, err)
 		assert.False(t, scoped.HasBeenCalled())
-		assert.Equal(t, StatusNoMockFound, res.StatusCode)
+		assert.Equal(t, StatusRequestDidNotMatch, res.StatusCode)
 	})
 }
 
@@ -220,12 +206,12 @@ func TestMocha_Enable_Disable(t *testing.T) {
 	res, err = testutil.Get(m.URL() + "/test-1").Do()
 
 	assert.NoError(t, err)
-	assert.Equal(t, StatusNoMockFound, res.StatusCode)
+	assert.Equal(t, StatusRequestDidNotMatch, res.StatusCode)
 
 	res, err = testutil.Get(m.URL() + "/test-2").Do()
 
 	assert.NoError(t, err)
-	assert.Equal(t, StatusNoMockFound, res.StatusCode)
+	assert.Equal(t, StatusRequestDidNotMatch, res.StatusCode)
 
 	// re-enable mocks again
 	m.Enable()

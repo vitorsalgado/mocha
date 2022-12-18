@@ -71,7 +71,7 @@ func TestMock(t *testing.T) {
 
 func TestMock_Matches(t *testing.T) {
 	m := newMock()
-	params := &RequestInfo{}
+	params := &values{}
 
 	cases := []struct {
 		name     string
@@ -110,11 +110,11 @@ func TestMock_Matches(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res := m.requestMatches(params, []*expectation{{
 				Matcher: Equal(tc.value),
-				ValueSelector: func(r *RequestInfo) any {
+				ValueSelector: func(r *values) any {
 					return tc.selector
 				},
 			}})
-			assert.Equal(t, tc.expected, res.OK)
+			assert.Equal(t, tc.expected, res.Pass)
 		})
 	}
 
@@ -124,11 +124,11 @@ func TestMock_Matches(t *testing.T) {
 			Matcher: Func(func(_ any) (bool, error) {
 				return false, fmt.Errorf("fail")
 			}),
-			ValueSelector: func(r *RequestInfo) any {
+			ValueSelector: func(r *values) any {
 				return "dev"
 			},
 		}})
-		assert.False(t, res.OK)
+		assert.False(t, res.Pass)
 	})
 
 	t.Run("should return the sum of the matchers weight when it matches", func(t *testing.T) {
@@ -136,27 +136,27 @@ func TestMock_Matches(t *testing.T) {
 		res := m.requestMatches(params, []*expectation{
 			{
 				Matcher: Equal("test"),
-				ValueSelector: func(r *RequestInfo) any {
+				ValueSelector: func(r *values) any {
 					return "test"
 				},
 				Weight: 2,
 			},
 			{
 				Matcher: Equal("test"),
-				ValueSelector: func(r *RequestInfo) any {
+				ValueSelector: func(r *values) any {
 					return "test"
 				},
 				Weight: 1,
 			},
 			{
 				Matcher: Equal(10.0),
-				ValueSelector: func(r *RequestInfo) any {
+				ValueSelector: func(r *values) any {
 					return 10.0
 				},
 				Weight: 2,
 			},
 		})
-		assert.True(t, res.OK)
+		assert.True(t, res.Pass)
 		assert.Equal(t, 5, res.Weight)
 	})
 
@@ -165,27 +165,27 @@ func TestMock_Matches(t *testing.T) {
 		res := m.requestMatches(params, []*expectation{
 			{
 				Matcher: Equal("test"),
-				ValueSelector: func(r *RequestInfo) any {
+				ValueSelector: func(r *values) any {
 					return "test"
 				},
 				Weight: 2,
 			},
 			{
 				Matcher: Equal("test"),
-				ValueSelector: func(r *RequestInfo) any {
+				ValueSelector: func(r *values) any {
 					return "dev"
 				},
 				Weight: 1,
 			},
 			{
 				Matcher: Equal(10.0),
-				ValueSelector: func(r *RequestInfo) any {
+				ValueSelector: func(r *values) any {
 					return 10.0
 				},
 				Weight: 2,
 			},
 		})
-		assert.False(t, res.OK)
+		assert.False(t, res.Pass)
 		assert.Equal(t, 4, res.Weight)
 	})
 }

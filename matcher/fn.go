@@ -17,8 +17,8 @@ func (m *funcMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		OK: r,
-		DescribeFailure: func() string {
+		Pass: r,
+		Message: func() string {
 			return fmt.Sprintf(
 				"%s %s %v",
 				hint(m.Name()),

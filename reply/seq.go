@@ -3,6 +3,7 @@ package reply
 import (
 	"fmt"
 	"net/http"
+	"sync"
 )
 
 var _ Reply = (*SequentialReply)(nil)
@@ -12,6 +13,7 @@ type SequentialReply struct {
 	replyOnNotFound Reply
 	replies         []Reply
 	hits            int
+	mu              sync.Mutex
 }
 
 // Seq creates a new SequentialReply.
@@ -20,20 +22,19 @@ func Seq(reply ...Reply) *SequentialReply {
 }
 
 // AfterEnded sets a response to be used once the sequence is over.
-func (mr *SequentialReply) AfterEnded(reply Reply) *SequentialReply {
-	mr.replyOnNotFound = reply
-	return mr
+func (r *SequentialReply) AfterEnded(reply Reply) *SequentialReply {
+	r.replyOnNotFound = reply
+	return r
 }
 
 // Add adds a new response to the sequence.
-func (mr *SequentialReply) Add(reply ...Reply) *SequentialReply {
-	mr.replies = append(mr.replies, reply...)
-	return mr
+func (r *SequentialReply) Add(reply ...Reply) *SequentialReply {
+	r.replies = append(r.replies, reply...)
+	return r
 }
 
-func (mr *SequentialReply) Prepare() error {
-	size := len(mr.replies)
-
+func (r *SequentialReply) Prepare() error {
+	size := len(r.replies)
 	if size == 0 {
 		return fmt.Errorf("you need to set at least one response when using multiple response builder")
 	}
@@ -41,39 +42,36 @@ func (mr *SequentialReply) Prepare() error {
 	return nil
 }
 
-func (mr *SequentialReply) Spec() []any {
+func (r *SequentialReply) Spec() []any {
 	return []any{}
 }
 
 // Build builds a new response based on current mock.Mock call sequence.
 // When the sequence is over, it will return an error or a previously configured reply for this scenario.
-func (mr *SequentialReply) Build(w http.ResponseWriter, r *http.Request) (*Response, error) {
-	arg := r.Context().Value(KArg).(*Arg)
-	size := len(mr.replies)
-	hits := arg.MockInfo.Hits
+func (r *SequentialReply) Build(w http.ResponseWriter, req *http.Request) (*ResponseStub, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
-	if size == 0 {
-		return nil,
-			fmt.Errorf("you need to set at least one response when using multiple response builder")
-	}
-
+	var size = len(r.replies)
 	var reply Reply
 
-	if hits <= size && hits >= 0 {
-		reply = mr.replies[hits-1]
+	if r.hits < size && r.hits >= 0 {
+		reply = r.replies[r.hits]
 	}
 
 	if reply == nil {
-		if mr.replyOnNotFound != nil {
-			return mr.replyOnNotFound.Build(w, r)
+		if r.replyOnNotFound != nil {
+			return r.replyOnNotFound.Build(w, req)
 		}
 
 		return nil,
 			fmt.Errorf(
 				"unable to obtain a response and no default response was set. request number: %d - sequence size: %d",
-				hits,
+				r.hits,
 				size)
 	}
 
-	return reply.Build(w, r)
+	r.hits++
+
+	return reply.Build(w, req)
 }

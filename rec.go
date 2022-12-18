@@ -18,22 +18,25 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/vitorsalgado/mocha/v3/internal/header"
+	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
-var _regexNoSpecialCharacters = regexp.MustCompile("[^a-z0-9]")
-var _defaultRecordConfig = RecordConfig{
-	SaveDir:        "testdata/_mocks",
-	SaveExtension:  "json",
-	SaveBodyToFile: false,
-	Save:           false,
-	RequestHeaders: []string{"accept", "content-type"},
-	ResponseHeaders: []string{
-		"content-type",
-		"link",
-		"content-length",
-		"cache-control",
-		"retry-after"},
-}
+var (
+	_regexNoSpecialCharacters = regexp.MustCompile("[^a-z0-9]")
+	_defaultRecordConfig      = RecordConfig{
+		SaveDir:        "testdata/_mocks",
+		SaveExtension:  "json",
+		SaveBodyToFile: false,
+		Save:           false,
+		RequestHeaders: []string{"accept", "content-type"},
+		ResponseHeaders: []string{
+			"content-type",
+			"link",
+			"content-length",
+			"cache-control",
+			"retry-after"},
+	}
+)
 
 type RecordConfig struct {
 	RequestHeaders  []string
@@ -114,24 +117,19 @@ func (r *record) startRecording(ctx context.Context) {
 	}()
 }
 
-func (r *record) record(
-	req *http.Request,
-	parsedReqBody []byte,
-	res *http.Response,
-	parsedResBody []byte,
-) {
+func (r *record) record(req *http.Request, rawReqBody []byte, res *reply.ResponseStub) {
 	input := &recArgs{
 		request: recRequest{
 			path:   req.URL.Path,
 			method: req.Method,
-			header: req.Header.Clone(),
+			header: req.Header,
 			query:  req.URL.Query(),
-			body:   parsedReqBody,
+			body:   rawReqBody,
 		},
 		response: recResponse{
 			status: res.StatusCode,
-			header: res.Header.Clone(),
-			body:   parsedResBody,
+			header: res.Header,
+			body:   res.Body,
 		},
 	}
 

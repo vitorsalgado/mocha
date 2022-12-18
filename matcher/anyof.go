@@ -23,14 +23,14 @@ func (m *anyOfMatcher) Match(v any) (*Result, error) {
 		if err != nil {
 			ok = false
 			errs = append(errs, err.Error())
-			failed = append(failed, result.DescribeFailure())
+			failed = append(failed, result.Message())
 
 			continue
 		}
 
-		if !result.OK {
+		if !result.Pass {
 			ok = false
-			failed = append(failed, result.DescribeFailure())
+			failed = append(failed, result.Message())
 
 			continue
 		}
@@ -49,12 +49,12 @@ func (m *anyOfMatcher) Match(v any) (*Result, error) {
 
 	if len(errs) > 0 {
 		return &Result{
-			OK:              false,
-			DescribeFailure: describeFailure,
+			Pass:    false,
+			Message: describeFailure,
 		}, fmt.Errorf(strings.Join(errs, "\n"))
 	}
 
-	return &Result{OK: ok, DescribeFailure: describeFailure}, nil
+	return &Result{Pass: ok, Message: describeFailure}, nil
 }
 
 func (m *anyOfMatcher) OnMockServed() error {

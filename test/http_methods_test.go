@@ -34,7 +34,7 @@ func TestHTTPMethods(t *testing.T) {
 		other, err := testutil.Post(m.URL()+"/test", nil).Do()
 
 		assert.NoError(t, err)
-		assert.Equal(t, mocha.StatusNoMockFound, other.StatusCode)
+		assert.Equal(t, mocha.StatusRequestDidNotMatch, other.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
 	})
 
@@ -48,7 +48,7 @@ func TestHTTPMethods(t *testing.T) {
 		res, err := testutil.Get(m.URL() + "/test").Do()
 
 		assert.NoError(t, err)
-		assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
+		assert.Equal(t, mocha.StatusRequestDidNotMatch, res.StatusCode)
 		assert.False(t, scoped.HasBeenCalled())
 
 		other, err := testutil.Post(m.URL()+"/test", nil).Do()
@@ -69,7 +69,7 @@ func TestHTTPMethods(t *testing.T) {
 		res, err := testutil.Get(m.URL() + "/test").Do()
 
 		assert.NoError(t, err)
-		assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
+		assert.Equal(t, mocha.StatusRequestDidNotMatch, res.StatusCode)
 		assert.False(t, scoped.HasBeenCalled())
 
 		other, err := testutil.NewRequest(http.MethodPut, m.URL()+"/test", nil).Do()
@@ -90,7 +90,7 @@ func TestHTTPMethods(t *testing.T) {
 		res, err := testutil.Get(m.URL() + "/test").Do()
 
 		assert.NoError(t, err)
-		assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
+		assert.Equal(t, mocha.StatusRequestDidNotMatch, res.StatusCode)
 		assert.False(t, scoped.HasBeenCalled())
 
 		other, err := testutil.NewRequest(http.MethodDelete, m.URL()+"/test", nil).Do()
@@ -111,7 +111,7 @@ func TestHTTPMethods(t *testing.T) {
 		res, err := testutil.Get(m.URL() + "/test").Do()
 
 		assert.NoError(t, err)
-		assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
+		assert.Equal(t, mocha.StatusRequestDidNotMatch, res.StatusCode)
 		assert.False(t, scoped.HasBeenCalled())
 
 		other, err := testutil.NewRequest(http.MethodPatch, m.URL()+"/test", nil).Do()
@@ -132,7 +132,7 @@ func TestHTTPMethods(t *testing.T) {
 		res, err := testutil.Get(m.URL() + "/test").Do()
 
 		assert.NoError(t, err)
-		assert.Equal(t, mocha.StatusNoMockFound, res.StatusCode)
+		assert.Equal(t, mocha.StatusRequestDidNotMatch, res.StatusCode)
 		assert.False(t, scoped.HasBeenCalled())
 
 		other, err := testutil.NewRequest(http.MethodHead, m.URL()+"/test", nil).Do()

@@ -53,7 +53,7 @@ func (m *urlPathMatcher) Match(v any) (*Result, error) {
 		return nil, err
 	}
 
-	return &Result{OK: res.OK, DescribeFailure: message(res.DescribeFailure())}, nil
+	return &Result{Pass: res.Pass, Message: message(res.Message())}, nil
 }
 
 func (m *urlPathMatcher) OnMockServed() error {

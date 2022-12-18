@@ -34,16 +34,16 @@ func (m *containsMatcher) Match(list any) (*Result, error) {
 	switch listType.Kind() {
 	case reflect.String:
 		return &Result{
-			OK:              strings.Contains(listValue.String(), sub.String()),
-			DescribeFailure: describeFailure,
+			Pass:    strings.Contains(listValue.String(), sub.String()),
+			Message: describeFailure,
 		}, nil
 	case reflect.Map:
 		keys := listValue.MapKeys()
 		for i := 0; i < len(keys); i++ {
 			if reflect.DeepEqual(keys[i].Interface(), m.expected) {
 				return &Result{
-					OK:              true,
-					DescribeFailure: describeFailure,
+					Pass:    true,
+					Message: describeFailure,
 				}, nil
 			}
 		}
@@ -54,8 +54,8 @@ func (m *containsMatcher) Match(list any) (*Result, error) {
 	for i := 0; i < listValue.Len(); i++ {
 		if reflect.DeepEqual(listValue.Index(i).Interface(), sub.Interface()) {
 			return &Result{
-				OK:              true,
-				DescribeFailure: describeFailure,
+				Pass:    true,
+				Message: describeFailure,
 			}, nil
 		}
 	}

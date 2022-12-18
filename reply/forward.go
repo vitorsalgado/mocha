@@ -95,7 +95,7 @@ func (r *ProxyReply) Spec() []any {
 }
 
 // Build builds a Reply based on the ProxyReply configuration.
-func (r *ProxyReply) Build(w http.ResponseWriter, req *http.Request) (*Response, error) {
+func (r *ProxyReply) Build(w http.ResponseWriter, req *http.Request) (*ResponseStub, error) {
 	path := req.URL.Path
 
 	if r.trimPrefix != "" {

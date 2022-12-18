@@ -17,8 +17,8 @@ func (m *hasSuffixMatcher) Match(v any) (*Result, error) {
 	txt := v.(string)
 
 	return &Result{
-		OK: strings.HasSuffix(txt, m.suffix),
-		DescribeFailure: func() string {
+		Pass: strings.HasSuffix(txt, m.suffix),
+		Message: func() string {
 			return fmt.Sprintf(
 				"%s %s %s",
 				hint(m.Name(), printExpected(m.suffix)),

@@ -182,3 +182,8 @@ func TestWithNewFiles(t *testing.T) {
 
 	assert.Equal(t, []string{"test", "dev"}, m.config.Directories)
 }
+
+func TestUseColors(t *testing.T) {
+	UseColors(false)
+	UseColors(true)
+}
