@@ -16,17 +16,6 @@ import (
 	"github.com/vitorsalgado/mocha/v3/x/event"
 )
 
-type response struct {
-	Closest *closest         `json:"closest,omitempty"`
-	Details []mismatchDetail `json:"details,omitempty"`
-	Error   error            `json:"error,omitempty"`
-}
-
-type closest struct {
-	ID   string `json:"id,omitempty"`
-	Name string `json:"name,omitempty"`
-}
-
 type mockHandler struct {
 	app *Mocha
 }

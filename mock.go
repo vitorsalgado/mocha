@@ -203,8 +203,8 @@ func (m *Mock) Build() (*Mock, error) {
 // MarshalJSON marshal Mock to a JSON that can be loaded later by this mock server.
 func (m *Mock) MarshalJSON() ([]byte, error) {
 	ext := make(map[string]any)
-	fields := make([]any, 0)
 
+	fields := make(map[string]any)
 	headers := make(map[string]any)
 	queries := make(map[string]any)
 	body := make([]any, 0)
@@ -220,7 +220,7 @@ func (m *Mock) MarshalJSON() ([]byte, error) {
 		case _targetHeader:
 			headers[e.Key] = e.Matcher.Spec()
 		case _targetForm:
-			fields = append(fields, e.Matcher.Spec())
+			fields[e.Key] = e.Matcher.Spec()
 		case _targetBody:
 			body = append(body, e.Matcher.Spec())
 		case _targetRequest:
@@ -244,6 +244,7 @@ func (m *Mock) MarshalJSON() ([]byte, error) {
 	ext["body"] = body
 	ext["header"] = headers
 	ext["query"] = queries
+	ext["fields"] = fields
 
 	res := m.Reply.Spec()
 	f := res[0].(string)

@@ -13,7 +13,6 @@ import (
 	"path"
 	"regexp"
 	"strings"
-	"sync"
 
 	"github.com/spf13/viper"
 
@@ -82,8 +81,6 @@ type record struct {
 	config *RecordConfig
 	in     chan *recArgs
 	cancel context.CancelFunc
-	mu     sync.Mutex
-	data   []*Mock
 }
 
 func newRecord(config *RecordConfig) *record {
@@ -203,7 +200,7 @@ func (r *record) process(arg *recArgs) error {
 	}
 
 	if exists {
-		return fmt.Errorf("file %s exists.\n", mockFile)
+		return fmt.Errorf("file %s exists", mockFile)
 	}
 
 	if hasResBody {
