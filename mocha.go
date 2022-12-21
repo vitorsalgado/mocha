@@ -65,7 +65,7 @@ func NewWithT(t TestingT, config ...Configurer) (m *Mocha) {
 		t = notifier.NewConsole()
 	}
 
-	conf := DefaultConfig()
+	conf := defaultConfig()
 	for i, configurer := range config {
 		err := configurer.Apply(conf)
 		if err != nil {

@@ -138,7 +138,7 @@ type ConfigBuilder struct {
 	conf *Config
 }
 
-func DefaultConfig() *Config {
+func defaultConfig() *Config {
 	return &Config{
 		LogLevel:           LogVerbose,
 		Directories:        []string{ConfigMockFilePattern},
@@ -151,7 +151,7 @@ func DefaultConfig() *Config {
 // Configure inits a new ConfigBuilder.
 // Entrypoint to start a new custom configuration for Mocha mock servers.
 func Configure() *ConfigBuilder {
-	return &ConfigBuilder{conf: DefaultConfig()}
+	return &ConfigBuilder{conf: defaultConfig()}
 }
 
 // Name sets a name to the mock server.

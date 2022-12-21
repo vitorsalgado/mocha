@@ -16,44 +16,55 @@ import (
 	"github.com/vitorsalgado/mocha/v3"
 )
 
-var (
-	//go:embed banner.txt
-	Banner     string
-	Repository = "https://github.com/vitorsalgado/mocha"
-	Usage      = "moai"
-	Short      = "Build Mock APIs in Go"
-	Example    = `  moai --addr=:3000
+const (
+	_dockerHostEnv    = "MOAI_DOCKER_HOST"
+	_gitRepository    = "https://github.com/vitorsalgado/mocha"
+	_usage            = "moai"
+	_shortDescription = "Build Mock APIs in Go"
+	_example          = `  moai --addr=:3000
   moai --proxy
   moai --proxy --record
   moai
 `
-	Description = fmt.Sprintf(`%s
+)
+
+var (
+	//go:embed banner.txt
+	_banner      string
+	_description = fmt.Sprintf(`%s
 Flexible HTTP mocking and expectations for Go. 
 Supported mock file extensions: %s
 
 For more information, visit: %s`,
-		Banner,
+		_banner,
 		strings.Join(viper.SupportedExts, ", "),
-		Repository,
+		_gitRepository,
 	)
 )
 
 func main() {
 	rootCmd := &cobra.Command{
-		Use:     Usage,
-		Short:   Short,
-		Long:    Description,
+		Use:     _usage,
+		Short:   _shortDescription,
+		Long:    _description,
 		Args:    cobra.MinimumNArgs(0),
-		Example: Example,
+		Example: _example,
 		Run: func(cmd *cobra.Command, args []string) {
-			m := mocha.New(mocha.UseLocalConfig(), mocha.UseFlags())
+			conf := []mocha.Configurer{mocha.UseLocals()}
+
+			_, exists := os.LookupEnv(_dockerHostEnv)
+			if exists {
+				conf = append(conf, &dockerConfigurer{})
+			}
+
+			m := mocha.New(conf...)
 
 			ctx, cancel := signal.NotifyContext(m.Context(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 			defer cancel()
 
 			m.MustStart()
 
-			fmt.Println(Banner)
+			fmt.Println(_banner)
 			_ = m.PrintConfig(os.Stdin)
 
 			readStdIn(ctx, inputs(bufio.NewReader(os.Stdin)))

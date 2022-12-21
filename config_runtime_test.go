@@ -1,6 +1,7 @@
 package mocha
 
 import (
+	"os"
 	"testing"
 	"time"
 
@@ -9,13 +10,13 @@ import (
 )
 
 func TestLocalConfig(t *testing.T) {
-	c := UseLocalConfig().(*localConfigurer)
+	c := UseLocals().(*localConfigurer)
 
 	assert.Equal(t, DefaultConfigFileName, c.filename)
 	assert.Equal(t, DefaultConfigDirectories, c.paths)
 }
 
-func TestLocalConfig_ApplyExt(t *testing.T) {
+func TestLocalConfig_UseDifferentExtensions(t *testing.T) {
 	testCases := []struct {
 		name     string
 		filename string
@@ -57,4 +58,16 @@ func TestLocalConfig_ApplyExt(t *testing.T) {
 			assert.Equal(t, "nowhere", config.Record.SaveDir)
 		})
 	}
+}
+
+func TestLocalConfigurer_Apply(t *testing.T) {
+	c := UseLocals()
+
+	assert.NoError(t, os.Setenv(_kProxy, "true"))
+	assert.NoError(t, os.Setenv(_kRecord, "true"))
+	assert.NoError(t, os.Setenv(_kCORS, "true"))
+	assert.NoError(t, os.Setenv(_kForward, "true"))
+	assert.NoError(t, os.Setenv(_kForwardTarget, "https://www.example.org/"))
+
+	assert.NoError(t, c.Apply(&Config{}))
 }
