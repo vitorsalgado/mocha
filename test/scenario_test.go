@@ -13,7 +13,7 @@ import (
 )
 
 func TestScenarioMatcher(t *testing.T) {
-	m := mocha.New(t)
+	m := mocha.NewWithT(t)
 	m.MustStart()
 
 	defer m.Close()

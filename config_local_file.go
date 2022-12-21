@@ -1,6 +1,10 @@
 package mocha
 
 import (
+	"errors"
+	"fmt"
+	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -33,7 +37,7 @@ const (
 	_fieldCORSSuccessStatusCode = "cors.success_status_code"
 
 	_fieldProxy        = "proxy"
-	_fieldProxyTarget  = "proxy.target"
+	_fieldProxyTarget  = "proxy.proxy_via"
 	_fieldProxyTimeout = "proxy.timeout"
 
 	_fieldRecord                = "record"
@@ -42,6 +46,14 @@ const (
 	_fieldRecordSave            = "record.save"
 	_fieldRecordSaveDir         = "record.save_dir"
 	_fieldRecordSaveBodyToFile  = "record.save_body_file"
+
+	_fieldForward                   = "forward"
+	_fieldForwardTarget             = "forward.target"
+	_fieldForwardHeaders            = "forward.headers"
+	_fieldForwardProxyHeaders       = "forward.proxy_headers"
+	_fieldForwardRemoveProxyHeaders = "forward.remove_proxy_headers"
+	_fieldForwardTrimPrefix         = "forward.trim_prefix"
+	_fieldForwardTrimSuffix         = "forward.trim_suffix"
 )
 
 var _ Configurer = (*localConfigurer)(nil)
@@ -51,17 +63,17 @@ type localConfigurer struct {
 	paths    []string
 }
 
-// WithLocal enables lookup for local configuration files using standard naming conventions.
+// UseLocalConfig enables lookup for local configuration files using standard naming conventions.
 // It will look up for a file named ".moairc.(json|toml|yaml|yml|properties|props|prop|hcl|tfvars|dotenv|env|ini)"
 // in the directories "." and "testdata".
-func WithLocal() Configurer {
+func UseLocalConfig() Configurer {
 	return &localConfigurer{filename: DefaultConfigFileName, paths: DefaultConfigDirectories}
 }
 
-// WithLocalCustomized enables lookup for local configuration file using standard naming conventions.
+// UseLocalConfigFrom enables lookup for local configuration file using standard naming conventions.
 // Supported extensions (json|toml|yaml|yml|properties|props|prop|hcl|tfvars|dotenv|env|ini)".
 // If only the filename is provided, it must contain the full path and extension to the configuration.
-func WithLocalCustomized(filename string, paths []string) Configurer {
+func UseLocalConfigFrom(filename string, paths []string) Configurer {
 	return &localConfigurer{filename: filename, paths: paths}
 }
 
@@ -131,18 +143,28 @@ func (c *localConfigurer) Apply(conf *Config) error {
 	if v.IsSet(_fieldProxy) {
 		v.SetDefault(_fieldProxyTimeout, _defaultProxyConfig.Timeout.Milliseconds())
 
-		conf.Proxy = &ProxyConfig{
-			Target:  v.GetString(_fieldProxyTarget),
-			Timeout: time.Duration(v.GetInt64(_fieldProxyTimeout)),
+		vv := v.Get(_fieldProxy)
+		switch vv.(type) {
+		case bool:
+			conf.Proxy = &ProxyConfig{Timeout: _defaultProxyConfig.Timeout}
+		case map[string]any:
+			conf.Proxy = &ProxyConfig{
+				ProxyVia: v.GetString(_fieldProxyTarget),
+				Timeout:  time.Duration(v.GetInt64(_fieldProxyTimeout)),
+			}
+		default:
+			return errors.New(`field "proxy" has an unknown type. supported type are: object, bool`)
 		}
 	}
 
 	if v.IsSet(_fieldRecord) {
-		v.SetDefault(_fieldRecordRequestHeaders, _defaultRecordConfig.RequestHeaders)
-		v.SetDefault(_fieldRecordResponseHeaders, _defaultRecordConfig.ResponseHeaders)
-		v.SetDefault(_fieldRecordSave, _defaultRecordConfig.Save)
-		v.SetDefault(_fieldRecordSaveDir, _defaultRecordConfig.SaveDir)
-		v.SetDefault(_fieldRecordSaveBodyToFile, _defaultRecordConfig.SaveBodyToFile)
+		defRec := defaultRecordConfig()
+
+		v.SetDefault(_fieldRecordRequestHeaders, defRec.RequestHeaders)
+		v.SetDefault(_fieldRecordResponseHeaders, defRec.ResponseHeaders)
+		v.SetDefault(_fieldRecordSave, defRec.Save)
+		v.SetDefault(_fieldRecordSaveDir, defRec.SaveDir)
+		v.SetDefault(_fieldRecordSaveBodyToFile, defRec.SaveBodyToFile)
 
 		conf.Record = &RecordConfig{
 			RequestHeaders:  v.GetStringSlice(_fieldRecordRequestHeaders),
@@ -150,6 +172,37 @@ func (c *localConfigurer) Apply(conf *Config) error {
 			Save:            v.GetBool(_fieldRecordSave),
 			SaveDir:         v.GetString(_fieldRecordSaveDir),
 			SaveBodyToFile:  v.GetBool(_fieldRecordSaveBodyToFile),
+		}
+	}
+
+	if v.IsSet(_fieldForward) {
+		target := v.GetString(_fieldForwardTarget)
+		if target == "" {
+			return errors.New(`when specifying a "forward" configuration, the field "forward.target" is required`)
+		}
+
+		targetURL, err := url.Parse(target)
+		if err != nil {
+			return fmt.Errorf(`field "forward.target" must contain a valid URL. %w`, err)
+		}
+
+		h := http.Header{}
+		for k, v := range v.GetStringMapString(_fieldForwardHeaders) {
+			h.Add(k, v)
+		}
+
+		hp := http.Header{}
+		for k, v := range v.GetStringMapString(_fieldForwardProxyHeaders) {
+			hp.Add(k, v)
+		}
+
+		conf.Forward = &ForwardConfig{
+			Target:               targetURL.String(),
+			Headers:              h,
+			ProxyHeaders:         hp,
+			ProxyHeadersToRemove: v.GetStringSlice(_fieldForwardRemoveProxyHeaders),
+			TrimPrefix:           v.GetString(_fieldForwardTrimPrefix),
+			TrimSuffix:           v.GetString(_fieldForwardTrimSuffix),
 		}
 	}
 

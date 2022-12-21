@@ -18,6 +18,19 @@ const (
 	LogVerbose
 )
 
+func (l LogLevel) String() string {
+	switch l {
+	case LogSilently:
+		return "silently"
+	case LogInfo:
+		return "info"
+	case LogVerbose:
+		return "verbose"
+	}
+
+	return ""
+}
+
 // Defaults
 const (
 	// ConfigMockFilePattern is the default filename glob pattern to search for local mock files.
@@ -38,6 +51,11 @@ type Config struct {
 
 	// Addr defines a custom server address.
 	Addr string
+
+	// UseHTTPS defines that the mock server should use HTTPS.
+	// This is only used running the command-line version.
+	// To start an HTTPS server from code, call .StartTLS() or .MustStartTLS() from Moai instance.
+	UseHTTPS bool
 
 	// RequestBodyParsers defines request body parsers to be executed before core parsers.
 	RequestBodyParsers []RequestBodyParser
@@ -74,6 +92,17 @@ type Config struct {
 	// Record configures Mock Request/ResponseStub recording.
 	// Needs to be used with Proxy.
 	Record *RecordConfig
+
+	Forward *ForwardConfig
+}
+
+type ForwardConfig struct {
+	Target               string
+	Headers              http.Header
+	ProxyHeaders         http.Header
+	ProxyHeadersToRemove []string
+	TrimPrefix           string
+	TrimSuffix           string
 }
 
 // Apply copies the current Config struct values to the given Config parameter.
@@ -109,7 +138,7 @@ type ConfigBuilder struct {
 	conf *Config
 }
 
-func newConfig() *Config {
+func DefaultConfig() *Config {
 	return &Config{
 		LogLevel:           LogVerbose,
 		Directories:        []string{ConfigMockFilePattern},
@@ -122,7 +151,7 @@ func newConfig() *Config {
 // Configure inits a new ConfigBuilder.
 // Entrypoint to start a new custom configuration for Mocha mock servers.
 func Configure() *ConfigBuilder {
-	return &ConfigBuilder{conf: newConfig()}
+	return &ConfigBuilder{conf: DefaultConfig()}
 }
 
 // Name sets a name to the mock server.
@@ -216,7 +245,7 @@ func (cb *ConfigBuilder) Proxy(options ...ProxyConfigurer) *ConfigBuilder {
 
 // Record configures recording.
 func (cb *ConfigBuilder) Record(options ...RecordConfigurer) *ConfigBuilder {
-	opts := &_defaultRecordConfig
+	opts := defaultRecordConfig()
 
 	for _, option := range options {
 		option.Apply(opts)
@@ -327,7 +356,7 @@ func WithProxy(options ...ProxyConfigurer) Configurer {
 // Globals
 // --
 
-// UseColors enable/disable terminal colors.
-func UseColors(value bool) {
+// SetColors enable/disable terminal colors.
+func SetColors(value bool) {
 	colorize.UseColors(value)
 }

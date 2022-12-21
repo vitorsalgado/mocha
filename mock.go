@@ -96,7 +96,7 @@ type (
 	expectation struct {
 		// Target is an optional metadata that describes the target of the matcher.
 		// Example: the target could have the "header", meaning that the matcher will be applied to one request header.
-		Target target
+		Target matchTarget
 
 		Key string
 
@@ -125,7 +125,7 @@ type (
 	// mismatchDetail gives more ctx about why a matcher did not match.
 	mismatchDetail struct {
 		MatchersName string
-		Target       target
+		Target       matchTarget
 		Desc         string
 		Err          error
 	}

@@ -104,7 +104,7 @@ func TestForward(t *testing.T) {
 		defer dest.Close()
 
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080/path/test/example?filter=all", nil)
-		res, err := Forward(dest.URL).StripPrefix("/path/test").Build(w, req)
+		res, err := Forward(dest.URL).TrimPrefix("/path/test").Build(w, req)
 
 		assert.NoError(t, err)
 		assert.Nil(t, res)
@@ -123,7 +123,7 @@ func TestForward(t *testing.T) {
 		defer dest.Close()
 
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080/path/test/example?filter=all", nil)
-		res, err := Forward(dest.URL).StripSuffix("/example").Build(w, req)
+		res, err := Forward(dest.URL).TrimSuffix("/example").Build(w, req)
 
 		assert.NoError(t, err)
 		assert.Nil(t, res)

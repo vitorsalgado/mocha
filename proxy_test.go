@@ -12,40 +12,40 @@ import (
 )
 
 func TestProxy(t *testing.T) {
-	p := New(t, Configure().Proxy()).CloseWithT(t)
-	p.MustStart()
-	scope1 := p.MustMock(Get(URLPath("/test")).Reply(reply.Accepted()))
+	proxySrv := NewWithT(t, Configure().Proxy()).CloseWithT(t)
+	proxySrv.MustStart()
+	proxyScope := proxySrv.MustMock(Get(URLPath("/test")).Reply(reply.Accepted()))
 
-	m := New(t).CloseWithT(t)
-	m.MustStart()
-	scope2 := m.MustMock(Get(URLPath("/other")).Reply(reply.Created()))
+	targetSrv := NewWithT(t).CloseWithT(t)
+	targetSrv.MustStart()
+	targetScope := targetSrv.MustMock(Get(URLPath("/other")).Reply(reply.Created()))
 
-	u, _ := url.Parse(p.URL())
-	client := &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(u)}}
+	// client that acts like a browser proxying requests to our server
+	proxyURL, _ := url.Parse(proxySrv.URL())
+	client := &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(proxyURL)}}
 
-	res, err := client.Get(m.URL() + "/test")
+	res, err := client.Get(targetSrv.URL() + "/test")
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusAccepted, res.StatusCode)
 
-	res, err = client.Get(m.URL() + "/other")
-
+	res, err = client.Get(targetSrv.URL() + "/other")
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, res.StatusCode)
 
-	scope1.AssertCalled(t)
-	scope2.AssertCalled(t)
+	proxyScope.AssertCalled(t)
+	targetScope.AssertCalled(t)
 }
 
 func TestProxy_ViaProxy(t *testing.T) {
-	p := New(t, WithProxy()).CloseWithT(t)
+	p := NewWithT(t, WithProxy()).CloseWithT(t)
 	p.MustStart()
 	scope1 := p.MustMock(Get(URLPath("/test")).Reply(reply.Accepted()))
 
-	v := New(t, WithProxy(&ProxyConfig{Target: p.URL()})).CloseWithT(t)
+	v := NewWithT(t, WithProxy(&ProxyConfig{ProxyVia: p.URL()})).CloseWithT(t)
 	v.MustStart()
 	scope2 := v.MustMock(Get(URLPath("/unknown")).Reply(reply.NoContent()))
 
-	m := New(t).CloseWithT(t)
+	m := NewWithT(t).CloseWithT(t)
 	m.MustStart()
 	m.MustMock(Get(URLPath("/other")).Reply(reply.Created()))
 

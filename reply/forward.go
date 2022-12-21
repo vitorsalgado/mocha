@@ -64,26 +64,44 @@ func (r *ProxyReply) Header(key, value string) *ProxyReply {
 	return r
 }
 
+// Headers sets extra response headers that will be set after proxy target responds.
+func (r *ProxyReply) Headers(header http.Header) *ProxyReply {
+	r.headers = header.Clone()
+	return r
+}
+
 // ProxyHeader sets an extra header to be sent to the proxy target.
 func (r *ProxyReply) ProxyHeader(key, value string) *ProxyReply {
 	r.proxyHeaders.Add(key, value)
 	return r
 }
 
-// RemoveProxyHeader removes the given before sending the request to the proxy target.
+// ProxyHeaders sets extra headers to be sent to the proxy target.
+func (r *ProxyReply) ProxyHeaders(header http.Header) *ProxyReply {
+	r.proxyHeaders = header.Clone()
+	return r
+}
+
+// RemoveProxyHeader removes the given header before sending the request to the proxy target.
 func (r *ProxyReply) RemoveProxyHeader(header string) *ProxyReply {
 	r.proxyHeadersToRemove = append(r.proxyHeadersToRemove, header)
 	return r
 }
 
-// StripPrefix removes the given prefix from the URL before proxying the request.
-func (r *ProxyReply) StripPrefix(prefix string) *ProxyReply {
+// RemoveProxyHeaders removes the given headers before sending the request to the proxy target.
+func (r *ProxyReply) RemoveProxyHeaders(headers []string) *ProxyReply {
+	r.proxyHeadersToRemove = append(r.proxyHeadersToRemove, headers...)
+	return r
+}
+
+// TrimPrefix removes the given prefix from the URL before proxying the request.
+func (r *ProxyReply) TrimPrefix(prefix string) *ProxyReply {
 	r.trimPrefix = prefix
 	return r
 }
 
-// StripSuffix removes the given suffix from the URL before proxying the request.
-func (r *ProxyReply) StripSuffix(suffix string) *ProxyReply {
+// TrimSuffix removes the given suffix from the URL before proxying the request.
+func (r *ProxyReply) TrimSuffix(suffix string) *ProxyReply {
 	r.trimSuffix = suffix
 	return r
 }

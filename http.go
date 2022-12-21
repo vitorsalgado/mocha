@@ -107,7 +107,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if res.Body != nil {
 			w.Write(res.Body)
 		}
-
+	} else {
 		res, err = h.buildResponseFromWriter(w)
 		if err != nil {
 			h.app.t.Logf(err.Error())

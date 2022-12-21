@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	"github.com/vitorsalgado/mocha/v3/matcher"
@@ -26,7 +27,7 @@ func TestHandlerReply(t *testing.T) {
 		w.Write([]byte(message.(string)))
 	}
 
-	m := mocha.New(t)
+	m := mocha.NewWithT(t)
 	m.Parameters().Set(key, msg)
 
 	m.MustStart()

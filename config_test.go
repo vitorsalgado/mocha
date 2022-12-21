@@ -57,7 +57,7 @@ func TestConfig(t *testing.T) {
 			addr = "127.0.0.1:3000"
 		}
 
-		m := New(t, Configure().Addr(addr)).CloseWithT(t)
+		m := NewWithT(t, Configure().Addr(addr)).CloseWithT(t)
 		m.MustStart()
 
 		defer m.Close()
@@ -76,7 +76,7 @@ func TestConfig(t *testing.T) {
 	})
 
 	t.Run("request body parsers from config should take precedence", func(t *testing.T) {
-		m := New(t, Configure().RequestBodyParsers(&testBodyParser{}))
+		m := NewWithT(t, Configure().RequestBodyParsers(&testBodyParser{}))
 		m.MustStart()
 
 		defer m.Close()
@@ -108,7 +108,7 @@ func TestConfig(t *testing.T) {
 				})
 		}
 
-		m := New(t, Configure().Middlewares(middleware))
+		m := NewWithT(t, Configure().Middlewares(middleware))
 		m.MustStart()
 
 		defer m.Close()
@@ -127,7 +127,7 @@ func TestConfig(t *testing.T) {
 	})
 
 	t.Run("configure custom server", func(t *testing.T) {
-		m := New(t, Configure().Server(&customTestServer{decorated: newServer()}))
+		m := NewWithT(t, Configure().Server(&customTestServer{decorated: newServer()}))
 		m.MustStart()
 
 		defer m.Close()
@@ -149,7 +149,7 @@ func TestConfig_WithFunctions(t *testing.T) {
 	addr := ":3000"
 	nm := "test"
 
-	m := New(t,
+	m := NewWithT(t,
 		WithName(nm),
 		WithAddr(addr),
 		WithRequestBodyParsers(&jsonBodyParser{}, &plainTextParser{}),
@@ -178,12 +178,12 @@ func TestConfig_WithFunctions(t *testing.T) {
 }
 
 func TestWithNewFiles(t *testing.T) {
-	m := New(t, WithNewDirs("test", "dev"))
+	m := NewWithT(t, WithNewDirs("test", "dev"))
 
 	assert.Equal(t, []string{"test", "dev"}, m.config.Directories)
 }
 
 func TestUseColors(t *testing.T) {
-	UseColors(false)
-	UseColors(true)
+	SetColors(false)
+	SetColors(true)
 }

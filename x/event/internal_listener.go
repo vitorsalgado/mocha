@@ -2,6 +2,7 @@ package event
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
@@ -25,7 +26,7 @@ func (h *InternalListener) OnRequest(evt any) {
 	e := evt.(*OnRequest)
 
 	builder := strings.Builder{}
-	builder.WriteString(fmt.Sprintf("\n%s %s ---> %s %s\n%s %s\n\n%s: %v",
+	builder.WriteString(fmt.Sprintf("\n%s %s ---> %s %s\n%s %s\n%s: %v",
 		colorize.BlueBright(colorize.Bold("REQUEST RECEIVED")),
 		e.StartedAt.Format(time.RFC3339),
 		colorize.Blue(e.Request.Method),
@@ -52,7 +53,7 @@ func (h *InternalListener) OnRequestMatched(evt any) {
 
 	builder := strings.Builder{}
 	builder.WriteString(fmt.Sprintf("\n%s %s <--- %s %s\n%s %s\n",
-		colorize.GreenBright(colorize.Bold("REQUEST DID MATCH")),
+		colorize.GreenBright(colorize.Bold("REQUEST MATCHED")),
 		time.Now().Format(time.RFC3339),
 		colorize.Green(e.Request.Method),
 		colorize.Green(e.Request.Path),
@@ -65,15 +66,15 @@ func (h *InternalListener) OnRequestMatched(evt any) {
 	}
 
 	if h.verbose {
-		builder.WriteString(fmt.Sprintf("\n%s %s %s\n%s %dms\n%s\n %s %d\n %s %v\n",
+		builder.WriteString(fmt.Sprintf("%s %s %s\n%s %dms\n%s %d %s\n%s %v\n",
 			colorize.Bold("Mock:"),
 			e.Mock.ID,
 			nm,
 			colorize.Green("Took:"),
 			e.Elapsed.Milliseconds(),
-			colorize.Green("Response"),
-			colorize.Green("StatusCode:"),
+			colorize.Green("Status:"),
 			e.ResponseDefinition.Status,
+			http.StatusText(e.ResponseDefinition.Status),
 			colorize.Green("Headers:"),
 			e.ResponseDefinition.Header))
 
@@ -103,7 +104,7 @@ func (h *InternalListener) OnRequestNotMatched(evt any) {
 			colorize.Bold("Closest Match"), e.Result.ClosestMatch.ID, e.Result.ClosestMatch.Name))
 	}
 
-	if h.verbose {
+	if h.verbose && len(e.Result.Details) > 0 {
 		builder.WriteString(fmt.Sprintf("%s:\n", colorize.Bold("Mismatches")))
 
 		for _, detail := range e.Result.Details {

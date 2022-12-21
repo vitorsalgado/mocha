@@ -1,10 +1,10 @@
 package mocha
 
-type target int
+type matchTarget int
 
-// target constants to help debug unmatched requests.
+// matchTarget constants to help debug unmatched requests.
 const (
-	_targetRequest target = iota
+	_targetRequest matchTarget = iota
 	_targetMethod
 	_targetURL
 	_targetHeader

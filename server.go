@@ -4,6 +4,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 )
 
 // ServerInfo holds HTTP server information, like its URL.
@@ -44,12 +45,18 @@ func (s *httpTestServer) Setup(config *Config, handler http.Handler) error {
 	s.server.EnableHTTP2 = true
 
 	if config.Addr != "" {
-		err := s.server.Listener.Close()
+		addr := config.Addr
+		_, err := strconv.Atoi(addr)
+		if err == nil {
+			addr = ":" + addr
+		}
+
+		err = s.server.Listener.Close()
 		if err != nil {
 			return err
 		}
 
-		listener, err := net.Listen("tcp", config.Addr)
+		listener, err := net.Listen("tcp", addr)
 		if err != nil {
 			return err
 		}

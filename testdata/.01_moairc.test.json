@@ -11,7 +11,7 @@
     "success_status_code": 200
   },
   "proxy": {
-    "target": "https://proxy.org/test",
+    "proxy_via": "https://proxy.org/test",
     "timeout": 5000
   },
   "record": {
@@ -20,5 +20,8 @@
     "save": true,
     "save_dir": "nowhere",
     "save_body_file": true
+  },
+  "forward": {
+    "target": "https://www.example.org"
   }
 }

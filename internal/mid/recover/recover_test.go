@@ -35,6 +35,6 @@ func TestRecover(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, http.StatusTeapot, res.StatusCode)
-	assert.Equal(t, "text/plain", res.Header.Get("content-type"))
+	assert.Equal(t, "text/plain; charset=utf-8", res.Header.Get("content-type"))
 	assert.True(t, strings.Contains(string(body), msg))
 }

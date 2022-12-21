@@ -33,7 +33,7 @@ func TestForward(t *testing.T) {
 
 	defer dest.Close()
 
-	m := mocha.New(t)
+	m := mocha.NewWithT(t)
 	m.MustStart()
 
 	defer m.Close()

@@ -58,7 +58,7 @@ func TestScoped(t *testing.T) {
 
 	t.Run("should return total hits from store", func(t *testing.T) {
 		assert.Equal(t, 3, scoped.Hits())
-		scoped.AssertCalls(t, 3)
+		scoped.AssertNumberOfCalls(t, 3)
 	})
 
 	t.Run("should clean all store associated with scope when calling .Clean()", func(t *testing.T) {
@@ -68,7 +68,7 @@ func TestScoped(t *testing.T) {
 	})
 
 	t.Run("should only consider enabled store", func(t *testing.T) {
-		m := New(t)
+		m := NewWithT(t)
 		m.MustStart()
 
 		defer m.Close()
@@ -123,7 +123,7 @@ func TestScoped(t *testing.T) {
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Equal(t, 1, s1.Hits())
 
-			s1.AssertCalls(t, 1)
+			s1.AssertNumberOfCalls(t, 1)
 		})
 
 		t.Run("enabling previously disabled", func(t *testing.T) {
@@ -136,7 +136,7 @@ func TestScoped(t *testing.T) {
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 			assert.Equal(t, 2, s1.Hits())
 
-			s1.AssertCalls(t, 2)
+			s1.AssertNumberOfCalls(t, 2)
 		})
 
 		t.Run("disabling multiple", func(t *testing.T) {

@@ -3,10 +3,13 @@ package mocha
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"reflect"
+	"strings"
 	"sync"
 
+	"github.com/vitorsalgado/mocha/v3/internal/colorize"
 	"github.com/vitorsalgado/mocha/v3/internal/mid"
 	"github.com/vitorsalgado/mocha/v3/internal/mid/recover"
 	"github.com/vitorsalgado/mocha/v3/internal/notifier"
@@ -38,7 +41,7 @@ type Mocha struct {
 	loaders            []Loader
 	rec                *record
 	mu                 sync.Mutex
-	proxy              *proxy
+	proxy              *reverseProxy
 }
 
 // TestingT is based on testing.T and allow mocha components to log information and errors.
@@ -53,16 +56,16 @@ type Cleanable interface {
 	Cleanup(func())
 }
 
-// New creates a new Mocha mock server with the given configurations.
+// NewWithT creates a new Mocha mock server with the given configurations.
 // Parameter config accepts a Config or a ConfigBuilder implementation.
-func New(t TestingT, config ...Configurer) (m *Mocha) {
+func NewWithT(t TestingT, config ...Configurer) (m *Mocha) {
 	m = &Mocha{}
 
 	if t == nil {
 		t = notifier.NewConsole()
 	}
 
-	conf := newConfig()
+	conf := DefaultConfig()
 	for i, configurer := range config {
 		err := configurer.Apply(conf)
 		if err != nil {
@@ -107,7 +110,7 @@ func New(t TestingT, config ...Configurer) (m *Mocha) {
 		rec = newRecord(conf.Record)
 	}
 
-	var p *proxy
+	var p *reverseProxy
 	if conf.Proxy != nil {
 		p = newProxy(conf.Proxy, events)
 	}
@@ -153,12 +156,24 @@ func New(t TestingT, config ...Configurer) (m *Mocha) {
 	m.proxy = p
 	m.requestBodyParsers = parsers
 
+	if m.config.Forward != nil {
+		m.MustMock(Request().
+			MethodMatches(matcher.Anything()).
+			Priority(10).
+			Reply(reply.Forward(m.config.Forward.Target).
+				Headers(m.config.Forward.Headers).
+				ProxyHeaders(m.config.Forward.ProxyHeaders).
+				RemoveProxyHeaders(m.config.Forward.ProxyHeadersToRemove).
+				TrimPrefix(m.config.Forward.TrimPrefix).
+				TrimSuffix(m.config.Forward.TrimSuffix)))
+	}
+
 	return
 }
 
-// Default creates a new mock server with default configurations.
-func Default(config ...Configurer) *Mocha {
-	return New(nil, config...)
+// New creates a new mock server with default configurations.
+func New(config ...Configurer) *Mocha {
+	return NewWithT(nil, config...)
 }
 
 // Start starts the mock server.
@@ -293,6 +308,11 @@ func (m *Mocha) Config() Config {
 	return *m.config
 }
 
+// Name returns mock server name.
+func (m *Mocha) Name() string {
+	return m.name
+}
+
 // Subscribe add a new event listener.
 func (m *Mocha) Subscribe(evt reflect.Type, fn func(payload any)) error {
 	m.mu.Lock()
@@ -394,6 +414,46 @@ func (m *Mocha) StopRecording() {
 	m.rec.stop()
 }
 
+// PrintConfig prints key configurations using the given io.Writer.
+func (m *Mocha) PrintConfig(w io.Writer) error {
+	s := strings.Builder{}
+
+	if m.Name() != "" {
+		s.WriteString(colorize.Bold("Name: "))
+		s.WriteString(m.Name())
+		s.WriteString("\n")
+	}
+
+	s.WriteString(colorize.Bold("Mock Search Patterns: "))
+	s.WriteString(strings.Join(m.config.Directories, ", "))
+	s.WriteString("\n")
+
+	s.WriteString(colorize.Bold("Log: "))
+	s.WriteString(m.config.LogLevel.String())
+	s.WriteString("\n")
+
+	if m.config.Proxy != nil {
+		s.WriteString(colorize.Bold("Reverse Proxy: "))
+		s.WriteString("enabled")
+		s.WriteString("\n")
+	}
+
+	if m.config.Record != nil {
+		s.WriteString(colorize.Bold("Recording: "))
+		s.WriteString(m.config.Record.SaveDir)
+		s.WriteString("\n")
+	}
+
+	s.WriteString("\n")
+	s.WriteString(colorize.Green("Listening: "))
+	s.WriteString(m.URL())
+	s.WriteString("\n")
+
+	_, err := fmt.Fprint(w, s.String())
+
+	return err
+}
+
 // --
 // Mock Builders (Syntax Sugar)
 // --
@@ -440,9 +500,9 @@ func (m *Mocha) AssertNotCalled(t TestingT) bool {
 	return result
 }
 
-// AssertCalls asserts that the sum of matched request hits
+// AssertNumberOfCalls asserts that the sum of matched request hits
 // is equal to the given expected value.
-func (m *Mocha) AssertCalls(t TestingT, expected int) bool {
+func (m *Mocha) AssertNumberOfCalls(t TestingT, expected int) bool {
 	t.Helper()
 
 	hits := m.Hits()

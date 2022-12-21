@@ -1,0 +1,24 @@
+---
+name: test_api
+addr: ":8080"
+cors:
+  allowed_origin: https://example.org
+  allow_credentials: true
+  allowed_methods: GET,POST
+  allowed_headers: "*"
+  expose_headers: None
+  max_age: '150'
+  success_status_code: 200
+proxy:
+  proxy_via: https://proxy.org/test
+  timeout: 5000
+record:
+  request_headers:
+    - header1
+    - header2
+  response_headers:
+    - header3
+    - header4
+  save: true
+  save_dir: nowhere
+  save_body_file: true

@@ -13,10 +13,9 @@ import (
 
 // ProxyConfig configures proxy.
 type ProxyConfig struct {
-	// Target configures the proxy address to route requests
-	// by the actual proxy being set.
-	// You need to set this configuration in your custom Transport, if one is provided.
-	Target string
+	// ProxyVia sets a URL to route request via another proxy server.
+	// ProxyVia is only valid when Transport configuration is not set.
+	ProxyVia string
 
 	// Timeout is the timeout used when calling the proxy client.
 	Timeout time.Duration
@@ -24,6 +23,7 @@ type ProxyConfig struct {
 	// Transport sets a custom http.RoundTripper.
 	// Target config will be ignored. Set it manually in your http.RoundTripper implementation.
 	// If none is provided, a default one will be used.
+	// You need to set a Target and a custom ProxyVia in your custom http.RoundTripper.
 	Transport http.RoundTripper
 }
 
@@ -34,23 +34,25 @@ type ProxyConfigurer interface {
 
 // Apply allows ProxyConfig to be used as a Configurer.
 func (p *ProxyConfig) Apply(c *ProxyConfig) {
-	c.Target = p.Target
 	c.Transport = p.Transport
 	c.Timeout = p.Timeout
+	c.ProxyVia = p.ProxyVia
 }
 
 var _defaultProxyConfig = ProxyConfig{Timeout: 10 * time.Second}
 
-type proxy struct {
+type reverseProxy struct {
 	conf     *ProxyConfig
 	listener *event.Listener
 }
 
-func newProxy(conf *ProxyConfig, events *event.Listener) *proxy {
+func newProxy(conf *ProxyConfig, events *event.Listener) *reverseProxy {
+	p := &reverseProxy{listener: events}
+
 	if conf.Transport == nil {
 		transport := &http.Transport{}
-		if conf.Target != "" {
-			u, err := url.Parse(conf.Target)
+		if conf.ProxyVia != "" {
+			u, err := url.Parse(conf.ProxyVia)
 			if err != nil {
 				panic(err)
 			}
@@ -66,10 +68,12 @@ func newProxy(conf *ProxyConfig, events *event.Listener) *proxy {
 		conf.Transport = transport
 	}
 
-	return &proxy{conf: conf, listener: events}
+	p.conf = conf
+
+	return p
 }
 
-func (p *proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (p *reverseProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodConnect {
 		p.handleTunneling(w, r)
 	} else {
@@ -77,7 +81,7 @@ func (p *proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (p *proxy) handleTunneling(w http.ResponseWriter, r *http.Request) {
+func (p *reverseProxy) handleTunneling(w http.ResponseWriter, r *http.Request) {
 	hijacker, ok := w.(http.Hijacker)
 	if !ok {
 		http.Error(w, "[proxy] hijacking is not supported", http.StatusInternalServerError)
@@ -86,7 +90,6 @@ func (p *proxy) handleTunneling(w http.ResponseWriter, r *http.Request) {
 
 	in, _, err := hijacker.Hijack()
 	if err != nil {
-		p.listener.Emit(&event.OnError{Request: event.FromRequest(r), Err: err})
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 	}
 
@@ -94,7 +97,6 @@ func (p *proxy) handleTunneling(w http.ResponseWriter, r *http.Request) {
 
 	out, err := net.DialTimeout("tcp", r.Host, 5*time.Second)
 	if err != nil {
-		p.listener.Emit(&event.OnError{Request: event.FromRequest(r), Err: err})
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}
@@ -118,12 +120,11 @@ func (p *proxy) handleTunneling(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (p *proxy) handleHTTP(w http.ResponseWriter, r *http.Request) {
+func (p *reverseProxy) handleHTTP(w http.ResponseWriter, r *http.Request) {
 	r.Header.Del(header.Connection)
 
 	res, err := p.conf.Transport.RoundTrip(r)
 	if err != nil {
-		p.listener.Emit(&event.OnError{Request: event.FromRequest(r), Err: err})
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
 	}

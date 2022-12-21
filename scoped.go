@@ -168,9 +168,9 @@ func (s *Scoped) AssertNotCalled(t TestingT) bool {
 	return false
 }
 
-// AssertCalls asserts that the sum of matched request hits
+// AssertNumberOfCalls asserts that the sum of matched request hits
 // is equal to the given expected value.
-func (s *Scoped) AssertCalls(t TestingT, expected int) bool {
+func (s *Scoped) AssertNumberOfCalls(t TestingT, expected int) bool {
 	t.Helper()
 
 	hits := s.Hits()

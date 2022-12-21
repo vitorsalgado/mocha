@@ -22,7 +22,19 @@ import (
 
 var (
 	_regexNoSpecialCharacters = regexp.MustCompile("[^a-z0-9]")
-	_defaultRecordConfig      = RecordConfig{
+)
+
+type RecordConfig struct {
+	RequestHeaders  []string
+	ResponseHeaders []string
+	Save            bool
+	SaveDir         string
+	SaveExtension   string
+	SaveBodyToFile  bool
+}
+
+func defaultRecordConfig() *RecordConfig {
+	return &RecordConfig{
 		SaveDir:        "testdata/_mocks",
 		SaveExtension:  "json",
 		SaveBodyToFile: false,
@@ -35,15 +47,6 @@ var (
 			"cache-control",
 			"retry-after"},
 	}
-)
-
-type RecordConfig struct {
-	RequestHeaders  []string
-	ResponseHeaders []string
-	Save            bool
-	SaveDir         string
-	SaveExtension   string
-	SaveBodyToFile  bool
 }
 
 type RecordConfigurer interface {

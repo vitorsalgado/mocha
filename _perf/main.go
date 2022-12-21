@@ -105,7 +105,7 @@ func main() {
 		})
 	}
 
-	m := mocha.New(notifier.NewConsole(),
+	m := mocha.NewWithT(notifier.NewConsole(),
 		mocha.Configure().
 			HandlerDecorator(h).
 			Server(&Srv{}).

@@ -19,7 +19,7 @@ type jsonTestModel struct {
 
 func TestPostJSON(t *testing.T) {
 	t.Run("should match specific json body fields", func(t *testing.T) {
-		m := mocha.New(t)
+		m := mocha.NewWithT(t)
 		m.MustStart()
 
 		defer m.Close()
@@ -42,7 +42,7 @@ func TestPostJSON(t *testing.T) {
 	})
 
 	t.Run("should match entire body using a struct", func(t *testing.T) {
-		m := mocha.New(t)
+		m := mocha.NewWithT(t)
 		m.MustStart()
 
 		data := &jsonTestModel{OK: true, Name: "dev"}
@@ -64,7 +64,7 @@ func TestPostJSON(t *testing.T) {
 	})
 
 	t.Run("should match entire body using a map", func(t *testing.T) {
-		m := mocha.New(t)
+		m := mocha.NewWithT(t)
 		m.MustStart()
 
 		data1 := map[string]interface{}{"ok": true, "name": "dev"}
@@ -87,7 +87,7 @@ func TestPostJSON(t *testing.T) {
 	})
 
 	t.Run("should match entire body when comparing a struct and a map", func(t *testing.T) {
-		m := mocha.New(t)
+		m := mocha.NewWithT(t)
 		m.MustStart()
 
 		toMatch := map[string]interface{}{"name": "dev", "ok": true}
@@ -110,7 +110,7 @@ func TestPostJSON(t *testing.T) {
 	})
 
 	t.Run("should not match when the given json is different than the incoming request body", func(t *testing.T) {
-		m := mocha.New(t)
+		m := mocha.NewWithT(t)
 		m.MustStart()
 
 		body := map[string]interface{}{"ok": true, "name": "dev"}

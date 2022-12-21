@@ -25,7 +25,7 @@ func (act *action) Run(a *mocha.PostActionIn) error {
 
 func TestPostAction(t *testing.T) {
 	t.Run("should call registered post action", func(t *testing.T) {
-		m := mocha.New(t)
+		m := mocha.NewWithT(t)
 		m.MustStart()
 
 		defer m.Close()
@@ -47,7 +47,7 @@ func TestPostAction(t *testing.T) {
 	})
 
 	t.Run("should not be affected by errors on registered post actions", func(t *testing.T) {
-		m := mocha.New(t)
+		m := mocha.NewWithT(t)
 		m.MustStart()
 
 		defer m.Close()

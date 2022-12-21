@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"runtime/debug"
-
-	"github.com/vitorsalgado/mocha/v3/internal/header"
-	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 )
 
 type L interface {
@@ -27,7 +24,6 @@ func (h *Recover) Recover(next http.Handler) http.Handler {
 			if recovery := recover(); recovery != nil {
 				err := fmt.Errorf("panic=%v\n%s", recovery, debug.Stack())
 
-				w.Header().Set(header.ContentType, mimetype.TextPlain)
 				w.WriteHeader(http.StatusTeapot)
 				w.Write([]byte(fmt.Sprintf(
 					"%d - Unexpected Error!\n%v",
