@@ -9,14 +9,14 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestLocalConfig(t *testing.T) {
+func TestLocals_DefaultFilenameAndPaths(t *testing.T) {
 	c := UseLocals().(*localConfigurer)
 
 	assert.Equal(t, DefaultConfigFileName, c.filename)
 	assert.Equal(t, DefaultConfigDirectories, c.paths)
 }
 
-func TestLocalConfig_UseDifferentExtensions(t *testing.T) {
+func TestLocals_UsingDifferentExtensions(t *testing.T) {
 	testCases := []struct {
 		name     string
 		filename string
@@ -29,7 +29,7 @@ func TestLocalConfig_UseDifferentExtensions(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			cl := UseLocalConfigFrom(tc.filename, []string{"testdata"})
+			cl := UseLocalsWith(tc.filename, []string{"testdata"})
 			config := &Config{}
 
 			err := cl.Apply(config)

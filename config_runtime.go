@@ -85,10 +85,10 @@ func UseLocals() Configurer {
 	return &localConfigurer{filename: DefaultConfigFileName, paths: DefaultConfigDirectories}
 }
 
-// UseLocalConfigFrom enables lookup for local configuration file using standard naming conventions.
+// UseLocalsWith enables lookup for local configuration file using standard naming conventions.
 // Supported extensions (json|toml|yaml|yml|properties|props|prop|hcl|tfvars|dotenv|env|ini)".
 // If only the filename is provided, it must contain the full path and extension to the configuration.
-func UseLocalConfigFrom(filename string, paths []string) Configurer {
+func UseLocalsWith(filename string, paths []string) Configurer {
 	return &localConfigurer{filename: filename, paths: paths}
 }
 
@@ -183,7 +183,7 @@ func (c *localConfigurer) Apply(conf *Config) (err error) {
 		}
 	}
 
-	if v.IsSet(_kForward) {
+	if v.IsSet(_kForward) || v.IsSet(_kForwardTarget) {
 		target := v.GetString(_kForwardTarget)
 		if target == "" {
 			return errors.New(`when specifying a "forward" configuration, the field "forward.target" is required`)
@@ -251,10 +251,10 @@ func bindFile(v *viper.Viper, filename string, paths []string) error {
 func bindFlags(v *viper.Viper) error {
 	pp := pflag.NewFlagSet("", pflag.ContinueOnError)
 
-	nf := pp.GetNormalizeFunc()
+	normalizer := pp.GetNormalizeFunc()
 
 	pp.SetNormalizeFunc(func(f *pflag.FlagSet, name string) pflag.NormalizedName {
-		result := nf(f, name)
+		result := normalizer(f, name)
 		name = strings.ReplaceAll(strings.ToLower(string(result)), ".", "-")
 
 		return pflag.NormalizedName(name)

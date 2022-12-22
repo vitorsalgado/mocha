@@ -3,29 +3,37 @@ package reply
 import (
 	"io"
 	"net/http"
+	"net/url"
 	"text/template"
 )
+
+// templateData is the data templateExtras used to render the templates.
+type templateData struct {
+	// Request is HTTP request ref.
+	Request templateRequest
+
+	// Extras is an additional data that can be passed to the template.
+	// This value is set using the TemplateExtra() function from StdReply.
+	Extras any
+}
+
+type templateRequest struct {
+	Method string
+	URL    url.URL
+	Header http.Header
+	Body   any
+}
 
 // Template defines a template parser for response bodies.
 type Template interface {
 	// Compile allows pre-compilation of the given template.
 	Compile() error
 
-	// Parse parses the given template.
-	Parse(io.Writer, any) error
+	// Render parses the given template.
+	Render(io.Writer, any) error
 }
 
-// TemplateData is the data model used to render the templates.
-type TemplateData struct {
-	// Request is HTTP request ref.
-	Request *http.Request
-
-	// Data is the model to be used with the given template.
-	// This value is set using the BodyTemplateModel() function from StdReply.
-	Data any
-}
-
-// TextTemplate is the built-in text Template interface.
+// TextTemplate is the built-in Template implementation.
 // It uses Go templates.
 type TextTemplate struct {
 	name     string
@@ -68,6 +76,6 @@ func (gt *TextTemplate) Compile() error {
 	return nil
 }
 
-func (gt *TextTemplate) Parse(w io.Writer, data any) error {
+func (gt *TextTemplate) Render(w io.Writer, data any) error {
 	return gt.t.Execute(w, data)
 }

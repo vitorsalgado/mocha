@@ -84,9 +84,7 @@ func Test_Example(t *testing.T) {
 	req.Header.Add("test", "hello")
 
 	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Fatal(err)
-	}
+    require.NoError(t, err)
 
 	body, err := ioutil.ReadAll(res.Body)
 

@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"net/http"
 	"sync"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 var _ Reply = (*RandomReply)(nil)
@@ -12,7 +14,7 @@ var _ Reply = (*RandomReply)(nil)
 // RandomReply configures a Reply that serves random HTTP responses.
 type RandomReply struct {
 	replies []Reply
-	r       *rand.Rand
+	random  *rand.Rand
 	mu      sync.Mutex
 }
 
@@ -26,19 +28,19 @@ func Rand(reply ...Reply) *RandomReply {
 // RandWithCustom creates a new RandomReply with a custom *rand.Rand.
 func RandWithCustom(random *rand.Rand, reply ...Reply) *RandomReply {
 	r := Rand(reply...)
-	r.r = random
+	r.random = random
 
 	return r
 }
 
 // Add adds a new Reply to the random list.
-func (mr *RandomReply) Add(reply ...Reply) *RandomReply {
-	mr.replies = append(mr.replies, reply...)
-	return mr
+func (rep *RandomReply) Add(reply ...Reply) *RandomReply {
+	rep.replies = append(rep.replies, reply...)
+	return rep
 }
 
-func (mr *RandomReply) Prepare() error {
-	size := len(mr.replies)
+func (rep *RandomReply) Prepare() error {
+	size := len(rep.replies)
 	if size == 0 {
 		return fmt.Errorf("you need to set at least one response when using random reply")
 	}
@@ -46,24 +48,23 @@ func (mr *RandomReply) Prepare() error {
 	return nil
 }
 
-func (mr *RandomReply) Spec() []any {
+func (rep *RandomReply) Spec() []any {
 	return []any{}
 }
 
 // Build builds a response stub randomly based on previously added Reply implementations.
-func (mr *RandomReply) Build(w http.ResponseWriter, r *http.Request) (*ResponseStub, error) {
-
-	mr.mu.Lock()
-	defer mr.mu.Unlock()
+func (rep *RandomReply) Build(w http.ResponseWriter, r *types.RequestValues) (*Stub, error) {
+	rep.mu.Lock()
+	defer rep.mu.Unlock()
 
 	var index int
-	if mr.r == nil {
-		index = rand.Intn(len(mr.replies)-1) + 0
+	if rep.random == nil {
+		index = rand.Intn(len(rep.replies)-1) + 0
 	} else {
-		index = mr.r.Intn(len(mr.replies)-1) + 0
+		index = rep.random.Intn(len(rep.replies)-1) + 0
 	}
 
-	reply := mr.replies[index]
+	reply := rep.replies[index]
 
 	return reply.Build(w, r)
 }

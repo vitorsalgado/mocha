@@ -52,11 +52,6 @@ type Config struct {
 	// Addr defines a custom server address.
 	Addr string
 
-	// UseHTTPS defines that the mock server should use HTTPS.
-	// This is only used running the command-line version.
-	// To start an HTTPS server from code, call .StartTLS() or .MustStartTLS() from Moai instance.
-	UseHTTPS bool
-
 	// RequestBodyParsers defines request body parsers to be executed before core parsers.
 	RequestBodyParsers []RequestBodyParser
 
@@ -89,13 +84,23 @@ type Config struct {
 	// Proxy configures the mock server as a proxy.
 	Proxy *ProxyConfig
 
-	// Record configures Mock Request/ResponseStub recording.
+	// Record configures Mock Request/Stub recording.
 	// Needs to be used with Proxy.
 	Record *RecordConfig
 
+	// CLI Only Options
+
+	// UseHTTPS defines that the mock server should use HTTPS.
+	// This is only used running the command-line version.
+	// To start an HTTPS server from code, call .StartTLS() or .MustStartTLS() from Moai instance.
+	UseHTTPS bool
+
+	// Forward configures a forward proxy for matched requests.
 	Forward *ForwardConfig
 }
 
+// ForwardConfig configures a forward proxy for matched requests.
+// Only for CLI.
 type ForwardConfig struct {
 	Target               string
 	Headers              http.Header
@@ -121,6 +126,8 @@ func (c *Config) Apply(conf *Config) error {
 	conf.Loaders = c.Loaders
 	conf.Proxy = c.Proxy
 	conf.Record = c.Record
+	conf.Forward = c.Forward
+	conf.UseHTTPS = c.UseHTTPS
 
 	return nil
 }

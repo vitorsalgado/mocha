@@ -117,7 +117,7 @@ func (r *record) startRecording(ctx context.Context) {
 	}()
 }
 
-func (r *record) record(req *http.Request, rawReqBody []byte, res *reply.ResponseStub) {
+func (r *record) record(req *http.Request, rawReqBody []byte, res *reply.Stub) {
 	input := &recArgs{
 		request: recRequest{
 			path:   req.URL.Path,

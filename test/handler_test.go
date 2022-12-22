@@ -15,21 +15,15 @@ import (
 )
 
 func TestHandlerReply(t *testing.T) {
-	key := "msg"
 	msg := "hello world"
 
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		arg := r.Context().Value(reply.KArg).(*reply.Arg)
-		message, _ := arg.Params.Get(key)
-
 		w.Header().Add("content-type", "text/plain")
 		w.WriteHeader(http.StatusCreated)
-		w.Write([]byte(message.(string)))
+		w.Write([]byte(msg))
 	}
 
 	m := mocha.New()
-	m.Parameters().Set(key, msg)
-
 	m.MustStart()
 
 	defer m.Close()

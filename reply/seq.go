@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 var _ Reply = (*SequentialReply)(nil)
@@ -48,7 +50,7 @@ func (r *SequentialReply) Spec() []any {
 
 // Build builds a new response based on current mock.Mock call sequence.
 // When the sequence is over, it will return an error or a previously configured reply for this scenario.
-func (r *SequentialReply) Build(w http.ResponseWriter, req *http.Request) (*ResponseStub, error) {
+func (r *SequentialReply) Build(w http.ResponseWriter, req *types.RequestValues) (*Stub, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 

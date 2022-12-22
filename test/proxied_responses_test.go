@@ -38,7 +38,7 @@ func TestForward(t *testing.T) {
 
 	defer m.Close()
 
-	t.Run("should forward request and respond using proxied response and mock definition", func(t *testing.T) {
+	t.Run("should forward request and respond using proxied response", func(t *testing.T) {
 		scoped := m.MustMock(mocha.Post(matcher.URLPath("/test")).
 			Body(matcher.Equal("hello world")).
 			Reply(reply.

@@ -20,7 +20,7 @@ func TestRandomReplies(t *testing.T) {
 			OK(),
 			Created(),
 			InternalServerError(),
-		).Build(nil, req)
+		).Build(nil, newReqValues(req))
 
 		contains := false
 		for _, status := range statuses {
@@ -53,7 +53,7 @@ func TestRandWithCustom(t *testing.T) {
 			OK(),
 			Created(),
 			InternalServerError(),
-		).Build(nil, req)
+		).Build(nil, newReqValues(req))
 
 		contains := false
 		for _, status := range statuses {

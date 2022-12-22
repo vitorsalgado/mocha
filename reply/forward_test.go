@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestForward(t *testing.T) {
@@ -35,7 +36,7 @@ func TestForward(t *testing.T) {
 			ProxyHeader("x-proxy", "proxied").
 			RemoveProxyHeader("x-to-be-removed").
 			Header("x-res", "response").
-			Build(w, req)
+			Build(w, newReqValues(req))
 
 		assert.NoError(t, err)
 		assert.Nil(t, res)
@@ -50,9 +51,7 @@ func TestForward(t *testing.T) {
 			w.WriteHeader(http.StatusOK)
 
 			b, err := io.ReadAll(r.Body)
-			if err != nil {
-				t.Fatal(err)
-			}
+			require.NoError(t, err)
 
 			w.Write(b)
 		}))
@@ -65,7 +64,7 @@ func TestForward(t *testing.T) {
 
 		u, _ := url.Parse(dest.URL)
 		forward := Forward(u)
-		res, err := forward.Build(w, req)
+		res, err := forward.Build(w, newReqValues(req))
 
 		assert.NoError(t, err)
 		assert.Nil(t, res)
@@ -84,7 +83,7 @@ func TestForward(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 
 		forward := Forward(dest.URL)
-		res, err := forward.Build(w, req)
+		res, err := forward.Build(w, newReqValues(req))
 
 		assert.NoError(t, err)
 		assert.Nil(t, res)
@@ -104,7 +103,7 @@ func TestForward(t *testing.T) {
 		defer dest.Close()
 
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080/path/test/example?filter=all", nil)
-		res, err := Forward(dest.URL).TrimPrefix("/path/test").Build(w, req)
+		res, err := Forward(dest.URL).TrimPrefix("/path/test").Build(w, newReqValues(req))
 
 		assert.NoError(t, err)
 		assert.Nil(t, res)
@@ -123,7 +122,7 @@ func TestForward(t *testing.T) {
 		defer dest.Close()
 
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080/path/test/example?filter=all", nil)
-		res, err := Forward(dest.URL).TrimSuffix("/example").Build(w, req)
+		res, err := Forward(dest.URL).TrimSuffix("/example").Build(w, newReqValues(req))
 
 		assert.NoError(t, err)
 		assert.Nil(t, res)

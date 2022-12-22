@@ -1,10 +1,10 @@
 package mocha
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -13,6 +13,7 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/httpx"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 	"github.com/vitorsalgado/mocha/v3/reply"
+	"github.com/vitorsalgado/mocha/v3/types"
 	"github.com/vitorsalgado/mocha/v3/x/event"
 )
 
@@ -66,13 +67,15 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		<-time.After(mock.Delay)
 	}
 
-	// request with reply vars
-	r = r.WithContext(
-		context.WithValue(
-			r.Context(), reply.KArg, &reply.Arg{MockInfo: reply.MockInfo{Hits: mock.Hits()}, Params: h.app.params}))
+	rawURL := r.URL.Path
+	if len(r.URL.RawQuery) > 0 {
+		rawURL += "?" + r.URL.RawQuery
+	}
 
-	// get the reply for the mock, after running all possible matchers.
-	res, err := result.Matched.Reply.Build(w, r)
+	u, _ := url.Parse(rawURL)
+	reqValues := &types.RequestValues{RawRequest: r, URL: u, Body: parsedBody}
+
+	res, err := result.Matched.Reply.Build(w, reqValues)
 	if err != nil {
 		h.app.log.Logf(err.Error())
 		h.onError(w, evtReq, fmt.Errorf("error building reply. reason=%w", err))
@@ -188,7 +191,7 @@ func (h *mockHandler) onError(w http.ResponseWriter, r *event.EvtReq, err error)
 	w.Write([]byte(fmt.Sprintf("An error occurred.\n%s", err.Error())))
 }
 
-func (h *mockHandler) buildResponseFromWriter(w http.ResponseWriter) (*reply.ResponseStub, error) {
+func (h *mockHandler) buildResponseFromWriter(w http.ResponseWriter) (*reply.Stub, error) {
 	rw := w.(*httpx.Rw)
 	result := rw.Result()
 
@@ -199,7 +202,7 @@ func (h *mockHandler) buildResponseFromWriter(w http.ResponseWriter) (*reply.Res
 
 	defer result.Body.Close()
 
-	return &reply.ResponseStub{
+	return &reply.Stub{
 		StatusCode: result.StatusCode,
 		Header:     result.Header,
 		Cookies:    result.Cookies(),

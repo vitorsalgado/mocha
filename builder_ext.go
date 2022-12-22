@@ -202,7 +202,7 @@ func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
 	// --
 	// End Request
 
-	// Begin ResponseStub
+	// Begin Stub
 	// --
 
 	var rep reply.Reply
@@ -289,7 +289,7 @@ func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
 	b.builder.Reply(rep)
 
 	// --
-	// End ResponseStub
+	// End Stub
 
 	return b.builder.Build()
 }
@@ -328,7 +328,7 @@ func buildResponse(v *viper.Viper) (reply.Reply, error) {
 		}
 
 		if v.GetBool(_fResponseIsTemplate) {
-			res.BodyTemplate(string(b)).BodyTemplateModel(v.Get(_fResponseTemplateModel))
+			res.BodyTemplate(string(b), v.Get(_fResponseTemplateModel))
 		} else {
 			res.Body(b)
 		}
@@ -337,7 +337,7 @@ func buildResponse(v *viper.Viper) (reply.Reply, error) {
 		switch e := b.(type) {
 		case string:
 			if v.GetBool(_fResponseIsTemplate) {
-				res.BodyTemplate(e).BodyTemplateModel(v.Get(_fResponseTemplateModel))
+				res.BodyTemplate(e, v.Get(_fResponseTemplateModel))
 			} else {
 				res.Body([]byte(e))
 			}

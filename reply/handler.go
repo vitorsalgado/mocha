@@ -2,6 +2,8 @@ package reply
 
 import (
 	"net/http"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 var _ Reply = (*HandlerReply)(nil)
@@ -20,7 +22,7 @@ func (h *HandlerReply) Spec() []any {
 	return []any{}
 }
 
-func (h *HandlerReply) Build(w http.ResponseWriter, r *http.Request) (*ResponseStub, error) {
-	h.h(w, r)
+func (h *HandlerReply) Build(w http.ResponseWriter, r *types.RequestValues) (*Stub, error) {
+	h.h(w, r.RawRequest)
 	return nil, nil
 }

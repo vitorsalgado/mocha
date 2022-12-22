@@ -9,17 +9,18 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 var _ Reply = (*StdReply)(nil)
 
-// StdReply holds the configuration on how the ResponseStub should be built.
+// StdReply holds the configuration on how the Stub should be built.
 type StdReply struct {
-	response *ResponseStub
-	bodyType bodyType
-	template Template
-	model    any
-	err      error
+	response       *Stub
+	bodyType       bodyType
+	template       Template
+	templateExtras any
+	err            error
 }
 
 type bodyType int
@@ -32,7 +33,7 @@ const (
 // New creates a new StdReply. Prefer to use factory functions for each status code.
 func New() *StdReply {
 	return &StdReply{
-		response: &ResponseStub{Cookies: make([]*http.Cookie, 0), Header: make(http.Header)},
+		response: &Stub{Cookies: make([]*http.Cookie, 0), Header: make(http.Header)},
 		bodyType: _bodyDefault}
 }
 
@@ -96,136 +97,133 @@ func ServiceUnavailable() *StdReply { return New().Status(http.StatusServiceUnav
 // GatewayTimeout creates a new Reply with http.StatusGatewayTimeout already.
 func GatewayTimeout() *StdReply { return New().Status(http.StatusGatewayTimeout) }
 
-// Status sets the HTTP status code for the ResponseStub.
-func (rpl *StdReply) Status(status int) *StdReply {
-	rpl.response.StatusCode = status
-	return rpl
+// Status sets the HTTP status code for the Stub.
+func (rep *StdReply) Status(status int) *StdReply {
+	rep.response.StatusCode = status
+	return rep
 }
 
-// Header adds a header to the ResponseStub.
-func (rpl *StdReply) Header(key, value string) *StdReply {
-	rpl.response.Header.Add(key, value)
-	return rpl
+// Header adds a header to the Stub.
+func (rep *StdReply) Header(key, value string) *StdReply {
+	rep.response.Header.Add(key, value)
+	return rep
 }
 
-// Cookie adds a http.Cookie to the ResponseStub.
-func (rpl *StdReply) Cookie(cookie *http.Cookie) *StdReply {
-	rpl.response.Cookies = append(rpl.response.Cookies, cookie)
-	return rpl
+// Cookie adds a http.Cookie to the Stub.
+func (rep *StdReply) Cookie(cookie *http.Cookie) *StdReply {
+	rep.response.Cookies = append(rep.response.Cookies, cookie)
+	return rep
 }
 
 // ExpireCookie expires a cookie.
-func (rpl *StdReply) ExpireCookie(cookie http.Cookie) *StdReply {
+func (rep *StdReply) ExpireCookie(cookie http.Cookie) *StdReply {
 	cookie.MaxAge = -1
-	rpl.response.Cookies = append(rpl.response.Cookies, &cookie)
-	return rpl
+	rep.response.Cookies = append(rep.response.Cookies, &cookie)
+	return rep
 }
 
 // Body defines the response body using a []byte,
-func (rpl *StdReply) Body(value []byte) *StdReply {
-	rpl.response.Body = value
-	return rpl
+func (rep *StdReply) Body(value []byte) *StdReply {
+	rep.response.Body = value
+	return rep
 }
 
 // BodyJSON defines the response body encoding the given value using json.Encoder.
-func (rpl *StdReply) BodyJSON(data any) *StdReply {
+func (rep *StdReply) BodyJSON(data any) *StdReply {
 	b, err := json.Marshal(data)
 	if err != nil {
-		rpl.err = err
-		return rpl
+		rep.err = err
+		return rep
 	}
 
-	rpl.response.Body = b
-	rpl.Header(header.ContentType, mimetype.JSON)
+	rep.response.Body = b
+	rep.Header(header.ContentType, mimetype.JSON)
 
-	return rpl
+	return rep
 }
 
 // BodyReader defines the response body using the given io.Reader.
-func (rpl *StdReply) BodyReader(reader io.Reader) *StdReply {
+func (rep *StdReply) BodyReader(reader io.Reader) *StdReply {
 	b, err := io.ReadAll(reader)
 	if err != nil {
-		rpl.err = err
-		return rpl
+		rep.err = err
+		return rep
 	}
 
-	rpl.response.Body = b
+	rep.response.Body = b
 
-	return rpl
+	return rep
 }
 
 // BodyTemplate defines the response body using a template.
 // It accepts a string or a reply.Template implementation. If a different type is provided, it panics.
-func (rpl *StdReply) BodyTemplate(template any) *StdReply {
-	switch e := template.(type) {
+func (rep *StdReply) BodyTemplate(tpl any, extras any) *StdReply {
+	switch e := tpl.(type) {
 	case string:
-		rpl.template = NewTextTemplate().Template(e)
+		rep.template = NewTextTemplate().Template(e)
 	case Template:
-		rpl.err = e.Compile()
-		rpl.template = e
+		rep.err = e.Compile()
+		rep.template = e
 
 	default:
 		panic(".BodyTemplate() parameter must be: string | reply.Template")
 	}
 
-	rpl.bodyType = _bodyTemplate
+	rep.bodyType = _bodyTemplate
+	rep.templateExtras = extras
 
-	return rpl
+	return rep
 }
 
 // JSON sets the response to application/json.
-func (rpl *StdReply) JSON() *StdReply {
-	rpl.Header(header.ContentType, mimetype.JSON)
-	return rpl
+func (rep *StdReply) JSON() *StdReply {
+	rep.Header(header.ContentType, mimetype.JSON)
+	return rep
 }
 
 // PlainText defines a text/plain response with the given text body.
-func (rpl *StdReply) PlainText(value string) *StdReply {
-	rpl.response.Body = []byte(value)
-	rpl.Header(header.ContentType, mimetype.TextPlain)
-	return rpl
+func (rep *StdReply) PlainText(value string) *StdReply {
+	rep.response.Body = []byte(value)
+	rep.Header(header.ContentType, mimetype.TextPlain)
+	return rep
 }
 
-// BodyTemplateModel sets the template data to be used.
-func (rpl *StdReply) BodyTemplateModel(model any) *StdReply {
-	rpl.model = model
-	return rpl
-}
-
-func (rpl *StdReply) Prepare() error {
-	if rpl.err != nil {
-		return rpl.err
+func (rep *StdReply) Prepare() error {
+	if rep.err != nil {
+		return rep.err
 	}
 
 	return nil
 }
 
-func (rpl *StdReply) Spec() []any {
+func (rep *StdReply) Spec() []any {
 	return []any{"response", map[string]any{
-		"status":  rpl.response.StatusCode,
-		"header":  rpl.response.Header,
-		"body":    string(rpl.response.Body),
-		"cookies": fmt.Sprintf("%v", rpl.response.Cookies),
+		"status":  rep.response.StatusCode,
+		"header":  rep.response.Header,
+		"body":    string(rep.response.Body),
+		"cookies": fmt.Sprintf("%v", rep.response.Cookies),
 	}}
 }
 
-// Build builds a ResponseStub based on StdReply definition.
-func (rpl *StdReply) Build(_ http.ResponseWriter, r *http.Request) (*ResponseStub, error) {
-	if rpl.err != nil {
-		return nil, rpl.err
+// Build builds a Stub based on StdReply definition.
+func (rep *StdReply) Build(_ http.ResponseWriter, r *types.RequestValues) (*Stub, error) {
+	if rep.err != nil {
+		return nil, rep.err
 	}
 
-	switch rpl.bodyType {
+	switch rep.bodyType {
 	case _bodyTemplate:
 		buf := &bytes.Buffer{}
-		model := &TemplateData{Request: r, Data: rpl.model}
-		err := rpl.template.Parse(buf, model)
+		reqExtra := templateRequest{r.RawRequest.Method, *r.URL, r.RawRequest.Header.Clone(), r.Body}
+		model := &templateData{Request: reqExtra, Extras: rep.templateExtras}
+
+		err := rep.template.Render(buf, model)
 		if err != nil {
 			return nil, err
 		}
 
-		rpl.response.Body = buf.Bytes()
+		rep.response.Body = buf.Bytes()
 	}
 
-	return rpl.response, nil
+	return rep.response, nil
 }

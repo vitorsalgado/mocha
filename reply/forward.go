@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 var _ Reply = (*ProxyReply)(nil)
@@ -113,8 +115,8 @@ func (r *ProxyReply) Spec() []any {
 }
 
 // Build builds a Reply based on the ProxyReply configuration.
-func (r *ProxyReply) Build(w http.ResponseWriter, req *http.Request) (*ResponseStub, error) {
-	path := req.URL.Path
+func (r *ProxyReply) Build(w http.ResponseWriter, req *types.RequestValues) (*Stub, error) {
+	path := req.RawRequest.URL.Path
 
 	if r.trimPrefix != "" {
 		path = strings.TrimPrefix(path, r.trimPrefix)
@@ -124,24 +126,23 @@ func (r *ProxyReply) Build(w http.ResponseWriter, req *http.Request) (*ResponseS
 		path = strings.TrimSuffix(path, r.trimSuffix)
 	}
 
-	req.URL.Host = r.target.Host
-	req.URL.Scheme = r.target.Scheme
-	req.URL.Path = path
-
-	req.Host = r.target.Host
-	req.RequestURI = ""
+	req.RawRequest.URL.Host = r.target.Host
+	req.RawRequest.URL.Scheme = r.target.Scheme
+	req.RawRequest.URL.Path = path
+	req.RawRequest.Host = r.target.Host
+	req.RawRequest.RequestURI = ""
 
 	for _, h := range r.proxyHeadersToRemove {
-		req.Header.Del(h)
+		req.RawRequest.Header.Del(h)
 	}
 
 	for key, values := range r.proxyHeaders {
 		for _, value := range values {
-			req.Header.Add(key, value)
+			req.RawRequest.Header.Add(key, value)
 		}
 	}
 
-	res, err := http.DefaultClient.Do(req)
+	res, err := http.DefaultClient.Do(req.RawRequest)
 	if err != nil {
 		return nil, err
 	}

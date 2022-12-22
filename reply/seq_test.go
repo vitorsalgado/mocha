@@ -13,23 +13,23 @@ func TestSequential(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 		builder := Seq(InternalServerError(), BadRequest(), OK(), NotFound())
 
-		res, err := builder.Build(nil, req)
+		res, err := builder.Build(nil, newReqValues(req))
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
 
-		res, err = builder.Build(nil, req)
+		res, err = builder.Build(nil, newReqValues(req))
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-		res, err = builder.Build(nil, req)
+		res, err = builder.Build(nil, newReqValues(req))
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 
-		res, err = builder.Build(nil, req)
+		res, err = builder.Build(nil, newReqValues(req))
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-		_, err = builder.Build(nil, req)
+		_, err = builder.Build(nil, newReqValues(req))
 		assert.NotNil(t, err)
 	})
 
@@ -39,11 +39,11 @@ func TestSequential(t *testing.T) {
 
 		builder := Seq().Add(OK()).AfterEnded(NotFound())
 
-		res, err := builder.Build(nil, req)
+		res, err := builder.Build(nil, newReqValues(req))
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 
-		res, err = builder.Build(nil, req)
+		res, err = builder.Build(nil, newReqValues(req))
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 	})
@@ -51,7 +51,7 @@ func TestSequential(t *testing.T) {
 
 func TestShouldReturnErrorWhenSequenceDoesNotContainReplies(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
-	res, err := Seq().Build(nil, req)
+	res, err := Seq().Build(nil, newReqValues(req))
 	assert.Nil(t, res)
 	assert.NotNil(t, err)
 }

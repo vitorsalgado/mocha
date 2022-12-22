@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestReplyFactories(t *testing.T) {
@@ -42,7 +43,7 @@ func TestReply(t *testing.T) {
 		Cookie(&http.Cookie{Name: "cookie_test"}).
 		ExpireCookie(http.Cookie{Name: "cookie_test_remove"}).
 		Body([]byte("hi")).
-		Build(nil, _req)
+		Build(nil, newReqValues(_req))
 
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, res.StatusCode)
@@ -59,7 +60,7 @@ func TestStdReply_BodyString(t *testing.T) {
 	res, err := New().
 		Status(http.StatusCreated).
 		PlainText("text").
-		Build(nil, _req)
+		Build(nil, newReqValues(_req))
 
 	assert.NoError(t, err)
 	assert.Equal(t, "text", string(res.Body))
@@ -82,7 +83,7 @@ func TestStdReply_BodyJSON(t *testing.T) {
 		res, err := New().
 			Status(http.StatusCreated).
 			BodyJSON(model).
-			Build(nil, _req)
+			Build(nil, newReqValues(_req))
 
 		assert.Nil(t, err)
 
@@ -97,7 +98,7 @@ func TestStdReply_BodyJSON(t *testing.T) {
 		res, err := New().
 			Status(http.StatusCreated).
 			BodyJSON(make(chan int)).
-			Build(nil, _req)
+			Build(nil, newReqValues(_req))
 
 		assert.Nil(t, res)
 		assert.NotNil(t, err)
@@ -108,7 +109,7 @@ func TestStdReply_BodyReader(t *testing.T) {
 	wd, _ := os.Getwd()
 	f, err := os.Open(path.Join(wd, "testdata", "data.txt"))
 	if err != nil {
-		t.Fatal(err)
+		require.NoError(t, err)
 	}
 
 	defer f.Close()
@@ -116,7 +117,7 @@ func TestStdReply_BodyReader(t *testing.T) {
 	res, err := New().
 		Status(http.StatusCreated).
 		BodyReader(f).
-		Build(nil, _req)
+		Build(nil, newReqValues(_req))
 
 	assert.NoError(t, err)
 	assert.Equal(t, "hello\nworld\n", string(res.Body))

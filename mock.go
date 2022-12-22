@@ -58,7 +58,7 @@ type Builder interface {
 // PostActionIn represents the arguments that will be passed to every PostAction implementation
 type PostActionIn struct {
 	Request  *http.Request
-	Response *reply.ResponseStub
+	Response *reply.Stub
 	Params   reply.Params
 }
 
@@ -68,9 +68,9 @@ type PostAction interface {
 	Run(args *PostActionIn) error
 }
 
-// Mapper is the function definition to be used to map Mock ResponseStub before serving it.
+// Mapper is the function definition to be used to map Mock Stub before serving it.
 // Mapper doesn't work with reply.Forward or Proxy.
-type Mapper func(res *reply.ResponseStub, args *MapperIn) error
+type Mapper func(res *reply.Stub, args *MapperIn) error
 
 // MapperIn represents the expected arguments for every Mapper.
 type MapperIn struct {

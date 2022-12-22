@@ -17,7 +17,7 @@ func TestHandlerReply(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	replier := Handler(fn)
-	res, err := replier.Build(w, r)
+	res, err := replier.Build(w, newReqValues(r))
 
 	assert.NoError(t, err)
 	assert.Nil(t, res)
