@@ -68,7 +68,7 @@ func TestScoped(t *testing.T) {
 	})
 
 	t.Run("should only consider enabled store", func(t *testing.T) {
-		m := NewWithT(t)
+		m := New()
 		m.MustStart()
 
 		defer m.Close()

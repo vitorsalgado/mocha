@@ -13,7 +13,7 @@ import (
 )
 
 func TestCORS(t *testing.T) {
-	m := mocha.NewWithT(t, mocha.Configure().CORS())
+	m := mocha.New(mocha.Configure().CORS())
 	m.MustStart()
 
 	defer m.Close()

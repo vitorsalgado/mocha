@@ -10,9 +10,9 @@ import (
 	"sync"
 
 	"github.com/vitorsalgado/mocha/v3/internal/colorize"
+	"github.com/vitorsalgado/mocha/v3/internal/logger"
 	"github.com/vitorsalgado/mocha/v3/internal/mid"
 	"github.com/vitorsalgado/mocha/v3/internal/mid/recover"
-	"github.com/vitorsalgado/mocha/v3/internal/notifier"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 	"github.com/vitorsalgado/mocha/v3/x/event"
@@ -27,7 +27,7 @@ const StatusRequestDidNotMatch = http.StatusTeapot
 
 // Mocha is the base for the mock server.
 type Mocha struct {
-	t                  TestingT
+	log                logger.Log
 	name               string
 	config             *Config
 	server             Server
@@ -49,27 +49,20 @@ type TestingT interface {
 	Helper()
 	Logf(format string, a ...any)
 	Errorf(format string, a ...any)
-}
-
-// Cleanable allows marking mocha instance to be closed on test cleanup.
-type Cleanable interface {
 	Cleanup(func())
 }
 
-// NewWithT creates a new Mocha mock server with the given configurations.
+// New creates a new Mocha mock server with the given configurations.
 // Parameter config accepts a Config or a ConfigBuilder implementation.
-func NewWithT(t TestingT, config ...Configurer) (m *Mocha) {
+func New(config ...Configurer) (m *Mocha) {
 	m = &Mocha{}
-
-	if t == nil {
-		t = notifier.NewConsole()
-	}
+	l := logger.NewConsole()
 
 	conf := defaultConfig()
 	for i, configurer := range config {
 		err := configurer.Apply(conf)
 		if err != nil {
-			t.Logf("error applying configuration [%d]. reason=%s", i, err.Error())
+			l.Logf("error applying configuration [%d]. reason=%s", i, err.Error())
 			panic(err)
 		}
 	}
@@ -83,10 +76,10 @@ func NewWithT(t TestingT, config ...Configurer) (m *Mocha) {
 	parsers = append(parsers, &jsonBodyParser{}, &plainTextParser{}, &formURLEncodedParser{}, &noopParser{})
 
 	middlewares := make([]func(handler http.Handler) http.Handler, 0)
-	middlewares = append(middlewares, recover.New(t).Recover)
+	middlewares = append(middlewares, recover.New(l).Recover)
 
 	if conf.LogLevel > LogSilently {
-		h := event.NewInternalListener(t, conf.LogLevel == LogVerbose)
+		h := event.NewInternalListener(l, conf.LogLevel == LogVerbose)
 
 		_ = events.Subscribe(event.EventOnRequest, h.OnRequest)
 		_ = events.Subscribe(event.EventOnRequestMatched, h.OnRequestMatched)
@@ -131,7 +124,7 @@ func NewWithT(t TestingT, config ...Configurer) (m *Mocha) {
 
 	err := server.Setup(conf, handler)
 	if err != nil {
-		t.Logf("failed to configure server. reason=%v", err)
+		l.Logf("failed to configure server. reason=%v", err)
 		panic(err)
 	}
 
@@ -142,7 +135,7 @@ func NewWithT(t TestingT, config ...Configurer) (m *Mocha) {
 	}
 
 	m.config = conf
-	m.t = t
+	m.log = l
 	m.name = conf.Name
 	m.server = server
 	m.storage = store
@@ -171,11 +164,6 @@ func NewWithT(t TestingT, config ...Configurer) (m *Mocha) {
 	return
 }
 
-// New creates a new mock server with default configurations.
-func New(config ...Configurer) *Mocha {
-	return NewWithT(nil, config...)
-}
-
 // Start starts the mock server.
 func (m *Mocha) Start() (ServerInfo, error) {
 	info, err := m.server.Start()
@@ -196,7 +184,7 @@ func (m *Mocha) Start() (ServerInfo, error) {
 func (m *Mocha) MustStart() ServerInfo {
 	info, err := m.Start()
 	if err != nil {
-		m.t.Logf("failed to start mock server. reason=%v", err)
+		m.log.Logf("failed to start mock server. reason=%v", err)
 		panic(err)
 	}
 
@@ -223,7 +211,7 @@ func (m *Mocha) StartTLS() (ServerInfo, error) {
 func (m *Mocha) MustStartTLS() ServerInfo {
 	info, err := m.server.StartTLS()
 	if err != nil {
-		m.t.Logf("failed to start a TLS mock server. reason=%v", err)
+		m.log.Logf("failed to start a TLS mock server. reason=%v", err)
 		panic(err)
 	}
 
@@ -281,7 +269,7 @@ func (m *Mocha) Mock(builders ...Builder) (*Scoped, error) {
 func (m *Mocha) MustMock(builders ...Builder) *Scoped {
 	scoped, err := m.Mock(builders...)
 	if err != nil {
-		m.t.Logf(err.Error())
+		m.log.Logf(err.Error())
 		panic(err)
 	}
 
@@ -353,7 +341,7 @@ func (m *Mocha) MustReload() {
 	err := m.Reload()
 
 	if err != nil {
-		m.t.Logf("error rebuild mock definitions. reason=%v", err.Error())
+		m.log.Logf("error rebuild mock definitions. reason=%v", err.Error())
 		panic(err)
 	}
 }
@@ -364,13 +352,13 @@ func (m *Mocha) Close() {
 
 	err := m.server.Close()
 	if err != nil {
-		m.t.Logf(err.Error())
+		m.log.Logf(err.Error())
 	}
 }
 
 // CloseWithT register Server Close function on TestingT Cleanup().
 // Useful to close the server when tests finishes.
-func (m *Mocha) CloseWithT(t Cleanable) *Mocha {
+func (m *Mocha) CloseWithT(t TestingT) *Mocha {
 	t.Cleanup(func() { m.Close() })
 	return m
 }

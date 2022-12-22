@@ -16,7 +16,7 @@ import (
 )
 
 func TestFormUrlEncoded(t *testing.T) {
-	m := mocha.NewWithT(t)
+	m := mocha.New()
 	m.MustStart()
 
 	defer m.Close()

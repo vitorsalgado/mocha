@@ -26,7 +26,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestMocha(t *testing.T) {
-	m := NewWithT(t)
+	m := New()
 	m.MustStart()
 
 	defer m.Close()
@@ -78,7 +78,7 @@ func TestMocha_NewBasic(t *testing.T) {
 }
 
 func TestResponseMapper(t *testing.T) {
-	m := NewWithT(t)
+	m := New()
 	m.MustStart()
 
 	defer m.Close()
@@ -105,7 +105,7 @@ func TestResponseMapper(t *testing.T) {
 }
 
 func TestResponseDelay(t *testing.T) {
-	m := NewWithT(t)
+	m := New()
 	m.MustStart()
 
 	defer m.Close()
@@ -131,7 +131,7 @@ func TestResponseDelay(t *testing.T) {
 }
 
 func TestErrors(t *testing.T) {
-	m := NewWithT(t)
+	m := New()
 	m.MustStart()
 
 	defer m.Close()
@@ -154,7 +154,7 @@ func TestErrors(t *testing.T) {
 }
 
 func TestMocha_Assertions(t *testing.T) {
-	m := NewWithT(t)
+	m := New()
 	m.MustStart()
 
 	defer m.Close()
@@ -183,7 +183,7 @@ func TestMocha_Assertions(t *testing.T) {
 }
 
 func TestMocha_Enable_Disable(t *testing.T) {
-	m := NewWithT(t)
+	m := New()
 	m.MustStart()
 
 	defer m.Close()
@@ -250,7 +250,7 @@ func TestMocha_Subscribe(t *testing.T) {
 	f.On("OnRequest", mock.Anything).Return()
 	f.On("OnRequestMatched", mock.Anything).Return()
 
-	m := NewWithT(t, Configure().LogLevel(LogSilently)).CloseWithT(t)
+	m := New(Configure().LogLevel(LogSilently)).CloseWithT(t)
 	m.MustSubscribe(event.EventOnRequest, f.OnRequest)
 	m.MustSubscribe(event.EventOnRequestMatched, f.OnRequestMatched)
 	m.MustStart()
@@ -273,7 +273,7 @@ func TestMocha_Subscribe(t *testing.T) {
 }
 
 func TestMocha_Silently(t *testing.T) {
-	m := NewWithT(t, Configure().LogLevel(LogSilently))
+	m := New(Configure().LogLevel(LogSilently))
 	m.MustStart()
 
 	defer m.Close()
@@ -300,7 +300,7 @@ func TestMocha_Silently(t *testing.T) {
 }
 
 func TestMocha_MatcherCompositions(t *testing.T) {
-	// m := NewWithT(t)
+	// m := New()
 	// m.MustStart()
 	//
 	// defer m.Close()
@@ -328,7 +328,7 @@ func TestMocha_MatcherCompositions(t *testing.T) {
 }
 
 func TestMocha_NoReply(t *testing.T) {
-	m := NewWithT(t)
+	m := New()
 
 	scoped, err := m.Mock(Get(URLPath("/test")))
 	assert.Nil(t, scoped)
@@ -336,7 +336,7 @@ func TestMocha_NoReply(t *testing.T) {
 }
 
 func TestMocha_NoMatchers(t *testing.T) {
-	m := NewWithT(t)
+	m := New()
 
 	scoped, err := m.Mock(Request())
 	assert.Nil(t, scoped)

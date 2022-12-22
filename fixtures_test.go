@@ -29,3 +29,5 @@ func (m *FakeNotifier) Logf(format string, args ...any) {
 func (m *FakeNotifier) Errorf(format string, args ...any) {
 	m.Called(format, args)
 }
+
+func (m *FakeNotifier) Cleanup(f func()) {}

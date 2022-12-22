@@ -27,7 +27,7 @@ func TestHandlerReply(t *testing.T) {
 		w.Write([]byte(message.(string)))
 	}
 
-	m := mocha.NewWithT(t)
+	m := mocha.New()
 	m.Parameters().Set(key, msg)
 
 	m.MustStart()

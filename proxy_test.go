@@ -12,11 +12,11 @@ import (
 )
 
 func TestProxy(t *testing.T) {
-	proxySrv := NewWithT(t, Configure().Proxy()).CloseWithT(t)
+	proxySrv := New(Configure().Proxy()).CloseWithT(t)
 	proxySrv.MustStart()
 	proxyScope := proxySrv.MustMock(Get(URLPath("/test")).Reply(reply.Accepted()))
 
-	targetSrv := NewWithT(t).CloseWithT(t)
+	targetSrv := New().CloseWithT(t)
 	targetSrv.MustStart()
 	targetScope := targetSrv.MustMock(Get(URLPath("/other")).Reply(reply.Created()))
 
@@ -37,15 +37,15 @@ func TestProxy(t *testing.T) {
 }
 
 func TestProxy_ViaProxy(t *testing.T) {
-	p := NewWithT(t, WithProxy()).CloseWithT(t)
+	p := New(WithProxy()).CloseWithT(t)
 	p.MustStart()
 	scope1 := p.MustMock(Get(URLPath("/test")).Reply(reply.Accepted()))
 
-	v := NewWithT(t, WithProxy(&ProxyConfig{ProxyVia: p.URL()})).CloseWithT(t)
+	v := New(WithProxy(&ProxyConfig{ProxyVia: p.URL()})).CloseWithT(t)
 	v.MustStart()
 	scope2 := v.MustMock(Get(URLPath("/unknown")).Reply(reply.NoContent()))
 
-	m := NewWithT(t).CloseWithT(t)
+	m := New().CloseWithT(t)
 	m.MustStart()
 	m.MustMock(Get(URLPath("/other")).Reply(reply.Created()))
 

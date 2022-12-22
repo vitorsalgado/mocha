@@ -19,7 +19,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	m := mocha.NewWithT(nil, mocha.Configure().Addr(":8080"))
+	m := mocha.New(mocha.Configure().Addr(":8080"))
 	m.MustStart()
 
 	m.MustMock(mocha.

@@ -46,7 +46,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			h.app.proxy.ServeHTTP(w, r)
 			res, err := h.buildResponseFromWriter(w)
 			if err != nil {
-				h.app.t.Logf(err.Error())
+				h.app.log.Logf(err.Error())
 				return
 			}
 
@@ -74,7 +74,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// get the reply for the mock, after running all possible matchers.
 	res, err := result.Matched.Reply.Build(w, r)
 	if err != nil {
-		h.app.t.Logf(err.Error())
+		h.app.log.Logf(err.Error())
 		h.onError(w, evtReq, fmt.Errorf("error building reply. reason=%w", err))
 		return
 	}
@@ -110,7 +110,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	} else {
 		res, err = h.buildResponseFromWriter(w)
 		if err != nil {
-			h.app.t.Logf(err.Error())
+			h.app.log.Logf(err.Error())
 			return
 		}
 	}
@@ -118,7 +118,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, exp := range mock.expectations {
 		err = exp.Matcher.OnMockServed()
 		if err != nil {
-			h.app.t.Logf("matcher %s .OnMockServed() returned the error=%v", exp.Matcher.Name(), err)
+			h.app.log.Logf("matcher %s .OnMockServed() returned the error=%v", exp.Matcher.Name(), err)
 		}
 	}
 
@@ -126,7 +126,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for i, action := range mock.PostActions {
 		err = action.Run(input)
 		if err != nil {
-			h.app.t.Logf("\nerror running post action [%d]. error=%v", i, err)
+			h.app.log.Logf("\nerror running post action [%d]. error=%v", i, err)
 		}
 	}
 
@@ -180,7 +180,7 @@ func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *event.EvtReq, result
 }
 
 func (h *mockHandler) onError(w http.ResponseWriter, r *event.EvtReq, err error) {
-	h.app.t.Logf(err.Error())
+	h.app.log.Logf(err.Error())
 	h.app.listener.Emit(&event.OnError{Request: r, Err: err})
 
 	w.Header().Add(header.ContentType, mimetype.TextPlain)
