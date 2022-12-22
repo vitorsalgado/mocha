@@ -45,6 +45,8 @@ func TestPostJSON(t *testing.T) {
 		m := mocha.New()
 		m.MustStart()
 
+		defer m.Close()
+
 		data := &jsonTestModel{OK: true, Name: "dev"}
 
 		scoped := m.MustMock(mocha.Post(matcher.URLPath("/test")).
@@ -66,6 +68,8 @@ func TestPostJSON(t *testing.T) {
 	t.Run("should match entire body using a map", func(t *testing.T) {
 		m := mocha.New()
 		m.MustStart()
+
+		defer m.Close()
 
 		data1 := map[string]interface{}{"ok": true, "name": "dev"}
 		data2 := map[string]interface{}{"ok": true, "name": "dev"}
@@ -90,6 +94,8 @@ func TestPostJSON(t *testing.T) {
 		m := mocha.New()
 		m.MustStart()
 
+		defer m.Close()
+
 		toMatch := map[string]interface{}{"name": "dev", "ok": true}
 		data := jsonTestModel{Name: "dev", OK: true}
 
@@ -112,6 +118,8 @@ func TestPostJSON(t *testing.T) {
 	t.Run("should not match when the given json is different than the incoming request body", func(t *testing.T) {
 		m := mocha.New()
 		m.MustStart()
+
+		defer m.Close()
 
 		body := map[string]interface{}{"ok": true, "name": "dev"}
 		exp := map[string]interface{}{"ok": false, "name": "qa"}

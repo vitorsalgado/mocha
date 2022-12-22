@@ -209,7 +209,7 @@ func (m *Mocha) StartTLS() (ServerInfo, error) {
 // MustStartTLS starts TLS on a mock server.
 // It fails immediately if any error occurs.
 func (m *Mocha) MustStartTLS() ServerInfo {
-	info, err := m.server.StartTLS()
+	info, err := m.StartTLS()
 	if err != nil {
 		m.log.Logf("failed to start a TLS mock server. reason=%v", err)
 		panic(err)

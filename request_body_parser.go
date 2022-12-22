@@ -76,11 +76,7 @@ func (parser *formURLEncodedParser) CanParse(content string, _ *http.Request) bo
 
 func (parser *formURLEncodedParser) Parse(_ []byte, r *http.Request) (any, error) {
 	err := r.ParseForm()
-	if err != nil {
-		return nil, err
-	}
-
-	return r.Form, nil
+	return r.Form, err
 }
 
 // plainTextParser parses requests with content type header containing "text/plain"

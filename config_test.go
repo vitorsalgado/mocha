@@ -146,7 +146,7 @@ func TestConfig(t *testing.T) {
 }
 
 func TestConfig_WithFunctions(t *testing.T) {
-	addr := ":3000"
+	addr := ""
 	nm := "test"
 
 	m := New(
@@ -177,6 +177,38 @@ func TestConfig_WithFunctions(t *testing.T) {
 	assert.NotNil(t, conf.Proxy)
 }
 
+func TestConfig_Builder(t *testing.T) {
+	addr := ""
+	nm := "test"
+
+	m := New(Configure().
+		Name(nm).
+		Addr(addr).
+		RequestBodyParsers(&jsonBodyParser{}, &plainTextParser{}).
+		Middlewares().
+		CORS(&_defaultCORSConfig).
+		Server(&httpTestServer{}).
+		HandlerDecorator(func(handler http.Handler) http.Handler { return handler }).
+		LogLevel(LogInfo).
+		Parameters(reply.Parameters()).
+		Dirs("test", "dev").
+		Loader(&FileLoader{}).
+		Proxy(&ProxyConfig{}, &ProxyConfig{}))
+	conf := m.Config()
+
+	assert.Equal(t, nm, conf.Name)
+	assert.Equal(t, addr, conf.Addr)
+	assert.Len(t, conf.RequestBodyParsers, 2)
+	assert.Len(t, conf.Middlewares, 0)
+	assert.Equal(t, &_defaultCORSConfig, conf.CORS)
+	assert.NotNil(t, conf.HandlerDecorator)
+	assert.Equal(t, LogInfo, conf.LogLevel)
+	assert.Equal(t, reply.Parameters(), conf.Parameters)
+	assert.Equal(t, []string{ConfigMockFilePattern, "test", "dev"}, conf.Directories)
+	assert.Len(t, conf.Loaders, 1)
+	assert.NotNil(t, conf.Proxy)
+}
+
 func TestWithNewFiles(t *testing.T) {
 	m := New(WithNewDirs("test", "dev"))
 
@@ -186,4 +218,10 @@ func TestWithNewFiles(t *testing.T) {
 func TestUseColors(t *testing.T) {
 	SetColors(false)
 	SetColors(true)
+}
+
+func TestLogLevel_String(t *testing.T) {
+	assert.Equal(t, LogSilently.String(), "silent")
+	assert.Equal(t, LogInfo.String(), "info")
+	assert.Equal(t, LogVerbose.String(), "verbose")
 }

@@ -26,6 +26,7 @@ func TestScoped(t *testing.T) {
 
 	assert.Equal(t, 3, len(scoped.GetAll()))
 	assert.Equal(t, m1, scoped.Get(m1.ID))
+	assert.Nil(t, scoped.Get("unknown"))
 
 	t.Run("should not return done when there is still pending store", func(t *testing.T) {
 		fakeT := NewFakeNotifier()

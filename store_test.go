@@ -9,9 +9,16 @@ import (
 
 func TestInMemoryStorage(t *testing.T) {
 	st := newStore()
-	st.Save(&Mock{ID: "1", Name: "mock_1", Enabled: true, mu: sync.Mutex{}, Priority: 0})
-	st.Save(&Mock{ID: "2", Name: "mock_2", Enabled: true, mu: sync.Mutex{}, Priority: 1})
-	st.Save(&Mock{ID: "3", Name: "mock_3", Enabled: true, mu: sync.Mutex{}, Priority: 2})
+
+	mock1 := &Mock{ID: "1", Name: "mock_1", Enabled: true, mu: sync.Mutex{}, Priority: 0}
+	mock2 := &Mock{ID: "2", Name: "mock_2", Enabled: true, mu: sync.Mutex{}, Priority: 1}
+	mock3 := &Mock{ID: "3", Name: "mock_3", Enabled: true, mu: sync.Mutex{}, Priority: 2}
+
+	st.Save(mock1)
+	st.Save(mock2)
+	st.Save(mock3)
+
+	assert.Equal(t, mock1, st.Get(mock1.ID))
 
 	m := st.GetAll()[0]
 	assert.Equal(t, m.ID, "1")

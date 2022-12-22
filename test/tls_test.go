@@ -1,28 +1,40 @@
 package test
 
 import (
+	"crypto/tls"
+	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+
+	"github.com/vitorsalgado/mocha/v3"
+	"github.com/vitorsalgado/mocha/v3/matcher"
+	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 func TestTLS(t *testing.T) {
-	// m := mocha.New(t)
-	// m.MustStartTLS()
-	//
-	// defer m.Close()
-	//
-	// // allow insecure https request
-	// http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.config{InsecureSkipVerify: true}
-	//
-	// scoped := m.MustMock(mocha.Get(matcher.URLPath("/test")).
-	// 	Header("test", matcher.Equal("hello")).
-	// 	Reply(reply.Pass()))
-	//
-	// req := testutil.Get(m.URL() + "/test")
-	// req.Header("test", "hello")
-	//
-	// res, err := req.Do()
-	//
-	// assert.NoError(t, err)
-	// assert.NoError(t, res.Body.Close())
-	// assert.True(t, scoped.HasBeenCalled())
+	m := mocha.New()
+	m.MustStartTLS()
+
+	defer m.Close()
+
+	client := &http.Client{
+		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
+	}
+
+	scoped := m.MustMock(mocha.Get(matcher.URLPath("/test")).
+		Header("test", matcher.Equal("hello")).
+		Reply(reply.OK()))
+
+	req, err := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
+	require.NoError(t, err)
+
+	req.Header.Add("test", "hello")
+
+	res, err := client.Do(req)
+
+	assert.NoError(t, err)
+	assert.NoError(t, res.Body.Close())
+	assert.True(t, scoped.HasBeenCalled())
 }

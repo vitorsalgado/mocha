@@ -40,6 +40,13 @@ func TestStylize(t *testing.T) {
 	fmt.Println(Strikethrough("strikethrough"))
 }
 
+func TestUseColors(t *testing.T) {
+	UseColors(true)
+
+	fmt.Println(Black("black"))
+	fmt.Println(BlackBright("black bright"))
+}
+
 func TestMultipleStyles(t *testing.T) {
 	fmt.Println(Red(Bold("hello") + " world"))
 }

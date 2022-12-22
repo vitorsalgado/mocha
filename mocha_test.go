@@ -3,6 +3,7 @@ package mocha
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"testing"
 	"time"
@@ -96,7 +97,7 @@ func TestResponseMapper(t *testing.T) {
 
 	res, err := req.Do()
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 
 	scoped.AssertCalled(t)
@@ -120,7 +121,7 @@ func TestResponseDelay(t *testing.T) {
 	req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
 	res, err := req.Do()
 	if err != nil {
-		t.Fatal(err)
+		log.Panic(err)
 	}
 
 	elapsed := time.Since(start)
@@ -291,7 +292,7 @@ func TestMocha_Silently(t *testing.T) {
 
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		t.Fatal(err)
+		t.Error(err)
 	}
 
 	assert.True(t, scoped.HasBeenCalled())

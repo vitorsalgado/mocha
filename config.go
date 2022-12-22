@@ -21,7 +21,7 @@ const (
 func (l LogLevel) String() string {
 	switch l {
 	case LogSilently:
-		return "silently"
+		return "silent"
 	case LogInfo:
 		return "info"
 	case LogVerbose:
@@ -219,6 +219,19 @@ func (cb *ConfigBuilder) Parameters(params reply.Params) *ConfigBuilder {
 // Dirs sets a custom Glob patterns to load mock from the file system.
 // Defaults to [testdata/*.mock.json, testdata/*.mock.yaml].
 func (cb *ConfigBuilder) Dirs(patterns ...string) *ConfigBuilder {
+	dirs := make([]string, 0)
+	dirs = append(dirs, ConfigMockFilePattern)
+	dirs = append(dirs, patterns...)
+
+	cb.conf.Directories = dirs
+	return cb
+}
+
+// NewDirs configures directories to search for local mocks,
+// overwriting the default internal mock filename pattern.
+// Pass a list of glob patterns supported by Go Standard Library.
+// Use Dirs to keep the default internal pattern.
+func (cb *ConfigBuilder) NewDirs(patterns ...string) *ConfigBuilder {
 	cb.conf.Directories = patterns
 	return cb
 }
@@ -323,7 +336,13 @@ func WithParams(params reply.Params) Configurer {
 // This method keeps the default mock filename pattern, [testdata/*mock.json].
 // to overwrite the default mock filename pattern, use WithNewDirs.
 func WithDirs(patterns ...string) Configurer {
-	return configFunc(func(c *Config) { c.Directories = append(c.Directories, patterns...) })
+	return configFunc(func(c *Config) {
+		dirs := make([]string, 0)
+		dirs = append(dirs, ConfigMockFilePattern)
+		dirs = append(dirs, patterns...)
+
+		c.Directories = dirs
+	})
 }
 
 // WithNewDirs configures directories to search for local mocks,

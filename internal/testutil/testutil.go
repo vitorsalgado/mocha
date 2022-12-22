@@ -16,7 +16,7 @@ type RequestValues struct {
 func NewRequest(method, url string, body io.Reader) *RequestValues {
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	return &RequestValues{Request: req}
@@ -25,7 +25,7 @@ func NewRequest(method, url string, body io.Reader) *RequestValues {
 func Get(url string) *RequestValues {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	return &RequestValues{Request: req}
@@ -34,7 +34,7 @@ func Get(url string) *RequestValues {
 func Post(url string, body io.Reader) *RequestValues {
 	req, err := http.NewRequest(http.MethodPost, url, body)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	return &RequestValues{Request: req}
@@ -43,12 +43,12 @@ func Post(url string, body io.Reader) *RequestValues {
 func PostJSON(url string, body any) *RequestValues {
 	b, err := json.Marshal(body)
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(b))
 	if err != nil {
-		log.Fatal(err)
+		log.Panic(err)
 	}
 
 	req.Header.Add("content-type", "application/json")
