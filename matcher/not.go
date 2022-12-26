@@ -2,6 +2,8 @@ package matcher
 
 import (
 	"fmt"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 type notMatcher struct {
@@ -30,12 +32,12 @@ func (m *notMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *notMatcher) OnMockServed() error {
-	return m.matcher.OnMockServed()
+func (m *notMatcher) AfterMockSent() error {
+	return m.matcher.AfterMockSent()
 }
 
-func (m *notMatcher) Spec() any {
-	return []any{_mNot, m.matcher.Spec()}
+func (m *notMatcher) Raw() types.RawValue {
+	return types.RawValue{_mNot, m.matcher.Raw()}
 }
 
 // Not negates the provided matcher.

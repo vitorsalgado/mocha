@@ -12,9 +12,9 @@ func TestPeek(t *testing.T) {
 		actionErr := fmt.Errorf("action failed")
 		result, err := Peek(Equal("test"), func(_ any) error { return actionErr }).Match("test")
 
-		assert.NotNil(t, err)
+		assert.Nil(t, result)
+		assert.Error(t, err)
 		assert.Equal(t, actionErr, err)
-		assert.False(t, result.Pass)
 	})
 
 	t.Run("should execute action before returning provided matcher result", func(t *testing.T) {

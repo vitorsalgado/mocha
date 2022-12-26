@@ -3,6 +3,8 @@ package matcher
 import (
 	"fmt"
 	"strings"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 type lowerCaseMatcher struct {
@@ -31,12 +33,12 @@ func (m *lowerCaseMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *lowerCaseMatcher) OnMockServed() error {
-	return m.matcher.OnMockServed()
+func (m *lowerCaseMatcher) AfterMockSent() error {
+	return m.matcher.AfterMockSent()
 }
 
-func (m *lowerCaseMatcher) Spec() any {
-	return []any{_mLowerCase, m.matcher.Spec()}
+func (m *lowerCaseMatcher) Raw() types.RawValue {
+	return types.RawValue{_mLowerCase, m.matcher.Raw()}
 }
 
 // ToLower lower case matcher string argument before submitting it to provided matcher.

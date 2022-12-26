@@ -12,7 +12,7 @@ func TestToEqualJSON(t *testing.T) {
 		body := map[string]interface{}{"ok": true, "name": "dev"}
 		res, err := EqualJSON(c).Match(body)
 
+		assert.Nil(t, res)
 		assert.Error(t, err)
-		assert.False(t, res.Pass)
 	})
 }

@@ -12,10 +12,10 @@ var _ Reply = (*SequentialReply)(nil)
 
 // SequentialReply configures a sequence of replies to be used after a mock.Mock is matched to a http.Request.
 type SequentialReply struct {
-	replyOnNotFound Reply
-	replies         []Reply
-	hits            int
-	mu              sync.Mutex
+	replyAfterEnd Reply
+	replies       []Reply
+	hits          int
+	mu            sync.Mutex
 }
 
 // Seq creates a new SequentialReply.
@@ -25,7 +25,7 @@ func Seq(reply ...Reply) *SequentialReply {
 
 // AfterEnded sets a response to be used once the sequence is over.
 func (r *SequentialReply) AfterEnded(reply Reply) *SequentialReply {
-	r.replyOnNotFound = reply
+	r.replyAfterEnd = reply
 	return r
 }
 
@@ -44,8 +44,23 @@ func (r *SequentialReply) Prepare() error {
 	return nil
 }
 
-func (r *SequentialReply) Spec() []any {
-	return []any{}
+func (r *SequentialReply) Raw() types.RawValue {
+	replies := make([]any, len(r.replies))
+	for i, rr := range r.replies {
+		if rr, ok := rr.(types.Persist); ok {
+			replies[i] = rr.Raw()
+		}
+	}
+
+	p := map[string]any{"responses": replies}
+
+	if r.replyAfterEnd != nil {
+		if rr, ok := r.replyAfterEnd.(types.Persist); ok {
+			p["after_ended"] = rr.Raw()
+		}
+	}
+
+	return types.RawValue{"response_sequence", p}
 }
 
 // Build builds a new response based on current mock.Mock call sequence.
@@ -62,8 +77,8 @@ func (r *SequentialReply) Build(w http.ResponseWriter, req *types.RequestValues)
 	}
 
 	if reply == nil {
-		if r.replyOnNotFound != nil {
-			return r.replyOnNotFound.Build(w, req)
+		if r.replyAfterEnd != nil {
+			return r.replyAfterEnd.Build(w, req)
 		}
 
 		return nil,

@@ -34,13 +34,13 @@ func RandWithCustom(random *rand.Rand, reply ...Reply) *RandomReply {
 }
 
 // Add adds a new Reply to the random list.
-func (rep *RandomReply) Add(reply ...Reply) *RandomReply {
-	rep.replies = append(rep.replies, reply...)
-	return rep
+func (r *RandomReply) Add(reply ...Reply) *RandomReply {
+	r.replies = append(r.replies, reply...)
+	return r
 }
 
-func (rep *RandomReply) Prepare() error {
-	size := len(rep.replies)
+func (r *RandomReply) Prepare() error {
+	size := len(r.replies)
 	if size == 0 {
 		return fmt.Errorf("you need to set at least one response when using random reply")
 	}
@@ -48,23 +48,32 @@ func (rep *RandomReply) Prepare() error {
 	return nil
 }
 
-func (rep *RandomReply) Spec() []any {
-	return []any{}
+func (r *RandomReply) Raw() types.RawValue {
+	replies := make([]any, len(r.replies))
+	for i, rr := range r.replies {
+		if rr, ok := rr.(types.Persist); ok {
+			replies[i] = rr.Raw().Arguments()
+		}
+	}
+
+	return types.RawValue{"response_random", map[string]any{
+		"responses": replies,
+	}}
 }
 
 // Build builds a response stub randomly based on previously added Reply implementations.
-func (rep *RandomReply) Build(w http.ResponseWriter, r *types.RequestValues) (*Stub, error) {
-	rep.mu.Lock()
-	defer rep.mu.Unlock()
+func (r *RandomReply) Build(w http.ResponseWriter, req *types.RequestValues) (*Stub, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
 
 	var index int
-	if rep.random == nil {
-		index = rand.Intn(len(rep.replies)-1) + 0
+	if r.random == nil {
+		index = rand.Intn(len(r.replies)-1) + 0
 	} else {
-		index = rep.random.Intn(len(rep.replies)-1) + 0
+		index = r.random.Intn(len(r.replies)-1) + 0
 	}
 
-	reply := rep.replies[index]
+	reply := r.replies[index]
 
-	return reply.Build(w, r)
+	return reply.Build(w, req)
 }

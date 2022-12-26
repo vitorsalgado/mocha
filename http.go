@@ -119,9 +119,9 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, exp := range mock.expectations {
-		err = exp.Matcher.OnMockServed()
+		err = exp.Matcher.AfterMockSent()
 		if err != nil {
-			h.app.log.Logf("matcher %s .OnMockServed() returned the error=%v", exp.Matcher.Name(), err)
+			h.app.log.Logf("matcher %s .AfterMockSent() returned the error=%v", exp.Matcher.Name(), err)
 		}
 	}
 

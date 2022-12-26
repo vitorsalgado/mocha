@@ -2,6 +2,7 @@ package matcher
 
 import (
 	"github.com/vitorsalgado/mocha/v3/internal/jsonx"
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 type hasKeyMatcher struct {
@@ -15,7 +16,7 @@ func (m *hasKeyMatcher) Name() string {
 func (m *hasKeyMatcher) Match(v any) (*Result, error) {
 	value, err := jsonx.Reach(m.path, v)
 	if err != nil {
-		return mismatch(nil), err
+		return nil, err
 	}
 
 	return &Result{
@@ -26,12 +27,12 @@ func (m *hasKeyMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *hasKeyMatcher) OnMockServed() error {
+func (m *hasKeyMatcher) AfterMockSent() error {
 	return nil
 }
 
-func (m *hasKeyMatcher) Spec() any {
-	return []any{_mHasKey, m.path}
+func (m *hasKeyMatcher) Raw() types.RawValue {
+	return types.RawValue{_mHasKey, m.path}
 }
 
 // HaveKey returns true if the JSON key in the given path is present.

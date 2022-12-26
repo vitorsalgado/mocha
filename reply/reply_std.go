@@ -3,7 +3,6 @@ package reply
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -196,12 +195,16 @@ func (rep *StdReply) Prepare() error {
 	return nil
 }
 
-func (rep *StdReply) Spec() []any {
-	return []any{"response", map[string]any{
-		"status":  rep.response.StatusCode,
-		"header":  rep.response.Header,
-		"body":    string(rep.response.Body),
-		"cookies": fmt.Sprintf("%v", rep.response.Cookies),
+func (rep *StdReply) Raw() types.RawValue {
+	headers := rep.response.Header.Clone()
+	for _, cookie := range rep.response.Cookies {
+		headers.Add("Set-Cookie", cookie.String())
+	}
+
+	return types.RawValue{"response", map[string]any{
+		"status": rep.response.StatusCode,
+		"header": headers,
+		"body":   string(rep.response.Body),
 	}}
 }
 
@@ -213,7 +216,7 @@ func (rep *StdReply) Build(_ http.ResponseWriter, r *types.RequestValues) (*Stub
 
 	switch rep.bodyType {
 	case _bodyTemplate:
-		buf := &bytes.Buffer{}
+		buf := new(bytes.Buffer)
 		reqExtra := templateRequest{r.RawRequest.Method, *r.URL, r.RawRequest.Header.Clone(), r.Body}
 		model := &templateData{Request: reqExtra, Extras: rep.templateExtras}
 

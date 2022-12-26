@@ -3,6 +3,8 @@ package matcher
 import (
 	"fmt"
 	"strings"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 type trimMatcher struct {
@@ -31,12 +33,12 @@ func (m *trimMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *trimMatcher) OnMockServed() error {
-	return m.matcher.OnMockServed()
+func (m *trimMatcher) AfterMockSent() error {
+	return m.matcher.AfterMockSent()
 }
 
-func (m *trimMatcher) Spec() any {
-	return []any{_mTrim, m.matcher.Spec()}
+func (m *trimMatcher) Raw() types.RawValue {
+	return types.RawValue{_mTrim, m.matcher.Raw()}
 }
 
 // Trim trims' spaces of matcher argument before submitting it to the given matcher.

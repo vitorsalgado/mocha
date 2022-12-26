@@ -7,40 +7,37 @@ import (
 )
 
 const (
-	_mAll              = "all"
-	_mAllOf            = "allof"
-	_mAny              = "any"
-	_mAnyOf            = "anyof"
-	_mContain          = "contain"
-	_mContains         = "contains"
-	_mBoth             = "both"
-	_mEach             = "each"
-	_mEither           = "either"
-	_mEmpty            = "empty"
-	_mEndsWith         = "endswith"
-	_mEqual            = "equal"
-	_mEqualTo          = "equalTo"
-	_mEqualIgnoreCase  = "equalignorecase"
-	_mEqualJSON        = "equaljson"
-	_mHasKey           = "haskey"
-	_mHasPrefix        = "hasprefix"
-	_mStartsWith       = "startswith"
-	_mHasSuffix        = "hassuffix"
-	_mEqualsIgnoreCase = "equalsignorecase"
-	_mEqualFold        = "equalfold"
-	_mJSONPath         = "jsonpath"
-	_mField            = "field"
-	_mLen              = "len"
-	_mLowerCase        = "lowercase"
-	_mRegex            = "regex"
-	_mSome             = "some"
-	_mNot              = "not"
-	_mPresent          = "present"
-	_mSplit            = "split"
-	_mTrim             = "trim"
-	_mUpperCase        = "uppercase"
-	_mURLPath          = "urlpath"
-	_mXOR              = "xor"
+	_mAnything          = "anything"
+	_mAll               = "all"
+	_mAllOf             = "allof"
+	_mAny               = "any"
+	_mAnyOf             = "anyof"
+	_mContains          = "contains"
+	_mBoth              = "both"
+	_mEach              = "each"
+	_mEither            = "either"
+	_mEmpty             = "empty"
+	_mEndsWith          = "endswith"
+	_mEqualTo           = "equalto"
+	_mEqualToIgnoreCase = "equaltoignorecase"
+	_mEqualJSON         = "equaljson"
+	_mHasKey            = "haskey"
+	_mHasPrefix         = "hasprefix"
+	_mStartsWith        = "startswith"
+	_mHasSuffix         = "hassuffix"
+	_mJSONPath          = "jsonpath"
+	_mField             = "field"
+	_mLen               = "len"
+	_mLowerCase         = "tolower"
+	_mRegex             = "regex"
+	_mSome              = "some"
+	_mNot               = "not"
+	_mPresent           = "present"
+	_mSplit             = "split"
+	_mTrim              = "trim"
+	_mUpperCase         = "toupper"
+	_mURLPath           = "urlpath"
+	_mXOR               = "xor"
 )
 
 func BuildMatcher(v any) (m Matcher, err error) {
@@ -60,14 +57,14 @@ func BuildMatcher(v any) (m Matcher, err error) {
 		val := reflect.ValueOf(v)
 		if val.Len() == 0 {
 			return nil,
-				fmt.Errorf("matcher definition must be a string or an array in the format: [\"equal\", \"test\"]")
+				fmt.Errorf("matcher definition must be a string or an array in the format: [\"<MATCHER_NAME>\", ...PARAMETERS (if any)]")
 		}
 
 		mk, ok := val.Index(0).Interface().(string)
 		if !ok {
 			return nil,
 				fmt.Errorf(
-					"first index of a matcher definition must be the matcher name. eg.: [\"equal\", \"test\"]. got: %v",
+					"first index of a matcher definition must be the matcher name. got: %v",
 					val.Index(0).Interface(),
 				)
 		}
@@ -117,7 +114,9 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 
 	switch strings.ToLower(key) {
 
-	// TODO: use one
+	case _mAnything:
+		return Anything(), nil
+
 	case _mAll, _mAllOf:
 		matchers, err := extractMultipleMatchers(args)
 		if err != nil {
@@ -127,7 +126,6 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 
 		return AllOf(matchers...), nil
 
-		// TODO: use one
 	case _mAny, _mAnyOf:
 		matchers, err := extractMultipleMatchers(args)
 		if err != nil {
@@ -137,8 +135,7 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 
 		return AnyOf(matchers...), nil
 
-		// TODO: use one
-	case _mContain, _mContains:
+	case _mContains:
 		return Contain(args), nil
 
 	case _mBoth:
@@ -202,20 +199,14 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 	case _mEmpty:
 		return Empty(), nil
 
-		// TODO: use one
-	case _mEqual, _mEqualTo:
+	case _mEqualTo:
 		return Equal(args), nil
 
-		// TODO: use one
-	case _mEqualIgnoreCase, _mEqualsIgnoreCase, _mEqualFold:
+	case _mEqualToIgnoreCase:
 		str, ok := args.(string)
 		if !ok {
 			return nil,
-				fmt.Errorf(
-					"[%s, %s, %s] expects a string argument. got=%v",
-					_mEqualIgnoreCase, _mEqualsIgnoreCase, _mEqualFold,
-					args,
-				)
+				fmt.Errorf("[%s] expects a string argument. got=%v", _mEqualToIgnoreCase, args)
 		}
 
 		return EqualIgnoreCase(str), nil
@@ -236,7 +227,6 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 
 		return HaveKey(str), nil
 
-		// TODO: use one
 	case _mHasPrefix, _mStartsWith:
 		str, ok := args.(string)
 		if !ok {
@@ -251,7 +241,6 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 
 		return HasPrefix(str), nil
 
-		// TODO: use one
 	case _mHasSuffix, _mEndsWith:
 		str, ok := args.(string)
 		if !ok {
@@ -266,19 +255,19 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 
 		return HasSuffix(str), nil
 
-		// TODO: use one
 	case _mJSONPath, _mField:
 		a, ok := args.([]any)
 		if !ok {
 			return nil,
-				fmt.Errorf("[%s] expects an array argument. got=%v", _mJSONPath, args)
+				fmt.Errorf("[%s, %s] expects an array argument. got=%v", _mJSONPath, _mField, args)
 		}
 
 		if len(a) != 2 {
 			return nil,
 				fmt.Errorf(
-					"[%s] expects at least 2 arguments, 1: JSON field path, 2: Matcher to be applied on JSON field. got=%v",
+					"[%s, %s] expects at least 2 arguments, 1: JSON field path, 2: Matcher to be applied on JSON field. got=%v",
 					_mJSONPath,
+					_mField,
 					args,
 				)
 		}
@@ -286,12 +275,12 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 		chain, ok := a[0].(string)
 		if !ok {
 			return nil,
-				fmt.Errorf("[%s] field path must be a string. got=%v", _mJSONPath, a[0])
+				fmt.Errorf("[%s, %s] field path must be a string. got=%v", _mJSONPath, _mField, a[0])
 		}
 
 		m, err := BuildMatcher(a[1])
 		if err != nil {
-			return nil, fmt.Errorf("[%s] building error. %w", _mJSONPath, err)
+			return nil, fmt.Errorf("[%s, %s] building error. %w", _mJSONPath, _mField, err)
 		}
 
 		return JSONPath(chain, m), nil

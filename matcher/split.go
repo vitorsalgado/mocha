@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 type splitMatcher struct {
@@ -37,12 +39,12 @@ func (m *splitMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *splitMatcher) OnMockServed() error {
-	return m.matcher.OnMockServed()
+func (m *splitMatcher) AfterMockSent() error {
+	return m.matcher.AfterMockSent()
 }
 
-func (m *splitMatcher) Spec() any {
-	return []any{_mSplit, m.separator, m.matcher.Spec()}
+func (m *splitMatcher) Raw() types.RawValue {
+	return types.RawValue{_mSplit, []any{m.separator, m.matcher.Raw()}}
 }
 
 func Split(separator string, matcher Matcher) Matcher {

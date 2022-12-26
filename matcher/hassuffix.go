@@ -3,6 +3,8 @@ package matcher
 import (
 	"fmt"
 	"strings"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 type hasSuffixMatcher struct {
@@ -29,12 +31,12 @@ func (m *hasSuffixMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *hasSuffixMatcher) OnMockServed() error {
+func (m *hasSuffixMatcher) AfterMockSent() error {
 	return nil
 }
 
-func (m *hasSuffixMatcher) Spec() any {
-	return []any{_mHasSuffix, m.suffix}
+func (m *hasSuffixMatcher) Raw() types.RawValue {
+	return types.RawValue{_mHasSuffix, m.suffix}
 }
 
 // HasSuffix returns true when matcher argument ends with the given suffix.

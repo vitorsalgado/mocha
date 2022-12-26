@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/spf13/viper"
@@ -301,8 +302,18 @@ func buildResponse(v *viper.Viper) (reply.Reply, error) {
 	res := reply.New()
 	res.Status(v.GetInt(_fResponseStatus))
 
-	for k, v := range v.GetStringMapString(_fResponseHeader) {
-		res.Header(k, v)
+	for k, v := range v.GetStringMap(_fResponseHeader) {
+		switch vv := v.(type) {
+		case string:
+			res.Header(k, vv)
+		case []string:
+			res.Header(k, strings.Join(vv, ", "))
+		default:
+			return nil, fmt.Errorf(
+				"[response.header] header %s has a wrong value type. value must be a string or []string",
+				k,
+			)
+		}
 	}
 
 	if v.IsSet(_fResponseBodyFile) {

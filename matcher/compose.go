@@ -1,13 +1,15 @@
 package matcher
 
+import "github.com/vitorsalgado/mocha/v3/types"
+
 type ComposeMatcher struct {
 	M Matcher
 }
 
 func (m *ComposeMatcher) Name() string                 { return m.M.Name() }
 func (m *ComposeMatcher) Match(v any) (*Result, error) { return m.M.Match(v) }
-func (m *ComposeMatcher) OnMockServed() error          { return m.M.OnMockServed() }
-func (m *ComposeMatcher) Spec() any                    { return m.M.Spec() }
+func (m *ComposeMatcher) AfterMockSent() error         { return m.M.AfterMockSent() }
+func (m *ComposeMatcher) Raw() types.RawValue          { return m.M.Raw() }
 
 // And compose the current Matcher with another one using the "and" operator.
 func (m *ComposeMatcher) And(and Matcher) *ComposeMatcher {

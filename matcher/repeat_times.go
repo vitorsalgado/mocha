@@ -3,6 +3,8 @@ package matcher
 import (
 	"fmt"
 	"sync"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 type timesMatcher struct {
@@ -26,7 +28,7 @@ func (m *timesMatcher) Match(_ any) (*Result, error) {
 	}}, nil
 }
 
-func (m *timesMatcher) OnMockServed() error {
+func (m *timesMatcher) AfterMockSent() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -35,8 +37,8 @@ func (m *timesMatcher) OnMockServed() error {
 	return nil
 }
 
-func (m *timesMatcher) Spec() any {
-	return []any{"times", m.max}
+func (m *timesMatcher) Raw() types.RawValue {
+	return types.RawValue{"times", m.max}
 }
 
 func Repeat(times int) Matcher {

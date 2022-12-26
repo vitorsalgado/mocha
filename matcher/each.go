@@ -3,6 +3,8 @@ package matcher
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 type eachMatcher struct {
@@ -25,7 +27,7 @@ func (m *eachMatcher) Match(v any) (*Result, error) {
 			mv := iter.Value().Interface()
 			res, err := m.matcher.Match(mv)
 			if err != nil {
-				return mismatch(nil), err
+				return nil, err
 			}
 
 			if !res.Pass {
@@ -50,7 +52,7 @@ func (m *eachMatcher) Match(v any) (*Result, error) {
 			entry := val.Index(i).Interface()
 			res, err := m.matcher.Match(entry)
 			if err != nil {
-				return mismatch(nil), err
+				return nil, err
 			}
 
 			if !res.Pass {
@@ -78,12 +80,12 @@ func (m *eachMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *eachMatcher) OnMockServed() error {
-	return m.matcher.OnMockServed()
+func (m *eachMatcher) AfterMockSent() error {
+	return m.matcher.AfterMockSent()
 }
 
-func (m *eachMatcher) Spec() any {
-	return []any{_mEach, m.matcher.Spec()}
+func (m *eachMatcher) Raw() types.RawValue {
+	return types.RawValue{_mEach, m.matcher.Raw()}
 }
 
 func Each(matcher Matcher) Matcher {

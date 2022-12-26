@@ -2,6 +2,8 @@ package matcher
 
 import (
 	"reflect"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 type lenMatcher struct {
@@ -23,12 +25,12 @@ func (m *lenMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *lenMatcher) OnMockServed() error {
+func (m *lenMatcher) AfterMockSent() error {
 	return nil
 }
 
-func (m *lenMatcher) Spec() any {
-	return []any{_mLen, m.length}
+func (m *lenMatcher) Raw() types.RawValue {
+	return types.RawValue{_mLen, m.length}
 }
 
 // HaveLen returns true when matcher argument length is equal to the items value.

@@ -3,6 +3,8 @@ package matcher
 import (
 	"fmt"
 	"strings"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 type equalIgnoreCaseMatcher struct {
@@ -30,12 +32,12 @@ func (m *equalIgnoreCaseMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *equalIgnoreCaseMatcher) OnMockServed() error {
+func (m *equalIgnoreCaseMatcher) AfterMockSent() error {
 	return nil
 }
 
-func (m *equalIgnoreCaseMatcher) Spec() any {
-	return []any{_mEqualIgnoreCase, m.expected}
+func (m *equalIgnoreCaseMatcher) Raw() types.RawValue {
+	return types.RawValue{_mEqualToIgnoreCase, m.expected}
 }
 
 // EqualIgnoreCase returns true if items value is equal to matcher value, ignoring case.

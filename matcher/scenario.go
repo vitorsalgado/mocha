@@ -2,6 +2,8 @@ package matcher
 
 import (
 	"fmt"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 const ScenarioStateStarted = "started"
@@ -85,7 +87,7 @@ func (m *scenarioMatcher) Match(_ any) (*Result, error) {
 	return &Result{Pass: false, Message: message}, nil
 }
 
-func (m *scenarioMatcher) OnMockServed() error {
+func (m *scenarioMatcher) AfterMockSent() error {
 	scn, ok := m.store.fetchByName(m.nm)
 	if !ok {
 		return nil
@@ -98,7 +100,7 @@ func (m *scenarioMatcher) OnMockServed() error {
 	return nil
 }
 
-func (m *scenarioMatcher) Spec() any {
+func (m *scenarioMatcher) Raw() types.RawValue {
 	return nil
 }
 

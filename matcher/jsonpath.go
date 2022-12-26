@@ -2,6 +2,7 @@ package matcher
 
 import (
 	"github.com/vitorsalgado/mocha/v3/internal/jsonx"
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 type jsonPathMatcher struct {
@@ -24,7 +25,7 @@ func (m *jsonPathMatcher) Match(v any) (*Result, error) {
 	}
 
 	if err != nil {
-		return mismatch(nil), err
+		return nil, err
 	}
 
 	r, err := m.matcher.Match(value)
@@ -37,12 +38,12 @@ func (m *jsonPathMatcher) Match(v any) (*Result, error) {
 	}}, nil
 }
 
-func (m *jsonPathMatcher) OnMockServed() error {
-	return m.matcher.OnMockServed()
+func (m *jsonPathMatcher) AfterMockSent() error {
+	return m.matcher.AfterMockSent()
 }
 
-func (m *jsonPathMatcher) Spec() any {
-	return []any{_mJSONPath, m.path, m.matcher.Spec()}
+func (m *jsonPathMatcher) Raw() types.RawValue {
+	return types.RawValue{_mJSONPath, []any{m.path, m.matcher.Raw()}}
 }
 
 // JSONPath applies the provided matcher to the JSON field value in the given path.

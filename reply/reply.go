@@ -13,8 +13,6 @@ type Reply interface {
 	// Useful for pre-configurations or validations that needs to be executed once.
 	Prepare() error
 
-	Spec() []any
-
 	// Build returns a HTTP response Stub to be served.
 	// Return Stub nil if the HTTP response was rendered inside the Build function.
 	Build(w http.ResponseWriter, r *types.RequestValues) (*Stub, error)

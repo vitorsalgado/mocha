@@ -3,6 +3,8 @@ package matcher
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 type bePresentMatcher struct {
@@ -32,12 +34,12 @@ func (m *bePresentMatcher) Match(v any) (*Result, error) {
 	return &Result{Pass: true, Message: message}, nil
 }
 
-func (m *bePresentMatcher) OnMockServed() error {
+func (m *bePresentMatcher) AfterMockSent() error {
 	return nil
 }
 
-func (m *bePresentMatcher) Spec() any {
-	return _mPresent
+func (m *bePresentMatcher) Raw() types.RawValue {
+	return types.RawValue{_mPresent}
 }
 
 // Present checks if matcher argument contains a value that is not nil or the zero value for the argument type.

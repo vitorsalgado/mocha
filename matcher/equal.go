@@ -3,6 +3,8 @@ package matcher
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 type equalMatcher struct {
@@ -26,12 +28,12 @@ func (m *equalMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *equalMatcher) OnMockServed() error {
+func (m *equalMatcher) AfterMockSent() error {
 	return nil
 }
 
-func (m *equalMatcher) Spec() any {
-	return []any{_mEqual, m.expected}
+func (m *equalMatcher) Raw() types.RawValue {
+	return types.RawValue{_mEqualTo, m.expected}
 }
 
 // Equal returns true if matcher value is equal to the given parameter value.

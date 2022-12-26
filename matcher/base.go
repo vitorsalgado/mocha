@@ -1,5 +1,7 @@
 package matcher
 
+import "github.com/vitorsalgado/mocha/v3/types"
+
 const (
 	_separator = "=>"
 )
@@ -14,12 +16,16 @@ type Matcher interface {
 	// Match is the function that does the actual matching logic.
 	Match(value any) (*Result, error)
 
-	// OnMockServed runs everytime the Mock that holds this Matcher is served.
+	// AfterMockSent runs everytime the Mock that holds this Matcher is served.
 	// Useful for stateful Matchers.
-	OnMockServed() error
+	AfterMockSent() error
 
-	// Spec serializes the Matcher to the format: ["matcher name", ...<parameters (any)>]
-	Spec() any
+	// Raw "serializes" the Matcher to its raw format: ["matcher name", ...<parameters (any)>]
+	// The raw format is used to save, load and build mocks from external sources, like JSON, YAML etc.
+	// First array item must be the Matcher unique name.
+	// Second item onwards are the Matcher parameters and ca be anything, including another Matcher
+	// that follows the same spec.
+	Raw() types.RawValue
 }
 
 // Result represents a Matcher result.

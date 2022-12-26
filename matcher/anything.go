@@ -1,5 +1,7 @@
 package matcher
 
+import "github.com/vitorsalgado/mocha/v3/types"
+
 type anythingMatcher struct {
 }
 
@@ -11,11 +13,11 @@ func (m *anythingMatcher) Match(v any) (*Result, error) {
 	return &Result{Pass: true}, nil
 }
 
-func (m *anythingMatcher) OnMockServed() error {
+func (m *anythingMatcher) AfterMockSent() error {
 	return nil
 }
 
-func (m *anythingMatcher) Spec() any {
+func (m *anythingMatcher) Raw() types.RawValue {
 	return nil
 }
 

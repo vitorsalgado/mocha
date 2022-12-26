@@ -110,8 +110,15 @@ func (r *ProxyReply) TrimSuffix(suffix string) *ProxyReply {
 
 func (r *ProxyReply) Prepare() error { return nil }
 
-func (r *ProxyReply) Spec() []any {
-	return []any{}
+func (r *ProxyReply) Raw() types.RawValue {
+	return types.RawValue{"response_from", map[string]any{
+		"target":                  r.target,
+		"headers":                 r.headers,
+		"proxy_headers":           r.proxyHeaders,
+		"proxy_headers_to_remove": r.proxyHeadersToRemove,
+		"trim_prefix":             r.trimPrefix,
+		"trim_suffix":             r.trimSuffix,
+	}}
 }
 
 // Build builds a Reply based on the ProxyReply configuration.

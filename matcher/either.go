@@ -2,6 +2,8 @@ package matcher
 
 import (
 	"fmt"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 type eitherMatcher struct {
@@ -46,12 +48,12 @@ func (m *eitherMatcher) Match(v any) (*Result, error) {
 	return &Result{Pass: r1.Pass || r2.Pass, Message: msg}, nil
 }
 
-func (m *eitherMatcher) OnMockServed() error {
+func (m *eitherMatcher) AfterMockSent() error {
 	return multiOnMockServed(m.first, m.second)
 }
 
-func (m *eitherMatcher) Spec() any {
-	return []any{_mEither, []any{m.first.Spec(), m.second.Spec()}}
+func (m *eitherMatcher) Raw() types.RawValue {
+	return types.RawValue{_mEither, []any{m.first.Raw(), m.second.Raw()}}
 }
 
 // Either matches true when any of the two given matchers returns true.

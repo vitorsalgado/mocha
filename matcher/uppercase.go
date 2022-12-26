@@ -3,6 +3,8 @@ package matcher
 import (
 	"fmt"
 	"strings"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 type upperCaseMatcher struct {
@@ -31,12 +33,12 @@ func (m *upperCaseMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *upperCaseMatcher) OnMockServed() error {
-	return m.matcher.OnMockServed()
+func (m *upperCaseMatcher) AfterMockSent() error {
+	return m.matcher.AfterMockSent()
 }
 
-func (m *upperCaseMatcher) Spec() any {
-	return []any{_mUpperCase, m.matcher.Spec()}
+func (m *upperCaseMatcher) Raw() types.RawValue {
+	return types.RawValue{_mUpperCase, m.matcher.Raw()}
 }
 
 // ToUpper upper case matcher string argument before submitting it to provided matcher.

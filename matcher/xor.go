@@ -1,6 +1,10 @@
 package matcher
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/vitorsalgado/mocha/v3/types"
+)
 
 type xorMatcher struct {
 	first  Matcher
@@ -47,12 +51,12 @@ func (m *xorMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *xorMatcher) OnMockServed() error {
+func (m *xorMatcher) AfterMockSent() error {
 	return nil
 }
 
-func (m *xorMatcher) Spec() any {
-	return []any{_mXOR, []any{m.first.Spec(), m.second.Spec()}}
+func (m *xorMatcher) Raw() types.RawValue {
+	return types.RawValue{_mXOR, []any{m.first.Raw(), m.second.Raw()}}
 }
 
 // XOR is an exclusive or matcher

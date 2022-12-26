@@ -2,6 +2,8 @@ package matcher
 
 import (
 	"fmt"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 type bothMatcher struct {
@@ -46,12 +48,12 @@ func (m *bothMatcher) Match(value any) (*Result, error) {
 	return &Result{Pass: r1.Pass && r2.Pass, Message: msg}, nil
 }
 
-func (m *bothMatcher) OnMockServed() error {
+func (m *bothMatcher) AfterMockSent() error {
 	return multiOnMockServed(m.first, m.second)
 }
 
-func (m *bothMatcher) Spec() any {
-	return []any{_mBoth, []any{m.first.Spec(), m.second.Spec()}}
+func (m *bothMatcher) Raw() types.RawValue {
+	return types.RawValue{_mBoth, []any{m.first.Raw(), m.second.Raw()}}
 }
 
 // Both matches true when both given matchers evaluates to true.

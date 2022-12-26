@@ -12,6 +12,7 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/colorize"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 // Mock holds metadata and expectations to be matched against HTTP requests in order to serve mocked responses.
@@ -148,10 +149,9 @@ func newMock() *Mock {
 	return &Mock{
 		ID:           uuid.New().String(),
 		Enabled:      true,
-		expectations: make([]*expectation, 0),
 		PostActions:  make([]PostAction, 0),
-
-		mu: sync.Mutex{},
+		expectations: make([]*expectation, 0),
+		mu:           sync.Mutex{},
 	}
 }
 
@@ -202,7 +202,17 @@ func (m *Mock) Build() (*Mock, error) {
 
 // MarshalJSON marshal Mock to a JSON that can be loaded later by this mock server.
 func (m *Mock) MarshalJSON() ([]byte, error) {
-	ext := make(map[string]any)
+	raw, err := m.Raw()
+	if err != nil {
+		return nil, err
+	}
+
+	return json.MarshalIndent(raw, "", " ")
+}
+
+func (m *Mock) Raw() (map[string]any, error) {
+	raw := make(map[string]any)
+	request := make(map[string]any)
 
 	fields := make(map[string]any)
 	headers := make(map[string]any)
@@ -212,47 +222,51 @@ func (m *Mock) MarshalJSON() ([]byte, error) {
 	for _, e := range m.expectations {
 		switch e.Target {
 		case _targetMethod:
-			ext["method"] = e.Matcher.Spec()
+			request["method"] = e.Matcher.Raw()
 		case _targetURL:
-			ext[e.Key] = e.Matcher.Spec()
+			request[e.Key] = e.Matcher.Raw()
 		case _targetQuery:
-			queries[e.Key] = e.Matcher.Spec()
+			queries[e.Key] = e.Matcher.Raw()
 		case _targetHeader:
-			headers[e.Key] = e.Matcher.Spec()
+			headers[e.Key] = e.Matcher.Raw()
 		case _targetForm:
-			fields[e.Key] = e.Matcher.Spec()
+			fields[e.Key] = e.Matcher.Raw()
 		case _targetBody:
-			body = append(body, e.Matcher.Spec())
+			body = append(body, e.Matcher.Raw())
 		case _targetRequest:
-			mm := e.Matcher.Spec()
-			if mm == nil {
+			r := e.Matcher.Raw()
+			if r == nil {
 				continue
 			}
 
-			arr, ok := mm.([]any)
-			if !ok {
-				return nil, fmt.Errorf("must be an array")
-			}
-
-			f := arr[0].(string)
-			v := arr[1]
-
-			ext[f] = v
+			request[r[0].(string)] = r[1:]
 		}
 	}
 
-	ext["body"] = body
-	ext["header"] = headers
-	ext["query"] = queries
-	ext["fields"] = fields
+	if len(body) > 0 {
+		request["body"] = body
+	}
 
-	res := m.Reply.Spec()
-	f := res[0].(string)
-	v := res[1]
+	if len(headers) > 0 {
+		request["header"] = headers
+	}
 
-	ext[f] = v
+	if len(queries) > 0 {
+		request["query"] = queries
+	}
 
-	return json.MarshalIndent(ext, "", " ")
+	if len(fields) > 0 {
+		request["fields"] = fields
+	}
+
+	if rep, ok := m.Reply.(types.Persist); ok {
+		rr := rep.Raw()
+		if rr != nil {
+			request[rr[0].(string)] = rr[1:]
+		}
+	}
+
+	return request, nil
 }
 
 // requestMatches checks if current Mock matches against a list of expectations.

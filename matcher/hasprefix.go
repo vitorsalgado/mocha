@@ -3,6 +3,8 @@ package matcher
 import (
 	"fmt"
 	"strings"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 type hasPrefixMatcher struct {
@@ -29,12 +31,12 @@ func (m *hasPrefixMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *hasPrefixMatcher) OnMockServed() error {
+func (m *hasPrefixMatcher) AfterMockSent() error {
 	return nil
 }
 
-func (m *hasPrefixMatcher) Spec() any {
-	return []any{_mHasPrefix, m.prefix}
+func (m *hasPrefixMatcher) Raw() types.RawValue {
+	return types.RawValue{_mHasPrefix, m.prefix}
 }
 
 // HasPrefix returns true if the matcher argument starts with the given prefix.

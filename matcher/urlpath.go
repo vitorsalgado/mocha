@@ -3,6 +3,8 @@ package matcher
 import (
 	"fmt"
 	"net/url"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 type urlPathMatcher struct {
@@ -56,12 +58,12 @@ func (m *urlPathMatcher) Match(v any) (*Result, error) {
 	return &Result{Pass: res.Pass, Message: message(res.Message())}, nil
 }
 
-func (m *urlPathMatcher) OnMockServed() error {
+func (m *urlPathMatcher) AfterMockSent() error {
 	return nil
 }
 
-func (m *urlPathMatcher) Spec() any {
-	return []any{_mURLPath, m.matcher.Spec()}
+func (m *urlPathMatcher) Raw() types.RawValue {
+	return types.RawValue{_mURLPath, m.matcher.Raw()}
 }
 
 // URLPath compares the URL path with the expected value and matches if they are equal.

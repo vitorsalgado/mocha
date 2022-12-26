@@ -3,6 +3,8 @@ package matcher
 import (
 	"fmt"
 	"strings"
+
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 type anyOfMatcher struct {
@@ -57,18 +59,18 @@ func (m *anyOfMatcher) Match(v any) (*Result, error) {
 	return &Result{Pass: ok, Message: describeFailure}, nil
 }
 
-func (m *anyOfMatcher) OnMockServed() error {
+func (m *anyOfMatcher) AfterMockSent() error {
 	return multiOnMockServed(m.matchers...)
 }
 
-func (m *anyOfMatcher) Spec() any {
+func (m *anyOfMatcher) Raw() types.RawValue {
 	args := make([]any, len(m.matchers))
 
 	for i, matcher := range m.matchers {
-		args[i] = matcher.Spec()
+		args[i] = matcher.Raw()
 	}
 
-	return []any{_mAnyOf, args}
+	return types.RawValue{_mAnyOf, args}
 }
 
 // AnyOf matches when any of the given matchers returns true.

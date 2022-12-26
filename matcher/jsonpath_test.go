@@ -71,8 +71,8 @@ func TestJSONPathMatcher_Match_Errors(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := JSONPath(tc.path, tc.matcher).Match(_json)
-			assert.NotNil(t, err)
-			assert.False(t, res.Pass)
+			assert.Nil(t, res)
+			assert.Error(t, err)
 		})
 	}
 }

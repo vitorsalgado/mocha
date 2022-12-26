@@ -1,6 +1,10 @@
 package matcher
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/vitorsalgado/mocha/v3/types"
+)
 
 type emptyMatcher struct {
 }
@@ -23,12 +27,12 @@ func (m *emptyMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *emptyMatcher) OnMockServed() error {
+func (m *emptyMatcher) AfterMockSent() error {
 	return nil
 }
 
-func (m *emptyMatcher) Spec() any {
-	return _mEmpty
+func (m *emptyMatcher) Raw() types.RawValue {
+	return types.RawValue{_mEmpty}
 }
 
 // Empty returns true if matcher value has zero length.

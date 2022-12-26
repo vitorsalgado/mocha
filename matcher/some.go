@@ -1,6 +1,10 @@
 package matcher
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/vitorsalgado/mocha/v3/types"
+)
 
 type someMatcher struct {
 	items []any
@@ -34,12 +38,12 @@ func (m *someMatcher) Match(v any) (*Result, error) {
 		}}, nil
 }
 
-func (m *someMatcher) OnMockServed() error {
+func (m *someMatcher) AfterMockSent() error {
 	return nil
 }
 
-func (m *someMatcher) Spec() any {
-	return []any{_mSome, m.items}
+func (m *someMatcher) Raw() types.RawValue {
+	return types.RawValue{_mSome, m.items}
 }
 
 func Some(items ...any) Matcher {

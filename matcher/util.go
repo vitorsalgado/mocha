@@ -9,7 +9,7 @@ func multiOnMockServed(matchers ...Matcher) error {
 	var errs []string
 
 	for _, matcher := range matchers {
-		err := matcher.OnMockServed()
+		err := matcher.AfterMockSent()
 		if err != nil {
 			errs = append(errs, err.Error())
 		}
@@ -20,8 +20,4 @@ func multiOnMockServed(matchers ...Matcher) error {
 	}
 
 	return nil
-}
-
-func mismatch(failureMessageFunc func() string) *Result {
-	return &Result{Pass: false, Message: failureMessageFunc}
 }
