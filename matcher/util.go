@@ -21,7 +21,3 @@ func multiOnMockServed(matchers ...Matcher) error {
 
 	return nil
 }
-
-func mismatch(failureMessageFunc func() string) *Result {
-	return &Result{Pass: false, Message: failureMessageFunc}
-}

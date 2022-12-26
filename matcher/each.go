@@ -25,7 +25,7 @@ func (m *eachMatcher) Match(v any) (*Result, error) {
 			mv := iter.Value().Interface()
 			res, err := m.matcher.Match(mv)
 			if err != nil {
-				return mismatch(nil), err
+				return nil, err
 			}
 
 			if !res.Pass {
@@ -50,7 +50,7 @@ func (m *eachMatcher) Match(v any) (*Result, error) {
 			entry := val.Index(i).Interface()
 			res, err := m.matcher.Match(entry)
 			if err != nil {
-				return mismatch(nil), err
+				return nil, err
 			}
 
 			if !res.Pass {
@@ -80,10 +80,6 @@ func (m *eachMatcher) Match(v any) (*Result, error) {
 
 func (m *eachMatcher) OnMockServed() error {
 	return m.matcher.OnMockServed()
-}
-
-func (m *eachMatcher) Spec() any {
-	return []any{_mEach, m.matcher.Spec()}
 }
 
 func Each(matcher Matcher) Matcher {

@@ -30,4 +30,4 @@ func (m *FakeNotifier) Errorf(format string, args ...any) {
 	m.Called(format, args)
 }
 
-func (m *FakeNotifier) Cleanup(f func()) {}
+func (m *FakeNotifier) Cleanup(_ func()) {}

@@ -60,10 +60,6 @@ func (m *urlPathMatcher) OnMockServed() error {
 	return nil
 }
 
-func (m *urlPathMatcher) Spec() any {
-	return []any{_mURLPath, m.matcher.Spec()}
-}
-
 // URLPath compares the URL path with the expected value and matches if they are equal.
 // Comparison is case-insensitive.
 func URLPath(expected string) Matcher {

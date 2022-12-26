@@ -24,7 +24,7 @@ func (m *jsonPathMatcher) Match(v any) (*Result, error) {
 	}
 
 	if err != nil {
-		return mismatch(nil), err
+		return nil, err
 	}
 
 	r, err := m.matcher.Match(value)
@@ -39,10 +39,6 @@ func (m *jsonPathMatcher) Match(v any) (*Result, error) {
 
 func (m *jsonPathMatcher) OnMockServed() error {
 	return m.matcher.OnMockServed()
-}
-
-func (m *jsonPathMatcher) Spec() any {
-	return []any{_mJSONPath, m.path, m.matcher.Spec()}
 }
 
 // JSONPath applies the provided matcher to the JSON field value in the given path.

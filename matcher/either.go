@@ -50,10 +50,6 @@ func (m *eitherMatcher) OnMockServed() error {
 	return multiOnMockServed(m.first, m.second)
 }
 
-func (m *eitherMatcher) Spec() any {
-	return []any{_mEither, []any{m.first.Spec(), m.second.Spec()}}
-}
-
 // Either matches true when any of the two given matchers returns true.
 func Either(first Matcher, second Matcher) Matcher {
 	return &eitherMatcher{first: first, second: second}

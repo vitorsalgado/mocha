@@ -14,7 +14,7 @@ func (m *peekMatcher) Name() string {
 func (m *peekMatcher) Match(v any) (*Result, error) {
 	err := m.action(v)
 	if err != nil {
-		return mismatch(nil), err
+		return nil, err
 	}
 
 	return m.matcher.Match(v)
@@ -22,10 +22,6 @@ func (m *peekMatcher) Match(v any) (*Result, error) {
 
 func (m *peekMatcher) OnMockServed() error {
 	return m.matcher.OnMockServed()
-}
-
-func (m *peekMatcher) Spec() any {
-	return nil
 }
 
 // Peek will return the result of the given matcher, after executing the provided function.

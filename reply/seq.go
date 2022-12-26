@@ -44,10 +44,6 @@ func (r *SequentialReply) Prepare() error {
 	return nil
 }
 
-func (r *SequentialReply) Spec() []any {
-	return []any{}
-}
-
 // Build builds a new response based on current mock.Mock call sequence.
 // When the sequence is over, it will return an error or a previously configured reply for this scenario.
 func (r *SequentialReply) Build(w http.ResponseWriter, req *types.RequestValues) (*Stub, error) {

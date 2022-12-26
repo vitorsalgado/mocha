@@ -20,10 +20,6 @@ func Function(fn func(http.ResponseWriter, *types.RequestValues) (*Stub, error))
 
 func (f *FunctionReply) Prepare() error { return nil }
 
-func (f *FunctionReply) Spec() []any {
-	return []any{}
-}
-
 // Build builds a response function using previously provided function.
 func (f *FunctionReply) Build(w http.ResponseWriter, r *types.RequestValues) (*Stub, error) {
 	return f.fn(w, r)

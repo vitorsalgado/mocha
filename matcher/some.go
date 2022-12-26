@@ -38,10 +38,6 @@ func (m *someMatcher) OnMockServed() error {
 	return nil
 }
 
-func (m *someMatcher) Spec() any {
-	return []any{_mSome, m.items}
-}
-
 func Some(items ...any) Matcher {
 	return &someMatcher{items: items}
 }

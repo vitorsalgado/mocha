@@ -35,10 +35,6 @@ func (m *timesMatcher) OnMockServed() error {
 	return nil
 }
 
-func (m *timesMatcher) Spec() any {
-	return []any{"times", m.max}
-}
-
 func Repeat(times int) Matcher {
 	return &timesMatcher{max: times}
 }

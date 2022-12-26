@@ -17,9 +17,6 @@ type Matcher interface {
 	// OnMockServed runs everytime the Mock that holds this Matcher is served.
 	// Useful for stateful Matchers.
 	OnMockServed() error
-
-	// Spec serializes the Matcher to the format: ["matcher name", ...<parameters (any)>]
-	Spec() any
 }
 
 // Result represents a Matcher result.

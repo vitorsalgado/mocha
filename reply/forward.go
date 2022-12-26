@@ -110,10 +110,6 @@ func (r *ProxyReply) TrimSuffix(suffix string) *ProxyReply {
 
 func (r *ProxyReply) Prepare() error { return nil }
 
-func (r *ProxyReply) Spec() []any {
-	return []any{}
-}
-
 // Build builds a Reply based on the ProxyReply configuration.
 func (r *ProxyReply) Build(w http.ResponseWriter, req *types.RequestValues) (*Stub, error) {
 	path := req.RawRequest.URL.Path

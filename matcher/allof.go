@@ -56,16 +56,6 @@ func (m *allOfMatcher) OnMockServed() error {
 	return multiOnMockServed(m.matchers...)
 }
 
-func (m *allOfMatcher) Spec() any {
-	args := make([]any, len(m.matchers))
-
-	for i, matcher := range m.matchers {
-		args[i] = matcher.Spec()
-	}
-
-	return []any{_mAllOf, args}
-}
-
 // AllOf matches when all the given matchers returns true.
 // Example:
 //

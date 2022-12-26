@@ -17,13 +17,13 @@ func (m *equalJSONMatcher) Name() string {
 func (m *equalJSONMatcher) Match(v any) (*Result, error) {
 	expectedAsJson, err := json.Marshal(m.expected)
 	if err != nil {
-		return mismatch(nil), err
+		return nil, err
 	}
 
 	var exp any
 	err = json.Unmarshal(expectedAsJson, &exp)
 	if err != nil {
-		return mismatch(nil), err
+		return nil, err
 	}
 
 	return &Result{
@@ -40,10 +40,6 @@ func (m *equalJSONMatcher) Match(v any) (*Result, error) {
 
 func (m *equalJSONMatcher) OnMockServed() error {
 	return nil
-}
-
-func (m *equalJSONMatcher) Spec() any {
-	return []any{_mEqual, m.expected}
 }
 
 // EqualJSON returns true if matcher value is equal to the given parameter value.

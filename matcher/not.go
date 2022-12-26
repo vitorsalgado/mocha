@@ -34,10 +34,6 @@ func (m *notMatcher) OnMockServed() error {
 	return m.matcher.OnMockServed()
 }
 
-func (m *notMatcher) Spec() any {
-	return []any{_mNot, m.matcher.Spec()}
-}
-
 // Not negates the provided matcher.
 func Not(matcher Matcher) Matcher {
 	return &notMatcher{matcher: matcher}

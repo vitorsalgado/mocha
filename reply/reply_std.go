@@ -3,7 +3,6 @@ package reply
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -194,15 +193,6 @@ func (rep *StdReply) Prepare() error {
 	}
 
 	return nil
-}
-
-func (rep *StdReply) Spec() []any {
-	return []any{"response", map[string]any{
-		"status":  rep.response.StatusCode,
-		"header":  rep.response.Header,
-		"body":    string(rep.response.Body),
-		"cookies": fmt.Sprintf("%v", rep.response.Cookies),
-	}}
 }
 
 // Build builds a Stub based on StdReply definition.

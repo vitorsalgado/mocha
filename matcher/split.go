@@ -41,10 +41,6 @@ func (m *splitMatcher) OnMockServed() error {
 	return m.matcher.OnMockServed()
 }
 
-func (m *splitMatcher) Spec() any {
-	return []any{_mSplit, m.separator, m.matcher.Spec()}
-}
-
 func Split(separator string, matcher Matcher) Matcher {
 	return &splitMatcher{separator: separator, matcher: matcher}
 }

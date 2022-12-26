@@ -1,7 +1,6 @@
 package mocha
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"sync"
@@ -198,61 +197,6 @@ func (m *Mock) Disable() {
 // Build allow users use Mock as a Builder.
 func (m *Mock) Build() (*Mock, error) {
 	return m, nil
-}
-
-// MarshalJSON marshal Mock to a JSON that can be loaded later by this mock server.
-func (m *Mock) MarshalJSON() ([]byte, error) {
-	ext := make(map[string]any)
-
-	fields := make(map[string]any)
-	headers := make(map[string]any)
-	queries := make(map[string]any)
-	body := make([]any, 0)
-
-	for _, e := range m.expectations {
-		switch e.Target {
-		case _targetMethod:
-			ext["method"] = e.Matcher.Spec()
-		case _targetURL:
-			ext[e.Key] = e.Matcher.Spec()
-		case _targetQuery:
-			queries[e.Key] = e.Matcher.Spec()
-		case _targetHeader:
-			headers[e.Key] = e.Matcher.Spec()
-		case _targetForm:
-			fields[e.Key] = e.Matcher.Spec()
-		case _targetBody:
-			body = append(body, e.Matcher.Spec())
-		case _targetRequest:
-			mm := e.Matcher.Spec()
-			if mm == nil {
-				continue
-			}
-
-			arr, ok := mm.([]any)
-			if !ok {
-				return nil, fmt.Errorf("must be an array")
-			}
-
-			f := arr[0].(string)
-			v := arr[1]
-
-			ext[f] = v
-		}
-	}
-
-	ext["body"] = body
-	ext["header"] = headers
-	ext["query"] = queries
-	ext["fields"] = fields
-
-	res := m.Reply.Spec()
-	f := res[0].(string)
-	v := res[1]
-
-	ext[f] = v
-
-	return json.MarshalIndent(ext, "", " ")
 }
 
 // requestMatches checks if current Mock matches against a list of expectations.

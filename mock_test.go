@@ -2,17 +2,11 @@ package mocha
 
 import (
 	"fmt"
-	"net/http"
-	"os"
-	"path"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/vitorsalgado/mocha/v3/internal/header"
-	"github.com/vitorsalgado/mocha/v3/reply"
 
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
@@ -193,43 +187,4 @@ func TestMock_Build(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, m, mm)
-}
-
-func TestMock_MarshalJSON(t *testing.T) {
-	file, err := os.Open(path.Join("testdata", "data.json"))
-	assert.NoError(t, err)
-
-	defer file.Close()
-
-	// jzon := make(map[string]any)
-	// err = json.NewDecoder(file).Decode(&jzon)
-	// assert.NoError(t, err)
-
-	m, err := Request().
-		URLPath(Equal("/test")).
-		Method(http.MethodPost).
-		Query("q", EqualIgnoreCase("dev")).
-		Query("sort", Equal("asc")).
-		Header(header.ContentType, Contain("json")).
-		Header(header.Accept, Contain("json")).
-		Body(JSONPath("name", Equal("no-one"))).
-		Body(JSONPath("active", Equal(true))).
-		Times(5).
-		Reply(reply.OK().
-			BodyReader(file).
-			Header("x-test", "ok").
-			Header("x-dev", "nok").
-			Cookie(&http.Cookie{Name: "hello", Value: "world"}).
-			Cookie(&http.Cookie{Name: "hi", Value: "bye"})).
-		Build()
-
-	assert.NoError(t, err)
-	assert.NotNil(t, m)
-
-	b, err := m.MarshalJSON()
-
-	assert.NoError(t, err)
-	assert.NotNil(t, b)
-
-	fmt.Println(string(b))
 }

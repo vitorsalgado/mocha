@@ -27,10 +27,6 @@ func (m *emptyMatcher) OnMockServed() error {
 	return nil
 }
 
-func (m *emptyMatcher) Spec() any {
-	return _mEmpty
-}
-
 // Empty returns true if matcher value has zero length.
 func Empty() Matcher {
 	return &emptyMatcher{}

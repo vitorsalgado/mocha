@@ -35,10 +35,6 @@ func (m *trimMatcher) OnMockServed() error {
 	return m.matcher.OnMockServed()
 }
 
-func (m *trimMatcher) Spec() any {
-	return []any{_mTrim, m.matcher.Spec()}
-}
-
 // Trim trims' spaces of matcher argument before submitting it to the given matcher.
 func Trim(matcher Matcher) Matcher {
 	return &trimMatcher{matcher: matcher}

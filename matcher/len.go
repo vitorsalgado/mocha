@@ -27,10 +27,6 @@ func (m *lenMatcher) OnMockServed() error {
 	return nil
 }
 
-func (m *lenMatcher) Spec() any {
-	return []any{_mLen, m.length}
-}
-
 // HaveLen returns true when matcher argument length is equal to the items value.
 func HaveLen(length int) Matcher {
 	return &lenMatcher{length: length}

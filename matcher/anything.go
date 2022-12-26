@@ -7,15 +7,11 @@ func (m *anythingMatcher) Name() string {
 	return "Anything"
 }
 
-func (m *anythingMatcher) Match(v any) (*Result, error) {
+func (m *anythingMatcher) Match(_ any) (*Result, error) {
 	return &Result{Pass: true}, nil
 }
 
 func (m *anythingMatcher) OnMockServed() error {
-	return nil
-}
-
-func (m *anythingMatcher) Spec() any {
 	return nil
 }
 

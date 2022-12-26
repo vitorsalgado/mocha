@@ -19,7 +19,7 @@ func (m *containsMatcher) Match(list any) (*Result, error) {
 	var sub = reflect.ValueOf(m.expected)
 	var listType = reflect.TypeOf(list)
 	if listType == nil {
-		return mismatch(nil), fmt.Errorf("unknown typeof value")
+		return nil, fmt.Errorf("unknown typeof value")
 	}
 
 	var describeFailure = func() string {
@@ -48,7 +48,7 @@ func (m *containsMatcher) Match(list any) (*Result, error) {
 			}
 		}
 
-		return mismatch(describeFailure), nil
+		return &Result{Message: describeFailure}, nil
 	}
 
 	for i := 0; i < listValue.Len(); i++ {
@@ -60,15 +60,11 @@ func (m *containsMatcher) Match(list any) (*Result, error) {
 		}
 	}
 
-	return mismatch(describeFailure), nil
+	return &Result{Message: describeFailure}, nil
 }
 
 func (m *containsMatcher) OnMockServed() error {
 	return nil
-}
-
-func (m *containsMatcher) Spec() any {
-	return []any{_mContain, m.expected}
 }
 
 // Contain returns true when the items value is contained in the matcher argument.

@@ -98,10 +98,6 @@ func (m *scenarioMatcher) OnMockServed() error {
 	return nil
 }
 
-func (m *scenarioMatcher) Spec() any {
-	return nil
-}
-
 func Scenario(name, requiredState, newState string) Matcher {
 	return &scenarioMatcher{
 		store:         newScenarioStore(),

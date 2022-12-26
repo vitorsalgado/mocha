@@ -34,17 +34,14 @@ func (m *regExpMatcher) Match(v any) (*Result, error) {
 	case *regexp.Regexp:
 		return &Result{Pass: e.Match([]byte(txt)), Message: msg}, nil
 	default:
-		return mismatch(nil), fmt.Errorf("regular expression matcher does not accept the expression of type %s",
-			reflect.TypeOf(v).Name())
+		return nil,
+			fmt.Errorf("regular expression matcher does not accept the expression of type %s",
+				reflect.TypeOf(v).Name())
 	}
 }
 
 func (m *regExpMatcher) OnMockServed() error {
 	return nil
-}
-
-func (m *regExpMatcher) Spec() any {
-	return []any{_mRegex, m.expression}
 }
 
 // Matches returns true then the given regular expression matches matcher argument.

@@ -51,10 +51,6 @@ func (m *xorMatcher) OnMockServed() error {
 	return nil
 }
 
-func (m *xorMatcher) Spec() any {
-	return []any{_mXOR, []any{m.first.Spec(), m.second.Spec()}}
-}
-
 // XOR is an exclusive or matcher
 func XOR(first Matcher, second Matcher) Matcher {
 	return &xorMatcher{first: first, second: second}
