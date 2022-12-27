@@ -54,30 +54,6 @@ func TestMocha(t *testing.T) {
 	assert.Equal(t, string(body), "hello world")
 }
 
-func TestMocha_NewBasic(t *testing.T) {
-	m := New()
-	m.MustStart()
-
-	defer m.Close()
-
-	scoped := m.MustMock(
-		Get(URLPath("/test")).
-			Reply(reply.
-				Created().
-				PlainText("hello world")))
-
-	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
-	res, err := http.DefaultClient.Do(req)
-	assert.NoError(t, err)
-
-	body, err := io.ReadAll(res.Body)
-
-	assert.NoError(t, err)
-	assert.True(t, scoped.HasBeenCalled())
-	assert.Equal(t, 201, res.StatusCode)
-	assert.Equal(t, string(body), "hello world")
-}
-
 func TestResponseMapper(t *testing.T) {
 	m := New()
 	m.MustStart()
@@ -112,7 +88,7 @@ func TestResponseDelay(t *testing.T) {
 	defer m.Close()
 
 	start := time.Now()
-	delay := time.Duration(1250) * time.Millisecond
+	delay := 250 * time.Millisecond
 
 	scoped := m.MustMock(Get(URLPath("/test")).
 		Delay(delay).
@@ -137,21 +113,19 @@ func TestErrors(t *testing.T) {
 
 	defer m.Close()
 
-	t.Run("should log errors from matchers", func(t *testing.T) {
-		scoped := m.MustMock(
-			Get(URLPath("/test2")).
-				Header("test", Func(
-					func(_ any) (bool, error) {
-						return false, fmt.Errorf("failed")
-					})).
-				Reply(reply.OK()))
+	scoped := m.MustMock(
+		Get(URLPath("/test2")).
+			Header("test", Func(
+				func(_ any) (bool, error) {
+					return false, fmt.Errorf("failed")
+				})).
+			Reply(reply.OK()))
 
-		res, err := testutil.Get(fmt.Sprintf("%s/test2", m.URL())).Do()
+	res, err := testutil.Get(fmt.Sprintf("%s/test2", m.URL())).Do()
 
-		assert.Nil(t, err)
-		assert.False(t, scoped.HasBeenCalled())
-		assert.Equal(t, StatusRequestDidNotMatch, res.StatusCode)
-	})
+	assert.NoError(t, err)
+	assert.False(t, scoped.HasBeenCalled())
+	assert.Equal(t, StatusRequestDidNotMatch, res.StatusCode)
 }
 
 func TestMocha_Assertions(t *testing.T) {

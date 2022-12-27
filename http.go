@@ -24,22 +24,27 @@ type mockHandler struct {
 func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	evtReq := event.FromRequest(r)
+	rawURL := r.URL.Path
+	if len(r.URL.RawQuery) > 0 {
+		rawURL += "?" + r.URL.RawQuery
+	}
+
+	u, _ := url.Parse(rawURL)
 
 	w = httpx.Wrap(w)
 
 	parsedBody, rawBody, err := parseRequestBody(r, h.app.requestBodyParsers)
-	if err != nil {
-		h.app.listener.Emit(&event.OnRequest{Request: evtReq, StartedAt: start})
-		h.onError(w, evtReq, fmt.Errorf("error parsing request body. reason=%w", err))
-		return
-	}
 
+	reqValues := &types.RequestValues{RawRequest: r, URL: u, Body: parsedBody}
 	evtReq.Body = rawBody
 	h.app.listener.Emit(&event.OnRequest{Request: evtReq, StartedAt: start})
 
+	if err != nil {
+		h.app.listener.Emit(&event.OnError{Request: evtReq, Err: fmt.Errorf("error parsing request body. reason=%w", err)})
+	}
+
 	// match current request with all eligible stored matchers in order to find one mock.
-	info := &values{Request: r, ParsedBody: parsedBody}
-	result := findMockForRequest(h.app.storage, info)
+	result := findMockForRequest(h.app.storage, reqValues)
 
 	if !result.Pass {
 		if h.app.proxy != nil {
@@ -66,14 +71,6 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if mock.Delay > 0 {
 		<-time.After(mock.Delay)
 	}
-
-	rawURL := r.URL.Path
-	if len(r.URL.RawQuery) > 0 {
-		rawURL += "?" + r.URL.RawQuery
-	}
-
-	u, _ := url.Parse(rawURL)
-	reqValues := &types.RequestValues{RawRequest: r, URL: u, Body: parsedBody}
 
 	res, err := result.Matched.Reply.Build(w, reqValues)
 	if err != nil {

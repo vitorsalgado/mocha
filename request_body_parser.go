@@ -33,7 +33,7 @@ func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (parsedBody 
 
 		err = r.Body.Close()
 		if err != nil {
-			return nil, nil, err
+			return nil, rawBody, err
 		}
 
 		r.Body = io.NopCloser(bytes.NewBuffer(rawBody))
@@ -44,7 +44,7 @@ func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (parsedBody 
 			if parse.CanParse(contentType, r) {
 				parsedBody, err = parse.Parse(rawBody, r)
 				if err != nil {
-					return nil, nil, err
+					return nil, rawBody, err
 				}
 
 				return parsedBody, rawBody, nil

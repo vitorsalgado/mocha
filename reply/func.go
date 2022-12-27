@@ -18,8 +18,6 @@ func Function(fn func(http.ResponseWriter, *types.RequestValues) (*Stub, error))
 	return &FunctionReply{fn: fn}
 }
 
-func (f *FunctionReply) Prepare() error { return nil }
-
 // Build builds a response function using previously provided function.
 func (f *FunctionReply) Build(w http.ResponseWriter, r *types.RequestValues) (*Stub, error) {
 	return f.fn(w, r)

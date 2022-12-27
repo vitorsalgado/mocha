@@ -2,22 +2,23 @@ package test
 
 import (
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
-	"github.com/vitorsalgado/mocha/v3/matcher"
+	. "github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
-type jsonTestModel struct {
-	Name string `json:"name"`
-	OK   bool   `json:"ok"`
-}
-
 func TestPostJSON(t *testing.T) {
+	type jsonTestModel struct {
+		Name string `json:"name"`
+		OK   bool   `json:"ok"`
+	}
+
 	t.Run("should match specific json body fields", func(t *testing.T) {
 		m := mocha.New()
 		m.MustStart()
@@ -25,9 +26,9 @@ func TestPostJSON(t *testing.T) {
 		defer m.Close()
 
 		scoped := m.MustMock(mocha.Postf("/test").
-			Header("test", matcher.Equal("hello")).
+			Header("test", Equal("hello")).
 			Body(
-				matcher.JSONPath("name", matcher.Equal("dev")), matcher.JSONPath("ok", matcher.Equal(true))).
+				JSONPath("name", Equal("dev")), JSONPath("ok", Equal(true))).
 			Reply(reply.OK()))
 
 		req := testutil.PostJSON(m.URL()+"/test", &jsonTestModel{Name: "dev", OK: true})
@@ -49,9 +50,9 @@ func TestPostJSON(t *testing.T) {
 
 		data := &jsonTestModel{OK: true, Name: "dev"}
 
-		scoped := m.MustMock(mocha.Post(matcher.URLPath("/test")).
-			Header("test", matcher.Equal("hello")).
-			Body(matcher.EqualJSON(data)).
+		scoped := m.MustMock(mocha.Post(URLPath("/test")).
+			Header("test", Equal("hello")).
+			Body(EqualJSON(data)).
 			Reply(reply.OK()))
 
 		req := testutil.PostJSON(m.URL()+"/test", data)
@@ -74,9 +75,9 @@ func TestPostJSON(t *testing.T) {
 		data1 := map[string]interface{}{"ok": true, "name": "dev"}
 		data2 := map[string]interface{}{"ok": true, "name": "dev"}
 
-		scoped := m.MustMock(mocha.Post(matcher.URLPath("/test")).
-			Header("test", matcher.Equal("hello")).
-			Body(matcher.EqualJSON(data1)).
+		scoped := m.MustMock(mocha.Post(URLPath("/test")).
+			Header("test", Equal("hello")).
+			Body(EqualJSON(data1)).
 			Reply(reply.OK()))
 
 		req := testutil.PostJSON(m.URL()+"/test", data2)
@@ -99,9 +100,9 @@ func TestPostJSON(t *testing.T) {
 		toMatch := map[string]interface{}{"name": "dev", "ok": true}
 		data := jsonTestModel{Name: "dev", OK: true}
 
-		scoped := m.MustMock(mocha.Post(matcher.URLPath("/test")).
-			Header("test", matcher.Equal("hello")).
-			Body(matcher.EqualJSON(toMatch)).
+		scoped := m.MustMock(mocha.Post(URLPath("/test")).
+			Header("test", Equal("hello")).
+			Body(EqualJSON(toMatch)).
 			Reply(reply.OK()))
 
 		req := testutil.PostJSON(m.URL()+"/test", data)
@@ -124,9 +125,9 @@ func TestPostJSON(t *testing.T) {
 		body := map[string]interface{}{"ok": true, "name": "dev"}
 		exp := map[string]interface{}{"ok": false, "name": "qa"}
 
-		scoped := m.MustMock(mocha.Post(matcher.URLPath("/test")).
-			Header("test", matcher.Equal("hello")).
-			Body(matcher.EqualJSON(exp)).
+		scoped := m.MustMock(mocha.Post(URLPath("/test")).
+			Header("test", Equal("hello")).
+			Body(EqualJSON(exp)).
 			Reply(reply.OK()))
 
 		req := testutil.PostJSON(m.URL()+"/test", body)
@@ -139,4 +140,48 @@ func TestPostJSON(t *testing.T) {
 		assert.False(t, scoped.HasBeenCalled())
 		assert.Equal(t, mocha.StatusRequestDidNotMatch, res.StatusCode)
 	})
+
+	t.Run("should match null fields", func(t *testing.T) {
+		m := mocha.New()
+		m.MustStart()
+
+		defer m.Close()
+
+		scoped := m.MustMock(mocha.Postf("/test").
+			Body(
+				JSONPath("name", Equal(nil)), JSONPath("ok", Equal(true))).
+			Reply(reply.OK()))
+
+		req := testutil.Post(m.URL()+"/test", strings.NewReader(`{"name": null, "ok": true}`))
+		req.Header("Content-Type", "application/json")
+
+		res, err := req.Do()
+
+		assert.NoError(t, err)
+		assert.NoError(t, res.Body.Close())
+		assert.True(t, scoped.HasBeenCalled())
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+	})
+}
+
+func TestMalformedJSON_ShouldMatchOtherFieldsAndContinue(t *testing.T) {
+	m := mocha.New()
+	m.MustStart()
+
+	defer m.Close()
+
+	scoped := m.MustMock(mocha.Postf("/test").
+		Header("test", Equal("hello")).
+		Reply(reply.OK()))
+
+	req := testutil.Post(m.URL()+"/test", strings.NewReader(`{"test": "malformed_json", "pass`))
+	req.Header("test", "hello")
+	req.Header("Content-Type", "application/json")
+
+	res, err := req.Do()
+
+	assert.NoError(t, err)
+	assert.NoError(t, res.Body.Close())
+	assert.True(t, scoped.HasBeenCalled())
+	assert.Equal(t, http.StatusOK, res.StatusCode)
 }

@@ -10,6 +10,6 @@ func FromRequest(r *http.Request) *EvtReq {
 		Path:       r.URL.Path,
 		RequestURI: r.RequestURI,
 		Host:       r.Host,
-		Header:     r.Header,
+		Header:     r.Header.Clone(),
 	}
 }

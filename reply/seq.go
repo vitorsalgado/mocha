@@ -35,7 +35,7 @@ func (r *SequentialReply) Add(reply ...Reply) *SequentialReply {
 	return r
 }
 
-func (r *SequentialReply) Prepare() error {
+func (r *SequentialReply) Pre() error {
 	size := len(r.replies)
 	if size == 0 {
 		return fmt.Errorf("you need to set at least one response when using multiple response builder")

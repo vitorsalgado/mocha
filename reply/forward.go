@@ -11,7 +11,7 @@ import (
 
 var _ Reply = (*ProxyReply)(nil)
 
-var forbiddenHeaders = []string{
+var _forbiddenHeaders = []string{
 	"Connection",
 	"Keep-Alive",
 	"ServeHTTP-Authenticate",
@@ -25,7 +25,7 @@ var forbiddenHeaders = []string{
 type FromTypes interface{ string | *url.URL }
 
 // ProxyReply represents a response stub that will be the response "proxied" from the specified target.
-// Use Forward to init a new ProxyReply.
+// Use From to init a new ProxyReply.
 type ProxyReply struct {
 	target               *url.URL
 	headers              http.Header
@@ -35,8 +35,8 @@ type ProxyReply struct {
 	trimSuffix           string
 }
 
-// Forward inits a ProxyReply with the given target URL.
-func Forward[T FromTypes](target T) *ProxyReply {
+// From inits a ProxyReply with the given target URL.
+func From[T FromTypes](target T) *ProxyReply {
 	u := &url.URL{}
 
 	switch e := any(target).(type) {
@@ -108,8 +108,6 @@ func (r *ProxyReply) TrimSuffix(suffix string) *ProxyReply {
 	return r
 }
 
-func (r *ProxyReply) Prepare() error { return nil }
-
 // Build builds a Reply based on the ProxyReply configuration.
 func (r *ProxyReply) Build(w http.ResponseWriter, req *types.RequestValues) (*Stub, error) {
 	path := req.RawRequest.URL.Path
@@ -143,7 +141,7 @@ func (r *ProxyReply) Build(w http.ResponseWriter, req *types.RequestValues) (*St
 		return nil, err
 	}
 
-	for _, h := range forbiddenHeaders {
+	for _, h := range _forbiddenHeaders {
 		res.Header.Del(h)
 	}
 

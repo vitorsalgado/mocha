@@ -16,8 +16,6 @@ func Handler(h http.HandlerFunc) *HandlerReply {
 	return &HandlerReply{h: h}
 }
 
-func (h *HandlerReply) Prepare() error { return nil }
-
 func (h *HandlerReply) Build(w http.ResponseWriter, r *types.RequestValues) (*Stub, error) {
 	h.h(w, r.RawRequest)
 	return nil, nil

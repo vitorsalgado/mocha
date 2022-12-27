@@ -38,30 +38,28 @@ func TestForward(t *testing.T) {
 
 	defer m.Close()
 
-	t.Run("should forward request and respond using proxied response", func(t *testing.T) {
-		scoped := m.MustMock(mocha.Post(matcher.URLPath("/test")).
-			Body(matcher.Equal("hello world")).
-			Reply(reply.
-				Forward(dest.URL).
-				ProxyHeader("x-test", "ok").
-				Header("x-res", "example").
-				RemoveProxyHeader("x-del")))
+	scoped := m.MustMock(mocha.Post(matcher.URLPath("/test")).
+		Body(matcher.Equal("hello world")).
+		Reply(reply.
+			From(dest.URL).
+			ProxyHeader("x-test", "ok").
+			Header("x-res", "example").
+			RemoveProxyHeader("x-del")))
 
-		data := strings.NewReader("hello world")
-		req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", data)
-		req.Header.Add("x-del", "to-delete")
-		req.Header.Add(header.ContentType, mimetype.TextPlain)
+	data := strings.NewReader("hello world")
+	req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", data)
+	req.Header.Add("x-del", "to-delete")
+	req.Header.Add(header.ContentType, mimetype.TextPlain)
 
-		res, err := http.DefaultClient.Do(req)
-		assert.NoError(t, err)
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
 
-		b, err := io.ReadAll(res.Body)
+	b, err := io.ReadAll(res.Body)
 
-		assert.NoError(t, err)
-		assert.NoError(t, res.Body.Close())
-		scoped.AssertCalled(t)
-		assert.Equal(t, http.StatusOK, res.StatusCode)
-		assert.Equal(t, "example", res.Header.Get("x-res"))
-		assert.Equal(t, "hello world", string(b))
-	})
+	assert.NoError(t, err)
+	assert.NoError(t, res.Body.Close())
+	scoped.AssertCalled(t)
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+	assert.Equal(t, "example", res.Header.Get("x-res"))
+	assert.Equal(t, "hello world", string(b))
 }

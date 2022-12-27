@@ -119,7 +119,7 @@ func (h *InternalListener) OnRequestNotMatched(evt any) {
 func (h *InternalListener) OnError(evt any) {
 	e := evt.(*OnError)
 
-	h.l.Logf("\n%s %s <--- %s %s\n%s %s\n\n%s: %v",
+	h.l.Logf("\n%s %s <--- %s %s\n%s %s\n%s: %v\n",
 		colorize.RedBright(colorize.Bold("ERROR")),
 		time.Now().Format(time.RFC3339),
 		colorize.Red(e.Request.Method),

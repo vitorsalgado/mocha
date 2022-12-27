@@ -9,38 +9,38 @@ import (
 	"net/http"
 )
 
-type RequestValues struct {
+type RequestIntent struct {
 	Request *http.Request
 }
 
-func NewRequest(method, url string, body io.Reader) *RequestValues {
+func NewRequest(method, url string, body io.Reader) *RequestIntent {
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	return &RequestValues{Request: req}
+	return &RequestIntent{Request: req}
 }
 
-func Get(url string) *RequestValues {
+func Get(url string) *RequestIntent {
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	return &RequestValues{Request: req}
+	return &RequestIntent{Request: req}
 }
 
-func Post(url string, body io.Reader) *RequestValues {
+func Post(url string, body io.Reader) *RequestIntent {
 	req, err := http.NewRequest(http.MethodPost, url, body)
 	if err != nil {
 		log.Panic(err)
 	}
 
-	return &RequestValues{Request: req}
+	return &RequestIntent{Request: req}
 }
 
-func PostJSON(url string, body any) *RequestValues {
+func PostJSON(url string, body any) *RequestIntent {
 	b, err := json.Marshal(body)
 	if err != nil {
 		log.Panic(err)
@@ -53,14 +53,14 @@ func PostJSON(url string, body any) *RequestValues {
 
 	req.Header.Add("content-type", "application/json")
 
-	return &RequestValues{Request: req}
+	return &RequestIntent{Request: req}
 }
 
-func (req *RequestValues) Header(key, value string) *RequestValues {
+func (req *RequestIntent) Header(key, value string) *RequestIntent {
 	req.Request.Header.Add(key, value)
 	return req
 }
 
-func (req *RequestValues) Do() (*http.Response, error) {
+func (req *RequestIntent) Do() (*http.Response, error) {
 	return http.DefaultClient.Do(req.Request)
 }

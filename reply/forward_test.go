@@ -32,7 +32,7 @@ func TestForward(t *testing.T) {
 		req.Header.Set("x-to-be-removed", "nok")
 		req.Header.Set("x-present", "ok")
 
-		res, err := Forward(dest.URL).
+		res, err := From(dest.URL).
 			ProxyHeader("x-proxy", "proxied").
 			RemoveProxyHeader("x-to-be-removed").
 			Header("x-res", "response").
@@ -63,7 +63,7 @@ func TestForward(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", body)
 
 		u, _ := url.Parse(dest.URL)
-		forward := Forward(u)
+		forward := From(u)
 		res, err := forward.Build(w, newReqValues(req))
 
 		assert.NoError(t, err)
@@ -82,7 +82,7 @@ func TestForward(t *testing.T) {
 
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 
-		forward := Forward(dest.URL)
+		forward := From(dest.URL)
 		res, err := forward.Build(w, newReqValues(req))
 
 		assert.NoError(t, err)
@@ -103,7 +103,7 @@ func TestForward(t *testing.T) {
 		defer dest.Close()
 
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080/path/test/example?filter=all", nil)
-		res, err := Forward(dest.URL).TrimPrefix("/path/test").Build(w, newReqValues(req))
+		res, err := From(dest.URL).TrimPrefix("/path/test").Build(w, newReqValues(req))
 
 		assert.NoError(t, err)
 		assert.Nil(t, res)
@@ -122,7 +122,7 @@ func TestForward(t *testing.T) {
 		defer dest.Close()
 
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080/path/test/example?filter=all", nil)
-		res, err := Forward(dest.URL).TrimSuffix("/example").Build(w, newReqValues(req))
+		res, err := From(dest.URL).TrimSuffix("/example").Build(w, newReqValues(req))
 
 		assert.NoError(t, err)
 		assert.Nil(t, res)
@@ -131,7 +131,7 @@ func TestForward(t *testing.T) {
 
 	t.Run("should panic if the given raw target cannot be parsed to a URL", func(t *testing.T) {
 		assert.Panics(t, func() {
-			Forward(" https://fail test  ")
+			From(" https://fail test  ")
 		})
 	})
 }

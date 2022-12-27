@@ -2,6 +2,7 @@ package reply
 
 import (
 	"bytes"
+	"compress/gzip"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -27,6 +28,7 @@ type bodyType int
 const (
 	_bodyDefault bodyType = iota
 	_bodyTemplate
+	_bodyGZIP
 )
 
 // New creates a new StdReply. Prefer to use factory functions for each status code.
@@ -121,9 +123,15 @@ func (rep *StdReply) ExpireCookie(cookie http.Cookie) *StdReply {
 	return rep
 }
 
-// Body defines the response body using a []byte,
+// Body defines the response body using a []byte.
 func (rep *StdReply) Body(value []byte) *StdReply {
 	rep.response.Body = value
+	return rep
+}
+
+// BodyText defines the response body using a string.
+func (rep *StdReply) BodyText(text string) *StdReply {
+	rep.response.Body = []byte(text)
 	return rep
 }
 
@@ -187,9 +195,33 @@ func (rep *StdReply) PlainText(value string) *StdReply {
 	return rep
 }
 
-func (rep *StdReply) Prepare() error {
+// Gzip indicates that the response should be gzip encoded.
+func (rep *StdReply) Gzip() *StdReply {
+	rep.bodyType = _bodyGZIP
+	return rep
+}
+
+func (rep *StdReply) Pre() error {
 	if rep.err != nil {
 		return rep.err
+	}
+
+	switch rep.bodyType {
+	case _bodyGZIP:
+		buf := new(bytes.Buffer)
+		gz := gzip.NewWriter(buf)
+
+		_, err := gz.Write(rep.response.Body)
+		if err != nil {
+			return err
+		}
+
+		err = gz.Close()
+		if err != nil {
+			return err
+		}
+
+		rep.response.Body = buf.Bytes()
 	}
 
 	return nil

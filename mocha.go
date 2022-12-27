@@ -153,7 +153,7 @@ func New(config ...Configurer) (m *Mocha) {
 		m.MustMock(Request().
 			MethodMatches(matcher.Anything()).
 			Priority(10).
-			Reply(reply.Forward(m.config.Forward.Target).
+			Reply(reply.From(m.config.Forward.Target).
 				Headers(m.config.Forward.Headers).
 				ProxyHeaders(m.config.Forward.ProxyHeaders).
 				RemoveProxyHeaders(m.config.Forward.ProxyHeadersToRemove).

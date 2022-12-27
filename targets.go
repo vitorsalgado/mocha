@@ -5,6 +5,7 @@ type matchTarget int
 // matchTarget constants to help debug unmatched requests.
 const (
 	_targetRequest matchTarget = iota
+	_targetScheme
 	_targetMethod
 	_targetURL
 	_targetHeader

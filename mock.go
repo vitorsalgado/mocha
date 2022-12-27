@@ -11,6 +11,7 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/colorize"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/reply"
+	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 // Mock holds metadata and expectations to be matched against HTTP requests in order to serve mocked responses.
@@ -68,7 +69,7 @@ type PostAction interface {
 }
 
 // Mapper is the function definition to be used to map Mock Stub before serving it.
-// Mapper doesn't work with reply.Forward or Proxy.
+// Mapper doesn't work with reply.From or Proxy.
 type Mapper func(res *reply.Stub, args *MapperIn) error
 
 // MapperIn represents the expected arguments for every Mapper.
@@ -78,18 +79,8 @@ type MapperIn struct {
 }
 
 type (
-	// values groups HTTP request information to be passed to each Matcher.
-	values struct {
-		// Request is the actual http.Request.
-		Request *http.Request
-
-		// ParsedBody is http.Request parsed body.
-		// Value of parsed body can vary depending on the mocha.RequestBodyParser that parsed the request.
-		ParsedBody any
-	}
-
 	// valueSelector defines a function that will be used to extract the value that will be passed to the associated matcher.
-	valueSelector func(r *values) any
+	valueSelector func(r *types.RequestValues) any
 
 	// expectation holds metadata related to one http.Request Matcher.
 	expectation struct {
@@ -201,7 +192,7 @@ func (m *Mock) Build() (*Mock, error) {
 
 // requestMatches checks if current Mock matches against a list of expectations.
 // Will iterate through all expectations even if it doesn't match early.
-func (m *Mock) requestMatches(ri *values, expectations []*expectation) *matchResult {
+func (m *Mock) requestMatches(ri *types.RequestValues, expectations []*expectation) *matchResult {
 	w := 0
 	ok := true
 	details := make([]mismatchDetail, 0)
