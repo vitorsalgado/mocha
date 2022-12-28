@@ -9,7 +9,6 @@ import (
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 func TestPriority(t *testing.T) {
@@ -20,13 +19,13 @@ func TestPriority(t *testing.T) {
 
 	one := m.MustMock(mocha.Get(matcher.URLPath("/test")).
 		Priority(3).
-		Reply(reply.OK()))
+		Reply(mocha.OK()))
 	two := m.MustMock(mocha.Get(matcher.URLPath("/test")).
 		Priority(1).
-		Reply(reply.BadRequest()))
+		Reply(mocha.BadRequest()))
 	three := m.MustMock(mocha.Get(matcher.URLPath("/test")).
 		Priority(100).
-		Reply(reply.Created()))
+		Reply(mocha.Created()))
 
 	res, err := testutil.Get(m.URL() + "/test").Do()
 

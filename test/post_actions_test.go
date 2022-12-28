@@ -11,7 +11,6 @@ import (
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 type action struct {
@@ -35,7 +34,7 @@ func TestPostAction(t *testing.T) {
 
 		scope := m.MustMock(mocha.Get(matcher.URLPath("/test")).
 			PostAction(act).
-			Reply(reply.OK()))
+			Reply(mocha.OK()))
 
 		req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
 		res, err := req.Do()
@@ -57,7 +56,7 @@ func TestPostAction(t *testing.T) {
 
 		scope := m.MustMock(mocha.Get(matcher.URLPath("/test")).
 			PostAction(act).
-			Reply(reply.OK()))
+			Reply(mocha.OK()))
 
 		req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
 		res, err := req.Do()

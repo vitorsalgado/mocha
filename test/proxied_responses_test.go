@@ -13,7 +13,6 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 func TestForward(t *testing.T) {
@@ -40,8 +39,7 @@ func TestForward(t *testing.T) {
 
 	scoped := m.MustMock(mocha.Post(matcher.URLPath("/test")).
 		Body(matcher.Equal("hello world")).
-		Reply(reply.
-			From(dest.URL).
+		Reply(mocha.From(dest.URL).
 			ProxyHeader("x-test", "ok").
 			Header("x-res", "example").
 			RemoveProxyHeaders("x-del")))

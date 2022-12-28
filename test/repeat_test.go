@@ -9,7 +9,6 @@ import (
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 func TestRepeat(t *testing.T) {
@@ -20,7 +19,7 @@ func TestRepeat(t *testing.T) {
 
 	m.MustMock(mocha.Get(matcher.URLPath("/test")).
 		Times(3).
-		Reply(reply.OK()))
+		Reply(mocha.OK()))
 
 	res, _ := testutil.Get(m.URL() + "/test").Do()
 	assert.Equal(t, http.StatusOK, res.StatusCode)

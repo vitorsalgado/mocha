@@ -10,7 +10,6 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 func TestTLS(t *testing.T) {
@@ -25,7 +24,7 @@ func TestTLS(t *testing.T) {
 
 	scoped := m.MustMock(mocha.Get(matcher.URLPath("/test")).
 		Header("test", matcher.Equal("hello")).
-		Reply(reply.OK()))
+		Reply(mocha.OK()))
 
 	req, err := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
 	require.NoError(t, err)

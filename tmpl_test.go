@@ -1,4 +1,4 @@
-package reply
+package mocha
 
 import (
 	"bytes"
@@ -59,7 +59,7 @@ func TestReplyWithTemplate(t *testing.T) {
 		Name: " test  ",
 	}
 
-	res, err := New().
+	res, err := NewReply().
 		Status(http.StatusOK).
 		BodyTemplate(NewTextTemplate().
 			FuncMap(template.FuncMap{"trim": strings.TrimSpace}).

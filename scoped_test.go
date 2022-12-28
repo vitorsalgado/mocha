@@ -9,7 +9,6 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 func TestScoped(t *testing.T) {
@@ -29,7 +28,7 @@ func TestScoped(t *testing.T) {
 	assert.Nil(t, scoped.Get("unknown"))
 
 	t.Run("should not return done when there is still pending store", func(t *testing.T) {
-		fakeT := NewFakeNotifier()
+		fakeT := newFakeT()
 
 		assert.False(t, scoped.HasBeenCalled())
 		assert.Equal(t, 3, len(scoped.GetPending()))
@@ -40,7 +39,7 @@ func TestScoped(t *testing.T) {
 	})
 
 	t.Run("should return done when all store were called", func(t *testing.T) {
-		fakeT := NewFakeNotifier()
+		fakeT := newFakeT()
 
 		m1.Inc()
 
@@ -74,10 +73,10 @@ func TestScoped(t *testing.T) {
 
 		defer m.Close()
 
-		s1 := m.MustMock(Get(matcher.URLPath("/test1")).Reply(reply.OK()))
+		s1 := m.MustMock(Get(matcher.URLPath("/test1")).Reply(OK()))
 		s2 := m.MustMock(
-			Get(matcher.URLPath("/test2")).Reply(reply.OK()),
-			Get(matcher.URLPath("/test3")).Reply(reply.OK()))
+			Get(matcher.URLPath("/test2")).Reply(OK()),
+			Get(matcher.URLPath("/test3")).Reply(OK()))
 
 		t.Run("initial state (enabled)", func(t *testing.T) {
 			req := testutil.Get(fmt.Sprintf("%s/test1", m.URL()))

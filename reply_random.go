@@ -1,12 +1,10 @@
-package reply
+package mocha
 
 import (
 	"fmt"
 	"math/rand"
 	"net/http"
 	"sync"
-
-	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 var _ Reply = (*RandomReply)(nil)
@@ -49,7 +47,7 @@ func (rep *RandomReply) Pre() error {
 }
 
 // Build builds a response stub randomly based on previously added Reply implementations.
-func (rep *RandomReply) Build(w http.ResponseWriter, r *types.RequestValues) (*Stub, error) {
+func (rep *RandomReply) Build(w http.ResponseWriter, r *RequestValues) (*Stub, error) {
 	rep.mu.Lock()
 	defer rep.mu.Unlock()
 

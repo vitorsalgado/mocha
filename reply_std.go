@@ -1,4 +1,4 @@
-package reply
+package mocha
 
 import (
 	"bytes"
@@ -10,7 +10,6 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
-	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 var _ Reply = (*StdReply)(nil)
@@ -32,72 +31,72 @@ const (
 	_bodyGZIP
 )
 
-// New creates a new StdReply. Prefer to use factory functions for each status code.
-func New() *StdReply {
+// NewReply creates a new StdReply. Prefer to use factory functions for each status code.
+func NewReply() *StdReply {
 	return &StdReply{
 		response: &Stub{Cookies: make([]*http.Cookie, 0), Header: make(http.Header), Trailer: make(http.Header)},
 		bodyType: _bodyDefault}
 }
 
 // Status creates a new Reply with the given HTTP status code.
-func Status(status int) *StdReply { return New().Status(status) }
+func Status(status int) *StdReply { return NewReply().Status(status) }
 
 // OK creates a new Reply with http.StatusOK already.
-func OK() *StdReply { return New().Status(http.StatusOK) }
+func OK() *StdReply { return NewReply().Status(http.StatusOK) }
 
 // Created creates a new Reply with http.StatusCreated already.
-func Created() *StdReply { return New().Status(http.StatusCreated) }
+func Created() *StdReply { return NewReply().Status(http.StatusCreated) }
 
 // Accepted creates a new Reply with http.StatusAccepted already.
-func Accepted() *StdReply { return New().Status(http.StatusAccepted) }
+func Accepted() *StdReply { return NewReply().Status(http.StatusAccepted) }
 
 // NoContent creates a new Reply with http.StatusNoContent already.
-func NoContent() *StdReply { return New().Status(http.StatusNoContent) }
+func NoContent() *StdReply { return NewReply().Status(http.StatusNoContent) }
 
 // PartialContent creates a new Reply with http.StatusPartialContent already.
-func PartialContent() *StdReply { return New().Status(http.StatusPartialContent) }
+func PartialContent() *StdReply { return NewReply().Status(http.StatusPartialContent) }
 
 // MovedPermanently creates a new Reply with http.StatusMovedPermanently already.
-func MovedPermanently() *StdReply { return New().Status(http.StatusMovedPermanently) }
+func MovedPermanently() *StdReply { return NewReply().Status(http.StatusMovedPermanently) }
 
 // NotModified creates a new Reply with http.StatusNotModified already.
-func NotModified() *StdReply { return New().Status(http.StatusNotModified) }
+func NotModified() *StdReply { return NewReply().Status(http.StatusNotModified) }
 
 // BadRequest creates a new Reply with http.StatusBadRequest already.
-func BadRequest() *StdReply { return New().Status(http.StatusBadRequest) }
+func BadRequest() *StdReply { return NewReply().Status(http.StatusBadRequest) }
 
 // Unauthorized creates a new Reply with http.StatusUnauthorized already.
-func Unauthorized() *StdReply { return New().Status(http.StatusUnauthorized) }
+func Unauthorized() *StdReply { return NewReply().Status(http.StatusUnauthorized) }
 
 // Forbidden creates a new Reply with http.StatusForbidden already.
-func Forbidden() *StdReply { return New().Status(http.StatusForbidden) }
+func Forbidden() *StdReply { return NewReply().Status(http.StatusForbidden) }
 
 // NotFound creates a new Reply with http.StatusNotFound already.
-func NotFound() *StdReply { return New().Status(http.StatusNotFound) }
+func NotFound() *StdReply { return NewReply().Status(http.StatusNotFound) }
 
 // MethodNotAllowed creates a new Reply with http.StatusMethodNotAllowed already.
-func MethodNotAllowed() *StdReply { return New().Status(http.StatusMethodNotAllowed) }
+func MethodNotAllowed() *StdReply { return NewReply().Status(http.StatusMethodNotAllowed) }
 
 // UnprocessableEntity creates a new Reply with http.StatusUnprocessableEntity already.
-func UnprocessableEntity() *StdReply { return New().Status(http.StatusUnprocessableEntity) }
+func UnprocessableEntity() *StdReply { return NewReply().Status(http.StatusUnprocessableEntity) }
 
 // MultipleChoices creates a new Reply with http.StatusMultipleChoices already.
-func MultipleChoices() *StdReply { return New().Status(http.StatusMultipleChoices) }
+func MultipleChoices() *StdReply { return NewReply().Status(http.StatusMultipleChoices) }
 
 // InternalServerError creates a new Reply with http.StatusInternalServerError already.
-func InternalServerError() *StdReply { return New().Status(http.StatusInternalServerError) }
+func InternalServerError() *StdReply { return NewReply().Status(http.StatusInternalServerError) }
 
 // NotImplemented creates a new Reply with http.StatusNotImplemented already.
-func NotImplemented() *StdReply { return New().Status(http.StatusNotImplemented) }
+func NotImplemented() *StdReply { return NewReply().Status(http.StatusNotImplemented) }
 
 // BadGateway creates a new Reply with http.StatusBadGateway already.
-func BadGateway() *StdReply { return New().Status(http.StatusBadGateway) }
+func BadGateway() *StdReply { return NewReply().Status(http.StatusBadGateway) }
 
 // ServiceUnavailable creates a new Reply with http.StatusServiceUnavailable already.
-func ServiceUnavailable() *StdReply { return New().Status(http.StatusServiceUnavailable) }
+func ServiceUnavailable() *StdReply { return NewReply().Status(http.StatusServiceUnavailable) }
 
 // GatewayTimeout creates a new Reply with http.StatusGatewayTimeout already.
-func GatewayTimeout() *StdReply { return New().Status(http.StatusGatewayTimeout) }
+func GatewayTimeout() *StdReply { return NewReply().Status(http.StatusGatewayTimeout) }
 
 // Status sets the HTTP status code for the Stub.
 func (rep *StdReply) Status(status int) *StdReply {
@@ -231,7 +230,7 @@ func (rep *StdReply) Pre() error {
 }
 
 // Build builds a Stub based on StdReply definition.
-func (rep *StdReply) Build(_ http.ResponseWriter, r *types.RequestValues) (*Stub, error) {
+func (rep *StdReply) Build(_ http.ResponseWriter, r *RequestValues) (*Stub, error) {
 	if rep.err != nil {
 		return nil, rep.err
 	}

@@ -11,7 +11,6 @@ import (
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 func TestHandlerReply(t *testing.T) {
@@ -29,7 +28,7 @@ func TestHandlerReply(t *testing.T) {
 	defer m.Close()
 
 	m.MustMock(mocha.Get(matcher.URLPath("/test")).
-		Reply(reply.Handler(fn)),
+		Reply(mocha.Handler(fn)),
 	)
 
 	req := testutil.Get(m.URL() + "/test")

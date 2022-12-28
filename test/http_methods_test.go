@@ -9,7 +9,6 @@ import (
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 func TestHTTPMethods(t *testing.T) {
@@ -21,7 +20,7 @@ func TestHTTPMethods(t *testing.T) {
 	t.Run("should mock GET", func(t *testing.T) {
 		scoped := m.MustMock(
 			mocha.Get(matcher.URLPath("/test")).
-				Reply(reply.OK()))
+				Reply(mocha.OK()))
 
 		defer scoped.Clean()
 
@@ -41,7 +40,7 @@ func TestHTTPMethods(t *testing.T) {
 	t.Run("should mock POST", func(t *testing.T) {
 		scoped := m.MustMock(
 			mocha.Post(matcher.URLPath("/test")).
-				Reply(reply.OK()))
+				Reply(mocha.OK()))
 
 		defer scoped.Clean()
 
@@ -62,7 +61,7 @@ func TestHTTPMethods(t *testing.T) {
 	t.Run("should mock PUT", func(t *testing.T) {
 		scoped := m.MustMock(
 			mocha.Put(matcher.URLPath("/test")).
-				Reply(reply.OK()))
+				Reply(mocha.OK()))
 
 		defer scoped.Clean()
 
@@ -83,7 +82,7 @@ func TestHTTPMethods(t *testing.T) {
 	t.Run("should mock DELETE", func(t *testing.T) {
 		scoped := m.MustMock(
 			mocha.Delete(matcher.URLPath("/test")).
-				Reply(reply.OK()))
+				Reply(mocha.OK()))
 
 		defer scoped.Clean()
 
@@ -104,7 +103,7 @@ func TestHTTPMethods(t *testing.T) {
 	t.Run("should mock PATCH", func(t *testing.T) {
 		scoped := m.MustMock(
 			mocha.Patch(matcher.URLPath("/test")).
-				Reply(reply.OK()))
+				Reply(mocha.OK()))
 
 		defer scoped.Clean()
 
@@ -125,7 +124,7 @@ func TestHTTPMethods(t *testing.T) {
 	t.Run("should mock HEAD", func(t *testing.T) {
 		scoped := m.MustMock(
 			mocha.Head(matcher.URLPath("/test")).
-				Reply(reply.OK()))
+				Reply(mocha.OK()))
 
 		defer scoped.Clean()
 

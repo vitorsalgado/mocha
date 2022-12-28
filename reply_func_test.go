@@ -1,4 +1,4 @@
-package reply
+package mocha
 
 import (
 	"net/http"
@@ -7,6 +7,19 @@ import (
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestFunctionReply(t *testing.T) {
+	fn := func(http.ResponseWriter, *RequestValues) (*Stub, error) {
+		return &Stub{StatusCode: http.StatusAccepted}, nil
+	}
+
+	r := httptest.NewRequest(http.MethodGet, "http://localhost", nil)
+	replier := Function(fn)
+	res, err := replier.Build(nil, newReqValues(r))
+
+	assert.Nil(t, err)
+	assert.Equal(t, res.StatusCode, http.StatusAccepted)
+}
 
 func TestHandlerReply(t *testing.T) {
 	fn := func(w http.ResponseWriter, r *http.Request) {

@@ -8,17 +8,16 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	. "github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 func TestProxy(t *testing.T) {
 	proxySrv := New(Configure().Proxy()).CloseWithT(t)
 	proxySrv.MustStart()
-	proxyScope := proxySrv.MustMock(Get(URLPath("/test")).Reply(reply.Accepted()))
+	proxyScope := proxySrv.MustMock(Get(URLPath("/test")).Reply(Accepted()))
 
 	targetSrv := New().CloseWithT(t)
 	targetSrv.MustStart()
-	targetScope := targetSrv.MustMock(Get(URLPath("/other")).Reply(reply.Created()))
+	targetScope := targetSrv.MustMock(Get(URLPath("/other")).Reply(Created()))
 
 	// client that acts like a browser proxying requests to our server
 	proxyURL, _ := url.Parse(proxySrv.URL())
@@ -39,15 +38,15 @@ func TestProxy(t *testing.T) {
 func TestProxy_ViaProxy(t *testing.T) {
 	p := New(WithProxy()).CloseWithT(t)
 	p.MustStart()
-	scope1 := p.MustMock(Get(URLPath("/test")).Reply(reply.Accepted()))
+	scope1 := p.MustMock(Get(URLPath("/test")).Reply(Accepted()))
 
 	v := New(WithProxy(&ProxyConfig{ProxyVia: p.URL()})).CloseWithT(t)
 	v.MustStart()
-	scope2 := v.MustMock(Get(URLPath("/unknown")).Reply(reply.NoContent()))
+	scope2 := v.MustMock(Get(URLPath("/unknown")).Reply(NoContent()))
 
 	m := New().CloseWithT(t)
 	m.MustStart()
-	m.MustMock(Get(URLPath("/other")).Reply(reply.Created()))
+	m.MustMock(Get(URLPath("/other")).Reply(Created()))
 
 	u, _ := url.Parse(v.URL())
 	client := &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(u)}}

@@ -1,4 +1,4 @@
-package reply
+package mocha
 
 import (
 	"encoding/json"
@@ -35,7 +35,7 @@ func TestReplyFactories(t *testing.T) {
 }
 
 func TestReply(t *testing.T) {
-	res, err := New().
+	res, err := NewReply().
 		Status(http.StatusCreated).
 		Header("test", "dev").
 		Header("test", "qa").
@@ -60,7 +60,7 @@ func TestReply(t *testing.T) {
 }
 
 func TestStdReply_BodyString(t *testing.T) {
-	res, err := New().
+	res, err := NewReply().
 		Status(http.StatusCreated).
 		PlainText("text").
 		Build(nil, newReqValues(_req))
@@ -86,7 +86,7 @@ func TestStdReply_BodyJSON(t *testing.T) {
 			Active: true,
 		}
 
-		res, err := New().
+		res, err := NewReply().
 			Status(http.StatusCreated).
 			BodyJSON(model).
 			Build(nil, newReqValues(_req))
@@ -104,7 +104,7 @@ func TestStdReply_BodyJSON(t *testing.T) {
 	})
 
 	t.Run("should report conversion error", func(t *testing.T) {
-		res, err := New().
+		res, err := NewReply().
 			Status(http.StatusCreated).
 			BodyJSON(make(chan int)).
 			Build(nil, newReqValues(_req))
@@ -123,7 +123,7 @@ func TestStdReply_BodyReader(t *testing.T) {
 
 	defer f.Close()
 
-	res, err := New().
+	res, err := NewReply().
 		Status(http.StatusCreated).
 		BodyReader(f).
 		Build(nil, newReqValues(_req))

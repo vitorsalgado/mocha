@@ -12,7 +12,6 @@ import (
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 func TestCompressedResponse_GZIP(t *testing.T) {
@@ -22,8 +21,7 @@ func TestCompressedResponse_GZIP(t *testing.T) {
 	defer m.Close()
 
 	m.MustMock(mocha.Get(URLPath("/test")).
-		Reply(reply.
-			OK().
+		Reply(mocha.OK().
 			BodyText("hello world").
 			Gzip()))
 
@@ -51,8 +49,7 @@ func Test_GZIPProxiedResponse(t *testing.T) {
 	defer p.Close()
 
 	ps := p.MustMock(mocha.Get(URLPath("/test")).
-		Reply(reply.
-			OK().
+		Reply(mocha.OK().
 			BodyText("hello world").
 			Gzip()))
 
@@ -62,7 +59,7 @@ func Test_GZIPProxiedResponse(t *testing.T) {
 	defer m.Close()
 
 	ms := m.MustMock(mocha.Get(URLPath("/test")).
-		Reply(reply.From(p.URL())))
+		Reply(mocha.From(p.URL())))
 
 	req := testutil.Get(m.URL() + "/test")
 	res, err := req.Do()

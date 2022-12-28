@@ -13,7 +13,6 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 func TestTrailer_WithBody(t *testing.T) {
@@ -24,8 +23,7 @@ func TestTrailer_WithBody(t *testing.T) {
 
 	scoped := m.MustMock(
 		mocha.Get(matcher.URLPath("/test")).
-			Reply(reply.
-				OK().
+			Reply(mocha.OK().
 				PlainText("hello world").
 				Header(header.ContentType, mimetype.TextPlain).
 				Trailer("trailer-1", "trailer-1-value").
@@ -60,8 +58,7 @@ func TestTrailer_WithoutBody(t *testing.T) {
 
 	scoped := m.MustMock(
 		mocha.Get(matcher.URLPath("/test")).
-			Reply(reply.
-				OK().
+			Reply(mocha.OK().
 				Header(header.ContentType, mimetype.TextPlain).
 				Trailer("trailer-1", "trailer-1-value").
 				Trailer("trailer-2", "trailer-2-value")))

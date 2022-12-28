@@ -63,7 +63,7 @@ func (l *FileLoader) Load(app *Mocha) error {
 					}
 
 					fn := func(filename string, c *errContainer) error {
-						_, err := app.Mock(From(filename))
+						_, err := app.Mock(MockFromFile(filename))
 						return err
 					}
 

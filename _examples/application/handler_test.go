@@ -9,7 +9,6 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 func TestHandler_GetById(t *testing.T) {
@@ -23,7 +22,7 @@ func TestHandler_GetById(t *testing.T) {
 		Get(URLPathf("/customers/%s", id)).
 		Header(headerAccept, Equal(contentTypeJSON)).
 		Header(headerContentType, Equal(contentTypeJSON)).
-		Reply(reply.OK().BodyJSON(customer)))
+		Reply(mocha.OK().BodyJSON(customer)))
 
 	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/customer/%s", id), nil)
 	rr := httptest.NewRecorder()

@@ -12,7 +12,6 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 func main() {
@@ -27,7 +26,7 @@ func main() {
 		Header(header.Accept, Contain(mimetype.TextHTML)).
 		Header(header.ContentType, Equal("test")).
 		Header("any", AllOf(Contain("test"), EqualIgnoreCase("dev"))).
-		Reply(reply.OK().
+		Reply(mocha.OK().
 			PlainText("hello world").
 			Header("x-basic", "true")))
 

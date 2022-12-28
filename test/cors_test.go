@@ -9,7 +9,6 @@ import (
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 func TestCORS(t *testing.T) {
@@ -19,7 +18,7 @@ func TestCORS(t *testing.T) {
 	defer m.Close()
 
 	m.MustMock(mocha.Get(matcher.URLPath("/test")).
-		Reply(reply.OK()))
+		Reply(mocha.OK()))
 
 	corsReq := testutil.NewRequest(http.MethodOptions, m.URL()+"/test", nil)
 	res, err := corsReq.Do()

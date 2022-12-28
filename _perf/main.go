@@ -18,7 +18,6 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 type Srv struct {
@@ -115,7 +114,7 @@ func main() {
 		Get(URLPath("/test")).
 		Header(header.Accept, Contain(mimetype.TextPlain)).
 		Header("X-Scenario", Equal("1")).
-		Reply(reply.OK().
+		Reply(mocha.OK().
 			PlainText("ok").
 			Header("X-Scenario-Result", "true")))
 
@@ -125,7 +124,7 @@ func main() {
 		Body(AllOf(
 			JSONPath("active", Equal(true)),
 			JSONPath("result", Equal("ok")))).
-		Reply(reply.OK().
+		Reply(mocha.OK().
 			JSON().
 			BodyReader(f)),
 	)

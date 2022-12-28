@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	. "github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 func TestRecording_WithWebProxy(t *testing.T) {
@@ -21,11 +20,11 @@ func TestRecording_WithWebProxy(t *testing.T) {
 	dir := t.TempDir()
 	p := New(Configure().Name("proxy").Proxy().Record(&RecordConfig{SaveDir: dir, Save: true, SaveBodyToFile: true}))
 	p.MustStart()
-	scope1 := p.MustMock(Get(URLPath("/test")).Reply(reply.Accepted()))
+	scope1 := p.MustMock(Get(URLPath("/test")).Reply(Accepted()))
 
 	m := New()
 	m.MustStart()
-	scope2 := m.MustMock(Get(URLPath("/other")).Reply(reply.Created()))
+	scope2 := m.MustMock(Get(URLPath("/other")).Reply(Created()))
 
 	u, _ := url.Parse(p.URL())
 	client := &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(u)}}

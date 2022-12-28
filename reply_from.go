@@ -1,4 +1,4 @@
-package reply
+package mocha
 
 import (
 	"bytes"
@@ -9,8 +9,6 @@ import (
 	"net/url"
 	"strings"
 	"time"
-
-	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 var _ Reply = (*ProxyReply)(nil)
@@ -122,7 +120,7 @@ func (r *ProxyReply) Timeout(timeout time.Duration) *ProxyReply {
 }
 
 // Build builds a Reply based on the ProxyReply configuration.
-func (r *ProxyReply) Build(_ http.ResponseWriter, req *types.RequestValues) (*Stub, error) {
+func (r *ProxyReply) Build(_ http.ResponseWriter, req *RequestValues) (*Stub, error) {
 	path := req.RawRequest.URL.Path
 
 	if r.trimPrefix != "" {

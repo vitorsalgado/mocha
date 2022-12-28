@@ -19,7 +19,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/vitorsalgado/mocha/v3/internal/header"
-	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 var (
@@ -119,7 +118,7 @@ func (r *record) startRecording(ctx context.Context) {
 	}()
 }
 
-func (r *record) record(req *http.Request, rawReqBody []byte, res *reply.Stub) {
+func (r *record) record(req *http.Request, rawReqBody []byte, res *Stub) {
 	input := &recArgs{
 		request: recRequest{
 			path:   req.URL.Path,

@@ -10,7 +10,6 @@ import (
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 func TestPostJSON(t *testing.T) {
@@ -29,7 +28,7 @@ func TestPostJSON(t *testing.T) {
 			Header("test", Equal("hello")).
 			Body(
 				JSONPath("name", Equal("dev")), JSONPath("ok", Equal(true))).
-			Reply(reply.OK()))
+			Reply(mocha.OK()))
 
 		req := testutil.PostJSON(m.URL()+"/test", &jsonTestModel{Name: "dev", OK: true})
 		req.Header("test", "hello")
@@ -53,7 +52,7 @@ func TestPostJSON(t *testing.T) {
 		scoped := m.MustMock(mocha.Post(URLPath("/test")).
 			Header("test", Equal("hello")).
 			Body(EqualJSON(data)).
-			Reply(reply.OK()))
+			Reply(mocha.OK()))
 
 		req := testutil.PostJSON(m.URL()+"/test", data)
 		req.Header("test", "hello")
@@ -78,7 +77,7 @@ func TestPostJSON(t *testing.T) {
 		scoped := m.MustMock(mocha.Post(URLPath("/test")).
 			Header("test", Equal("hello")).
 			Body(EqualJSON(data1)).
-			Reply(reply.OK()))
+			Reply(mocha.OK()))
 
 		req := testutil.PostJSON(m.URL()+"/test", data2)
 		req.Header("test", "hello")
@@ -103,7 +102,7 @@ func TestPostJSON(t *testing.T) {
 		scoped := m.MustMock(mocha.Post(URLPath("/test")).
 			Header("test", Equal("hello")).
 			Body(EqualJSON(toMatch)).
-			Reply(reply.OK()))
+			Reply(mocha.OK()))
 
 		req := testutil.PostJSON(m.URL()+"/test", data)
 		req.Header("test", "hello")
@@ -128,7 +127,7 @@ func TestPostJSON(t *testing.T) {
 		scoped := m.MustMock(mocha.Post(URLPath("/test")).
 			Header("test", Equal("hello")).
 			Body(EqualJSON(exp)).
-			Reply(reply.OK()))
+			Reply(mocha.OK()))
 
 		req := testutil.PostJSON(m.URL()+"/test", body)
 		req.Header("test", "hello")
@@ -150,7 +149,7 @@ func TestPostJSON(t *testing.T) {
 		scoped := m.MustMock(mocha.Postf("/test").
 			Body(
 				JSONPath("name", Equal(nil)), JSONPath("ok", Equal(true))).
-			Reply(reply.OK()))
+			Reply(mocha.OK()))
 
 		req := testutil.Post(m.URL()+"/test", strings.NewReader(`{"name": null, "ok": true}`))
 		req.Header("Content-Type", "application/json")
@@ -172,7 +171,7 @@ func TestMalformedJSON_ShouldMatchOtherFieldsAndContinue(t *testing.T) {
 
 	scoped := m.MustMock(mocha.Postf("/test").
 		Header("test", Equal("hello")).
-		Reply(reply.OK()))
+		Reply(mocha.OK()))
 
 	req := testutil.Post(m.URL()+"/test", strings.NewReader(`{"test": "malformed_json", "pass`))
 	req.Header("test", "hello")

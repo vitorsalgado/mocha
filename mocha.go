@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strings"
 	"sync"
@@ -14,7 +15,6 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/mid"
 	"github.com/vitorsalgado/mocha/v3/internal/mid/recover"
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
 	"github.com/vitorsalgado/mocha/v3/x/event"
 )
 
@@ -24,6 +24,21 @@ import (
 // expected response from the actual server being mocked.
 // Basically, every request that doesn't match against to a Mock will return http.StatusTeapot.
 const StatusRequestDidNotMatch = http.StatusTeapot
+
+// RequestValues groups HTTP request data, including the parsed body, if any.
+type RequestValues struct {
+	// RawRequest is the original incoming http.Request.
+	RawRequest *http.Request
+
+	// URL is full request url.URL, including scheme, host, port.
+	URL *url.URL
+
+	// ParsedBody is the parsed http.Request body.
+	ParsedBody any
+
+	// App exposes Mocha instance associated with the incoming HTTP request.
+	App *Mocha
+}
 
 // Mocha is the base for the mock server.
 type Mocha struct {
@@ -153,7 +168,7 @@ func New(config ...Configurer) (m *Mocha) {
 		m.MustMock(Request().
 			MethodMatches(matcher.Anything()).
 			Priority(10).
-			Reply(reply.From(m.config.Forward.Target).
+			Reply(From(m.config.Forward.Target).
 				Headers(m.config.Forward.Headers).
 				ProxyHeaders(m.config.Forward.ProxyHeaders).
 				RemoveProxyHeaders(m.config.Forward.ProxyHeadersToRemove...).

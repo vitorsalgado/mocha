@@ -6,8 +6,6 @@ import (
 	"time"
 
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
-	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 var _ Builder = (*MockBuilder)(nil)
@@ -105,7 +103,7 @@ func (b *MockBuilder) Scheme(scheme string) *MockBuilder {
 		Target:  _targetScheme,
 		Key:     scheme,
 		Matcher: matcher.EqualIgnoreCase(scheme),
-		ValueSelector: func(r *types.RequestValues) any {
+		ValueSelector: func(r *RequestValues) any {
 			return r.URL.Scheme
 		},
 		Weight: _weightVeryLow,
@@ -127,7 +125,7 @@ func (b *MockBuilder) Method(methods ...string) *MockBuilder {
 
 	b.appendExpectation(&expectation{
 		Target:        _targetMethod,
-		ValueSelector: func(r *types.RequestValues) any { return r.RawRequest.Method },
+		ValueSelector: func(r *RequestValues) any { return r.RawRequest.Method },
 		Matcher:       m,
 		Weight:        _weightNone,
 	})
@@ -140,7 +138,7 @@ func (b *MockBuilder) Method(methods ...string) *MockBuilder {
 func (b *MockBuilder) MethodMatches(m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetMethod,
-		ValueSelector: func(r *types.RequestValues) any { return r.RawRequest.Method },
+		ValueSelector: func(r *RequestValues) any { return r.RawRequest.Method },
 		Matcher:       m,
 		Weight:        _weightNone,
 	})
@@ -153,7 +151,7 @@ func (b *MockBuilder) URL(m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetURL,
 		Key:           "url",
-		ValueSelector: func(r *types.RequestValues) any { return r.RawRequest.URL },
+		ValueSelector: func(r *RequestValues) any { return r.RawRequest.URL },
 		Matcher:       m,
 		Weight:        _weightRegular,
 	})
@@ -172,7 +170,7 @@ func (b *MockBuilder) URLPath(m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetURL,
 		Key:           "url_path",
-		ValueSelector: func(r *types.RequestValues) any { return r.RawRequest.URL.Path },
+		ValueSelector: func(r *RequestValues) any { return r.RawRequest.URL.Path },
 		Matcher:       m,
 		Weight:        _weightRegular,
 	})
@@ -191,7 +189,7 @@ func (b *MockBuilder) Header(key string, m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetHeader,
 		Key:           key,
-		ValueSelector: func(r *types.RequestValues) any { return r.RawRequest.Header.Get(key) },
+		ValueSelector: func(r *RequestValues) any { return r.RawRequest.Header.Get(key) },
 		Matcher:       m,
 		Weight:        _weightLow,
 	})
@@ -209,7 +207,7 @@ func (b *MockBuilder) Query(key string, m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetQuery,
 		Key:           key,
-		ValueSelector: func(r *types.RequestValues) any { return r.RawRequest.URL.Query().Get(key) },
+		ValueSelector: func(r *RequestValues) any { return r.RawRequest.URL.Query().Get(key) },
 		Matcher:       m,
 		Weight:        _weightVeryLow,
 	})
@@ -239,7 +237,7 @@ func (b *MockBuilder) Body(matcherList ...matcher.Matcher) *MockBuilder {
 
 	b.appendExpectation(&expectation{
 		Target:        _targetBody,
-		ValueSelector: func(r *types.RequestValues) any { return r.ParsedBody },
+		ValueSelector: func(r *RequestValues) any { return r.ParsedBody },
 		Matcher:       m,
 		Weight:        _weightHigh,
 	})
@@ -252,7 +250,7 @@ func (b *MockBuilder) FormField(field string, m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetForm,
 		Key:           field,
-		ValueSelector: func(r *types.RequestValues) any { return r.RawRequest.Form.Get(field) },
+		ValueSelector: func(r *RequestValues) any { return r.RawRequest.Form.Get(field) },
 		Matcher:       m,
 		Weight:        _weightVeryLow,
 	})
@@ -279,7 +277,7 @@ func (b *MockBuilder) Times(times int) *MockBuilder {
 func (b *MockBuilder) RequestMatches(m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetRequest,
-		ValueSelector: func(r *types.RequestValues) any { return r.ParsedBody },
+		ValueSelector: func(r *RequestValues) any { return r.ParsedBody },
 		Matcher:       m,
 		Weight:        _weightLow,
 	})
@@ -332,7 +330,7 @@ func (b *MockBuilder) Map(mapper Mapper) *MockBuilder {
 }
 
 // Reply defines a response mock to be served if this mock matches to a request.
-func (b *MockBuilder) Reply(rep reply.Reply) *MockBuilder {
+func (b *MockBuilder) Reply(rep Reply) *MockBuilder {
 	b.mock.Reply = rep
 	return b
 }
@@ -356,7 +354,7 @@ func (b *MockBuilder) Build() (*Mock, error) {
 			fmt.Errorf("no reply set. use .Reply() or any equivalent to set the expected mock response")
 	}
 
-	if r, ok := b.mock.Reply.(reply.Pre); ok {
+	if r, ok := b.mock.Reply.(Pre); ok {
 		err := r.Pre()
 		if err != nil {
 			return nil, err

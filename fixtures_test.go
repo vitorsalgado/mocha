@@ -1,15 +1,23 @@
 package mocha
 
 import (
+	"net/http"
+
 	"github.com/stretchr/testify/mock"
 )
 
-var _ TestingT = (*FakeNotifier)(nil)
+var _req, _ = http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 
-type FakeNotifier struct{ mock.Mock }
+func newReqValues(req *http.Request) *RequestValues {
+	return &RequestValues{RawRequest: req, URL: req.URL}
+}
 
-func NewFakeNotifier() *FakeNotifier {
-	t := &FakeNotifier{}
+var _ TestingT = (*fakeT)(nil)
+
+type fakeT struct{ mock.Mock }
+
+func newFakeT() *fakeT {
+	t := &fakeT{}
 	t.On("Helper").Return()
 	t.On("Logf", mock.Anything, mock.Anything).Return()
 	t.On("Errorf", mock.Anything, mock.Anything).Return()
@@ -18,16 +26,16 @@ func NewFakeNotifier() *FakeNotifier {
 	return t
 }
 
-func (m *FakeNotifier) Helper() {
+func (m *fakeT) Helper() {
 	m.Called()
 }
 
-func (m *FakeNotifier) Logf(format string, args ...any) {
+func (m *fakeT) Logf(format string, args ...any) {
 	m.Called(format, args)
 }
 
-func (m *FakeNotifier) Errorf(format string, args ...any) {
+func (m *fakeT) Errorf(format string, args ...any) {
 	m.Called(format, args)
 }
 
-func (m *FakeNotifier) Cleanup(_ func()) {}
+func (m *fakeT) Cleanup(_ func()) {}

@@ -13,7 +13,6 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 type testBodyParser struct{}
@@ -64,7 +63,7 @@ func TestConfig(t *testing.T) {
 
 		scoped := m.MustMock(
 			Getf("/test").
-				Reply(reply.OK()))
+				Reply(OK()))
 
 		req := testutil.Get(m.URL() + "/test")
 		res, err := req.Do()
@@ -83,7 +82,7 @@ func TestConfig(t *testing.T) {
 
 		scoped := m.MustMock(Post(matcher.URLPath("/test")).
 			Body(matcher.Equal(10)).
-			Reply(reply.OK()))
+			Reply(OK()))
 
 		req := testutil.Post(m.URL()+"/test", strings.NewReader("10"))
 		req.Header(header.ContentType, mimetype.TextPlain)
@@ -115,7 +114,7 @@ func TestConfig(t *testing.T) {
 
 		scoped := m.MustMock(
 			Get(matcher.URLPath("/test")).
-				Reply(reply.OK()))
+				Reply(OK()))
 
 		req := testutil.Get(m.URL() + "/test")
 		res, err := req.Do()
@@ -134,7 +133,7 @@ func TestConfig(t *testing.T) {
 
 		scoped := m.MustMock(
 			Get(matcher.URLPath("/test")).
-				Reply(reply.OK()))
+				Reply(OK()))
 
 		req := testutil.Get(m.URL() + "/test")
 		res, err := req.Do()

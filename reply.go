@@ -1,10 +1,8 @@
-package reply
+package mocha
 
 import (
 	"io"
 	"net/http"
-
-	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 // Reply defines the contract to configure an HTTP responder.
@@ -12,7 +10,7 @@ type Reply interface {
 
 	// Build returns an HTTP response Stub to be served.
 	// Return Stub nil if the HTTP response was rendered inside the Build function.
-	Build(w http.ResponseWriter, r *types.RequestValues) (*Stub, error)
+	Build(w http.ResponseWriter, r *RequestValues) (*Stub, error)
 }
 
 // Pre describes a Reply that has preparations steps to run on mocking building.

@@ -14,7 +14,6 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
 	"github.com/vitorsalgado/mocha/v3/x/event"
 )
 
@@ -36,8 +35,7 @@ func TestMocha(t *testing.T) {
 		Get(URLPath("/test")).
 			Header("test", Equal("hello")).
 			Query("filter", Equal("all")).
-			Reply(reply.
-				Created().
+			Reply(Created().
 				PlainText("hello world")))
 
 	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test?filter=all", nil)
@@ -61,9 +59,8 @@ func TestResponseMapper(t *testing.T) {
 	defer m.Close()
 
 	scoped := m.MustMock(Get(URLPath("/test")).
-		Reply(reply.
-			OK()).
-		Map(func(r *reply.Stub, rma *MapperIn) error {
+		Reply(OK()).
+		Map(func(r *Stub, rma *MapperIn) error {
 			r.Header.Add("x-test", rma.Request.Header.Get("x-param"))
 			return nil
 		}))
@@ -92,7 +89,7 @@ func TestResponseDelay(t *testing.T) {
 
 	scoped := m.MustMock(Get(URLPath("/test")).
 		Delay(delay).
-		Reply(reply.OK()))
+		Reply(OK()))
 
 	req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
 	res, err := req.Do()
@@ -119,7 +116,7 @@ func TestErrors(t *testing.T) {
 				func(_ any) (bool, error) {
 					return false, fmt.Errorf("failed")
 				})).
-			Reply(reply.OK()))
+			Reply(OK()))
 
 	res, err := testutil.Get(fmt.Sprintf("%s/test2", m.URL())).Do()
 
@@ -134,11 +131,11 @@ func TestMocha_Assertions(t *testing.T) {
 
 	defer m.Close()
 
-	fakeT := NewFakeNotifier()
+	fakeT := newFakeT()
 
 	scoped := m.MustMock(
 		Get(URLPath("/test-ok")).
-			Reply(reply.OK()))
+			Reply(OK()))
 
 	assert.Equal(t, 0, scoped.Hits())
 	assert.False(t, m.AssertCalled(fakeT))
@@ -165,9 +162,9 @@ func TestMocha_Enable_Disable(t *testing.T) {
 
 	m.MustMock(
 		Get(URLPath("/test-1")).
-			Reply(reply.OK()),
+			Reply(OK()),
 		Get(URLPath("/test-2")).
-			Reply(reply.OK()))
+			Reply(OK()))
 
 	res, err := testutil.Get(m.URL() + "/test-1").Do()
 
@@ -234,7 +231,7 @@ func TestMocha_Subscribe(t *testing.T) {
 
 	scoped := m.MustMock(
 		Get(URLPath("/test")).
-			Reply(reply.OK()))
+			Reply(OK()))
 
 	res, err := testutil.Get(m.URL() + "/test").Do()
 	assert.NoError(t, err)
@@ -255,8 +252,7 @@ func TestMocha_Silently(t *testing.T) {
 
 	scoped := m.MustMock(
 		Get(URLPath("/test")).
-			Reply(reply.
-				Created().
+			Reply(Created().
 				PlainText("hello world")))
 
 	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test?filter=all", nil)

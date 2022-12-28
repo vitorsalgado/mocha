@@ -1,7 +1,5 @@
 package mocha
 
-import "github.com/vitorsalgado/mocha/v3/types"
-
 // findResult holds the results for an attempt to match a mock to a request.
 type findResult struct {
 	Pass            bool
@@ -13,7 +11,7 @@ type findResult struct {
 // findMockForRequest tries to find a mock to the incoming HTTP request.
 // It runs all matchers of all eligible mocks on request until it finds one that matches every one of then.
 // It returns a findResult with the find result, along with a possible closest match.
-func findMockForRequest(storage mockStore, requestValues *types.RequestValues) *findResult {
+func findMockForRequest(storage mockStore, requestValues *RequestValues) *findResult {
 	var mocks = storage.GetEligible()
 	var matched *Mock
 	var weights = 0

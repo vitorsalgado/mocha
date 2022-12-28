@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 // Mock configuration fields
@@ -54,7 +53,7 @@ type MockExternalBuilder struct {
 	builder  *MockBuilder
 }
 
-func From(filename string) Builder {
+func MockFromFile(filename string) Builder {
 	return &MockExternalBuilder{filename: filename, builder: Request()}
 }
 
@@ -205,7 +204,7 @@ func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
 	// Begin Stub
 	// --
 
-	var rep reply.Reply
+	var rep Reply
 
 	if v.IsSet(_fResponse) {
 		rep, err = buildResponse(v.Sub(_fResponse))
@@ -217,12 +216,12 @@ func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
 			return nil, errors.New("[response_random.responses] requires at least one response definition")
 		}
 
-		var random *reply.RandomReply
+		var random *RandomReply
 
 		if v.IsSet(_fResponseRandomSeed) {
-			random = reply.RandWithCustom(rand.New(rand.NewSource(v.GetInt64(_fResponseRandomSeed))))
+			random = RandWithCustom(rand.New(rand.NewSource(v.GetInt64(_fResponseRandomSeed))))
 		} else {
-			random = reply.Rand()
+			random = Rand()
 		}
 
 		entries, ok := v.Get(_fResponseRandomEntries).([]any)
@@ -253,7 +252,7 @@ func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
 			return nil, errors.New("[response_sequence] requires at least one response definition")
 		}
 
-		seq := reply.Seq()
+		seq := Seq()
 
 		if v.IsSet(_fResponseSequenceAfterEnded) {
 			rr, err := buildResponse(v.Sub(_fResponseSequenceAfterEnded))
@@ -290,7 +289,7 @@ func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
 	} else {
 		// no response definition found.
 		// default to 200 (Pass) with nothing more.
-		rep = reply.OK()
+		rep = OK()
 	}
 
 	b.builder.Reply(rep)
@@ -301,11 +300,11 @@ func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
 	return b.builder.Build()
 }
 
-func buildResponse(v *viper.Viper) (reply.Reply, error) {
+func buildResponse(v *viper.Viper) (Reply, error) {
 	v.SetDefault(_fResponseStatus, http.StatusOK)
 	v.SetDefault(_fResponseIsTemplate, false)
 
-	res := reply.New()
+	res := NewReply()
 	res.Status(v.GetInt(_fResponseStatus))
 
 	for k, v := range v.GetStringMapString(_fResponseHeader) {

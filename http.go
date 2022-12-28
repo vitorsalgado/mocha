@@ -13,8 +13,6 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/httpx"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
-	"github.com/vitorsalgado/mocha/v3/reply"
-	"github.com/vitorsalgado/mocha/v3/types"
 	"github.com/vitorsalgado/mocha/v3/x/event"
 )
 
@@ -39,7 +37,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	parsedBody, rawBody, err := parseRequestBody(r, h.app.requestBodyParsers)
 
-	reqValues := &types.RequestValues{RawRequest: r, URL: rawURL, ParsedBody: parsedBody}
+	reqValues := &RequestValues{RawRequest: r, URL: rawURL, ParsedBody: parsedBody, App: h.app}
 	evtReq.Body = rawBody
 	h.app.listener.Emit(&event.OnRequest{Request: evtReq, StartedAt: start})
 
@@ -205,7 +203,7 @@ func (h *mockHandler) onError(w http.ResponseWriter, r *event.EvtReq, err error)
 	w.Write([]byte(fmt.Sprintf("An error occurred.\n%s", err.Error())))
 }
 
-func (h *mockHandler) buildResponseFromWriter(w http.ResponseWriter) (*reply.Stub, error) {
+func (h *mockHandler) buildResponseFromWriter(w http.ResponseWriter) (*Stub, error) {
 	rw := w.(*httpx.Rw)
 	result := rw.Result()
 
@@ -216,7 +214,7 @@ func (h *mockHandler) buildResponseFromWriter(w http.ResponseWriter) (*reply.Stu
 
 	defer result.Body.Close()
 
-	stub := &reply.Stub{
+	stub := &Stub{
 		StatusCode: result.StatusCode,
 		Header:     result.Header,
 		Cookies:    result.Cookies(),
