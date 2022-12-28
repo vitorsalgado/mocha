@@ -7,40 +7,32 @@ import (
 )
 
 const (
-	_mAll              = "all"
-	_mAllOf            = "allof"
-	_mAny              = "any"
-	_mAnyOf            = "anyof"
-	_mContain          = "contain"
-	_mContains         = "contains"
-	_mBoth             = "both"
-	_mEach             = "each"
-	_mEither           = "either"
-	_mEmpty            = "empty"
-	_mEndsWith         = "endswith"
-	_mEqual            = "equal"
-	_mEqualTo          = "equalTo"
-	_mEqualIgnoreCase  = "equalignorecase"
-	_mEqualJSON        = "equaljson"
-	_mHasKey           = "haskey"
-	_mHasPrefix        = "hasprefix"
-	_mStartsWith       = "startswith"
-	_mHasSuffix        = "hassuffix"
-	_mEqualsIgnoreCase = "equalsignorecase"
-	_mEqualFold        = "equalfold"
-	_mJSONPath         = "jsonpath"
-	_mField            = "field"
-	_mLen              = "len"
-	_mLowerCase        = "lowercase"
-	_mRegex            = "regex"
-	_mSome             = "some"
-	_mNot              = "not"
-	_mPresent          = "present"
-	_mSplit            = "split"
-	_mTrim             = "trim"
-	_mUpperCase        = "uppercase"
-	_mURLPath          = "urlpath"
-	_mXOR              = "xor"
+	_mAllOf             = "allof"
+	_mAnyOf             = "anyof"
+	_mContains          = "contains"
+	_mBoth              = "both"
+	_mEach              = "each"
+	_mEither            = "either"
+	_mEmpty             = "empty"
+	_mEqualTo           = "equalto"
+	_mEqualToIgnoreCase = "equaltoignorecase"
+	_mEqualJSON         = "equaljson"
+	_mHasKey            = "haskey"
+	_mHasPrefix         = "hasprefix"
+	_mHasSuffix         = "hassuffix"
+	_mJSONPath          = "jsonpath"
+	_mField             = "field"
+	_mLen               = "len"
+	_mLowerCase         = "lowercase"
+	_mRegex             = "regex"
+	_mSome              = "some"
+	_mNot               = "not"
+	_mPresent           = "present"
+	_mSplit             = "split"
+	_mTrim              = "trim"
+	_mUpperCase         = "uppercase"
+	_mURLPath           = "urlpath"
+	_mXOR               = "xor"
 )
 
 func BuildMatcher(v any) (m Matcher, err error) {
@@ -117,28 +109,25 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 
 	switch strings.ToLower(key) {
 
-	// TODO: use one
-	case _mAll, _mAllOf:
+	case _mAllOf:
 		matchers, err := extractMultipleMatchers(args)
 		if err != nil {
 			return nil,
-				fmt.Errorf("[%s, %s] error building matcher list. %w", _mAll, _mAllOf, err)
+				fmt.Errorf("[%s] error building matcher list. %w", _mAllOf, err)
 		}
 
 		return AllOf(matchers...), nil
 
-		// TODO: use one
-	case _mAny, _mAnyOf:
+	case _mAnyOf:
 		matchers, err := extractMultipleMatchers(args)
 		if err != nil {
 			return nil,
-				fmt.Errorf("[%s, %s] error building matcher list. %w", _mAny, _mAnyOf, err)
+				fmt.Errorf("[%s] error building matcher list. %w", _mAnyOf, err)
 		}
 
 		return AnyOf(matchers...), nil
 
-		// TODO: use one
-	case _mContain, _mContains:
+	case _mContains:
 		return Contain(args), nil
 
 	case _mBoth:
@@ -202,20 +191,14 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 	case _mEmpty:
 		return Empty(), nil
 
-		// TODO: use one
-	case _mEqual, _mEqualTo:
+	case _mEqualTo:
 		return Equal(args), nil
 
-		// TODO: use one
-	case _mEqualIgnoreCase, _mEqualsIgnoreCase, _mEqualFold:
+	case _mEqualToIgnoreCase:
 		str, ok := args.(string)
 		if !ok {
 			return nil,
-				fmt.Errorf(
-					"[%s, %s, %s] expects a string argument. got=%v",
-					_mEqualIgnoreCase, _mEqualsIgnoreCase, _mEqualFold,
-					args,
-				)
+				fmt.Errorf("[%s] expects a string argument. got=%v", _mEqualToIgnoreCase, args)
 		}
 
 		return EqualIgnoreCase(str), nil
@@ -236,37 +219,24 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 
 		return HaveKey(str), nil
 
-		// TODO: use one
-	case _mHasPrefix, _mStartsWith:
+	case _mHasPrefix:
 		str, ok := args.(string)
 		if !ok {
 			return nil,
-				fmt.Errorf(
-					"[%s, %s] expects a string argument. got=%v",
-					_mHasPrefix,
-					_mStartsWith,
-					args,
-				)
+				fmt.Errorf("[%s] expects a string argument. got=%v", _mHasPrefix, args)
 		}
 
 		return HasPrefix(str), nil
 
-		// TODO: use one
-	case _mHasSuffix, _mEndsWith:
+	case _mHasSuffix:
 		str, ok := args.(string)
 		if !ok {
 			return nil,
-				fmt.Errorf(
-					"[%s, %s] expects a string argument. got=%v",
-					_mHasSuffix,
-					_mEndsWith,
-					args,
-				)
+				fmt.Errorf("[%s] expects a string argument. got=%v", _mHasSuffix, args)
 		}
 
 		return HasSuffix(str), nil
 
-		// TODO: use one
 	case _mJSONPath, _mField:
 		a, ok := args.([]any)
 		if !ok {

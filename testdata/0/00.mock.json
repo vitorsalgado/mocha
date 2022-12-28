@@ -5,16 +5,16 @@
     "query": {
       "term": "test",
       "filter": ["contains", "all"],
-      "page": ["allOf", "present", ["equal", 10]]
+      "page": ["allOf", "present", ["equalTo", 10]]
     },
     "body": [
       "allOf",
-      ["jsonpath", "name", ["equal", "john doe"]],
+      ["jsonpath", "name", ["equalTo", "john doe"]],
       [
         "jsonpath",
         "job",
         [
-          "equal",
+          "equalto",
           {
             "value": "DEV",
             "ignoreCase": true
