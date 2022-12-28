@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
@@ -34,7 +35,7 @@ const (
 // New creates a new StdReply. Prefer to use factory functions for each status code.
 func New() *StdReply {
 	return &StdReply{
-		response: &Stub{Cookies: make([]*http.Cookie, 0), Header: make(http.Header)},
+		response: &Stub{Cookies: make([]*http.Cookie, 0), Header: make(http.Header), Trailer: make(http.Header)},
 		bodyType: _bodyDefault}
 }
 
@@ -110,6 +111,12 @@ func (rep *StdReply) Header(key, value string) *StdReply {
 	return rep
 }
 
+// Trailer adds a trailer header to the response Stub.
+func (rep *StdReply) Trailer(key, value string) *StdReply {
+	rep.response.Trailer.Add(key, value)
+	return rep
+}
+
 // Cookie adds a http.Cookie to the Stub.
 func (rep *StdReply) Cookie(cookie *http.Cookie) *StdReply {
 	rep.response.Cookies = append(rep.response.Cookies, cookie)
@@ -125,13 +132,13 @@ func (rep *StdReply) ExpireCookie(cookie http.Cookie) *StdReply {
 
 // Body defines the response body using a []byte.
 func (rep *StdReply) Body(value []byte) *StdReply {
-	rep.response.Body = value
+	rep.response.Body = bytes.NewReader(value)
 	return rep
 }
 
 // BodyText defines the response body using a string.
 func (rep *StdReply) BodyText(text string) *StdReply {
-	rep.response.Body = []byte(text)
+	rep.response.Body = strings.NewReader(text)
 	return rep
 }
 
@@ -143,22 +150,14 @@ func (rep *StdReply) BodyJSON(data any) *StdReply {
 		return rep
 	}
 
-	rep.response.Body = b
-	rep.Header(header.ContentType, mimetype.JSON)
+	rep.response.Body = bytes.NewReader(b)
 
 	return rep
 }
 
 // BodyReader defines the response body using the given io.Reader.
 func (rep *StdReply) BodyReader(reader io.Reader) *StdReply {
-	b, err := io.ReadAll(reader)
-	if err != nil {
-		rep.err = err
-		return rep
-	}
-
-	rep.response.Body = b
-
+	rep.response.Body = reader
 	return rep
 }
 
@@ -183,16 +182,15 @@ func (rep *StdReply) BodyTemplate(tpl any, extras any) *StdReply {
 }
 
 // JSON sets the response to application/json.
-func (rep *StdReply) JSON() *StdReply {
+func (rep *StdReply) JSON(payload any) *StdReply {
 	rep.Header(header.ContentType, mimetype.JSON)
-	return rep
+	return rep.BodyJSON(payload)
 }
 
 // PlainText defines a text/plain response with the given text body.
-func (rep *StdReply) PlainText(value string) *StdReply {
-	rep.response.Body = []byte(value)
+func (rep *StdReply) PlainText(text string) *StdReply {
 	rep.Header(header.ContentType, mimetype.TextPlain)
-	return rep
+	return rep.BodyText(text)
 }
 
 // Gzip indicates that the response should be gzip encoded.
@@ -208,10 +206,15 @@ func (rep *StdReply) Pre() error {
 
 	switch rep.bodyType {
 	case _bodyGZIP:
+		b, err := io.ReadAll(rep.response.Body)
+		if err != nil {
+			return err
+		}
+
 		buf := new(bytes.Buffer)
 		gz := gzip.NewWriter(buf)
 
-		_, err := gz.Write(rep.response.Body)
+		_, err = gz.Write(b)
 		if err != nil {
 			return err
 		}
@@ -221,7 +224,7 @@ func (rep *StdReply) Pre() error {
 			return err
 		}
 
-		rep.response.Body = buf.Bytes()
+		rep.response.Body = buf
 	}
 
 	return nil
@@ -236,7 +239,7 @@ func (rep *StdReply) Build(_ http.ResponseWriter, r *types.RequestValues) (*Stub
 	switch rep.bodyType {
 	case _bodyTemplate:
 		buf := &bytes.Buffer{}
-		reqExtra := templateRequest{r.RawRequest.Method, *r.URL, r.RawRequest.Header.Clone(), r.Body}
+		reqExtra := templateRequest{r.RawRequest.Method, *r.URL, r.RawRequest.Header.Clone(), r.ParsedBody}
 		model := &templateData{Request: reqExtra, Extras: rep.templateExtras}
 
 		err := rep.template.Render(buf, model)
@@ -244,7 +247,7 @@ func (rep *StdReply) Build(_ http.ResponseWriter, r *types.RequestValues) (*Stub
 			return nil, err
 		}
 
-		rep.response.Body = buf.Bytes()
+		rep.response.Body = buf
 	}
 
 	return rep.response, nil

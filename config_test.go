@@ -158,7 +158,7 @@ func TestConfig_WithFunctions(t *testing.T) {
 		WithServer(&httpTestServer{}),
 		WithHandlerDecorator(func(handler http.Handler) http.Handler { return handler }),
 		WithLogLevel(LogInfo),
-		WithParams(reply.Parameters()),
+		WithParams(Parameters()),
 		WithDirs("test", "dev"),
 		WithLoader(&FileLoader{}),
 		WithProxy(&ProxyConfig{}, &ProxyConfig{}))
@@ -171,7 +171,7 @@ func TestConfig_WithFunctions(t *testing.T) {
 	assert.Equal(t, &_defaultCORSConfig, conf.CORS)
 	assert.NotNil(t, conf.HandlerDecorator)
 	assert.Equal(t, LogInfo, conf.LogLevel)
-	assert.Equal(t, reply.Parameters(), conf.Parameters)
+	assert.Equal(t, Parameters(), conf.Parameters)
 	assert.Equal(t, []string{ConfigMockFilePattern, "test", "dev"}, conf.Directories)
 	assert.Len(t, conf.Loaders, 1)
 	assert.NotNil(t, conf.Proxy)
@@ -190,7 +190,7 @@ func TestConfig_Builder(t *testing.T) {
 		Server(&httpTestServer{}).
 		HandlerDecorator(func(handler http.Handler) http.Handler { return handler }).
 		LogLevel(LogInfo).
-		Parameters(reply.Parameters()).
+		Parameters(Parameters()).
 		Dirs("test", "dev").
 		Loader(&FileLoader{}).
 		Proxy(&ProxyConfig{}, &ProxyConfig{}))
@@ -203,7 +203,7 @@ func TestConfig_Builder(t *testing.T) {
 	assert.Equal(t, &_defaultCORSConfig, conf.CORS)
 	assert.NotNil(t, conf.HandlerDecorator)
 	assert.Equal(t, LogInfo, conf.LogLevel)
-	assert.Equal(t, reply.Parameters(), conf.Parameters)
+	assert.Equal(t, Parameters(), conf.Parameters)
 	assert.Equal(t, []string{ConfigMockFilePattern, "test", "dev"}, conf.Directories)
 	assert.Len(t, conf.Loaders, 1)
 	assert.NotNil(t, conf.Proxy)

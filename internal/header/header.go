@@ -3,13 +3,13 @@ package header
 
 // Common HTTP headers.
 const (
-	Accept        = "Accept"
-	ContentType   = "Content-Type"
-	Vary          = "Vary"
-	Origin        = "Origin"
-	ContentLength = "Content-length"
-	Connection    = "Connection"
-
+	Accept                        = "Accept"
+	ContentType                   = "Content-Type"
+	Vary                          = "Vary"
+	Origin                        = "Origin"
+	ContentLength                 = "Content-length"
+	Connection                    = "Connection"
+	Trailer                       = "Trailer"
 	AccessControlAllowOrigin      = "Access-Control-Allow-Origin"
 	AccessControlAllowMethods     = "Access-Control-Allow-Methods"
 	AccessControlAllowHeaders     = "Access-Control-Allow-Header"

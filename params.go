@@ -1,4 +1,4 @@
-package reply
+package mocha
 
 // Params defines a contract for a generic parameters repository.
 type Params interface {

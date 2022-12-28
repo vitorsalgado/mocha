@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/vitorsalgado/mocha/v3/internal/colorize"
-	"github.com/vitorsalgado/mocha/v3/reply"
 )
 
 type LogLevel int
@@ -73,7 +72,7 @@ type Config struct {
 	LogLevel LogLevel
 
 	// Parameters sets a custom reply parameters store.
-	Parameters reply.Params
+	Parameters Params
 
 	// Directories configures glob patterns to load mock from the file system.
 	Directories []string
@@ -218,7 +217,7 @@ func (cb *ConfigBuilder) LogLevel(l LogLevel) *ConfigBuilder {
 }
 
 // Parameters sets a custom reply parameters store.
-func (cb *ConfigBuilder) Parameters(params reply.Params) *ConfigBuilder {
+func (cb *ConfigBuilder) Parameters(params Params) *ConfigBuilder {
 	cb.conf.Parameters = params
 	return cb
 }
@@ -334,7 +333,7 @@ func WithLogLevel(level LogLevel) Configurer {
 }
 
 // WithParams configures a custom reply.Params.
-func WithParams(params reply.Params) Configurer {
+func WithParams(params Params) Configurer {
 	return configFunc(func(c *Config) { c.Parameters = params })
 }
 

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
@@ -17,24 +18,22 @@ import (
 
 // Mock configuration fields
 const (
-	_fName                  = "name"
-	_fEnabled               = "enabled"
-	_fPriority              = "priority"
-	_fDelayInMs             = "delay_ms"
-	_fScenarioName          = "scenario.name"
-	_fScenarioRequiredState = "scenario.required_state"
-	_fScenarioNewState      = "scenario.new_state"
-
-	_fRequestMethod       = "request.method"
-	_fRequestURL          = "request.url"
-	_fRequestURLMatch     = "request.url_match"
-	_fRequestURLPath      = "request.url_path"
-	_fRequestURLPathMatch = "request.url_path_match"
-	_fRequestQuery        = "request.query"
-	_fRequestHeader       = "request.header"
-	_fRequestForm         = "request.form"
-	_fRequestBody         = "request.body"
-
+	_fName                       = "name"
+	_fEnabled                    = "enabled"
+	_fPriority                   = "priority"
+	_fDelayInMs                  = "delay_ms"
+	_fScenarioName               = "scenario.name"
+	_fScenarioRequiredState      = "scenario.required_state"
+	_fScenarioNewState           = "scenario.new_state"
+	_fRequestMethod              = "request.method"
+	_fRequestURL                 = "request.url"
+	_fRequestURLMatch            = "request.url_match"
+	_fRequestURLPath             = "request.url_path"
+	_fRequestURLPathMatch        = "request.url_path_match"
+	_fRequestQuery               = "request.query"
+	_fRequestHeader              = "request.header"
+	_fRequestForm                = "request.form"
+	_fRequestBody                = "request.body"
 	_fResponse                   = "response"
 	_fResponseStatus             = "response.status"
 	_fResponseHeader             = "response.header"
@@ -47,6 +46,7 @@ const (
 	_fResponseSequenceAfterEnded = "response_sequence.after_ended"
 	_fResponseRandom             = "response_random"
 	_fResponseRandomEntries      = "response_random.responses"
+	_fResponseRandomSeed         = "response_random.seed"
 )
 
 type MockExternalBuilder struct {
@@ -217,7 +217,14 @@ func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
 			return nil, errors.New("[response_random.responses] requires at least one response definition")
 		}
 
-		random := reply.Rand()
+		var random *reply.RandomReply
+
+		if v.IsSet(_fResponseRandomSeed) {
+			random = reply.RandWithCustom(rand.New(rand.NewSource(v.GetInt64(_fResponseRandomSeed))))
+		} else {
+			random = reply.Rand()
+		}
+
 		entries, ok := v.Get(_fResponseRandomEntries).([]any)
 		if !ok {
 			return nil, errors.New("[response_random.response] requires an array of responses")
@@ -255,7 +262,7 @@ func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
 					fmt.Errorf("[response_response.after_ended] building error. %w", err)
 			}
 
-			seq.AfterEnded(rr)
+			seq.AfterSequenceEnded(rr)
 		}
 
 		entries, ok := v.Get(_fResponseSequenceEntries).([]any)

@@ -226,11 +226,11 @@ func (b *MockBuilder) Queryf(key string, value string, a ...any) *MockBuilder {
 // If request contains a JSON body, you can provide multiple matchers to several fields.
 // Example:
 //
-//	m.Body(JSONPath("name", EqualTo("test")), JSONPath("address.street", ToContains("nowhere")))
+//	m.ParsedBody(JSONPath("name", EqualTo("test")), JSONPath("address.street", ToContains("nowhere")))
 func (b *MockBuilder) Body(matcherList ...matcher.Matcher) *MockBuilder {
 	var m matcher.Matcher
 	if len(matcherList) == 0 {
-		panic(".Body() func requires at least one matcher.Matcher")
+		panic(".ParsedBody() func requires at least one matcher.Matcher")
 	} else if len(matcherList) == 1 {
 		m = matcherList[0]
 	} else {
@@ -239,7 +239,7 @@ func (b *MockBuilder) Body(matcherList ...matcher.Matcher) *MockBuilder {
 
 	b.appendExpectation(&expectation{
 		Target:        _targetBody,
-		ValueSelector: func(r *types.RequestValues) any { return r.Body },
+		ValueSelector: func(r *types.RequestValues) any { return r.ParsedBody },
 		Matcher:       m,
 		Weight:        _weightHigh,
 	})
@@ -279,7 +279,7 @@ func (b *MockBuilder) Times(times int) *MockBuilder {
 func (b *MockBuilder) RequestMatches(m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetRequest,
-		ValueSelector: func(r *types.RequestValues) any { return r.Body },
+		ValueSelector: func(r *types.RequestValues) any { return r.ParsedBody },
 		Matcher:       m,
 		Weight:        _weightLow,
 	})

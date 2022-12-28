@@ -44,7 +44,7 @@ func TestForward(t *testing.T) {
 			From(dest.URL).
 			ProxyHeader("x-test", "ok").
 			Header("x-res", "example").
-			RemoveProxyHeader("x-del")))
+			RemoveProxyHeaders("x-del")))
 
 	data := strings.NewReader("hello world")
 	req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", data)

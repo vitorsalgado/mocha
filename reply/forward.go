@@ -1,28 +1,37 @@
 package reply
 
 import (
+	"bytes"
+	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/vitorsalgado/mocha/v3/types"
 )
 
 var _ Reply = (*ProxyReply)(nil)
 
-var _forbiddenHeaders = []string{
-	"Connection",
-	"Keep-Alive",
-	"ServeHTTP-Authenticate",
-	"ServeHTTP-Authorization",
-	"TE",
-	"Trailers",
-	"Transfer-Encoding",
-	"Upgrade",
-}
+var (
+	_client           = &http.Client{}
+	_forbiddenHeaders = []string{
+		"Connection",
+		"Keep-Alive",
+		"ServeHTTP-Authenticate",
+		"ServeHTTP-Authorization",
+		"TE",
+		"Trailer",
+		"Transfer-Encoding",
+		"Upgrade",
+	}
+)
 
-type FromTypes interface{ string | *url.URL }
+const _defaultTimeout = 30 * time.Second
+
+type FromTypes interface{ string | *url.URL | url.URL }
 
 // ProxyReply represents a response stub that will be the response "proxied" from the specified target.
 // Use From to init a new ProxyReply.
@@ -33,6 +42,7 @@ type ProxyReply struct {
 	proxyHeadersToRemove []string
 	trimPrefix           string
 	trimSuffix           string
+	timeout              time.Duration
 }
 
 // From inits a ProxyReply with the given target URL.
@@ -45,11 +55,12 @@ func From[T FromTypes](target T) *ProxyReply {
 
 		u, err = url.Parse(e)
 		if err != nil {
-			panic(err)
+			panic(fmt.Errorf("[reply.From()] unable to url.Parse the value \"%s\". reason=%w", e, err))
 		}
-
 	case *url.URL:
 		u = e
+	case url.URL:
+		u = &e
 	}
 
 	return &ProxyReply{
@@ -57,6 +68,7 @@ func From[T FromTypes](target T) *ProxyReply {
 		headers:              make(http.Header),
 		proxyHeaders:         make(http.Header),
 		proxyHeadersToRemove: make([]string, 0),
+		timeout:              _defaultTimeout,
 	}
 }
 
@@ -84,15 +96,9 @@ func (r *ProxyReply) ProxyHeaders(header http.Header) *ProxyReply {
 	return r
 }
 
-// RemoveProxyHeader removes the given header before sending the request to the proxy target.
-func (r *ProxyReply) RemoveProxyHeader(header string) *ProxyReply {
-	r.proxyHeadersToRemove = append(r.proxyHeadersToRemove, header)
-	return r
-}
-
-// RemoveProxyHeaders removes the given headers before sending the request to the proxy target.
-func (r *ProxyReply) RemoveProxyHeaders(headers []string) *ProxyReply {
-	r.proxyHeadersToRemove = append(r.proxyHeadersToRemove, headers...)
+// RemoveProxyHeaders removes the given header before sending the request to the proxy target.
+func (r *ProxyReply) RemoveProxyHeaders(header ...string) *ProxyReply {
+	r.proxyHeadersToRemove = append(r.proxyHeadersToRemove, header...)
 	return r
 }
 
@@ -108,8 +114,15 @@ func (r *ProxyReply) TrimSuffix(suffix string) *ProxyReply {
 	return r
 }
 
+// Timeout sets the timeout for the target HTTP request.
+// Defaults to 30s.
+func (r *ProxyReply) Timeout(timeout time.Duration) *ProxyReply {
+	r.timeout = timeout
+	return r
+}
+
 // Build builds a Reply based on the ProxyReply configuration.
-func (r *ProxyReply) Build(w http.ResponseWriter, req *types.RequestValues) (*Stub, error) {
+func (r *ProxyReply) Build(_ http.ResponseWriter, req *types.RequestValues) (*Stub, error) {
 	path := req.RawRequest.URL.Path
 
 	if r.trimPrefix != "" {
@@ -136,10 +149,17 @@ func (r *ProxyReply) Build(w http.ResponseWriter, req *types.RequestValues) (*St
 		}
 	}
 
-	res, err := http.DefaultClient.Do(req.RawRequest)
+	ctx, cancel := context.WithTimeout(req.RawRequest.Context(), r.timeout)
+	defer cancel()
+
+	res, err := _client.Do(req.RawRequest.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
+
+	defer res.Body.Close()
+
+	stub := &Stub{Header: make(http.Header, len(res.Header))}
 
 	for _, h := range _forbiddenHeaders {
 		res.Header.Del(h)
@@ -147,22 +167,25 @@ func (r *ProxyReply) Build(w http.ResponseWriter, req *types.RequestValues) (*St
 
 	for key, values := range r.headers {
 		for _, value := range values {
-			w.Header().Add(key, value)
+			stub.Header.Add(key, value)
 		}
 	}
 
-	for key, values := range res.Header {
-		for _, value := range values {
-			w.Header().Add(key, value)
-		}
-	}
+	stub.StatusCode = res.StatusCode
 
-	w.WriteHeader(res.StatusCode)
-
-	_, err = io.Copy(w, res.Body)
+	b, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	return nil, nil
+	stub.Body = bytes.NewReader(b)
+	stub.Trailer = make(http.Header, len(res.Trailer))
+
+	for key, values := range res.Trailer {
+		for _, value := range values {
+			stub.Trailer.Add(key, value)
+		}
+	}
+
+	return stub, nil
 }

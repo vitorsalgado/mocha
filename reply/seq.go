@@ -12,10 +12,10 @@ var _ Reply = (*SequentialReply)(nil)
 
 // SequentialReply configures a sequence of replies to be used after a mock.Mock is matched to a http.Request.
 type SequentialReply struct {
-	replyOnNotFound Reply
-	replies         []Reply
-	hits            int
-	mu              sync.Mutex
+	replyAfterSeqEnded Reply
+	replies            []Reply
+	hits               int
+	mu                 sync.Mutex
 }
 
 // Seq creates a new SequentialReply.
@@ -23,9 +23,9 @@ func Seq(reply ...Reply) *SequentialReply {
 	return &SequentialReply{replies: reply}
 }
 
-// AfterEnded sets a response to be used once the sequence is over.
-func (r *SequentialReply) AfterEnded(reply Reply) *SequentialReply {
-	r.replyOnNotFound = reply
+// AfterSequenceEnded sets a response to be used once the sequence is over.
+func (r *SequentialReply) AfterSequenceEnded(reply Reply) *SequentialReply {
+	r.replyAfterSeqEnded = reply
 	return r
 }
 
@@ -58,8 +58,8 @@ func (r *SequentialReply) Build(w http.ResponseWriter, req *types.RequestValues)
 	}
 
 	if reply == nil {
-		if r.replyOnNotFound != nil {
-			return r.replyOnNotFound.Build(w, req)
+		if r.replyAfterSeqEnded != nil {
+			return r.replyAfterSeqEnded.Build(w, req)
 		}
 
 		return nil,

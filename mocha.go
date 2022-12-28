@@ -35,7 +35,7 @@ type Mocha struct {
 	ctx                context.Context
 	cancel             context.CancelFunc
 	requestBodyParsers []RequestBodyParser
-	params             reply.Params
+	params             Params
 	listener           *event.Listener
 	scopes             []*Scoped
 	loaders            []Loader
@@ -93,7 +93,7 @@ func New(config ...Configurer) (m *Mocha) {
 
 	middlewares = append(middlewares, conf.Middlewares...)
 
-	params := reply.Parameters()
+	params := Parameters()
 	if conf.Parameters != nil {
 		params = conf.Parameters
 	}
@@ -156,7 +156,7 @@ func New(config ...Configurer) (m *Mocha) {
 			Reply(reply.From(m.config.Forward.Target).
 				Headers(m.config.Forward.Headers).
 				ProxyHeaders(m.config.Forward.ProxyHeaders).
-				RemoveProxyHeaders(m.config.Forward.ProxyHeadersToRemove).
+				RemoveProxyHeaders(m.config.Forward.ProxyHeadersToRemove...).
 				TrimPrefix(m.config.Forward.TrimPrefix).
 				TrimSuffix(m.config.Forward.TrimSuffix)))
 	}
@@ -277,7 +277,7 @@ func (m *Mocha) MustMock(builders ...Builder) *Scoped {
 }
 
 // Parameters returns an editable parameters reply.Params that will be available when build a reply.Reply.
-func (m *Mocha) Parameters() reply.Params {
+func (m *Mocha) Parameters() Params {
 	return m.params
 }
 

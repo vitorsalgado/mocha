@@ -14,7 +14,6 @@ import (
 
 func TestForward(t *testing.T) {
 	t.Run("should forward and respond basic GET", func(t *testing.T) {
-		w := httptest.NewRecorder()
 		dest := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "/path/test/example", r.URL.Path)
 			assert.Equal(t, "all", r.URL.Query().Get("filter"))
@@ -34,19 +33,21 @@ func TestForward(t *testing.T) {
 
 		res, err := From(dest.URL).
 			ProxyHeader("x-proxy", "proxied").
-			RemoveProxyHeader("x-to-be-removed").
+			RemoveProxyHeaders("x-to-be-removed").
 			Header("x-res", "response").
-			Build(w, newReqValues(req))
+			Build(nil, newReqValues(req))
+
+		require.NoError(t, err)
+
+		b, err := io.ReadAll(res.Body)
 
 		assert.NoError(t, err)
-		assert.Nil(t, res)
-		assert.Equal(t, http.StatusCreated, w.Code)
-		assert.Equal(t, "hello world", w.Body.String())
-		assert.Equal(t, "response", w.Header().Get("x-res"))
+		assert.Equal(t, http.StatusCreated, res.StatusCode)
+		assert.Equal(t, "hello world", string(b))
+		assert.Equal(t, "response", res.Header.Get("x-res"))
 	})
 
 	t.Run("should forward and respond POST with body", func(t *testing.T) {
-		w := httptest.NewRecorder()
 		dest := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 
@@ -64,16 +65,18 @@ func TestForward(t *testing.T) {
 
 		u, _ := url.Parse(dest.URL)
 		forward := From(u)
-		res, err := forward.Build(w, newReqValues(req))
+		res, err := forward.Build(nil, newReqValues(req))
+
+		require.NoError(t, err)
+
+		b, err := io.ReadAll(res.Body)
 
 		assert.NoError(t, err)
-		assert.Nil(t, res)
-		assert.Equal(t, http.StatusOK, w.Code)
-		assert.Equal(t, expected, w.Body.String())
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+		assert.Equal(t, expected, string(b))
 	})
 
 	t.Run("should forward and respond a No Content", func(t *testing.T) {
-		w := httptest.NewRecorder()
 		dest := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusNoContent)
 		}))
@@ -83,16 +86,18 @@ func TestForward(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 
 		forward := From(dest.URL)
-		res, err := forward.Build(w, newReqValues(req))
+		res, err := forward.Build(nil, newReqValues(req))
+
+		require.NoError(t, err)
+
+		b, err := io.ReadAll(res.Body)
 
 		assert.NoError(t, err)
-		assert.Nil(t, res)
-		assert.Equal(t, http.StatusNoContent, w.Code)
-		assert.Equal(t, "", w.Body.String())
+		assert.Equal(t, http.StatusNoContent, res.StatusCode)
+		assert.Equal(t, "", string(b))
 	})
 
 	t.Run("should remove prefix from URL", func(t *testing.T) {
-		w := httptest.NewRecorder()
 		dest := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "/example", r.URL.Path)
 			assert.Equal(t, "all", r.URL.Query().Get("filter"))
@@ -103,15 +108,13 @@ func TestForward(t *testing.T) {
 		defer dest.Close()
 
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080/path/test/example?filter=all", nil)
-		res, err := From(dest.URL).TrimPrefix("/path/test").Build(w, newReqValues(req))
+		res, err := From(dest.URL).TrimPrefix("/path/test").Build(nil, newReqValues(req))
 
 		assert.NoError(t, err)
-		assert.Nil(t, res)
-		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
 
 	t.Run("should remove suffix from URL", func(t *testing.T) {
-		w := httptest.NewRecorder()
 		dest := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			assert.Equal(t, "/path/test", r.URL.Path)
 			assert.Equal(t, "all", r.URL.Query().Get("filter"))
@@ -122,16 +125,24 @@ func TestForward(t *testing.T) {
 		defer dest.Close()
 
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080/path/test/example?filter=all", nil)
-		res, err := From(dest.URL).TrimSuffix("/example").Build(w, newReqValues(req))
+		res, err := From(dest.URL).TrimSuffix("/example").Build(nil, newReqValues(req))
 
 		assert.NoError(t, err)
-		assert.Nil(t, res)
-		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
 
 	t.Run("should panic if the given raw target cannot be parsed to a URL", func(t *testing.T) {
 		assert.Panics(t, func() {
 			From(" https://fail test  ")
 		})
+	})
+
+	t.Run("should accept url.URL pointer and non-pointer", func(t *testing.T) {
+		addr := "https://localhost:8080"
+		u, _ := url.Parse(addr)
+
+		assert.Equal(t, From(u).target.String(), addr)
+		assert.Equal(t, From(*u).target.String(), addr)
+		assert.Equal(t, From(addr).target.String(), addr)
 	})
 }

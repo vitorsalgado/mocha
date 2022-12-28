@@ -59,7 +59,7 @@ type Builder interface {
 type PostActionIn struct {
 	Request  *http.Request
 	Response *reply.Stub
-	Params   reply.Params
+	Params   Params
 }
 
 // PostAction defines the contract for an action that will be executed after serving a mocked HTTP response.
@@ -75,7 +75,7 @@ type Mapper func(res *reply.Stub, args *MapperIn) error
 // MapperIn represents the expected arguments for every Mapper.
 type MapperIn struct {
 	Request    *http.Request
-	Parameters reply.Params
+	Parameters Params
 }
 
 type (

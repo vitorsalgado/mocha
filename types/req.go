@@ -13,6 +13,6 @@ type RequestValues struct {
 	// URL is full request url.URL, including scheme, host, port.
 	URL *url.URL
 
-	// Body is the parsed http.Request body.
-	Body any
+	// ParsedBody is the parsed http.Request body.
+	ParsedBody any
 }

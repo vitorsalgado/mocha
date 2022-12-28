@@ -294,7 +294,7 @@ func TestMocha_MatcherCompositions(t *testing.T) {
 	// res, err := http.DefaultClient.Do(req)
 	// assert.NoError(t, err)
 	//
-	// body, err := io.ReadAll(res.Body)
+	// body, err := io.ReadAll(res.ParsedBody)
 	//
 	// assert.NoError(t, err)
 	// assert.True(t, scoped.HasBeenCalled())

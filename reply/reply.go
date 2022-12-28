@@ -1,6 +1,7 @@
 package reply
 
 import (
+	"io"
 	"net/http"
 
 	"github.com/vitorsalgado/mocha/v3/types"
@@ -26,5 +27,11 @@ type Stub struct {
 	StatusCode int
 	Header     http.Header
 	Cookies    []*http.Cookie
-	Body       []byte
+	Body       io.Reader
+	Trailer    http.Header
+}
+
+// BodyBytes reads and returns all body contents.
+func (s *Stub) BodyBytes() ([]byte, error) {
+	return io.ReadAll(s.Body)
 }

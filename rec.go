@@ -1,10 +1,12 @@
 package mocha
 
 import (
+	"bufio"
 	"context"
 	"encoding/hex"
 	"fmt"
 	"hash/fnv"
+	"io"
 	"log"
 	"mime"
 	"net/http"
@@ -77,7 +79,7 @@ type recRequest struct {
 type recResponse struct {
 	status int
 	header http.Header
-	body   []byte
+	body   io.Reader
 }
 
 type record struct {
@@ -152,7 +154,7 @@ func (r *record) process(arg *recArgs) error {
 	requestHeaders := make(map[string]string)
 	responseHeaders := make(map[string]string)
 	query := make(map[string]string, len(arg.request.query))
-	hasResBody := len(arg.response.body) > 0
+	hasResBody := arg.response.body != nil
 	bsha := ""
 
 	for _, h := range r.config.RequestHeaders {
@@ -207,6 +209,8 @@ func (r *record) process(arg *recArgs) error {
 	}
 
 	if hasResBody {
+		scanner := bufio.NewScanner(arg.response.body)
+
 		if r.config.SaveBodyToFile {
 			mockBodyFile := name + ".bin"
 			if len(ext) > 0 {
@@ -220,22 +224,29 @@ func (r *record) process(arg *recArgs) error {
 
 			defer b.Close()
 
-			_, err = b.Write(arg.response.body)
-			if err != nil {
-				return err
+			v.Set(_fResponseBodyFile, mockBodyFile)
+
+			for scanner.Scan() {
+				_, _ = b.Write(scanner.Bytes())
+			}
+		} else {
+			buf := strings.Builder{}
+
+			for scanner.Scan() {
+				_, _ = buf.Write(scanner.Bytes())
 			}
 
-			v.Set(_fResponseBodyFile, mockBodyFile)
-		} else {
-			v.Set(_fResponseBody, string(arg.response.body))
+			v.Set(_fResponseBody, buf.String())
+		}
+
+		if scanner.Err() != nil {
+			return scanner.Err()
 		}
 	}
 
-	if r.config.Save {
-		err = v.WriteConfigAs(mockFile)
-		if err != nil {
-			return err
-		}
+	err = v.WriteConfigAs(mockFile)
+	if err != nil {
+		return err
 	}
 
 	return nil

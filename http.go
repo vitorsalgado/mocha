@@ -1,6 +1,7 @@
 package mocha
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -24,18 +25,21 @@ type mockHandler struct {
 func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	evtReq := event.FromRequest(r)
-	rawURL := r.URL.Path
+
+	reqPath := r.URL.Path
 	if len(r.URL.RawQuery) > 0 {
-		rawURL += "?" + r.URL.RawQuery
+		reqPath += "?" + r.URL.RawQuery
 	}
 
-	u, _ := url.Parse(rawURL)
+	rawURL, _ := url.Parse(reqPath)
 
-	w = httpx.Wrap(w)
+	if h.app.config.Record != nil {
+		w = httpx.Wrap(w)
+	}
 
 	parsedBody, rawBody, err := parseRequestBody(r, h.app.requestBodyParsers)
 
-	reqValues := &types.RequestValues{RawRequest: r, URL: u, Body: parsedBody}
+	reqValues := &types.RequestValues{RawRequest: r, URL: rawURL, ParsedBody: parsedBody}
 	evtReq.Body = rawBody
 	h.app.listener.Emit(&event.OnRequest{Request: evtReq, StartedAt: start})
 
@@ -43,20 +47,20 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.app.listener.Emit(&event.OnError{Request: evtReq, Err: fmt.Errorf("error parsing request body. reason=%w", err)})
 	}
 
-	// match current request with all eligible stored matchers in order to find one mock.
 	result := findMockForRequest(h.app.storage, reqValues)
 
 	if !result.Pass {
 		if h.app.proxy != nil {
 			// proxy non-matched requests.
 			h.app.proxy.ServeHTTP(w, r)
-			res, err := h.buildResponseFromWriter(w)
-			if err != nil {
-				h.app.log.Logf(err.Error())
-				return
-			}
 
 			if h.app.rec != nil {
+				res, err := h.buildResponseFromWriter(w)
+				if err != nil {
+					h.app.log.Logf(err.Error())
+					return
+				}
+
 				h.app.rec.record(r, rawBody, res)
 			}
 			return
@@ -87,7 +91,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		for i, mapper := range mock.Mappers {
 			if err = mapper(res, mapperArgs); err != nil {
 				mock.Dec()
-				h.onError(w, evtReq, fmt.Errorf("error with response mapper[%d]. reason=%w", i, err))
+				h.onError(w, evtReq, fmt.Errorf("error with response mapper at index [%d]. reason=%w", i, err))
 				return
 			}
 		}
@@ -98,6 +102,10 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		for k := range res.Trailer {
+			w.Header().Add(header.Trailer, k)
+		}
+
 		for _, cookie := range res.Cookies {
 			http.SetCookie(w, cookie)
 		}
@@ -105,7 +113,16 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(res.StatusCode)
 
 		if res.Body != nil {
-			w.Write(res.Body)
+			_, err = io.Copy(w, res.Body)
+			if err != nil {
+				h.app.log.Logf(err.Error())
+			}
+		}
+
+		for k, v := range res.Trailer {
+			for _, vv := range v {
+				w.Header().Add(k, vv)
+			}
 		}
 	} else {
 		res, err = h.buildResponseFromWriter(w)
@@ -199,10 +216,15 @@ func (h *mockHandler) buildResponseFromWriter(w http.ResponseWriter) (*reply.Stu
 
 	defer result.Body.Close()
 
-	return &reply.Stub{
+	stub := &reply.Stub{
 		StatusCode: result.StatusCode,
 		Header:     result.Header,
 		Cookies:    result.Cookies(),
-		Body:       body,
-	}, nil
+	}
+
+	if len(body) > 0 {
+		stub.Body = bytes.NewReader(body)
+	}
+
+	return stub, nil
 }

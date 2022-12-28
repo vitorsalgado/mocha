@@ -67,6 +67,10 @@ func TestReplyWithTemplate(t *testing.T) {
 		Build(nil, newReqValues(req))
 
 	require.NoError(t, err)
+
+	b, err = io.ReadAll(res.Body)
+	require.NoError(t, err)
+
 	assert.Equal(t, http.StatusOK, res.StatusCode)
-	assert.Equal(t, "test\ndev\n", string(res.Body))
+	assert.Equal(t, "test\ndev\n", string(b))
 }
