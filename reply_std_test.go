@@ -44,6 +44,7 @@ func TestReply(t *testing.T) {
 		ExpireCookie(http.Cookie{Name: "cookie_test_remove"}).
 		Body([]byte("hi")).
 		Build(nil, newReqValues(_req))
+	require.NoError(t, err)
 
 	b, err := res.BodyBytes()
 	require.NoError(t, err)
@@ -64,6 +65,7 @@ func TestStdReply_BodyString(t *testing.T) {
 		Status(http.StatusCreated).
 		PlainText("text").
 		Build(nil, newReqValues(_req))
+	require.NoError(t, err)
 
 	body, err := res.BodyBytes()
 	require.NoError(t, err)
@@ -117,9 +119,7 @@ func TestStdReply_BodyJSON(t *testing.T) {
 func TestStdReply_BodyReader(t *testing.T) {
 	wd, _ := os.Getwd()
 	f, err := os.Open(path.Join(wd, "testdata", "data.txt"))
-	if err != nil {
-		require.NoError(t, err)
-	}
+	require.NoError(t, err)
 
 	defer f.Close()
 
@@ -127,6 +127,7 @@ func TestStdReply_BodyReader(t *testing.T) {
 		Status(http.StatusCreated).
 		BodyReader(f).
 		Build(nil, newReqValues(_req))
+	require.NoError(t, err)
 
 	body, err := res.BodyBytes()
 	require.NoError(t, err)
