@@ -29,6 +29,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		reqPath += "?" + r.URL.RawQuery
 	}
 
+	segments := strings.Split(reqPath, "/")
 	rawURL, _ := url.Parse(reqPath)
 
 	if h.app.config.Record != nil {
@@ -37,7 +38,6 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	parsedBody, rawBody, err := parseRequestBody(r, h.app.requestBodyParsers)
 
-	reqValues := &RequestValues{RawRequest: r, URL: rawURL, ParsedBody: parsedBody, App: h.app}
 	evtReq.Body = rawBody
 	h.app.listener.Emit(&event.OnRequest{Request: evtReq, StartedAt: start})
 
@@ -45,7 +45,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.app.listener.Emit(&event.OnError{Request: evtReq, Err: fmt.Errorf("error parsing request body. reason=%w", err)})
 	}
 
-	result := findMockForRequest(h.app.storage, reqValues)
+	result := findMockForRequest(h.app.storage, &valueSelectorInput{r, rawURL, parsedBody})
 
 	if !result.Pass {
 		if h.app.proxy != nil {
@@ -74,6 +74,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		<-time.After(mock.Delay)
 	}
 
+	reqValues := &RequestValues{r, rawURL, segments, parsedBody, h.app, mock}
 	res, err := result.Matched.Reply.Build(w, reqValues)
 	if err != nil {
 		h.app.log.Logf(err.Error())
@@ -85,9 +86,8 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if res != nil {
 		// map the response using mock mappers.
-		mapperArgs := &MapperIn{Request: r, Parameters: h.app.params}
 		for i, mapper := range mock.Mappers {
-			if err = mapper(res, mapperArgs); err != nil {
+			if err = mapper(reqValues, res); err != nil {
 				mock.Dec()
 				h.onError(w, evtReq, fmt.Errorf("error with response mapper at index [%d]. reason=%w", i, err))
 				return
@@ -137,7 +137,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	input := &PostActionIn{Request: r, Response: res, Params: h.app.params}
+	input := &PostActionInput{r, rawURL, parsedBody, h.app, mock, res, nil}
 	for i, action := range mock.PostActions {
 		err = action.Run(input)
 		if err != nil {

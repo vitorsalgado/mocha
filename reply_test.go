@@ -46,7 +46,7 @@ func TestReply(t *testing.T) {
 		Build(nil, newReqValues(_req))
 	require.NoError(t, err)
 
-	b, err := res.BodyBytes()
+	b, err := res.bodyBytes()
 	require.NoError(t, err)
 
 	assert.NoError(t, err)
@@ -67,7 +67,7 @@ func TestStdReply_BodyString(t *testing.T) {
 		Build(nil, newReqValues(_req))
 	require.NoError(t, err)
 
-	body, err := res.BodyBytes()
+	body, err := res.bodyBytes()
 	require.NoError(t, err)
 
 	assert.NoError(t, err)
@@ -95,7 +95,7 @@ func TestStdReply_BodyJSON(t *testing.T) {
 
 		assert.Nil(t, err)
 
-		body, err := res.BodyBytes()
+		body, err := res.bodyBytes()
 		require.NoError(t, err)
 
 		b := jsonData{}
@@ -129,7 +129,7 @@ func TestStdReply_BodyReader(t *testing.T) {
 		Build(nil, newReqValues(_req))
 	require.NoError(t, err)
 
-	body, err := res.BodyBytes()
+	body, err := res.bodyBytes()
 	require.NoError(t, err)
 
 	assert.NoError(t, err)

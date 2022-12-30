@@ -1,6 +1,7 @@
 package mocha
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"log"
@@ -52,16 +53,24 @@ func TestMocha(t *testing.T) {
 	assert.Equal(t, string(body), "hello world")
 }
 
-func TestResponseMapper(t *testing.T) {
+func TestResponseMapper_ModifyingResponse(t *testing.T) {
+	const k = "key"
+	const v = "test-ok"
+
 	m := New()
+	_ = m.Parameters().Set(context.Background(), k, v)
 	m.MustStart()
 
 	defer m.Close()
 
 	scoped := m.MustMock(Get(URLPath("/test")).
 		Reply(OK()).
-		Map(func(r *Stub, rma *MapperIn) error {
-			r.Header.Add("x-test", rma.Request.Header.Get("x-param"))
+		Map(func(rv *RequestValues, r *Stub) error {
+			val, _, _ := rv.App.Parameters().Get(rv.RawRequest.Context(), k)
+
+			r.Header.Add("x-param-key", val.(string))
+			r.Header.Add("x-test", rv.RawRequest.Header.Get("x-param"))
+
 			return nil
 		}))
 
@@ -76,6 +85,7 @@ func TestResponseMapper(t *testing.T) {
 	scoped.AssertCalled(t)
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.Equal(t, "dev", res.Header.Get("x-test"))
+	assert.Equal(t, "test-ok", res.Header.Get("x-param-key"))
 }
 
 func TestResponseDelay(t *testing.T) {

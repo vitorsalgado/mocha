@@ -83,7 +83,7 @@ func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
 
 	b.builder.Name(v.GetString(_fName))
 	b.builder.Priority(v.GetInt(_fPriority))
-	b.builder.Enabled(v.GetBool(_fEnabled))
+	b.builder.Enable(v.GetBool(_fEnabled))
 	b.builder.ScenarioIs(v.GetString(_fScenarioName))
 	b.builder.ScenarioStateIs(v.GetString(_fScenarioRequiredState))
 	b.builder.ScenarioStateWillBe(v.GetString(_fScenarioNewState))

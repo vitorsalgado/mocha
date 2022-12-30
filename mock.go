@@ -3,6 +3,7 @@ package mocha
 import (
 	"fmt"
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
 
@@ -53,32 +54,83 @@ type Builder interface {
 	Build() (*Mock, error)
 }
 
-// PostActionIn represents the arguments that will be passed to every PostAction implementation
-type PostActionIn struct {
-	Request  *http.Request
-	Response *Stub
-	Params   Params
+// RequestValues groups HTTP request data, including the parsed body, if any.
+type RequestValues struct {
+	// RawRequest is the original incoming http.Request.
+	RawRequest *http.Request
+
+	// URL is full request url.URL, including scheme, host, port.
+	URL *url.URL
+
+	// URLPathSegments stores path segments.
+	// Eg.: /test/100 -> []string{"test", "100"}
+	URLPathSegments []string
+
+	// ParsedBody is the parsed http.Request body parsed by a RequestBodyParser instance.
+	// It'll be nil if the HTTP request does not contain a body.
+	ParsedBody any
+
+	// App exposes Mocha instance associated with the incoming HTTP request.
+	App *Mocha
+
+	// Mock is the matched Mock for the current HTTP request.
+	Mock *Mock
+}
+
+// PostActionInput represents the arguments that will be passed to every PostAction implementation
+type PostActionInput struct {
+	// RawRequest is the original incoming http.Request.
+	RawRequest *http.Request
+
+	// URL is full request url.URL, including scheme, host, port.
+	URL *url.URL
+
+	// ParsedBody is the parsed http.Request body.
+	ParsedBody any
+
+	// App exposes Mocha instance associated with the incoming HTTP request.
+	App *Mocha
+
+	// Mock is the matched Mock for the current HTTP request.
+	Mock *Mock
+
+	// Stub is the HTTP response Stub served.
+	Stub *Stub
+
+	// Args allow passing custom arguments to a PostAction.
+	Args any
 }
 
 // PostAction defines the contract for an action that will be executed after serving a mocked HTTP response.
 type PostAction interface {
 	// Run runs the PostAction implementation.
-	Run(args *PostActionIn) error
+	Run(input *PostActionInput) error
 }
 
 // Mapper is the function definition to be used to map Mock Stub before serving it.
 // Mapper doesn't work with reply.From or Proxy.
-type Mapper func(res *Stub, args *MapperIn) error
+type Mapper func(requestValues *RequestValues, res *Stub) error
 
-// MapperIn represents the expected arguments for every Mapper.
-type MapperIn struct {
-	Request    *http.Request
-	Parameters Params
+// Extension describes a component that can registered within the mock server, and used lately.
+// Only one instance of Extension should be registered, but, depending on the component, it could be used many times.
+type Extension interface {
+	UniqueName() string
 }
 
 type (
 	// valueSelector defines a function that will be used to extract the value that will be passed to the associated matcher.
-	valueSelector func(r *RequestValues) any
+	valueSelector func(r *valueSelectorInput) any
+
+	valueSelectorInput struct {
+		// RawRequest is the original incoming http.Request.
+		RawRequest *http.Request
+
+		// URL is full request url.URL, including scheme, host, port.
+		URL *url.URL
+
+		// ParsedBody is the parsed http.Request body.
+		ParsedBody any
+	}
 
 	// expectation holds metadata related to one http.Request Matcher.
 	expectation struct {
@@ -129,6 +181,20 @@ const (
 	_weightVeryLow
 	_weightRegular
 	_weightHigh
+)
+
+type matchTarget int
+
+// matchTarget constants to help debug unmatched requests.
+const (
+	_targetRequest matchTarget = iota
+	_targetScheme
+	_targetMethod
+	_targetURL
+	_targetHeader
+	_targetQuery
+	_targetBody
+	_targetForm
 )
 
 // newMock returns a new Mock with default values set.
@@ -190,7 +256,7 @@ func (m *Mock) Build() (*Mock, error) {
 
 // requestMatches checks if current Mock matches against a list of expectations.
 // Will iterate through all expectations even if it doesn't match early.
-func (m *Mock) requestMatches(ri *RequestValues, expectations []*expectation) *matchResult {
+func (m *Mock) requestMatches(ri *valueSelectorInput, expectations []*expectation) *matchResult {
 	w := 0
 	ok := true
 	details := make([]mismatchDetail, 0)

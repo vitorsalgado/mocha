@@ -100,13 +100,11 @@ func (b *MockBuilder) Priority(p int) *MockBuilder {
 // Scheme sets a matcher.Matcher for the URL scheme part.
 func (b *MockBuilder) Scheme(scheme string) *MockBuilder {
 	b.appendExpectation(&expectation{
-		Target:  _targetScheme,
-		Key:     scheme,
-		Matcher: matcher.EqualIgnoreCase(scheme),
-		ValueSelector: func(r *RequestValues) any {
-			return r.URL.Scheme
-		},
-		Weight: _weightVeryLow,
+		Target:        _targetScheme,
+		Key:           scheme,
+		Matcher:       matcher.EqualIgnoreCase(scheme),
+		ValueSelector: selectScheme,
+		Weight:        _weightVeryLow,
 	})
 
 	return b
@@ -125,7 +123,7 @@ func (b *MockBuilder) Method(methods ...string) *MockBuilder {
 
 	b.appendExpectation(&expectation{
 		Target:        _targetMethod,
-		ValueSelector: func(r *RequestValues) any { return r.RawRequest.Method },
+		ValueSelector: selectMethod,
 		Matcher:       m,
 		Weight:        _weightNone,
 	})
@@ -138,7 +136,7 @@ func (b *MockBuilder) Method(methods ...string) *MockBuilder {
 func (b *MockBuilder) MethodMatches(m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetMethod,
-		ValueSelector: func(r *RequestValues) any { return r.RawRequest.Method },
+		ValueSelector: selectMethod,
 		Matcher:       m,
 		Weight:        _weightNone,
 	})
@@ -151,7 +149,7 @@ func (b *MockBuilder) URL(m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetURL,
 		Key:           "url",
-		ValueSelector: func(r *RequestValues) any { return r.RawRequest.URL },
+		ValueSelector: selectURL,
 		Matcher:       m,
 		Weight:        _weightRegular,
 	})
@@ -170,7 +168,7 @@ func (b *MockBuilder) URLPath(m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetURL,
 		Key:           "url_path",
-		ValueSelector: func(r *RequestValues) any { return r.RawRequest.URL.Path },
+		ValueSelector: selectURLPath,
 		Matcher:       m,
 		Weight:        _weightRegular,
 	})
@@ -189,7 +187,7 @@ func (b *MockBuilder) Header(key string, m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetHeader,
 		Key:           key,
-		ValueSelector: func(r *RequestValues) any { return r.RawRequest.Header.Get(key) },
+		ValueSelector: selectHeader(key),
 		Matcher:       m,
 		Weight:        _weightLow,
 	})
@@ -207,7 +205,7 @@ func (b *MockBuilder) Query(key string, m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetQuery,
 		Key:           key,
-		ValueSelector: func(r *RequestValues) any { return r.RawRequest.URL.Query().Get(key) },
+		ValueSelector: selectQuery(key),
 		Matcher:       m,
 		Weight:        _weightVeryLow,
 	})
@@ -237,7 +235,7 @@ func (b *MockBuilder) Body(matcherList ...matcher.Matcher) *MockBuilder {
 
 	b.appendExpectation(&expectation{
 		Target:        _targetBody,
-		ValueSelector: func(r *RequestValues) any { return r.ParsedBody },
+		ValueSelector: selectBody,
 		Matcher:       m,
 		Weight:        _weightHigh,
 	})
@@ -250,7 +248,7 @@ func (b *MockBuilder) FormField(field string, m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetForm,
 		Key:           field,
-		ValueSelector: func(r *RequestValues) any { return r.RawRequest.Form.Get(field) },
+		ValueSelector: selectFormField(field),
 		Matcher:       m,
 		Weight:        _weightVeryLow,
 	})
@@ -277,7 +275,7 @@ func (b *MockBuilder) Times(times int) *MockBuilder {
 func (b *MockBuilder) RequestMatches(m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetRequest,
-		ValueSelector: func(r *RequestValues) any { return r.ParsedBody },
+		ValueSelector: selectRawRequest,
 		Matcher:       m,
 		Weight:        _weightLow,
 	})
@@ -335,9 +333,9 @@ func (b *MockBuilder) Reply(rep Reply) *MockBuilder {
 	return b
 }
 
-// Enabled define if the Mock will enabled or disabled.
+// Enable define if the Mock will enabled or disabled.
 // All mocks are enabled by default.
-func (b *MockBuilder) Enabled(enabled bool) *MockBuilder {
+func (b *MockBuilder) Enable(enabled bool) *MockBuilder {
 	b.mock.Enabled = enabled
 	return b
 }
@@ -374,3 +372,23 @@ func (b *MockBuilder) Build() (*Mock, error) {
 func (b *MockBuilder) appendExpectation(e *expectation) {
 	b.mock.expectations = append(b.mock.expectations, e)
 }
+
+// --
+// Request Values Selectors
+// --
+
+func selectScheme(r *valueSelectorInput) any  { return r.URL.Scheme }
+func selectMethod(r *valueSelectorInput) any  { return r.RawRequest.Method }
+func selectURL(r *valueSelectorInput) any     { return r.URL }
+func selectURLPath(r *valueSelectorInput) any { return r.URL.Path }
+func selectHeader(k string) valueSelector {
+	return func(r *valueSelectorInput) any { return r.RawRequest.Header.Get(k) }
+}
+func selectQuery(k string) valueSelector {
+	return func(r *valueSelectorInput) any { return r.RawRequest.URL.Query().Get(k) }
+}
+func selectBody(r *valueSelectorInput) any { return r.ParsedBody }
+func selectFormField(k string) valueSelector {
+	return func(r *valueSelectorInput) any { return r.RawRequest.Form.Get(k) }
+}
+func selectRawRequest(r *valueSelectorInput) any { return r.RawRequest }

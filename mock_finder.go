@@ -11,7 +11,7 @@ type findResult struct {
 // findMockForRequest tries to find a mock to the incoming HTTP request.
 // It runs all matchers of all eligible mocks on request until it finds one that matches every one of then.
 // It returns a findResult with the find result, along with a possible closest match.
-func findMockForRequest(storage mockStore, requestValues *RequestValues) *findResult {
+func findMockForRequest(storage mockStore, requestValues *valueSelectorInput) *findResult {
 	var mocks = storage.GetEligible()
 	var matched *Mock
 	var weights = 0

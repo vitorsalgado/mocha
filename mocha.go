@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"reflect"
 	"strings"
 	"sync"
@@ -25,21 +24,6 @@ import (
 // Basically, every request that doesn't match against to a Mock will return http.StatusTeapot.
 const StatusRequestDidNotMatch = http.StatusTeapot
 
-// RequestValues groups HTTP request data, including the parsed body, if any.
-type RequestValues struct {
-	// RawRequest is the original incoming http.Request.
-	RawRequest *http.Request
-
-	// URL is full request url.URL, including scheme, host, port.
-	URL *url.URL
-
-	// ParsedBody is the parsed http.Request body.
-	ParsedBody any
-
-	// App exposes Mocha instance associated with the incoming HTTP request.
-	App *Mocha
-}
-
 // Mocha is the base for the mock server.
 type Mocha struct {
 	log                logger.Log
@@ -57,6 +41,7 @@ type Mocha struct {
 	rec                *record
 	mu                 sync.Mutex
 	proxy              *reverseProxy
+	extensions         map[string]Extension
 }
 
 // TestingT is based on testing.T and allow mocha components to log information and errors.
@@ -108,7 +93,7 @@ func New(config ...Configurer) (m *Mocha) {
 
 	middlewares = append(middlewares, conf.Middlewares...)
 
-	params := Parameters()
+	params := newInMemoryParameters()
 	if conf.Parameters != nil {
 		params = conf.Parameters
 	}
@@ -163,6 +148,7 @@ func New(config ...Configurer) (m *Mocha) {
 	m.rec = rec
 	m.proxy = p
 	m.requestBodyParsers = parsers
+	m.extensions = make(map[string]Extension)
 
 	if m.config.Forward != nil {
 		m.MustMock(Request().
@@ -415,6 +401,20 @@ func (m *Mocha) Clean() {
 
 func (m *Mocha) StopRecording() {
 	m.rec.stop()
+}
+
+func (m *Mocha) RegisterExtension(extension Extension) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	_, ok := m.extensions[extension.UniqueName()]
+	if ok {
+		return fmt.Errorf("there is already an extension registered with the name \"%s\"", extension.UniqueName())
+	}
+
+	m.extensions[extension.UniqueName()] = extension
+
+	return nil
 }
 
 // PrintConfig prints key configurations using the given io.Writer.
