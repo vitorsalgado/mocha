@@ -7,7 +7,7 @@ import (
 )
 
 func TestExpect_Compositions(t *testing.T) {
-	m, err := Compose(Equal("hello world")).
+	m, err := Compose(StrictEqual("hello world")).
 		And(Contain("hello")).
 		And(HasPrefix("hello")).
 		And(HasSuffix("world")).
@@ -16,7 +16,7 @@ func TestExpect_Compositions(t *testing.T) {
 	assert.True(t, m.Pass)
 	assert.Nil(t, err)
 
-	m, err = Compose(Equal("dev qa")).
+	m, err = Compose(StrictEqual("dev qa")).
 		And(HasSuffix("dev")).
 		Or(Contain("qa")).
 		Match("dev qa")
@@ -24,14 +24,14 @@ func TestExpect_Compositions(t *testing.T) {
 	assert.True(t, m.Pass)
 	assert.Nil(t, err)
 
-	m, err = Compose(Equal("testing")).
+	m, err = Compose(StrictEqual("testing")).
 		Xor(Contain("test")).
 		Match("testing")
 
 	assert.False(t, m.Pass)
 	assert.Nil(t, err)
 
-	m, err = Compose(Equal("hello world")).
+	m, err = Compose(StrictEqual("hello world")).
 		And(Contain("hello")).
 		And(HasPrefix("world")).
 		And(HasSuffix("hello")).

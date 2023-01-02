@@ -18,18 +18,15 @@ func (m *hasPrefixMatcher) Match(v any) (*Result, error) {
 
 	return &Result{
 		Pass: strings.HasPrefix(txt, m.prefix),
-		Message: func() string {
-			return fmt.Sprintf(
-				"%s %s %s",
-				hint(m.Name(), printExpected(m.prefix)),
-				_separator,
-				txt,
-			)
-		},
+		Message: fmt.Sprintf(
+			"%s %s %s",
+			hint(m.Name(), printExpected(m.prefix)),
+			_separator,
+			txt),
 	}, nil
 }
 
-func (m *hasPrefixMatcher) OnMockServed() error {
+func (m *hasPrefixMatcher) After() error {
 	return nil
 }
 

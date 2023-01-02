@@ -25,25 +25,25 @@ func TestJSONPathMatcher(t *testing.T) {
 		{
 			name:     "should read match text field on object root",
 			path:     "name",
-			matcher:  Equal("someone"),
+			matcher:  StrictEqual("someone"),
 			expected: true,
 		},
 		{
 			name:     "should match numeric field value",
 			path:     "age",
-			matcher:  Equal(34),
+			matcher:  StrictEqual(34),
 			expected: true,
 		},
 		{
 			name:     "should match nested object field",
 			path:     "address.street",
-			matcher:  Equal("very nice place"),
+			matcher:  StrictEqual("very nice place"),
 			expected: true,
 		},
 		{
 			name:     "should match nil when field is present",
 			path:     "job",
-			matcher:  Equal(nil),
+			matcher:  StrictEqual(nil),
 			expected: true,
 		},
 	}
@@ -63,9 +63,9 @@ func TestJSONPathMatcher_Match_Errors(t *testing.T) {
 		path    string
 		matcher Matcher
 	}{
-		{name: "invalid path", path: "312nj.,", matcher: Equal("anything")},
-		{name: "field not present", path: "life", matcher: Equal("anything")},
-		{name: "deep field not present", path: "path.to.another.field", matcher: Equal("any")},
+		{name: "invalid path", path: "312nj.,", matcher: StrictEqual("anything")},
+		{name: "field not present", path: "life", matcher: StrictEqual("anything")},
+		{name: "deep field not present", path: "path.to.another.field", matcher: StrictEqual("any")},
 	}
 
 	for _, tc := range testCases {

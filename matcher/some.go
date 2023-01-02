@@ -12,29 +12,22 @@ func (m *someMatcher) Name() string {
 
 func (m *someMatcher) Match(v any) (*Result, error) {
 	for _, item := range m.items {
-		res, err := Equal(v).Match(item)
-		if err != nil {
-			return nil, err
-		}
-
-		if res.Pass {
-			return res, nil
+		if equalValues(v, item) {
+			return &Result{Pass: true}, nil
 		}
 	}
 
 	return &Result{
-		Message: func() string {
-			return fmt.Sprintf(
-				"%s %s value %v is not contained in the %v",
-				hint(m.Name(), m.items),
-				_separator,
-				printReceived(v),
-				printExpected(m.items),
-			)
-		}}, nil
+		Message: fmt.Sprintf(
+			"%s %s value %v is not contained in the %v",
+			hint(m.Name(), m.items),
+			_separator,
+			printReceived(v),
+			printExpected(m.items)),
+	}, nil
 }
 
-func (m *someMatcher) OnMockServed() error {
+func (m *someMatcher) After() error {
 	return nil
 }
 

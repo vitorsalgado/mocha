@@ -23,37 +23,41 @@ func (m *allOfMatcher) Match(v any) (*Result, error) {
 		if err != nil {
 			ok = false
 			errs = append(errs, err.Error())
-			failed = append(failed, result.Message())
+			failed = append(failed, result.Message)
 
 			continue
 		}
 
 		if !result.Pass {
 			ok = false
-			failed = append(failed, result.Message())
+			failed = append(failed, result.Message)
 		}
-	}
-
-	describeFailure := func() string {
-		return fmt.Sprintf(
-			"%s\n%s",
-			hint(m.Name(), fmt.Sprintf("+%d", len(m.matchers))),
-			indent(strings.Join(failed, "\n")),
-		)
 	}
 
 	if len(errs) > 0 {
 		return &Result{
-			Pass:    false,
-			Message: describeFailure,
+			Pass: false,
+			Message: fmt.Sprintf(
+				"%s\n%s",
+				hint(m.Name(), fmt.Sprintf("+%d", len(m.matchers))),
+				indent(strings.Join(failed, "\n")),
+			),
 		}, fmt.Errorf(strings.Join(errs, "\n"))
 	}
 
-	return &Result{Pass: ok, Message: describeFailure}, nil
+	if !ok {
+		return &Result{Message: fmt.Sprintf(
+			"%s\n%s",
+			hint(m.Name(), fmt.Sprintf("+%d", len(m.matchers))),
+			indent(strings.Join(failed, "\n")),
+		)}, nil
+	}
+
+	return &Result{Pass: true}, nil
 }
 
-func (m *allOfMatcher) OnMockServed() error {
-	return multiOnMockServed(m.matchers...)
+func (m *allOfMatcher) After() error {
+	return runAfter(m.matchers...)
 }
 
 // AllOf matches when all the given matchers returns true.
@@ -61,5 +65,9 @@ func (m *allOfMatcher) OnMockServed() error {
 //
 //	AllOf(EqualTo("test"),EqualIgnoreCase("test"),ToContains("tes"))
 func AllOf(matchers ...Matcher) Matcher {
+	if len(matchers) == 0 {
+		panic("[AllOf] requires at least 1 matcher")
+	}
+
 	return &allOfMatcher{matchers: matchers}
 }

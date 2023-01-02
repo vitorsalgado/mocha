@@ -7,7 +7,7 @@ import (
 )
 
 func TestToLowerCase(t *testing.T) {
-	result, err := ToLower(Equal("test")).Match("TeST")
+	result, err := ToLower(StrictEqual("test")).Match("TeST")
 
 	assert.Nil(t, err)
 	assert.True(t, result.Pass)

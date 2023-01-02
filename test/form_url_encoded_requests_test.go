@@ -21,7 +21,7 @@ func TestFormUrlEncoded(t *testing.T) {
 	defer m.Close()
 
 	scoped := m.MustMock(mocha.Post(matcher.URLPath("/test")).
-		FormField("var1", matcher.Equal("dev")).
+		FormField("var1", matcher.StrictEqual("dev")).
 		FormField("var2", matcher.Contain("q")).
 		Reply(mocha.OK()))
 

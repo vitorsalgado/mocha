@@ -192,7 +192,7 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 		return Empty(), nil
 
 	case _mEqualTo:
-		return Equal(args), nil
+		return StrictEqual(args), nil
 
 	case _mEqualToIgnoreCase:
 		str, ok := args.(string)

@@ -226,8 +226,8 @@ func (m *Mocha) MustStartTLS() ServerInfo {
 //
 //	scoped := m.MustMock(
 //		Get(matcher.URLPath("/test")).
-//			Header("test", matcher.Equal("hello")).
-//			Query("filter", matcher.Equal("all")).
+//			Header("test", matcher.StrictEqual("hello")).
+//			Query("filter", matcher.StrictEqual("all")).
 //			Reply(reply.Created().PlainText("hello world")))
 //
 //	assert.True(t, scoped.HasBeenCalled())
@@ -262,8 +262,8 @@ func (m *Mocha) Mock(builders ...Builder) (*Scoped, error) {
 //
 //	scoped := m.MustMock(
 //		Get(matcher.URLPath("/test")).
-//			Header("test", matcher.Equal("hello")).
-//			Query("filter", matcher.Equal("all")).
+//			Header("test", matcher.StrictEqual("hello")).
+//			Query("filter", matcher.StrictEqual("all")).
 //			Reply(reply.Created().PlainText("hello world")))
 //
 //	assert.True(t, scoped.HasBeenCalled())

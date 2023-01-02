@@ -93,6 +93,20 @@ func (s *Scoped) Enable() {
 	}
 }
 
+// Delete removes a by ID, as long as it is scoped by this instance.
+func (s *Scoped) Delete(id string) bool {
+	for i, m := range s.mocks {
+		if m.ID == id {
+			s.storage.Delete(id)
+			s.mocks = append(s.mocks[:i], s.mocks[i+1:]...)
+
+			return true
+		}
+	}
+
+	return false
+}
+
 // Clean all scoped store.
 func (s *Scoped) Clean() {
 	ids := make([]string, len(s.mocks))

@@ -14,15 +14,13 @@ func (m *urlPathMatcher) Name() string {
 }
 
 func (m *urlPathMatcher) Match(v any) (*Result, error) {
-	message := func(failure string) func() string {
-		return func() string {
-			return fmt.Sprintf(
-				"%s %s %s",
-				hint(m.Name()),
-				_separator,
-				failure,
-			)
-		}
+	message := func(failure string) string {
+		return fmt.Sprintf(
+			"%s %s %s",
+			hint(m.Name()),
+			_separator,
+			failure,
+		)
 	}
 
 	var value any
@@ -53,10 +51,10 @@ func (m *urlPathMatcher) Match(v any) (*Result, error) {
 		return nil, err
 	}
 
-	return &Result{Pass: res.Pass, Message: message(res.Message())}, nil
+	return &Result{Pass: res.Pass, Message: message(res.Message)}, nil
 }
 
-func (m *urlPathMatcher) OnMockServed() error {
+func (m *urlPathMatcher) After() error {
 	return nil
 }
 

@@ -9,25 +9,25 @@ import (
 
 func TestEither(t *testing.T) {
 	t.Run("should return true when only left matcher evaluates to true", func(t *testing.T) {
-		result, err := Either(Equal("test"), Contain("qa")).Match("test")
+		result, err := Either(StrictEqual("test"), Contain("qa")).Match("test")
 		assert.Nil(t, err)
 		assert.True(t, result.Pass)
 	})
 
 	t.Run("should return true when only right matcher evaluates to true", func(t *testing.T) {
-		result, err := Either(Equal("qa"), Contain("tes")).Match("test")
+		result, err := Either(StrictEqual("qa"), Contain("tes")).Match("test")
 		assert.Nil(t, err)
 		assert.True(t, result.Pass)
 	})
 
 	t.Run("should return true when both matchers evaluates to true", func(t *testing.T) {
-		result, err := Either(Equal("test"), Contain("te")).Match("test")
+		result, err := Either(StrictEqual("test"), Contain("te")).Match("test")
 		assert.Nil(t, err)
 		assert.True(t, result.Pass)
 	})
 
 	t.Run("should return false when both evaluates to false", func(t *testing.T) {
-		result, err := Either(Equal("dev"), Contain("qa")).Match("test")
+		result, err := Either(StrictEqual("dev"), Contain("qa")).Match("test")
 		assert.Nil(t, err)
 		assert.False(t, result.Pass)
 	})

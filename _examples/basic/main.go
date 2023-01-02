@@ -24,7 +24,7 @@ func main() {
 	m.MustMock(mocha.
 		Get(URLPath("/test")).
 		Header(header.Accept, Contain(mimetype.TextHTML)).
-		Header(header.ContentType, Equal("test")).
+		Header(header.ContentType, StrictEqual("test")).
 		Header("any", AllOf(Contain("test"), EqualIgnoreCase("dev"))).
 		Reply(mocha.OK().
 			PlainText("hello world").

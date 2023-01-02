@@ -10,7 +10,7 @@ import (
 func TestPeek(t *testing.T) {
 	t.Run("should return peek error", func(t *testing.T) {
 		actionErr := fmt.Errorf("action failed")
-		result, err := Peek(Equal("test"), func(_ any) error { return actionErr }).Match("test")
+		result, err := Peek(StrictEqual("test"), func(_ any) error { return actionErr }).Match("test")
 
 		assert.NotNil(t, err)
 		assert.Equal(t, actionErr, err)
@@ -19,7 +19,7 @@ func TestPeek(t *testing.T) {
 
 	t.Run("should execute action before returning provided matcher result", func(t *testing.T) {
 		c := ""
-		result, err := Peek(Equal("test"), func(v any) error { c = v.(string); return nil }).Match("test")
+		result, err := Peek(StrictEqual("test"), func(v any) error { c = v.(string); return nil }).Match("test")
 
 		assert.Nil(t, err)
 		assert.True(t, result.Pass)

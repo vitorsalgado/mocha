@@ -22,17 +22,14 @@ func (m *upperCaseMatcher) Match(v any) (*Result, error) {
 
 	return &Result{
 		Pass: result.Pass,
-		Message: func() string {
-			return fmt.Sprintf("%s %s",
-				hint(m.Name(), m.matcher.Name()),
-				result.Message(),
-			)
-		},
+		Message: fmt.Sprintf("%s %s",
+			hint(m.Name(), m.matcher.Name()),
+			result.Message),
 	}, nil
 }
 
-func (m *upperCaseMatcher) OnMockServed() error {
-	return m.matcher.OnMockServed()
+func (m *upperCaseMatcher) After() error {
+	return m.matcher.After()
 }
 
 // ToUpper upper case matcher string argument before submitting it to provided matcher.

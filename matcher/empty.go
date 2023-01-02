@@ -16,14 +16,12 @@ func (m *emptyMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		Pass: result.Pass,
-		Message: func() string {
-			return fmt.Sprintf("%s %s %s", hint(m.Name()), _separator, v)
-		},
+		Pass:    result.Pass,
+		Message: fmt.Sprintf("%s %s %s", hint(m.Name()), _separator, v),
 	}, nil
 }
 
-func (m *emptyMatcher) OnMockServed() error {
+func (m *emptyMatcher) After() error {
 	return nil
 }
 

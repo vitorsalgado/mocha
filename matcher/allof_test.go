@@ -9,9 +9,9 @@ import (
 func TestAllOf(t *testing.T) {
 	t.Run("should return true when all matchers evaluates to true", func(t *testing.T) {
 		result, err := AllOf(
-			Equal("test"),
+			StrictEqual("test"),
 			EqualIgnoreCase("TEST"),
-			ToUpper(Equal("TEST")),
+			ToUpper(StrictEqual("TEST")),
 			Contain("tes")).
 			Match("test")
 		assert.Nil(t, err)
@@ -20,9 +20,9 @@ func TestAllOf(t *testing.T) {
 
 	t.Run("should return false when just one matcher evaluates to false", func(t *testing.T) {
 		result, err := AllOf(
-			Equal("test"),
+			StrictEqual("test"),
 			EqualIgnoreCase("dev"),
-			ToUpper(Equal("TEST")),
+			ToUpper(StrictEqual("TEST")),
 			Contain("tes")).
 			Match("test")
 		assert.Nil(t, err)
@@ -31,9 +31,9 @@ func TestAllOf(t *testing.T) {
 
 	t.Run("should return false when all matchers evaluates to false", func(t *testing.T) {
 		result, err := AllOf(
-			Equal("dev"),
+			StrictEqual("dev"),
 			EqualIgnoreCase("qa"),
-			ToUpper(Equal("none")),
+			ToUpper(StrictEqual("none")),
 			Contain("blah")).
 			Match("test")
 		assert.Nil(t, err)
@@ -41,8 +41,8 @@ func TestAllOf(t *testing.T) {
 	})
 
 	t.Run("mismatch description is not empty", func(t *testing.T) {
-		result, err := AllOf().Match("")
-		assert.NoError(t, err)
-		assert.NotEmpty(t, result.Message())
+		assert.Panics(t, func() {
+			AllOf()
+		})
 	})
 }

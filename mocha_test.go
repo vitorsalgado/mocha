@@ -34,8 +34,8 @@ func TestMocha(t *testing.T) {
 
 	scoped := m.MustMock(
 		Get(URLPath("/test")).
-			Header("test", Equal("hello")).
-			Query("filter", Equal("all")).
+			Header("test", StrictEqual("hello")).
+			Query("filter", StrictEqual("all")).
 			Reply(Created().
 				PlainText("hello world")))
 
@@ -288,8 +288,8 @@ func TestMocha_MatcherCompositions(t *testing.T) {
 	//
 	// scoped := m.MustMock(
 	// 	Get(URLPath("/test")).
-	// 		Header("test", Should(Be(Equal("hello")))).
-	// 		Query("filter", Is(Equal("all"))).
+	// 		Header("test", Should(Be(StrictEqual("hello")))).
+	// 		Query("filter", Is(StrictEqual("all"))).
 	// 		Reply(reply.
 	// 			Created().
 	// 			PlainText("hello world")))
@@ -300,12 +300,12 @@ func TestMocha_MatcherCompositions(t *testing.T) {
 	// res, err := http.DefaultClient.Do(req)
 	// assert.NoError(t, err)
 	//
-	// body, err := io.ReadAll(res.ParsedBody)
+	// body, err := io.ReadAll(res.Body)
 	//
 	// assert.NoError(t, err)
 	// assert.True(t, scoped.HasBeenCalled())
-	// assert.Equal(t, 201, res.StatusCode)
-	// assert.Equal(t, string(body), "hello world")
+	// assert.StrictEqual(t, 201, res.StatusCode)
+	// assert.StrictEqual(t, string(body), "hello world")
 }
 
 func TestMocha_NoReply(t *testing.T) {

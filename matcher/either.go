@@ -24,30 +24,32 @@ func (m *eitherMatcher) Match(v any) (*Result, error) {
 		return &Result{Pass: false}, err
 	}
 
-	msg := func() string {
-		desc := ""
-
-		if !r1.Pass {
-			desc = r1.Message()
-		}
-
-		if !r2.Pass {
-			desc += "\n\n"
-			desc += r2.Message()
-		}
-
-		return fmt.Sprintf(
-			"%s %s %s",
-			hint(m.Name(), m.first.Name(), m.second.Name()),
-			_separator,
-			desc)
+	if r1.Pass || r2.Pass {
+		return &Result{Pass: true}, nil
 	}
 
-	return &Result{Pass: r1.Pass || r2.Pass, Message: msg}, nil
+	desc := ""
+
+	if !r1.Pass {
+		desc = r1.Message
+	}
+
+	if !r2.Pass {
+		desc += "\n\n"
+		desc += r2.Message
+	}
+
+	msg := fmt.Sprintf(
+		"%s %s %s",
+		hint(m.Name(), m.first.Name(), m.second.Name()),
+		_separator,
+		desc)
+
+	return &Result{Pass: false, Message: msg}, nil
 }
 
-func (m *eitherMatcher) OnMockServed() error {
-	return multiOnMockServed(m.first, m.second)
+func (m *eitherMatcher) After() error {
+	return runAfter(m.first, m.second)
 }
 
 // Either matches true when any of the two given matchers returns true.

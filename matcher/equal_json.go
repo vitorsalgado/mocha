@@ -3,7 +3,6 @@ package matcher
 import (
 	"encoding/json"
 	"fmt"
-	"reflect"
 )
 
 type equalJSONMatcher struct {
@@ -27,18 +26,15 @@ func (m *equalJSONMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		Pass: reflect.DeepEqual(v, exp),
-		Message: func() string {
-			return fmt.Sprintf("%s\nExpected:\n%s\nReceived:\n%s",
-				hint(m.Name()),
-				printExpected(m.expected),
-				printReceived(v),
-			)
-		},
+		Pass: equalValues(v, exp),
+		Message: fmt.Sprintf("%s\nExpected:\n%s\nReceived:\n%s",
+			hint(m.Name()),
+			printExpected(m.expected),
+			printReceived(v)),
 	}, nil
 }
 
-func (m *equalJSONMatcher) OnMockServed() error {
+func (m *equalJSONMatcher) After() error {
 	return nil
 }
 

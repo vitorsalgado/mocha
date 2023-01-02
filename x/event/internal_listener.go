@@ -40,7 +40,7 @@ func (h *InternalListener) OnRequest(evt any) {
 		builder.WriteString("\n")
 
 		if len(e.Request.Body) > 0 {
-			builder.WriteString(colorize.Blue("ParsedBody: "))
+			builder.WriteString(colorize.Blue("Body: "))
 			builder.WriteString(fmt.Sprintf("%v\n", string(e.Request.Body)))
 		}
 	}
@@ -80,7 +80,7 @@ func (h *InternalListener) OnRequestMatched(evt any) {
 
 		if len(e.ResponseDefinition.Body) > 0 {
 			builder.WriteString(
-				fmt.Sprintf(" %s %s\n", colorize.Green("ParsedBody:"), string(e.ResponseDefinition.Body)))
+				fmt.Sprintf(" %s %s\n", colorize.Green("Body:"), string(e.ResponseDefinition.Body)))
 		}
 	}
 

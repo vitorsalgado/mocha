@@ -160,7 +160,7 @@ func (b *MockBuilder) URL(m matcher.Matcher) *MockBuilder {
 // URLf sets a matcher to the http.Request url.URL that compares the http.Request url.URL with given value.
 // The expected value will be formatted with the provided format specifier.
 func (b *MockBuilder) URLf(format string, a ...any) *MockBuilder {
-	return b.URL(matcher.Equal(fmt.Sprintf(format, a...)))
+	return b.URL(matcher.StrictEqual(fmt.Sprintf(format, a...)))
 }
 
 // URLPath defines a matcher to be applied to the url.URL path.
@@ -179,7 +179,7 @@ func (b *MockBuilder) URLPath(m matcher.Matcher) *MockBuilder {
 // URLPathf sets a Matcher that compares the http.Request url.URL path with given value, ignoring case.
 // The expected value will be formatted with the provided format specifier.
 func (b *MockBuilder) URLPathf(format string, a ...any) *MockBuilder {
-	return b.URLPath(matcher.Equal(fmt.Sprintf(format, a...)))
+	return b.URLPath(matcher.StrictEqual(fmt.Sprintf(format, a...)))
 }
 
 // Header adds a matcher to a specific http.Header key.
@@ -197,7 +197,7 @@ func (b *MockBuilder) Header(key string, m matcher.Matcher) *MockBuilder {
 
 // Headerf adds a matcher to a specific http.Header key.
 func (b *MockBuilder) Headerf(key string, value string, a ...any) *MockBuilder {
-	return b.Header(key, matcher.Equal(fmt.Sprintf(value, a...)))
+	return b.Header(key, matcher.StrictEqual(fmt.Sprintf(value, a...)))
 }
 
 // Query defines a matcher to a specific query.
@@ -215,18 +215,18 @@ func (b *MockBuilder) Query(key string, m matcher.Matcher) *MockBuilder {
 
 // Queryf defines a matcher to a specific query.
 func (b *MockBuilder) Queryf(key string, value string, a ...any) *MockBuilder {
-	return b.Query(key, matcher.Equal(fmt.Sprintf(value, a...)))
+	return b.Query(key, matcher.StrictEqual(fmt.Sprintf(value, a...)))
 }
 
 // Body adds matchers to the request body.
 // If request contains a JSON body, you can provide multiple matchers to several fields.
 // Example:
 //
-//	m.ParsedBody(JSONPath("name", EqualTo("test")), JSONPath("address.street", ToContains("nowhere")))
+//	m.Body(JSONPath("name", EqualTo("test")), JSONPath("address.street", ToContains("nowhere")))
 func (b *MockBuilder) Body(matcherList ...matcher.Matcher) *MockBuilder {
 	var m matcher.Matcher
 	if len(matcherList) == 0 {
-		panic(".ParsedBody() func requires at least one matcher.Matcher")
+		panic(".Body() func requires at least one matcher.Matcher")
 	} else if len(matcherList) == 1 {
 		m = matcherList[0]
 	} else {
@@ -258,7 +258,7 @@ func (b *MockBuilder) FormField(field string, m matcher.Matcher) *MockBuilder {
 
 // FormFieldf defines a matcher for a specific form field by its key.
 func (b *MockBuilder) FormFieldf(field string, value string, a ...any) *MockBuilder {
-	return b.FormField(field, matcher.Equal(fmt.Sprintf(value, a...)))
+	return b.FormField(field, matcher.StrictEqual(fmt.Sprintf(value, a...)))
 }
 
 // Times defines to total times that a mock should be served, if request matches.

@@ -19,14 +19,12 @@ func (m *hasKeyMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		Pass: value != nil,
-		Message: func() string {
-			return hint(m.Name(), printExpected(m.path))
-		},
+		Pass:    value != nil,
+		Message: hint(m.Name(), printExpected(m.path)),
 	}, nil
 }
 
-func (m *hasKeyMatcher) OnMockServed() error {
+func (m *hasKeyMatcher) After() error {
 	return nil
 }
 

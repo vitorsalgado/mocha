@@ -16,14 +16,12 @@ func (m *lenMatcher) Match(v any) (*Result, error) {
 	value := reflect.ValueOf(v)
 
 	return &Result{
-		Pass: value.Len() == m.length,
-		Message: func() string {
-			return hint(m.Name(), printExpected(m.length))
-		},
+		Pass:    value.Len() == m.length,
+		Message: hint(m.Name(), printExpected(m.length)),
 	}, nil
 }
 
-func (m *lenMatcher) OnMockServed() error {
+func (m *lenMatcher) After() error {
 	return nil
 }
 

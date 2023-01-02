@@ -292,7 +292,7 @@ func (m *Mock) requestMatches(ri *valueSelectorInput, expectations []*expectatio
 			details = append(details, mismatchDetail{
 				MatchersName: exp.Matcher.Name(),
 				Target:       exp.Target,
-				Desc:         result.Message(),
+				Desc:         result.Message,
 			})
 		}
 	}

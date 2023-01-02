@@ -14,9 +14,16 @@ type Matcher interface {
 	// Match is the function that does the actual matching logic.
 	Match(value any) (*Result, error)
 
-	// OnMockServed runs everytime the Mock that holds this Matcher is served.
+	// After runs everytime the Mock that holds this Matcher is served.
 	// Useful for stateful Matchers.
-	OnMockServed() error
+	After() error
+}
+
+// After describes a Matcher that has post processes that needs to be executed.
+// The After() function will be called after mock HTTP response.
+// Useful for stateful Matchers.
+type After interface {
+	After() error
 }
 
 // Result represents a Matcher result.
@@ -24,6 +31,6 @@ type Result struct {
 	// Pass defines if Matcher passed or not.
 	Pass bool
 
-	// Message is function that should return the failure description.
-	Message func() string
+	// Message describes why the associated Matcher did not pass.
+	Message string
 }

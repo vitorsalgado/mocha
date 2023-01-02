@@ -18,18 +18,15 @@ func (m *funcMatcher) Match(v any) (*Result, error) {
 
 	return &Result{
 		Pass: r,
-		Message: func() string {
-			return fmt.Sprintf(
-				"%s %s %v",
-				hint(m.Name()),
-				_separator,
-				v,
-			)
-		},
+		Message: fmt.Sprintf(
+			"%s %s %v",
+			hint(m.Name()),
+			_separator,
+			v),
 	}, nil
 }
 
-func (m *funcMatcher) OnMockServed() error {
+func (m *funcMatcher) After() error {
 	return nil
 }
 

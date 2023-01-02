@@ -84,7 +84,7 @@ func TestMock_Matches(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			res := m.requestMatches(params, []*expectation{{
-				Matcher: Equal(tc.value),
+				Matcher: StrictEqual(tc.value),
 				ValueSelector: func(r *valueSelectorInput) any {
 					return tc.selector
 				},
@@ -123,21 +123,21 @@ func TestMock_Matches(t *testing.T) {
 		// any
 		res := m.requestMatches(params, []*expectation{
 			{
-				Matcher: Equal("test"),
+				Matcher: StrictEqual("test"),
 				ValueSelector: func(r *valueSelectorInput) any {
 					return "test"
 				},
 				Weight: 2,
 			},
 			{
-				Matcher: Equal("test"),
+				Matcher: StrictEqual("test"),
 				ValueSelector: func(r *valueSelectorInput) any {
 					return "test"
 				},
 				Weight: 1,
 			},
 			{
-				Matcher: Equal(10.0),
+				Matcher: StrictEqual(10.0),
 				ValueSelector: func(r *valueSelectorInput) any {
 					return 10.0
 				},
@@ -152,21 +152,21 @@ func TestMock_Matches(t *testing.T) {
 		// any
 		res := m.requestMatches(params, []*expectation{
 			{
-				Matcher: Equal("test"),
+				Matcher: StrictEqual("test"),
 				ValueSelector: func(r *valueSelectorInput) any {
 					return "test"
 				},
 				Weight: 2,
 			},
 			{
-				Matcher: Equal("test"),
+				Matcher: StrictEqual("test"),
 				ValueSelector: func(r *valueSelectorInput) any {
 					return "dev"
 				},
 				Weight: 1,
 			},
 			{
-				Matcher: Equal(10.0),
+				Matcher: StrictEqual(10.0),
 				ValueSelector: func(r *valueSelectorInput) any {
 					return 10.0
 				},

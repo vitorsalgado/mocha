@@ -20,18 +20,15 @@ func (m *notMatcher) Match(v any) (*Result, error) {
 
 	return &Result{
 		Pass: !result.Pass,
-		Message: func() string {
-			return fmt.Sprintf(
-				"%s ! %s",
-				hint(m.Name(), m.matcher.Name()),
-				result.Message(),
-			)
-		},
+		Message: fmt.Sprintf(
+			"%s ! %s",
+			hint(m.Name(), m.matcher.Name()),
+			result.Message),
 	}, nil
 }
 
-func (m *notMatcher) OnMockServed() error {
-	return m.matcher.OnMockServed()
+func (m *notMatcher) After() error {
+	return m.matcher.After()
 }
 
 // Not negates the provided matcher.

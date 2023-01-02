@@ -18,9 +18,7 @@ func (m *bePresentMatcher) Match(v any) (*Result, error) {
 	}
 
 	val := reflect.ValueOf(v)
-	message := func() string {
-		return fmt.Sprintf("%s %v", hint(m.Name()), v)
-	}
+	message := fmt.Sprintf("%s %v", hint(m.Name()), v)
 
 	switch val.Kind() {
 	case reflect.String, reflect.Array, reflect.Slice, reflect.Map, reflect.Struct, reflect.Interface:
@@ -32,7 +30,7 @@ func (m *bePresentMatcher) Match(v any) (*Result, error) {
 	return &Result{Pass: true, Message: message}, nil
 }
 
-func (m *bePresentMatcher) OnMockServed() error {
+func (m *bePresentMatcher) After() error {
 	return nil
 }
 

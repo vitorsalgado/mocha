@@ -156,3 +156,22 @@ func TestScoped(t *testing.T) {
 		})
 	})
 }
+
+func TestDelete(t *testing.T) {
+	m1 := newMock()
+	m2 := newMock()
+	m3 := newMock()
+
+	repo := newStore()
+	repo.Save(m1)
+	repo.Save(m2)
+	repo.Save(m3)
+
+	scoped := scope(repo, repo.GetAll())
+
+	assert.True(t, scoped.Delete(m1.ID))
+	assert.False(t, scoped.Delete("unknown"))
+
+	assert.Nil(t, scoped.Get(m1.ID))
+	assert.Nil(t, repo.Get(m1.ID))
+}

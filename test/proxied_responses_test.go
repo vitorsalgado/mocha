@@ -38,7 +38,7 @@ func TestForward(t *testing.T) {
 	defer m.Close()
 
 	scoped := m.MustMock(mocha.Post(matcher.URLPath("/test")).
-		Body(matcher.Equal("hello world")).
+		Body(matcher.StrictEqual("hello world")).
 		Reply(mocha.From(dest.URL).
 			ProxyHeader("x-test", "ok").
 			Header("x-res", "example").

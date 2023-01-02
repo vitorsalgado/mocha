@@ -18,18 +18,15 @@ func (m *hasSuffixMatcher) Match(v any) (*Result, error) {
 
 	return &Result{
 		Pass: strings.HasSuffix(txt, m.suffix),
-		Message: func() string {
-			return fmt.Sprintf(
-				"%s %s %s",
-				hint(m.Name(), printExpected(m.suffix)),
-				_separator,
-				txt,
-			)
-		},
+		Message: fmt.Sprintf(
+			"%s %s %s",
+			hint(m.Name(), printExpected(m.suffix)),
+			_separator,
+			txt),
 	}, nil
 }
 
-func (m *hasSuffixMatcher) OnMockServed() error {
+func (m *hasSuffixMatcher) After() error {
 	return nil
 }
 

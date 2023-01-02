@@ -32,13 +32,11 @@ func (m *jsonPathMatcher) Match(v any) (*Result, error) {
 		return &Result{}, err
 	}
 
-	return &Result{Pass: r.Pass, Message: func() string {
-		return hint(m.Name(), printExpected(m.path), r.Message())
-	}}, nil
+	return &Result{Pass: r.Pass, Message: hint(m.Name(), printExpected(m.path), r.Message)}, nil
 }
 
-func (m *jsonPathMatcher) OnMockServed() error {
-	return m.matcher.OnMockServed()
+func (m *jsonPathMatcher) After() error {
+	return m.matcher.After()
 }
 
 // JSONPath applies the provided matcher to the JSON field value in the given path.
@@ -47,4 +45,13 @@ func (m *jsonPathMatcher) OnMockServed() error {
 //	JSONPath("address.city", EqualTo("Santiago"))
 func JSONPath(path string, matcher Matcher) Matcher {
 	return &jsonPathMatcher{path: path, matcher: matcher}
+}
+
+// Field is an alias for JSONPath.
+// It applies the provided matcher to the JSON field value in the given path.
+// Example:
+//
+//	Field("address.city", EqualTo("Santiago"))
+func Field(path string, matcher Matcher) Matcher {
+	return JSONPath(path, matcher)
 }

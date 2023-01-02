@@ -20,8 +20,8 @@ func TestHandler_GetById(t *testing.T) {
 
 	m.MustMock(mocha.
 		Get(URLPathf("/customers/%s", id)).
-		Header(headerAccept, Equal(contentTypeJSON)).
-		Header(headerContentType, Equal(contentTypeJSON)).
+		Header(headerAccept, StrictEqual(contentTypeJSON)).
+		Header(headerContentType, StrictEqual(contentTypeJSON)).
 		Reply(mocha.OK().BodyJSON(customer)))
 
 	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/customer/%s", id), nil)

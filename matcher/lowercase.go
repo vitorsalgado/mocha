@@ -22,17 +22,14 @@ func (m *lowerCaseMatcher) Match(v any) (*Result, error) {
 
 	return &Result{
 		Pass: result.Pass,
-		Message: func() string {
-			return fmt.Sprintf("%s %s",
-				hint(m.Name(), printExpected(txt)),
-				result.Message(),
-			)
-		},
+		Message: fmt.Sprintf("%s %s",
+			hint(m.Name(), printExpected(txt)),
+			result.Message),
 	}, nil
 }
 
-func (m *lowerCaseMatcher) OnMockServed() error {
-	return m.matcher.OnMockServed()
+func (m *lowerCaseMatcher) After() error {
+	return m.matcher.After()
 }
 
 // ToLower lower case matcher string argument before submitting it to provided matcher.

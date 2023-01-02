@@ -28,17 +28,14 @@ func (m *splitMatcher) Match(v any) (*Result, error) {
 
 	return &Result{
 		Pass: result.Pass,
-		Message: func() string {
-			return fmt.Sprintf("%s %s",
-				hint(m.Name(), printExpected(txt)),
-				result.Message(),
-			)
-		},
+		Message: fmt.Sprintf("%s %s",
+			hint(m.Name(), printExpected(txt)),
+			result.Message),
 	}, nil
 }
 
-func (m *splitMatcher) OnMockServed() error {
-	return m.matcher.OnMockServed()
+func (m *splitMatcher) After() error {
+	return m.matcher.After()
 }
 
 func Split(separator string, matcher Matcher) Matcher {

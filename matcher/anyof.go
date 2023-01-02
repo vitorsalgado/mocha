@@ -23,14 +23,14 @@ func (m *anyOfMatcher) Match(v any) (*Result, error) {
 		if err != nil {
 			ok = false
 			errs = append(errs, err.Error())
-			failed = append(failed, result.Message())
+			failed = append(failed, result.Message)
 
 			continue
 		}
 
 		if !result.Pass {
 			ok = false
-			failed = append(failed, result.Message())
+			failed = append(failed, result.Message)
 
 			continue
 		}
@@ -39,26 +39,30 @@ func (m *anyOfMatcher) Match(v any) (*Result, error) {
 		break
 	}
 
-	describeFailure := func() string {
-		return fmt.Sprintf(
-			"%s\n%s",
-			hint(m.Name(), fmt.Sprintf("+%d", len(m.matchers))),
-			indent(strings.Join(failed, "\n")),
-		)
-	}
-
 	if len(errs) > 0 {
 		return &Result{
-			Pass:    false,
-			Message: describeFailure,
+			Pass: false,
+			Message: fmt.Sprintf(
+				"%s\n%s",
+				hint(m.Name(), fmt.Sprintf("+%d", len(m.matchers))),
+				indent(strings.Join(failed, "\n")),
+			),
 		}, fmt.Errorf(strings.Join(errs, "\n"))
 	}
 
-	return &Result{Pass: ok, Message: describeFailure}, nil
+	if !ok {
+		return &Result{Message: fmt.Sprintf(
+			"%s\n%s",
+			hint(m.Name(), fmt.Sprintf("+%d", len(m.matchers))),
+			indent(strings.Join(failed, "\n")),
+		)}, nil
+	}
+
+	return &Result{Pass: ok}, nil
 }
 
-func (m *anyOfMatcher) OnMockServed() error {
-	return multiOnMockServed(m.matchers...)
+func (m *anyOfMatcher) After() error {
+	return runAfter(m.matchers...)
 }
 
 // AnyOf matches when any of the given matchers returns true.

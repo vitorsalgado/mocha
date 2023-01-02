@@ -69,23 +69,19 @@ func (m *scenarioMatcher) Match(_ any) (*Result, error) {
 		return &Result{Pass: true}, nil
 	}
 
-	message := func() string {
-		return fmt.Sprintf(
-			"%s %s %s",
-			hint(m.Name(), printExpected(m.requiredState)),
-			_separator,
-			printReceived(scn.state),
-		)
-	}
-
 	if scn.state == m.requiredState {
 		return &Result{Pass: true}, nil
 	}
 
-	return &Result{Pass: false, Message: message}, nil
+	return &Result{Pass: false, Message: fmt.Sprintf(
+		"%s %s %s",
+		hint(m.Name(), printExpected(m.requiredState)),
+		_separator,
+		printReceived(scn.state),
+	)}, nil
 }
 
-func (m *scenarioMatcher) OnMockServed() error {
+func (m *scenarioMatcher) After() error {
 	scn, ok := m.store.fetchByName(m.nm)
 	if !ok {
 		return nil

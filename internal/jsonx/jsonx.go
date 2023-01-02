@@ -1,4 +1,4 @@
-// Package jsonx implements functions to get JSON property values by their path.
+// Package jsonx implements utilities to work with JSON.
 package jsonx
 
 import (
@@ -13,6 +13,14 @@ var (
 	fieldRegExp = regexp.MustCompile(`(\w+)\[(\d+)](.*)`)
 	idxRegExp   = regexp.MustCompile(`^\[(\d+)](.*)`)
 )
+
+type ErrKeyNotFound struct {
+	p string
+}
+
+func (e *ErrKeyNotFound) Error() string {
+	return fmt.Sprintf("field \"%s\" is not present", e.p)
+}
 
 // Reach returns the field with the given path from the given json data
 // Example:
@@ -88,7 +96,7 @@ func Reach(path string, data any) (any, error) {
 
 		return Reach(ch, val)
 
-	case reflect.Slice:
+	case reflect.Slice, reflect.Array:
 		if !hasBracket {
 			return nil,
 				fmt.Errorf("json is an array but the json path does not start with an index pattern []")
@@ -124,5 +132,5 @@ func Reach(path string, data any) (any, error) {
 }
 
 func fieldNotFound(p string) error {
-	return fmt.Errorf("field \"%s\" is not present", p)
+	return &ErrKeyNotFound{p: p}
 }

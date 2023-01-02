@@ -23,7 +23,7 @@ func TestTLS(t *testing.T) {
 	}
 
 	scoped := m.MustMock(mocha.Get(matcher.URLPath("/test")).
-		Header("test", matcher.Equal("hello")).
+		Header("test", matcher.StrictEqual("hello")).
 		Reply(mocha.OK()))
 
 	req, err := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)

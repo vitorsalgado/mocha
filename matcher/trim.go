@@ -22,17 +22,14 @@ func (m *trimMatcher) Match(v any) (*Result, error) {
 
 	return &Result{
 		Pass: result.Pass,
-		Message: func() string {
-			return fmt.Sprintf("%s %s",
-				hint(m.Name(), printExpected(txt)),
-				result.Message(),
-			)
-		},
+		Message: fmt.Sprintf("%s %s",
+			hint(m.Name(), printExpected(txt)),
+			result.Message),
 	}, nil
 }
 
-func (m *trimMatcher) OnMockServed() error {
-	return m.matcher.OnMockServed()
+func (m *trimMatcher) After() error {
+	return m.matcher.After()
 }
 
 // Trim trims' spaces of matcher argument before submitting it to the given matcher.

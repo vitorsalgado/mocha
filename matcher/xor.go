@@ -22,32 +22,34 @@ func (m *xorMatcher) Match(v any) (*Result, error) {
 		return &Result{}, err
 	}
 
-	msg := func() string {
-		desc := ""
-
-		if !a.Pass {
-			desc = a.Message()
-		}
-
-		if !b.Pass {
-			desc += "\n\n"
-			desc += b.Message()
-		}
-
-		return fmt.Sprintf(
-			"%s %s %s",
-			hint(m.Name(), m.first.Name(), m.second.Name()),
-			_separator,
-			desc)
+	if a.Pass != b.Pass {
+		return &Result{Pass: true}, nil
 	}
 
+	desc := ""
+
+	if !a.Pass {
+		desc = a.Message
+	}
+
+	if !b.Pass {
+		desc += "\n\n"
+		desc += b.Message
+	}
+
+	msg := fmt.Sprintf(
+		"%s %s %s",
+		hint(m.Name(), m.first.Name(), m.second.Name()),
+		_separator,
+		desc)
+
 	return &Result{
-		Pass:    a.Pass != b.Pass,
+		Pass:    false,
 		Message: msg,
 	}, nil
 }
 
-func (m *xorMatcher) OnMockServed() error {
+func (m *xorMatcher) After() error {
 	return nil
 }
 

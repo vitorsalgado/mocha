@@ -22,14 +22,12 @@ func (m *containsMatcher) Match(list any) (*Result, error) {
 		return nil, fmt.Errorf("unknown typeof value")
 	}
 
-	var describeFailure = func() string {
-		return fmt.Sprintf(
-			"%s %s %v",
-			hint(m.Name(), printExpected(m.expected)),
-			_separator,
-			printReceived(listValue),
-		)
-	}
+	describeFailure := fmt.Sprintf(
+		"%s %s %v",
+		hint(m.Name(), printExpected(m.expected)),
+		_separator,
+		printReceived(listValue),
+	)
 
 	switch listType.Kind() {
 	case reflect.String:
@@ -40,7 +38,7 @@ func (m *containsMatcher) Match(list any) (*Result, error) {
 	case reflect.Map:
 		keys := listValue.MapKeys()
 		for i := 0; i < len(keys); i++ {
-			if reflect.DeepEqual(keys[i].Interface(), m.expected) {
+			if equalValues(keys[i].Interface(), m.expected) {
 				return &Result{
 					Pass:    true,
 					Message: describeFailure,
@@ -52,7 +50,7 @@ func (m *containsMatcher) Match(list any) (*Result, error) {
 	}
 
 	for i := 0; i < listValue.Len(); i++ {
-		if reflect.DeepEqual(listValue.Index(i).Interface(), sub.Interface()) {
+		if equalValues(listValue.Index(i).Interface(), sub.Interface()) {
 			return &Result{
 				Pass:    true,
 				Message: describeFailure,
@@ -63,7 +61,7 @@ func (m *containsMatcher) Match(list any) (*Result, error) {
 	return &Result{Message: describeFailure}, nil
 }
 
-func (m *containsMatcher) OnMockServed() error {
+func (m *containsMatcher) After() error {
 	return nil
 }
 

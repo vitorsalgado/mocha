@@ -20,17 +20,14 @@ func (m *equalIgnoreCaseMatcher) Match(v any) (*Result, error) {
 
 	return &Result{
 		Pass: strings.EqualFold(m.expected, v.(string)),
-		Message: func() string {
-			return fmt.Sprintf("%s %s %s",
-				hint(m.Name(), printExpected(m.expected)),
-				_separator,
-				printReceived(v),
-			)
-		},
+		Message: fmt.Sprintf("%s %s %s",
+			hint(m.Name(), printExpected(m.expected)),
+			_separator,
+			printReceived(v)),
 	}, nil
 }
 
-func (m *equalIgnoreCaseMatcher) OnMockServed() error {
+func (m *equalIgnoreCaseMatcher) After() error {
 	return nil
 }
 

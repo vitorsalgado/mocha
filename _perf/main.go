@@ -113,7 +113,7 @@ func main() {
 	m.MustMock(mocha.
 		Get(URLPath("/test")).
 		Header(header.Accept, Contain(mimetype.TextPlain)).
-		Header("X-Scenario", Equal("1")).
+		Header("X-Scenario", StrictEqual("1")).
 		Reply(mocha.OK().
 			PlainText("ok").
 			Header("X-Scenario-Result", "true")))
@@ -122,8 +122,8 @@ func main() {
 		Post(URLPath("/test")).
 		Header(header.ContentType, Contain(mimetype.JSON)).
 		Body(AllOf(
-			JSONPath("active", Equal(true)),
-			JSONPath("result", Equal("ok")))).
+			JSONPath("active", StrictEqual(true)),
+			JSONPath("result", StrictEqual("ok")))).
 		Reply(mocha.OK().
 			JSON().
 			BodyReader(f)),

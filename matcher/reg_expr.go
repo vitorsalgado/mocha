@@ -17,13 +17,11 @@ func (m *regExpMatcher) Name() string {
 func (m *regExpMatcher) Match(v any) (*Result, error) {
 	txt := fmt.Sprintf("%v", v)
 
-	msg := func() string {
-		return fmt.Sprintf(
-			"%s %s %s",
-			hint(m.Name(), printExpected(m.expression)),
-			_separator,
-			txt)
-	}
+	msg := fmt.Sprintf(
+		"%s %s %s",
+		hint(m.Name(), printExpected(m.expression)),
+		_separator,
+		txt)
 
 	switch e := m.expression.(type) {
 	case string:
@@ -40,7 +38,7 @@ func (m *regExpMatcher) Match(v any) (*Result, error) {
 	}
 }
 
-func (m *regExpMatcher) OnMockServed() error {
+func (m *regExpMatcher) After() error {
 	return nil
 }
 
