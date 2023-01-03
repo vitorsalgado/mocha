@@ -92,16 +92,16 @@ func equalValues(expected any, actual any) bool {
 	return false
 }
 
-func runAfter(matchers ...Matcher) error {
+func runAfterMockServed(matchers ...Matcher) error {
 	var errs []string
 
 	for _, matcher := range matchers {
-		m, ok := matcher.(After)
+		m, ok := matcher.(OnAfterMockServed)
 		if !ok {
 			continue
 		}
 
-		err := m.After()
+		err := m.AfterMockServed()
 		if err != nil {
 			errs = append(errs, err.Error())
 		}

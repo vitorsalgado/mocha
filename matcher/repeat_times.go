@@ -24,7 +24,7 @@ func (m *timesMatcher) Match(_ any) (*Result, error) {
 	}, nil
 }
 
-func (m *timesMatcher) After() error {
+func (m *timesMatcher) AfterMockServed() error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 

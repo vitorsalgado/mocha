@@ -35,8 +35,8 @@ func (m *jsonPathMatcher) Match(v any) (*Result, error) {
 	return &Result{Pass: r.Pass, Message: hint(m.Name(), printExpected(m.path), r.Message)}, nil
 }
 
-func (m *jsonPathMatcher) After() error {
-	return m.matcher.After()
+func (m *jsonPathMatcher) AfterMockServed() error {
+	return m.matcher.AfterMockServed()
 }
 
 // JSONPath applies the provided matcher to the JSON field value in the given path.

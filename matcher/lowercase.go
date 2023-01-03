@@ -28,8 +28,8 @@ func (m *lowerCaseMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *lowerCaseMatcher) After() error {
-	return m.matcher.After()
+func (m *lowerCaseMatcher) AfterMockServed() error {
+	return m.matcher.AfterMockServed()
 }
 
 // ToLower lower case matcher string argument before submitting it to provided matcher.

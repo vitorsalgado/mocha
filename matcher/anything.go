@@ -11,7 +11,7 @@ func (m *anythingMatcher) Match(_ any) (*Result, error) {
 	return &Result{Pass: true}, nil
 }
 
-func (m *anythingMatcher) After() error {
+func (m *anythingMatcher) AfterMockServed() error {
 	return nil
 }
 

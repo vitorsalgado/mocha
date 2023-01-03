@@ -28,8 +28,8 @@ func (m *trimMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *trimMatcher) After() error {
-	return m.matcher.After()
+func (m *trimMatcher) AfterMockServed() error {
+	return m.matcher.AfterMockServed()
 }
 
 // Trim trims' spaces of matcher argument before submitting it to the given matcher.

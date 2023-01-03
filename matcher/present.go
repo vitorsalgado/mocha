@@ -30,7 +30,7 @@ func (m *bePresentMatcher) Match(v any) (*Result, error) {
 	return &Result{Pass: true, Message: message}, nil
 }
 
-func (m *bePresentMatcher) After() error {
+func (m *bePresentMatcher) AfterMockServed() error {
 	return nil
 }
 

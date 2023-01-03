@@ -24,7 +24,7 @@ func (m *hasKeyMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *hasKeyMatcher) After() error {
+func (m *hasKeyMatcher) AfterMockServed() error {
 	return nil
 }
 

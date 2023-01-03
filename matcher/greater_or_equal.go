@@ -27,7 +27,7 @@ func (m *greaterOrEqualMatcher) Match(v any) (*Result, error) {
 		printReceived(vv))}, nil
 }
 
-func (m *greaterOrEqualMatcher) After() error {
+func (m *greaterOrEqualMatcher) AfterMockServed() error {
 	return nil
 }
 

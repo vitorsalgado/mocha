@@ -61,7 +61,7 @@ func (m *containsMatcher) Match(list any) (*Result, error) {
 	return &Result{Message: describeFailure}, nil
 }
 
-func (m *containsMatcher) After() error {
+func (m *containsMatcher) AfterMockServed() error {
 	return nil
 }
 

@@ -49,7 +49,7 @@ func (m *xorMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *xorMatcher) After() error {
+func (m *xorMatcher) AfterMockServed() error {
 	return nil
 }
 

@@ -54,7 +54,7 @@ func (m *urlPathMatcher) Match(v any) (*Result, error) {
 	return &Result{Pass: res.Pass, Message: message(res.Message)}, nil
 }
 
-func (m *urlPathMatcher) After() error {
+func (m *urlPathMatcher) AfterMockServed() error {
 	return nil
 }
 

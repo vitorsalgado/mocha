@@ -26,7 +26,7 @@ func (m *hasPrefixMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *hasPrefixMatcher) After() error {
+func (m *hasPrefixMatcher) AfterMockServed() error {
 	return nil
 }
 

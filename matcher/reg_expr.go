@@ -38,7 +38,7 @@ func (m *regExpMatcher) Match(v any) (*Result, error) {
 	}
 }
 
-func (m *regExpMatcher) After() error {
+func (m *regExpMatcher) AfterMockServed() error {
 	return nil
 }
 

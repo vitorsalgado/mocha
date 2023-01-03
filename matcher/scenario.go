@@ -81,7 +81,7 @@ func (m *scenarioMatcher) Match(_ any) (*Result, error) {
 	)}, nil
 }
 
-func (m *scenarioMatcher) After() error {
+func (m *scenarioMatcher) AfterMockServed() error {
 	scn, ok := m.store.fetchByName(m.nm)
 	if !ok {
 		return nil

@@ -23,7 +23,7 @@ func (m *equalStrictMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *equalStrictMatcher) After() error {
+func (m *equalStrictMatcher) AfterMockServed() error {
 	return nil
 }
 

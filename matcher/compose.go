@@ -6,7 +6,7 @@ type ComposeMatcher struct {
 
 func (m *ComposeMatcher) Name() string                 { return m.M.Name() }
 func (m *ComposeMatcher) Match(v any) (*Result, error) { return m.M.Match(v) }
-func (m *ComposeMatcher) After() error                 { return m.M.After() }
+func (m *ComposeMatcher) AfterMockServed() error       { return m.M.AfterMockServed() }
 
 // And compose the current Matcher with another one using the "and" operator.
 func (m *ComposeMatcher) And(and Matcher) *ComposeMatcher {

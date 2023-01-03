@@ -56,8 +56,8 @@ func (m *allOfMatcher) Match(v any) (*Result, error) {
 	return &Result{Pass: true}, nil
 }
 
-func (m *allOfMatcher) After() error {
-	return runAfter(m.matchers...)
+func (m *allOfMatcher) AfterMockServed() error {
+	return runAfterMockServed(m.matchers...)
 }
 
 // AllOf matches when all the given matchers returns true.

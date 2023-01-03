@@ -48,8 +48,8 @@ func (m *bothMatcher) Match(value any) (*Result, error) {
 	return &Result{Pass: false, Message: msg}, nil
 }
 
-func (m *bothMatcher) After() error {
-	return runAfter(m.first, m.second)
+func (m *bothMatcher) AfterMockServed() error {
+	return runAfterMockServed(m.first, m.second)
 }
 
 // Both matches true when both given matchers evaluates to true.

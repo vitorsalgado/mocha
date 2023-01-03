@@ -41,7 +41,7 @@ func (m *convertMatcher) Match(v any) (*Result, error) {
 	)}, nil
 }
 
-func (m *convertMatcher) After() error {
+func (m *convertMatcher) AfterMockServed() error {
 	return nil
 }
 

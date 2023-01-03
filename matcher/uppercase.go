@@ -28,8 +28,8 @@ func (m *upperCaseMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *upperCaseMatcher) After() error {
-	return m.matcher.After()
+func (m *upperCaseMatcher) AfterMockServed() error {
+	return m.matcher.AfterMockServed()
 }
 
 // ToUpper upper case matcher string argument before submitting it to provided matcher.

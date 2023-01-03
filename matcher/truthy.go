@@ -25,7 +25,7 @@ func (m *truthyMatcher) Match(v any) (*Result, error) {
 	return &Result{Pass: true}, nil
 }
 
-func (m *truthyMatcher) After() error {
+func (m *truthyMatcher) AfterMockServed() error {
 	return nil
 }
 

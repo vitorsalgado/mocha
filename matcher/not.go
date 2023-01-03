@@ -27,8 +27,8 @@ func (m *notMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *notMatcher) After() error {
-	return m.matcher.After()
+func (m *notMatcher) AfterMockServed() error {
+	return m.matcher.AfterMockServed()
 }
 
 // Not negates the provided matcher.

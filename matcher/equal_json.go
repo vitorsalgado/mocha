@@ -34,7 +34,7 @@ func (m *equalJSONMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *equalJSONMatcher) After() error {
+func (m *equalJSONMatcher) AfterMockServed() error {
 	return nil
 }
 

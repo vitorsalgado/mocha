@@ -27,7 +27,7 @@ func (m *equalIgnoreCaseMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *equalIgnoreCaseMatcher) After() error {
+func (m *equalIgnoreCaseMatcher) AfterMockServed() error {
 	return nil
 }
 

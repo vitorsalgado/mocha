@@ -26,7 +26,7 @@ func (m *hasSuffixMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *hasSuffixMatcher) After() error {
+func (m *hasSuffixMatcher) AfterMockServed() error {
 	return nil
 }
 

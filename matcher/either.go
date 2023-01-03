@@ -48,8 +48,8 @@ func (m *eitherMatcher) Match(v any) (*Result, error) {
 	return &Result{Pass: false, Message: msg}, nil
 }
 
-func (m *eitherMatcher) After() error {
-	return runAfter(m.first, m.second)
+func (m *eitherMatcher) AfterMockServed() error {
+	return runAfterMockServed(m.first, m.second)
 }
 
 // Either matches true when any of the two given matchers returns true.

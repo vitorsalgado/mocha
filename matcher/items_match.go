@@ -70,7 +70,7 @@ func (m *itemsMatchMatcher) Match(v any) (*Result, error) {
 	return &Result{}, nil
 }
 
-func (m *itemsMatchMatcher) After() error {
+func (m *itemsMatchMatcher) AfterMockServed() error {
 	return nil
 }
 

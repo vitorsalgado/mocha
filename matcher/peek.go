@@ -20,8 +20,8 @@ func (m *peekMatcher) Match(v any) (*Result, error) {
 	return m.matcher.Match(v)
 }
 
-func (m *peekMatcher) After() error {
-	return m.matcher.After()
+func (m *peekMatcher) AfterMockServed() error {
+	return m.matcher.AfterMockServed()
 }
 
 // Peek will return the result of the given matcher, after executing the provided function.

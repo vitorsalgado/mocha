@@ -61,8 +61,8 @@ func (m *anyOfMatcher) Match(v any) (*Result, error) {
 	return &Result{Pass: ok}, nil
 }
 
-func (m *anyOfMatcher) After() error {
-	return runAfter(m.matchers...)
+func (m *anyOfMatcher) AfterMockServed() error {
+	return runAfterMockServed(m.matchers...)
 }
 
 // AnyOf matches when any of the given matchers returns true.

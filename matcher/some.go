@@ -27,7 +27,7 @@ func (m *someMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *someMatcher) After() error {
+func (m *someMatcher) AfterMockServed() error {
 	return nil
 }
 

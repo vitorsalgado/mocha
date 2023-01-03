@@ -21,7 +21,7 @@ func (m *lenMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *lenMatcher) After() error {
+func (m *lenMatcher) AfterMockServed() error {
 	return nil
 }
 
