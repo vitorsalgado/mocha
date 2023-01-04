@@ -26,10 +26,6 @@ func (m *hasPrefixMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *hasPrefixMatcher) AfterMockServed() error {
-	return nil
-}
-
 // HasPrefix returns true if the matcher argument starts with the given prefix.
 func HasPrefix(prefix string) Matcher {
 	return &hasPrefixMatcher{prefix: prefix}

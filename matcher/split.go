@@ -35,7 +35,7 @@ func (m *splitMatcher) Match(v any) (*Result, error) {
 }
 
 func (m *splitMatcher) AfterMockServed() error {
-	return m.matcher.AfterMockServed()
+	return runAfterMockServed(m.matcher)
 }
 
 func Split(separator string, matcher Matcher) Matcher {

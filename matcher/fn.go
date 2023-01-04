@@ -26,10 +26,6 @@ func (m *funcMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *funcMatcher) AfterMockServed() error {
-	return nil
-}
-
 // Func creates an anonymous Matcher using the given function.
 func Func(fn func(v any) (bool, error)) Matcher {
 	return &funcMatcher{fn: fn}

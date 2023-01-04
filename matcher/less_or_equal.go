@@ -27,10 +27,6 @@ func (m *lessOrEqualMatcher) Match(v any) (*Result, error) {
 		printReceived(vv))}, nil
 }
 
-func (m *lessOrEqualMatcher) AfterMockServed() error {
-	return nil
-}
-
 func LessOrEqual(expected float64) Matcher {
 	return &lessOrEqualMatcher{expected: expected}
 }

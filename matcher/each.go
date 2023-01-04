@@ -73,7 +73,7 @@ func (m *eachMatcher) Match(v any) (*Result, error) {
 }
 
 func (m *eachMatcher) AfterMockServed() error {
-	return m.matcher.AfterMockServed()
+	return runAfterMockServed(m.matcher)
 }
 
 func Each(matcher Matcher) Matcher {

@@ -23,10 +23,6 @@ func (m *equalStrictMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *equalStrictMatcher) AfterMockServed() error {
-	return nil
-}
-
 // StrictEqual returns true if matcher value and type are equal to the given parameter.
 func StrictEqual(expected any) Matcher {
 	return &equalStrictMatcher{expected: expected}

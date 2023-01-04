@@ -38,10 +38,6 @@ func (m *regExpMatcher) Match(v any) (*Result, error) {
 	}
 }
 
-func (m *regExpMatcher) AfterMockServed() error {
-	return nil
-}
-
 // Matches returns true then the given regular expression matches matcher argument.
 // It accepts a string or a regexp.Regexp.
 func Matches(expression any) Matcher {

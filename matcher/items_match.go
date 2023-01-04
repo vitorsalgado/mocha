@@ -70,10 +70,6 @@ func (m *itemsMatchMatcher) Match(v any) (*Result, error) {
 	return &Result{}, nil
 }
 
-func (m *itemsMatchMatcher) AfterMockServed() error {
-	return nil
-}
-
 func ItemsMatch(items any) Matcher {
 	return &itemsMatchMatcher{expected: items}
 }

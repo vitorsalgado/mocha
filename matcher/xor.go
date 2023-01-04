@@ -50,7 +50,7 @@ func (m *xorMatcher) Match(v any) (*Result, error) {
 }
 
 func (m *xorMatcher) AfterMockServed() error {
-	return nil
+	return runAfterMockServed(m.first, m.second)
 }
 
 // XOR is an exclusive or matcher

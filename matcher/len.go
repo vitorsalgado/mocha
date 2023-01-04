@@ -21,10 +21,6 @@ func (m *lenMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *lenMatcher) AfterMockServed() error {
-	return nil
-}
-
 // HaveLen returns true when matcher argument length is equal to the items value.
 func HaveLen(length int) Matcher {
 	return &lenMatcher{length: length}

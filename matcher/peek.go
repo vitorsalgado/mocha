@@ -21,7 +21,7 @@ func (m *peekMatcher) Match(v any) (*Result, error) {
 }
 
 func (m *peekMatcher) AfterMockServed() error {
-	return m.matcher.AfterMockServed()
+	return runAfterMockServed(m.matcher)
 }
 
 // Peek will return the result of the given matcher, after executing the provided function.

@@ -41,10 +41,6 @@ func (m *convertMatcher) Match(v any) (*Result, error) {
 	)}, nil
 }
 
-func (m *convertMatcher) AfterMockServed() error {
-	return nil
-}
-
 func ConvertTo[T any](matcher Matcher) Matcher {
 	var t T
 	return &convertMatcher{to: reflect.TypeOf(t), matcher: matcher}

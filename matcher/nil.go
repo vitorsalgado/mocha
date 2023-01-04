@@ -21,10 +21,6 @@ func (m *nilMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *nilMatcher) AfterMockServed() error {
-	return nil
-}
-
 func Nil() Matcher {
 	return &nilMatcher{}
 }

@@ -11,10 +11,6 @@ func (m *anythingMatcher) Match(_ any) (*Result, error) {
 	return &Result{Pass: true}, nil
 }
 
-func (m *anythingMatcher) AfterMockServed() error {
-	return nil
-}
-
 func Anything() Matcher {
 	return &anythingMatcher{}
 }

@@ -21,10 +21,6 @@ func (m *emptyMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *emptyMatcher) AfterMockServed() error {
-	return nil
-}
-
 // Empty returns true if matcher value has zero length.
 func Empty() Matcher {
 	return &emptyMatcher{}

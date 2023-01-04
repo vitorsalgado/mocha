@@ -27,10 +27,6 @@ func (m *greaterMatcher) Match(v any) (*Result, error) {
 		printReceived(vv))}, nil
 }
 
-func (m *greaterMatcher) AfterMockServed() error {
-	return nil
-}
-
 func GreaterThan(expected float64) Matcher {
 	return &greaterMatcher{expected: expected}
 }

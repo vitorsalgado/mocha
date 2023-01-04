@@ -239,13 +239,15 @@ func (m *Mocha) Mock(builders ...Builder) (*Scoped, error) {
 	added := make([]*Mock, size)
 
 	for i, b := range builders {
-		nm, err := b.Build()
+		mock, err := b.Build()
 		if err != nil {
 			return nil, fmt.Errorf("error building mock at index [%d]. %w", i, err)
 		}
 
-		m.storage.Save(nm)
-		added[i] = nm
+		mock.prepare()
+
+		m.storage.Save(mock)
+		added[i] = mock
 	}
 
 	scoped := scope(m.storage, added)

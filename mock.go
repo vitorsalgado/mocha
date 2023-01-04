@@ -45,6 +45,7 @@ type Mock struct {
 	// Mappers stores response mappers associated with this Mock.
 	Mappers []Mapper
 
+	after        []matcher.OnAfterMockServed
 	expectations []*expectation
 	mu           sync.Mutex
 	hits         int
@@ -298,6 +299,15 @@ func (m *Mock) requestMatches(ri *valueSelectorInput, expectations []*expectatio
 	}
 
 	return &matchResult{Pass: ok, Weight: w, Details: details}
+}
+
+func (m *Mock) prepare() {
+	for _, e := range m.expectations {
+		ee, ok := e.Matcher.(matcher.OnAfterMockServed)
+		if ok {
+			m.after = append(m.after, ee)
+		}
+	}
 }
 
 func doMatches(e *expectation, value any) (result *matcher.Result, err error) {

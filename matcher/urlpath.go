@@ -54,10 +54,6 @@ func (m *urlPathMatcher) Match(v any) (*Result, error) {
 	return &Result{Pass: res.Pass, Message: message(res.Message)}, nil
 }
 
-func (m *urlPathMatcher) AfterMockServed() error {
-	return nil
-}
-
 // URLPath compares the URL path with the expected value and matches if they are equal.
 // Comparison is case-insensitive.
 func URLPath(expected string) Matcher {

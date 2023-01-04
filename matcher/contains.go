@@ -61,10 +61,6 @@ func (m *containsMatcher) Match(list any) (*Result, error) {
 	return &Result{Message: describeFailure}, nil
 }
 
-func (m *containsMatcher) AfterMockServed() error {
-	return nil
-}
-
 // Contain returns true when the items value is contained in the matcher argument.
 func Contain(expected any) Matcher {
 	return &containsMatcher{expected: expected}

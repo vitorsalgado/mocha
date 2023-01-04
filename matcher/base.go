@@ -13,14 +13,10 @@ type Matcher interface {
 
 	// Match is the function that does the actual matching logic.
 	Match(value any) (*Result, error)
-
-	// After runs everytime the Mock that holds this Matcher is served.
-	// Useful for stateful Matchers.
-	AfterMockServed() error
 }
 
 // OnAfterMockServed describes a Matcher that has post processes that needs to be executed.
-// The OnAfterMockServed() function will be called after mock HTTP response.
+// AfterMockServed() function will be called after mock HTTP response.
 // Useful for stateful Matchers.
 type OnAfterMockServed interface {
 	AfterMockServed() error

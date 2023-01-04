@@ -13,6 +13,7 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/httpx"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
+	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/x/event"
 )
 
@@ -130,10 +131,10 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	for _, exp := range mock.expectations {
-		err = exp.Matcher.AfterMockServed()
+	for _, aa := range mock.after {
+		err = aa.AfterMockServed()
 		if err != nil {
-			h.app.log.Logf("matcher %s .AfterMockServed() returned the error=%v", exp.Matcher.Name(), err)
+			h.app.log.Logf("matcher %s .AfterMockServed() returned the error=%v", aa.(matcher.Matcher).Name(), err)
 		}
 	}
 

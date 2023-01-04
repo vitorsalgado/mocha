@@ -30,10 +30,6 @@ func (m *bePresentMatcher) Match(v any) (*Result, error) {
 	return &Result{Pass: true, Message: message}, nil
 }
 
-func (m *bePresentMatcher) AfterMockServed() error {
-	return nil
-}
-
 // Present checks if matcher argument contains a value that is not nil or the zero value for the argument type.
 func Present() Matcher {
 	return &bePresentMatcher{}

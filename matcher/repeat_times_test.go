@@ -7,7 +7,7 @@ import (
 )
 
 func TestRepeat(t *testing.T) {
-	rep := Repeat(2)
+	rep := Repeat(2).(*repeatMatcher)
 
 	res, err := rep.Match(nil)
 	assert.NoError(t, rep.AfterMockServed())

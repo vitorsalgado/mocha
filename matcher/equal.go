@@ -26,10 +26,6 @@ func (m *equalMatcher) Match(v any) (*Result, error) {
 		nil
 }
 
-func (m *equalMatcher) AfterMockServed() error {
-	return nil
-}
-
 // Equal asserts that the given expectation is equal to the incoming request value.
 // It considers equivalent value. Eg.: float64(10) is equal to int(10).
 func Equal(expected any) Matcher {

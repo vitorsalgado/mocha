@@ -288,7 +288,7 @@ func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
 		rep = seq
 	} else {
 		// no response definition found.
-		// default to 200 (Pass) with nothing more.
+		// default to 200 (OK) with nothing more.
 		rep = OK()
 	}
 

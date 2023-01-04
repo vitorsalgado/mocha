@@ -27,10 +27,6 @@ func (m *equalIgnoreCaseMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func (m *equalIgnoreCaseMatcher) AfterMockServed() error {
-	return nil
-}
-
 // EqualIgnoreCase returns true if items value is equal to matcher value, ignoring case.
 func EqualIgnoreCase(expected string) Matcher {
 	return &equalIgnoreCaseMatcher{expected: expected}
