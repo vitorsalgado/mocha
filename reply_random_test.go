@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRandomReplies(t *testing.T) {
@@ -18,9 +19,9 @@ func TestRandomReplies(t *testing.T) {
 		res, err := Rand(
 			BadRequest(),
 			OK(),
-			Created(),
-			InternalServerError(),
-		).Build(nil, newReqValues(req))
+			Created()).
+			Add(InternalServerError()).
+			Build(nil, newReqValues(req))
 
 		contains := false
 		for _, status := range statuses {
@@ -66,4 +67,14 @@ func TestRandWithCustom(t *testing.T) {
 		assert.Nil(t, err)
 		assert.True(t, contains)
 	}
+}
+
+func TestRandomReply_Pre(t *testing.T) {
+	r := Rand()
+
+	require.Error(t, r.Pre())
+
+	r.Add(OK())
+
+	require.NoError(t, r.Pre())
 }

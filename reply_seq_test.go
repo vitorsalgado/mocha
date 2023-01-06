@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSequential(t *testing.T) {
+func TestSequentialReply(t *testing.T) {
 	t.Run("should return replies based configure sequence and return error when over", func(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 		builder := Seq(InternalServerError(), BadRequest(), OK(), NotFound())
@@ -49,9 +49,19 @@ func TestSequential(t *testing.T) {
 	})
 }
 
-func TestShouldReturnErrorWhenSequenceDoesNotContainReplies(t *testing.T) {
+func TestSequentialReply_ShouldReturnErrorWhenSequenceDoesNotContainReplies(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 	res, err := Seq().Build(nil, newReqValues(req))
 	assert.Nil(t, res)
 	assert.NotNil(t, err)
+}
+
+func TestSequentialReply_Pre(t *testing.T) {
+	seq := Seq()
+
+	require.Error(t, seq.Pre())
+
+	seq.Add(OK())
+
+	require.NoError(t, seq.Pre())
 }

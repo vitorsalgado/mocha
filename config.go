@@ -23,11 +23,9 @@ func (l LogLevel) String() string {
 		return "silent"
 	case LogInfo:
 		return "info"
-	case LogVerbose:
+	default:
 		return "verbose"
 	}
-
-	return ""
 }
 
 // Defaults

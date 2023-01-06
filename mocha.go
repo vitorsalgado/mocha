@@ -54,7 +54,11 @@ type TestingT interface {
 
 // New creates a new Mocha mock server with the given configurations.
 // Parameter config accepts a Config or a ConfigBuilder implementation.
-func New(config ...Configurer) (m *Mocha) {
+func New(config ...Configurer) *Mocha {
+	return NewWithContext(context.Background(), config...)
+}
+
+func NewWithContext(ctx context.Context, config ...Configurer) (m *Mocha) {
 	m = &Mocha{}
 	l := logger.NewConsole()
 
@@ -67,7 +71,7 @@ func New(config ...Configurer) (m *Mocha) {
 		}
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	store := newStore()
 	events := event.New()
 

@@ -249,7 +249,7 @@ func bindFile(v *viper.Viper, filename string, paths []string) error {
 }
 
 func bindFlags(v *viper.Viper) error {
-	pp := pflag.NewFlagSet("", pflag.ContinueOnError)
+	pp := pflag.CommandLine
 
 	normalizer := pp.GetNormalizeFunc()
 
@@ -282,7 +282,6 @@ func bindFlags(v *viper.Viper) error {
 	pp.Bool(_kForward, false, "")
 	pp.String(_kForwardTarget, "", "Forward requests to the given URL.")
 
-	// aliases
 	v.RegisterAlias(_kDirectories, _kGlob)
 
 	err := pp.Parse(os.Args)

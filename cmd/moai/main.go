@@ -43,6 +43,13 @@ For more information, visit: %s`,
 )
 
 func main() {
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	defer cancel()
+
+	run(ctx)
+}
+
+func run(ctx context.Context) {
 	rootCmd := &cobra.Command{
 		Use:     _usage,
 		Short:   _shortDescription,
@@ -50,18 +57,14 @@ func main() {
 		Args:    cobra.MinimumNArgs(0),
 		Example: _example,
 		Run: func(cmd *cobra.Command, args []string) {
-			conf := []mocha.Configurer{mocha.UseLocals()}
+			configurers := []mocha.Configurer{mocha.UseLocals()}
 
 			_, exists := os.LookupEnv(_dockerHostEnv)
 			if exists {
-				conf = append(conf, &dockerConfigurer{})
+				configurers = append(configurers, &dockerConfigurer{})
 			}
 
-			m := mocha.New(conf...)
-
-			ctx, cancel := signal.NotifyContext(m.Context(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
-			defer cancel()
-
+			m := mocha.NewWithContext(ctx, configurers...)
 			m.MustStart()
 
 			fmt.Println(_banner)
@@ -104,12 +107,10 @@ func readStdIn(ctx context.Context, in <-chan string) {
 			case <-ctx.Done():
 				return
 
-			case input, ok := <-in:
+			case _, ok := <-in:
 				if !ok {
 					return
 				}
-
-				println("done work " + input)
 			}
 		}
 	}()

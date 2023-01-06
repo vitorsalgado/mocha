@@ -29,7 +29,7 @@ var (
 
 const _defaultTimeout = 30 * time.Second
 
-type FromTypes interface{ string | *url.URL | url.URL }
+type FromTypes interface{ string | *url.URL }
 
 // ProxyReply represents a response stub that will be the response "proxied" from the specified target.
 // Use From to init a new ProxyReply.
@@ -57,8 +57,6 @@ func From[T FromTypes](target T) *ProxyReply {
 		}
 	case *url.URL:
 		u = e
-	case url.URL:
-		u = &e
 	}
 
 	return &ProxyReply{
@@ -78,7 +76,12 @@ func (r *ProxyReply) Header(key, value string) *ProxyReply {
 
 // Headers sets extra response headers that will be set after proxy target responds.
 func (r *ProxyReply) Headers(header http.Header) *ProxyReply {
-	r.headers = header.Clone()
+	for k, v := range header {
+		for _, vv := range v {
+			r.headers.Add(k, vv)
+		}
+	}
+
 	return r
 }
 
@@ -90,7 +93,12 @@ func (r *ProxyReply) ProxyHeader(key, value string) *ProxyReply {
 
 // ProxyHeaders sets extra headers to be sent to the proxy target.
 func (r *ProxyReply) ProxyHeaders(header http.Header) *ProxyReply {
-	r.proxyHeaders = header.Clone()
+	for k, v := range header {
+		for _, vv := range v {
+			r.proxyHeaders.Add(k, vv)
+		}
+	}
+
 	return r
 }
 
