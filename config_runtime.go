@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/spf13/pflag"
@@ -73,6 +74,8 @@ const (
 
 var _ Configurer = (*localConfigurer)(nil)
 
+var _once sync.Once
+
 type localConfigurer struct {
 	filename string
 	paths    []string
@@ -96,7 +99,10 @@ func UseLocalsWith(filename string, paths []string) Configurer {
 func (c *localConfigurer) Apply(conf *Config) (err error) {
 	v := viper.New()
 
-	err = bindFlags(v)
+	_once.Do(func() {
+		err = bindFlags(v)
+	})
+
 	if err != nil {
 		return err
 	}
