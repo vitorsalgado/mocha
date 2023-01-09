@@ -11,6 +11,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/goleak"
 
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
@@ -280,32 +281,26 @@ func TestMocha_Silently(t *testing.T) {
 	assert.Equal(t, string(body), "hello world")
 }
 
-func TestMocha_MatcherCompositions(t *testing.T) {
-	// m := New()
-	// m.MustStart()
-	//
-	// defer m.Close()
-	//
-	// scoped := m.MustMock(
-	// 	Get(URLPath("/test")).
-	// 		Header("test", Should(Be(StrictEqual("hello")))).
-	// 		Query("filter", Is(StrictEqual("all"))).
-	// 		Reply(reply.
-	// 			Created().
-	// 			PlainText("hello world")))
-	//
-	// req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test?filter=all", nil)
-	// req.Header.Add("test", "hello")
-	//
-	// res, err := http.DefaultClient.Do(req)
-	// assert.NoError(t, err)
-	//
-	// body, err := io.ReadAll(res.Body)
-	//
-	// assert.NoError(t, err)
-	// assert.True(t, scoped.HasBeenCalled())
-	// assert.StrictEqual(t, 201, res.StatusCode)
-	// assert.StrictEqual(t, string(body), "hello world")
+func TestSchemeMatching(t *testing.T) {
+	m := New()
+	m.MustStart()
+
+	defer m.Close()
+
+	scoped := m.MustMock(
+		Get(URLPath("/test")).
+			Scheme("http").
+			Reply(OK()))
+
+	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test?filter=all", nil)
+
+	res, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+
+	defer res.Body.Close()
+
+	assert.True(t, scoped.HasBeenCalled())
+	assert.Equal(t, http.StatusOK, res.StatusCode)
 }
 
 func TestMocha_NoReply(t *testing.T) {

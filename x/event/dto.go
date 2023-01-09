@@ -1,22 +1,17 @@
 package event
 
 import (
-	"fmt"
 	"net/http"
 )
 
 // EvtReq defines information from http.Request to be logged.
 type EvtReq struct {
-	Method     string
-	Path       string
-	RequestURI string
-	Host       string
-	Header     http.Header
-	Body       []byte
-}
-
-func (r *EvtReq) FullURL() string {
-	return fmt.Sprintf("%s%s", r.Host, r.RequestURI)
+	Method string
+	Path   string
+	Host   string
+	Header http.Header
+	Body   []byte
+	URL    string
 }
 
 // EvtRes defines HTTP EvtRes information to be logged.

@@ -30,7 +30,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	segments := strings.Split(reqPath, "/")
-	rawURL, _ := url.Parse(reqPath)
+	rawURL, _ := url.Parse(h.app.URL() + reqPath)
 
 	if h.app.config.Record != nil {
 		w = httpx.Wrap(w)
@@ -38,6 +38,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	parsedBody, rawBody, err := parseRequestBody(r, h.app.requestBodyParsers)
 
+	evtReq.URL = rawURL.String()
 	evtReq.Body = rawBody
 	h.app.listener.Emit(&event.OnRequest{Request: evtReq, StartedAt: start})
 

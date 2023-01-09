@@ -6,10 +6,9 @@ import (
 
 func FromRequest(r *http.Request) *EvtReq {
 	return &EvtReq{
-		Method:     r.Method,
-		Path:       r.URL.Path,
-		RequestURI: r.RequestURI,
-		Host:       r.Host,
-		Header:     r.Header.Clone(),
+		Method: r.Method,
+		Path:   r.URL.Path,
+		Host:   r.Host,
+		Header: r.Header.Clone(),
 	}
 }

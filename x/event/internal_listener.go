@@ -32,7 +32,7 @@ func (h *InternalListener) OnRequest(evt any) {
 		colorize.Blue(e.Request.Method),
 		colorize.Blue(e.Request.Path),
 		e.Request.Method,
-		e.Request.FullURL(),
+		e.Request.URL,
 		colorize.Blue("Headers"),
 		e.Request.Header))
 
@@ -58,7 +58,7 @@ func (h *InternalListener) OnRequestMatched(evt any) {
 		colorize.Green(e.Request.Method),
 		colorize.Green(e.Request.Path),
 		e.Request.Method,
-		e.Request.FullURL()))
+		e.Request.URL))
 
 	nm := e.Mock.Name
 	if nm == "" {
@@ -97,7 +97,7 @@ func (h *InternalListener) OnRequestNotMatched(evt any) {
 		colorize.Yellow(e.Request.Method),
 		colorize.Yellow(e.Request.Path),
 		e.Request.Method,
-		e.Request.FullURL()))
+		e.Request.URL))
 
 	if e.Result.HasClosestMatch {
 		builder.WriteString(fmt.Sprintf("%s: %s %s\n\n",
@@ -125,7 +125,7 @@ func (h *InternalListener) OnError(evt any) {
 		colorize.Red(e.Request.Method),
 		colorize.Red(e.Request.Path),
 		e.Request.Method,
-		e.Request.FullURL(),
+		e.Request.URL,
 		colorize.Red(colorize.Bold("Error: ")),
 		e.Err,
 	)
