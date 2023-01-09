@@ -1,6 +1,7 @@
 package mocha
 
 import (
+	"crypto/tls"
 	"net/http"
 	"net/url"
 	"testing"
@@ -35,7 +36,35 @@ func TestProxy(t *testing.T) {
 	targetScope.AssertCalled(t)
 }
 
-func TestProxy_ViaProxy(t *testing.T) {
+func TestProxyTLS(t *testing.T) {
+	proxySrv := New(Configure().Proxy()).CloseWithT(t)
+	proxySrv.MustStartTLS()
+	proxyScope := proxySrv.MustMock(Get(URLPath("/test")).Reply(Accepted()))
+
+	targetSrv := New().CloseWithT(t)
+	targetSrv.MustStart()
+	targetScope := targetSrv.MustMock(Get(URLPath("/other")).Reply(Created()))
+
+	// client that acts like a browser proxying requests to our server
+	proxyURL, _ := url.Parse(proxySrv.URL())
+	client := &http.Client{Transport: &http.Transport{
+		Proxy:           http.ProxyURL(proxyURL),
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+	}}
+
+	res, err := client.Get(targetSrv.URL() + "/test")
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusAccepted, res.StatusCode)
+
+	res, err = client.Get(targetSrv.URL() + "/other")
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusCreated, res.StatusCode)
+
+	proxyScope.AssertCalled(t)
+	targetScope.AssertCalled(t)
+}
+
+func TestProxy_ViaAnotherProxy(t *testing.T) {
 	p := New(WithProxy()).CloseWithT(t)
 	p.MustStart()
 	scope1 := p.MustMock(Get(URLPath("/test")).Reply(Accepted()))

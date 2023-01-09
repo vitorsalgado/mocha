@@ -132,7 +132,7 @@ func TestErrors(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.False(t, scoped.HasBeenCalled())
-	assert.Equal(t, StatusRequestDidNotMatch, res.StatusCode)
+	assert.Equal(t, StatusRequestWasNotMatch, res.StatusCode)
 }
 
 func TestMocha_Assertions(t *testing.T) {
@@ -188,12 +188,12 @@ func TestMocha_Enable_Disable(t *testing.T) {
 	res, err = testutil.Get(m.URL() + "/test-1").Do()
 
 	assert.NoError(t, err)
-	assert.Equal(t, StatusRequestDidNotMatch, res.StatusCode)
+	assert.Equal(t, StatusRequestWasNotMatch, res.StatusCode)
 
 	res, err = testutil.Get(m.URL() + "/test-2").Do()
 
 	assert.NoError(t, err)
-	assert.Equal(t, StatusRequestDidNotMatch, res.StatusCode)
+	assert.Equal(t, StatusRequestWasNotMatch, res.StatusCode)
 
 	// re-enable mocks again
 	m.Enable()

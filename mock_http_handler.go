@@ -1,7 +1,6 @@
 package mocha
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -112,10 +111,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(res.StatusCode)
 
 		if res.Body != nil {
-			_, err = io.Copy(w, res.Body)
-			if err != nil {
-				h.app.log.Logf(err.Error())
-			}
+			w.Write(res.Body)
 		}
 
 		for k, v := range res.Trailer {
@@ -191,7 +187,7 @@ func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *event.EvtReq, result
 	}
 
 	w.Header().Add(header.ContentType, mimetype.TextPlain)
-	w.WriteHeader(StatusRequestDidNotMatch)
+	w.WriteHeader(h.app.config.MockNotFoundStatusCode)
 	w.Write([]byte(builder.String()))
 }
 
@@ -200,7 +196,7 @@ func (h *mockHandler) onError(w http.ResponseWriter, r *event.EvtReq, err error)
 	h.app.listener.Emit(&event.OnError{Request: r, Err: err})
 
 	w.Header().Add(header.ContentType, mimetype.TextPlain)
-	w.WriteHeader(StatusRequestDidNotMatch)
+	w.WriteHeader(h.app.config.MockNotFoundStatusCode)
 	w.Write([]byte(fmt.Sprintf("An error occurred.\n%s", err.Error())))
 }
 
@@ -222,7 +218,7 @@ func (h *mockHandler) buildResponseFromWriter(w http.ResponseWriter) (*Stub, err
 	}
 
 	if len(body) > 0 {
-		stub.Body = bytes.NewReader(body)
+		stub.Body = body
 	}
 
 	return stub, nil

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"strings"
 
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
@@ -31,12 +30,8 @@ type Stub struct {
 	StatusCode int
 	Header     http.Header
 	Cookies    []*http.Cookie
-	Body       io.Reader
+	Body       []byte
 	Trailer    http.Header
-}
-
-func (s *Stub) bodyBytes() ([]byte, error) {
-	return io.ReadAll(s.Body)
 }
 
 // -- Standard Reply
@@ -160,13 +155,13 @@ func (rep *StdReply) ExpireCookie(cookie http.Cookie) *StdReply {
 
 // Body defines the response body using a []byte.
 func (rep *StdReply) Body(value []byte) *StdReply {
-	rep.response.Body = bytes.NewReader(value)
+	rep.response.Body = value
 	return rep
 }
 
 // BodyText defines the response body using a string.
 func (rep *StdReply) BodyText(text string) *StdReply {
-	rep.response.Body = strings.NewReader(text)
+	rep.response.Body = []byte(text)
 	return rep
 }
 
@@ -178,14 +173,19 @@ func (rep *StdReply) BodyJSON(data any) *StdReply {
 		return rep
 	}
 
-	rep.response.Body = bytes.NewReader(b)
+	rep.response.Body = b
 
 	return rep
 }
 
 // BodyReader defines the response body using the given io.Reader.
 func (rep *StdReply) BodyReader(reader io.Reader) *StdReply {
-	rep.response.Body = reader
+	b, err := io.ReadAll(reader)
+	if err != nil {
+		rep.err = err
+	}
+
+	rep.response.Body = b
 	return rep
 }
 
@@ -234,15 +234,10 @@ func (rep *StdReply) Pre() error {
 
 	switch rep.bodyType {
 	case _bodyGZIP:
-		b, err := io.ReadAll(rep.response.Body)
-		if err != nil {
-			return err
-		}
-
 		buf := new(bytes.Buffer)
 		gz := gzip.NewWriter(buf)
 
-		_, err = gz.Write(b)
+		_, err := gz.Write(rep.response.Body)
 		if err != nil {
 			return err
 		}
@@ -252,7 +247,7 @@ func (rep *StdReply) Pre() error {
 			return err
 		}
 
-		rep.response.Body = buf
+		rep.response.Body = buf.Bytes()
 	}
 
 	return nil
@@ -275,7 +270,7 @@ func (rep *StdReply) Build(_ http.ResponseWriter, r *RequestValues) (*Stub, erro
 			return nil, err
 		}
 
-		rep.response.Body = buf
+		rep.response.Body = buf.Bytes()
 	}
 
 	return rep.response, nil

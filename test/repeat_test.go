@@ -31,5 +31,5 @@ func TestRepeat(t *testing.T) {
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 
 	res, _ = testutil.Get(m.URL() + "/test").Do()
-	assert.Equal(t, mocha.StatusRequestDidNotMatch, res.StatusCode)
+	assert.Equal(t, mocha.StatusRequestWasNotMatch, res.StatusCode)
 }

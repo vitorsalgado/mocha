@@ -48,13 +48,9 @@ func TestForward(t *testing.T) {
 			Headers(h).
 			Build(nil, newReqValues(req))
 
-		require.NoError(t, err)
-
-		b, err := io.ReadAll(res.Body)
-
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusCreated, res.StatusCode)
-		assert.Equal(t, "hello world", string(b))
+		assert.Equal(t, "hello world", string(res.Body))
 		assert.Equal(t, []string{"response", "ok"}, res.Header.Values("x-res"))
 		assert.Equal(t, "trailer-ok", res.Trailer.Get("x-test-trailer"))
 	})
@@ -81,11 +77,9 @@ func TestForward(t *testing.T) {
 
 		require.NoError(t, err)
 
-		b, err := io.ReadAll(res.Body)
-
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
-		assert.Equal(t, expected, string(b))
+		assert.Equal(t, expected, string(res.Body))
 	})
 
 	t.Run("should forward and respond a No Content", func(t *testing.T) {
@@ -101,12 +95,9 @@ func TestForward(t *testing.T) {
 		res, err := forward.Build(nil, newReqValues(req))
 
 		require.NoError(t, err)
-
-		b, err := io.ReadAll(res.Body)
-
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusNoContent, res.StatusCode)
-		assert.Equal(t, "", string(b))
+		assert.Equal(t, "", string(res.Body))
 	})
 
 	t.Run("should remove prefix from URL", func(t *testing.T) {

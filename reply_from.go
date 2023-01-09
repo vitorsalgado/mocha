@@ -1,7 +1,6 @@
 package mocha
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -184,7 +183,7 @@ func (r *ProxyReply) Build(_ http.ResponseWriter, req *RequestValues) (*Stub, er
 		return nil, err
 	}
 
-	stub.Body = bytes.NewReader(b)
+	stub.Body = b
 	stub.Trailer = make(http.Header, len(res.Trailer))
 
 	for key, values := range res.Trailer {

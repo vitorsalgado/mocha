@@ -151,6 +151,7 @@ func TestConfig_WithFunctions(t *testing.T) {
 	m := New(
 		WithName(nm),
 		WithAddr(addr),
+		WithMockNotFoundStatusCode(http.StatusNotFound),
 		WithRequestBodyParsers(&jsonBodyParser{}, &plainTextParser{}),
 		WithMiddlewares(),
 		WithCORS(&_defaultCORSConfig),
@@ -165,6 +166,7 @@ func TestConfig_WithFunctions(t *testing.T) {
 
 	assert.Equal(t, nm, conf.Name)
 	assert.Equal(t, addr, conf.Addr)
+	assert.Equal(t, http.StatusNotFound, conf.MockNotFoundStatusCode)
 	assert.Len(t, conf.RequestBodyParsers, 2)
 	assert.Len(t, conf.Middlewares, 0)
 	assert.Equal(t, &_defaultCORSConfig, conf.CORS)
@@ -183,6 +185,7 @@ func TestConfig_Builder(t *testing.T) {
 	m := New(Configure().
 		Name(nm).
 		Addr(addr).
+		MockNotFoundStatusCode(http.StatusNotFound).
 		RequestBodyParsers(&jsonBodyParser{}, &plainTextParser{}).
 		Middlewares().
 		CORS(&_defaultCORSConfig).
@@ -197,6 +200,7 @@ func TestConfig_Builder(t *testing.T) {
 
 	assert.Equal(t, nm, conf.Name)
 	assert.Equal(t, addr, conf.Addr)
+	assert.Equal(t, http.StatusNotFound, conf.MockNotFoundStatusCode)
 	assert.Len(t, conf.RequestBodyParsers, 2)
 	assert.Len(t, conf.Middlewares, 0)
 	assert.Equal(t, &_defaultCORSConfig, conf.CORS)

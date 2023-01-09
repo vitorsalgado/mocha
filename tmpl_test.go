@@ -67,10 +67,32 @@ func TestReplyWithTemplate(t *testing.T) {
 		Build(nil, newReqValues(req))
 
 	require.NoError(t, err)
-
-	b, err = io.ReadAll(res.Body)
-	require.NoError(t, err)
-
 	assert.Equal(t, http.StatusOK, res.StatusCode)
-	assert.Equal(t, "test\ndev\n", string(b))
+	assert.Equal(t, "test\ndev\n", string(res.Body))
+}
+
+func TestReplyWithTemplateText(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
+	req.Header.Add("x-test", "dev")
+
+	data := struct {
+		Name string
+	}{
+		Name: " test  ",
+	}
+
+	tmpl := `{{- trim .Extras.Name }}
+{{ .Request.Header.Get "x-test" }}
+`
+
+	res, err := NewReply().
+		Status(http.StatusOK).
+		BodyTemplate(NewTextTemplate().
+			FuncMap(template.FuncMap{"trim": strings.TrimSpace}).
+			Template(tmpl), data).
+		Build(nil, newReqValues(req))
+
+	require.NoError(t, err)
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+	assert.Equal(t, "test\ndev\n", string(res.Body))
 }

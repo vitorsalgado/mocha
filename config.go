@@ -32,6 +32,13 @@ func (l LogLevel) String() string {
 const (
 	// ConfigMockFilePattern is the default filename glob pattern to search for local mock files.
 	ConfigMockFilePattern = "testdata/*mock.json"
+
+	// StatusRequestWasNotMatch describes an HTTP response where no Mock was found.
+	//
+	// It uses http.StatusTeapot to reduce the chance of using the same
+	// expected response from the actual server being mocked.
+	// Basically, every request that doesn't match against to a Mock will return http.StatusTeapot.
+	StatusRequestWasNotMatch = http.StatusTeapot
 )
 
 // Configurer lets users configure the Mock API.
@@ -48,6 +55,11 @@ type Config struct {
 
 	// Addr defines a custom server address.
 	Addr string
+
+	// MockNotFoundStatusCode defines the status code that should be used when
+	// an HTTP request doesn't match with any mock.
+	// Defaults to 418 (I'm a teapot).
+	MockNotFoundStatusCode int
 
 	// RequestBodyParsers defines request body parsers to be executed before core parsers.
 	RequestBodyParsers []RequestBodyParser
@@ -112,6 +124,7 @@ type ForwardConfig struct {
 func (c *Config) Apply(conf *Config) error {
 	conf.Name = c.Name
 	conf.Addr = c.Addr
+	conf.MockNotFoundStatusCode = c.MockNotFoundStatusCode
 	conf.RequestBodyParsers = c.RequestBodyParsers
 	conf.Middlewares = c.Middlewares
 	conf.CORS = c.CORS
@@ -144,15 +157,16 @@ type ConfigBuilder struct {
 
 func defaultConfig() *Config {
 	return &Config{
-		LogLevel:           LogVerbose,
-		Directories:        []string{ConfigMockFilePattern},
-		RequestBodyParsers: make([]RequestBodyParser, 0),
-		Middlewares:        make([]func(http.Handler) http.Handler, 0),
-		Loaders:            make([]Loader, 0),
+		MockNotFoundStatusCode: StatusRequestWasNotMatch,
+		LogLevel:               LogVerbose,
+		Directories:            []string{ConfigMockFilePattern},
+		RequestBodyParsers:     make([]RequestBodyParser, 0),
+		Middlewares:            make([]func(http.Handler) http.Handler, 0),
+		Loaders:                make([]Loader, 0),
 	}
 }
 
-// Configure inits a new ConfigBuilder.
+// Configure initialize a new ConfigBuilder.
 // Entrypoint to start a new custom configuration for Mocha mock servers.
 func Configure() *ConfigBuilder {
 	return &ConfigBuilder{conf: defaultConfig()}
@@ -167,6 +181,12 @@ func (cb *ConfigBuilder) Name(name string) *ConfigBuilder {
 // Addr sets a custom address for the mock HTTP server.
 func (cb *ConfigBuilder) Addr(addr string) *ConfigBuilder {
 	cb.conf.Addr = addr
+	return cb
+}
+
+// MockNotFoundStatusCode defines the status code to be used no mock matches with an HTTP request.
+func (cb *ConfigBuilder) MockNotFoundStatusCode(code int) *ConfigBuilder {
+	cb.conf.MockNotFoundStatusCode = code
 	return cb
 }
 
@@ -290,6 +310,11 @@ func WithName(name string) Configurer {
 // WithAddr configures the server address.
 func WithAddr(addr string) Configurer {
 	return configFunc(func(c *Config) { c.Addr = addr })
+}
+
+// WithMockNotFoundStatusCode defines the status code to be used no mock matches with an HTTP request.
+func WithMockNotFoundStatusCode(code int) Configurer {
+	return configFunc(func(c *Config) { c.MockNotFoundStatusCode = code })
 }
 
 // WithRequestBodyParsers configures one or more RequestBodyParser.

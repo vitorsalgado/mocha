@@ -1,12 +1,10 @@
 package mocha
 
 import (
-	"bufio"
 	"context"
 	"encoding/hex"
 	"fmt"
 	"hash/fnv"
-	"io"
 	"log"
 	"mime"
 	"net/http"
@@ -78,7 +76,7 @@ type recRequest struct {
 type recResponse struct {
 	status int
 	header http.Header
-	body   io.Reader
+	body   []byte
 }
 
 type record struct {
@@ -208,8 +206,6 @@ func (r *record) process(arg *recArgs) error {
 	}
 
 	if hasResBody {
-		scanner := bufio.NewScanner(arg.response.body)
-
 		if r.config.SaveBodyToFile {
 			mockBodyFile := name + ".bin"
 			if len(ext) > 0 {
@@ -225,21 +221,13 @@ func (r *record) process(arg *recArgs) error {
 
 			v.Set(_fResponseBodyFile, mockBodyFile)
 
-			for scanner.Scan() {
-				_, _ = b.Write(scanner.Bytes())
-			}
+			_, _ = b.Write(arg.response.body)
 		} else {
 			buf := strings.Builder{}
 
-			for scanner.Scan() {
-				_, _ = buf.Write(scanner.Bytes())
-			}
+			_, _ = buf.Write(arg.response.body)
 
 			v.Set(_fResponseBody, buf.String())
-		}
-
-		if scanner.Err() != nil {
-			return scanner.Err()
 		}
 	}
 

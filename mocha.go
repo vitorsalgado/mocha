@@ -17,13 +17,6 @@ import (
 	"github.com/vitorsalgado/mocha/v3/x/event"
 )
 
-// StatusRequestDidNotMatch describes an HTTP response where no Mock was found.
-//
-// It uses http.StatusTeapot to reduce the chance of using the same
-// expected response from the actual server being mocked.
-// Basically, every request that doesn't match against to a Mock will return http.StatusTeapot.
-const StatusRequestDidNotMatch = http.StatusTeapot
-
 // Mocha is the base for the mock server.
 type Mocha struct {
 	log                logger.Log

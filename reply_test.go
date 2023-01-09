@@ -44,10 +44,6 @@ func TestReply(t *testing.T) {
 		ExpireCookie(http.Cookie{Name: "cookie_test_remove"}).
 		Body([]byte("hi")).
 		Build(nil, newReqValues(_req))
-	require.NoError(t, err)
-
-	b, err := res.bodyBytes()
-	require.NoError(t, err)
 
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, res.StatusCode)
@@ -57,7 +53,7 @@ func TestReply(t *testing.T) {
 	assert.Equal(t, "cookie_test", res.Cookies[0].Name)
 	assert.Equal(t, "cookie_test_remove", res.Cookies[1].Name)
 	assert.Equal(t, -1, res.Cookies[1].MaxAge)
-	assert.Equal(t, "hi", string(b))
+	assert.Equal(t, "hi", string(res.Body))
 }
 
 func TestStdReply_BodyString(t *testing.T) {
@@ -67,11 +63,8 @@ func TestStdReply_BodyString(t *testing.T) {
 		Build(nil, newReqValues(_req))
 	require.NoError(t, err)
 
-	body, err := res.bodyBytes()
-	require.NoError(t, err)
-
 	assert.NoError(t, err)
-	assert.Equal(t, "text", string(body))
+	assert.Equal(t, "text", string(res.Body))
 }
 
 func TestStdReply_BodyJSON(t *testing.T) {
@@ -93,13 +86,10 @@ func TestStdReply_BodyJSON(t *testing.T) {
 			BodyJSON(model).
 			Build(nil, newReqValues(_req))
 
-		assert.Nil(t, err)
-
-		body, err := res.bodyBytes()
-		require.NoError(t, err)
+		assert.NoError(t, err)
 
 		b := jsonData{}
-		err = json.Unmarshal(body, &b)
+		err = json.Unmarshal(res.Body, &b)
 
 		assert.Nil(t, err)
 		assert.Equal(t, model, b)
@@ -127,11 +117,8 @@ func TestStdReply_BodyReader(t *testing.T) {
 		Status(http.StatusCreated).
 		BodyReader(f).
 		Build(nil, newReqValues(_req))
-	require.NoError(t, err)
 
-	body, err := res.bodyBytes()
 	require.NoError(t, err)
-
 	assert.NoError(t, err)
-	assert.Equal(t, "hello\nworld\n", string(body))
+	assert.Equal(t, "hello\nworld\n", string(res.Body))
 }
