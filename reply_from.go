@@ -2,6 +2,7 @@ package mocha
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,12 +14,15 @@ import (
 var _ Reply = (*ProxyReply)(nil)
 
 var (
-	_client           = &http.Client{}
+	_client = &http.Client{Transport: &http.Transport{
+		DisableCompression: true,
+		TLSClientConfig:    &tls.Config{InsecureSkipVerify: true},
+	}}
 	_forbiddenHeaders = []string{
 		"Connection",
 		"Keep-Alive",
-		"ServeHTTP-Authenticate",
-		"ServeHTTP-Authorization",
+		"Proxy-Authenticate",
+		"Proxy-Authorization",
 		"TE",
 		"Trailer",
 		"Transfer-Encoding",
@@ -42,7 +46,7 @@ type ProxyReply struct {
 	timeout              time.Duration
 }
 
-// From inits a ProxyReply with the given target URL.
+// From creates a ProxyReply with the given target.
 func From[T FromTypes](target T) *ProxyReply {
 	u := &url.URL{}
 
@@ -157,17 +161,23 @@ func (r *ProxyReply) Build(_ http.ResponseWriter, req *RequestValues) (*Stub, er
 	ctx, cancel := context.WithTimeout(req.RawRequest.Context(), r.timeout)
 	defer cancel()
 
-	res, err := _client.Do(req.RawRequest.WithContext(ctx))
+	res, err := _client.Transport.RoundTrip(req.RawRequest.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
 
 	defer res.Body.Close()
 
-	stub := &Stub{Header: make(http.Header, len(res.Header))}
+	stub := &Stub{Header: make(http.Header)}
 
 	for _, h := range _forbiddenHeaders {
 		res.Header.Del(h)
+	}
+
+	for k, v := range res.Header {
+		for _, vv := range v {
+			stub.Header.Add(k, vv)
+		}
 	}
 
 	for key, values := range r.headers {

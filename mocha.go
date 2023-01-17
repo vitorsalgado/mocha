@@ -97,7 +97,7 @@ func NewWithContext(ctx context.Context, config ...Configurer) (m *Mocha) {
 
 	var rec *record
 	if conf.Record != nil {
-		rec = newRecord(conf.Record)
+		rec = newRecorder(conf.Record)
 	}
 
 	var p *reverseProxy
@@ -354,6 +354,10 @@ func (m *Mocha) Close() {
 	if err != nil {
 		m.log.Logf(err.Error())
 	}
+
+	if m.rec != nil {
+		m.rec.stop()
+	}
 }
 
 // CloseWithT register Server Close function on TestingT Cleanup().
@@ -531,7 +535,7 @@ func (m *Mocha) onStart() error {
 	m.listener.StartListening(m.ctx)
 
 	if m.rec != nil {
-		m.rec.startRecording(m.ctx)
+		m.rec.start(m.ctx)
 	}
 
 	return nil

@@ -1,6 +1,7 @@
 package mocha
 
 import (
+	"compress/gzip"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -11,6 +12,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/vitorsalgado/mocha/v3/internal/header"
 )
 
 func TestForward(t *testing.T) {
@@ -48,7 +51,7 @@ func TestForward(t *testing.T) {
 			Headers(h).
 			Build(nil, newReqValues(req))
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, http.StatusCreated, res.StatusCode)
 		assert.Equal(t, "hello world", string(res.Body))
 		assert.Equal(t, []string{"response", "ok"}, res.Header.Values("x-res"))
@@ -76,10 +79,42 @@ func TestForward(t *testing.T) {
 		res, err := forward.Build(nil, newReqValues(req))
 
 		require.NoError(t, err)
-
-		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Equal(t, expected, string(res.Body))
+	})
+
+	t.Run("should forward and respond POST with compressed body", func(t *testing.T) {
+		dest := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusOK)
+			w.Header().Add(header.ContentEncoding, "gzip")
+			w.Header().Add(header.ContentType, "application/json")
+
+			b, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+
+			ww := gzip.NewWriter(w)
+
+			defer ww.Close()
+
+			_, _ = ww.Write(b)
+		}))
+
+		defer dest.Close()
+
+		expected := "test text"
+		body := strings.NewReader(expected)
+		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", body)
+
+		u, _ := url.Parse(dest.URL)
+		forward := From(u)
+		res, err := forward.Build(nil, newReqValues(req))
+		require.NoError(t, err)
+
+		g, err := res.Gunzip()
+		require.NoError(t, err)
+
+		assert.Equal(t, http.StatusOK, res.StatusCode)
+		assert.Equal(t, expected, string(g))
 	})
 
 	t.Run("should forward and respond a No Content", func(t *testing.T) {
@@ -95,7 +130,6 @@ func TestForward(t *testing.T) {
 		res, err := forward.Build(nil, newReqValues(req))
 
 		require.NoError(t, err)
-		assert.NoError(t, err)
 		assert.Equal(t, http.StatusNoContent, res.StatusCode)
 		assert.Equal(t, "", string(res.Body))
 	})

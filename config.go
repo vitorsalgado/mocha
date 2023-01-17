@@ -33,12 +33,12 @@ const (
 	// ConfigMockFilePattern is the default filename glob pattern to search for local mock files.
 	ConfigMockFilePattern = "testdata/*mock.json"
 
-	// StatusRequestWasNotMatch describes an HTTP response where no Mock was found.
+	// StatusNoMatch describes an HTTP response where no Mock was found.
 	//
 	// It uses http.StatusTeapot to reduce the chance of using the same
 	// expected response from the actual server being mocked.
 	// Basically, every request that doesn't match against to a Mock will return http.StatusTeapot.
-	StatusRequestWasNotMatch = http.StatusTeapot
+	StatusNoMatch = http.StatusTeapot
 )
 
 // Configurer lets users configure the Mock API.
@@ -143,21 +143,22 @@ func (c *Config) Apply(conf *Config) error {
 }
 
 // configFunc is a helper to build Configurer instances with functions.
-type configFunc func(config *Config)
+type configFunc func(config *Config) error
 
 func (f configFunc) Apply(config *Config) error {
-	f(config)
-	return nil
+	return f(config)
 }
 
 // ConfigBuilder lets users create a Config with a fluent API.
 type ConfigBuilder struct {
-	conf *Config
+	conf         *Config
+	recorderConf []RecordConfigurer
+	proxyConf    []ProxyConfigurer
 }
 
 func defaultConfig() *Config {
 	return &Config{
-		MockNotFoundStatusCode: StatusRequestWasNotMatch,
+		MockNotFoundStatusCode: StatusNoMatch,
 		LogLevel:               LogVerbose,
 		Directories:            []string{ConfigMockFilePattern},
 		RequestBodyParsers:     make([]RequestBodyParser, 0),
@@ -269,32 +270,52 @@ func (cb *ConfigBuilder) Loader(loader Loader) *ConfigBuilder {
 // Proxy configures the mock server as a proxy server.
 // Non-Matched requests will be routed based on the proxy configuration.
 func (cb *ConfigBuilder) Proxy(options ...ProxyConfigurer) *ConfigBuilder {
-	opts := &ProxyConfig{}
+	if len(options) == 0 {
+		c := _defaultProxyConfig
+		cb.proxyConf = []ProxyConfigurer{&c}
 
-	for _, option := range options {
-		option.Apply(opts)
+		return cb
 	}
 
-	cb.conf.Proxy = opts
-
+	cb.proxyConf = options
 	return cb
 }
 
 // Record configures recording.
 func (cb *ConfigBuilder) Record(options ...RecordConfigurer) *ConfigBuilder {
-	opts := defaultRecordConfig()
-
-	for _, option := range options {
-		option.Apply(opts)
+	if len(options) == 0 {
+		cb.recorderConf = []RecordConfigurer{defaultRecordConfig()}
+		return cb
 	}
 
-	cb.conf.Record = opts
-
+	cb.recorderConf = options
 	return cb
 }
 
 // Apply builds a new Config with previously configured values.
 func (cb *ConfigBuilder) Apply(conf *Config) error {
+	if len(cb.recorderConf) > 0 {
+		recordConfig := defaultRecordConfig()
+		for _, option := range cb.recorderConf {
+			err := option.Apply(recordConfig)
+			if err != nil {
+				return err
+			}
+		}
+		cb.conf.Record = recordConfig
+	}
+
+	if len(cb.proxyConf) > 0 {
+		proxyConfig := _defaultProxyConfig
+		for _, option := range cb.proxyConf {
+			err := option.Apply(&proxyConfig)
+			if err != nil {
+				return err
+			}
+		}
+		cb.conf.Proxy = &proxyConfig
+	}
+
 	return cb.conf.Apply(conf)
 }
 
@@ -304,60 +325,89 @@ func (cb *ConfigBuilder) Apply(conf *Config) error {
 
 // WithName sets a name to the mock server.
 func WithName(name string) Configurer {
-	return configFunc(func(c *Config) { c.Name = name })
+	return configFunc(func(c *Config) error {
+		c.Name = name
+		return nil
+	})
 }
 
 // WithAddr configures the server address.
 func WithAddr(addr string) Configurer {
-	return configFunc(func(c *Config) { c.Addr = addr })
+	return configFunc(func(c *Config) error {
+		c.Addr = addr
+		return nil
+	})
 }
 
 // WithMockNotFoundStatusCode defines the status code to be used no mock matches with an HTTP request.
 func WithMockNotFoundStatusCode(code int) Configurer {
-	return configFunc(func(c *Config) { c.MockNotFoundStatusCode = code })
+	return configFunc(func(c *Config) error {
+		c.MockNotFoundStatusCode = code
+		return nil
+	})
 }
 
 // WithRequestBodyParsers configures one or more RequestBodyParser.
 func WithRequestBodyParsers(parsers ...RequestBodyParser) Configurer {
-	return configFunc(func(c *Config) { c.RequestBodyParsers = append(c.RequestBodyParsers, parsers...) })
+	return configFunc(func(c *Config) error {
+		c.RequestBodyParsers = append(c.RequestBodyParsers, parsers...)
+		return nil
+	})
 }
 
 // WithMiddlewares adds one or more middlewares to be executed before the mock HTTP handler.
 func WithMiddlewares(middlewares ...func(handler http.Handler) http.Handler) Configurer {
-	return configFunc(func(c *Config) { c.Middlewares = append(c.Middlewares, middlewares...) })
+	return configFunc(func(c *Config) error {
+		c.Middlewares = append(c.Middlewares, middlewares...)
+		return nil
+	})
 }
 
 // WithCORS configures CORS.
 func WithCORS(opts ...CORSConfigurer) Configurer {
-	return configFunc(func(c *Config) {
+	return configFunc(func(c *Config) error {
 		options := &_defaultCORSConfig
 		for _, option := range opts {
 			option.Apply(options)
 		}
 
 		c.CORS = options
+
+		return nil
 	})
 }
 
 // WithServer configures a custom mock HTTP Server.
 // If none is set, a default one will be used.
 func WithServer(srv Server) Configurer {
-	return configFunc(func(c *Config) { c.Server = srv })
+	return configFunc(func(c *Config) error {
+		c.Server = srv
+		return nil
+	})
 }
 
 // WithHandlerDecorator configures a http.Handler that decorates the internal mock HTTP handler.
 func WithHandlerDecorator(fn func(handler http.Handler) http.Handler) Configurer {
-	return configFunc(func(c *Config) { c.HandlerDecorator = fn })
+	return configFunc(func(c *Config) error {
+		c.HandlerDecorator = fn
+		return nil
+	})
 }
 
 // WithLogLevel sets the mock server LogLevel.
 func WithLogLevel(level LogLevel) Configurer {
-	return configFunc(func(c *Config) { c.LogLevel = level })
+	return configFunc(func(c *Config) error {
+		c.LogLevel = level
+		return nil
+	})
 }
 
 // WithParams configures a custom reply.Params.
 func WithParams(params Params) Configurer {
-	return configFunc(func(c *Config) { c.Parameters = params })
+	return configFunc(func(c *Config) error {
+		c.Parameters = params
+		return nil
+	})
 }
 
 // WithDirs configures directories to search for local mocks.
@@ -365,12 +415,14 @@ func WithParams(params Params) Configurer {
 // This method keeps the default mock filename pattern, [testdata/*mock.json].
 // to overwrite the default mock filename pattern, use WithNewDirs.
 func WithDirs(patterns ...string) Configurer {
-	return configFunc(func(c *Config) {
+	return configFunc(func(c *Config) error {
 		dirs := make([]string, 0)
 		dirs = append(dirs, ConfigMockFilePattern)
 		dirs = append(dirs, patterns...)
 
 		c.Directories = dirs
+
+		return nil
 	})
 }
 
@@ -379,24 +431,35 @@ func WithDirs(patterns ...string) Configurer {
 // Pass a list of glob patterns supported by Go Standard Library.
 // Use WithDirs to keep the default internal pattern.
 func WithNewDirs(patterns ...string) Configurer {
-	return configFunc(func(c *Config) { c.Directories = patterns })
+	return configFunc(func(c *Config) error {
+		c.Directories = patterns
+		return nil
+	})
 }
 
 // WithLoader adds a new Loader to the configuration.
 func WithLoader(loader Loader) Configurer {
-	return configFunc(func(c *Config) { c.Loaders = append(c.Loaders, loader) })
+	return configFunc(func(c *Config) error {
+		c.Loaders = append(c.Loaders, loader)
+		return nil
+	})
 }
 
 // WithProxy configures the mock server as a proxy server.
 func WithProxy(options ...ProxyConfigurer) Configurer {
-	return configFunc(func(c *Config) {
+	return configFunc(func(c *Config) error {
 		opts := &ProxyConfig{}
 
 		for _, option := range options {
-			option.Apply(opts)
+			err := option.Apply(opts)
+			if err != nil {
+				return err
+			}
 		}
 
 		c.Proxy = opts
+
+		return nil
 	})
 }
 

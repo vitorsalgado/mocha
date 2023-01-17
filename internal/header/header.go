@@ -5,11 +5,13 @@ package header
 const (
 	Accept                        = "Accept"
 	ContentType                   = "Content-Type"
+	ContentEncoding               = "Content-Encoding"
 	Vary                          = "Vary"
 	Origin                        = "Origin"
 	ContentLength                 = "Content-length"
 	Connection                    = "Connection"
 	Trailer                       = "Trailer"
+	Location                      = "Location"
 	AccessControlAllowOrigin      = "Access-Control-Allow-Origin"
 	AccessControlAllowMethods     = "Access-Control-Allow-Methods"
 	AccessControlAllowHeaders     = "Access-Control-Allow-Header"

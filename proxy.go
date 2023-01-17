@@ -11,6 +11,8 @@ import (
 	"github.com/vitorsalgado/mocha/v3/x/event"
 )
 
+var _ ProxyConfigurer = (*ProxyConfig)(nil)
+
 // ProxyConfig configures proxy.
 type ProxyConfig struct {
 	// ProxyVia sets a URL to route request via another proxy server.
@@ -29,14 +31,16 @@ type ProxyConfig struct {
 
 // ProxyConfigurer lets users configure proxy.
 type ProxyConfigurer interface {
-	Apply(config *ProxyConfig)
+	Apply(config *ProxyConfig) error
 }
 
 // Apply allows ProxyConfig to be used as a Configurer.
-func (p *ProxyConfig) Apply(c *ProxyConfig) {
+func (p *ProxyConfig) Apply(c *ProxyConfig) error {
 	c.Transport = p.Transport
 	c.Timeout = p.Timeout
 	c.ProxyVia = p.ProxyVia
+
+	return nil
 }
 
 var _defaultProxyConfig = ProxyConfig{Timeout: 10 * time.Second}
@@ -142,5 +146,11 @@ func (p *reverseProxy) handleHTTP(w http.ResponseWriter, r *http.Request) {
 	_, err = io.Copy(w, res.Body)
 	if err != nil {
 		p.listener.Emit(&event.OnError{Request: event.FromRequest(r), Err: err})
+	}
+
+	for k, vv := range res.Trailer {
+		for _, v := range vv {
+			w.Header().Add(k, v)
+		}
 	}
 }

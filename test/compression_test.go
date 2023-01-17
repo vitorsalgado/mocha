@@ -31,13 +31,10 @@ func TestCompressedResponse_GZIP(t *testing.T) {
 
 	defer res.Body.Close()
 
-	gz, err := gzip.NewReader(res.Body)
+	b, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
 
-	b, err := io.ReadAll(gz)
-	require.NoError(t, err)
-
-	assert.False(t, res.Uncompressed)
+	assert.True(t, res.Uncompressed)
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.Equal(t, "hello world", string(b))
 }
@@ -61,8 +58,9 @@ func Test_GZIPProxiedResponse(t *testing.T) {
 	ms := m.MustMock(mocha.Get(URLPath("/test")).
 		Reply(mocha.From(p.URL())))
 
-	req := testutil.Get(m.URL() + "/test")
-	res, err := req.Do()
+	httpClient := &http.Client{Transport: &http.Transport{DisableCompression: true}}
+
+	res, err := httpClient.Get(m.URL() + "/test")
 	require.NoError(t, err)
 
 	defer res.Body.Close()

@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
+	"strings"
 	"time"
 
 	"github.com/spf13/viper"
@@ -37,8 +39,9 @@ const (
 	_fResponseStatus             = "response.status"
 	_fResponseHeader             = "response.header"
 	_fResponseBody               = "response.body"
+	_fResponseEncoding           = "response.encoding"
 	_fResponseBodyFile           = "response.body_file"
-	_fResponseIsTemplate         = "response.is_template"
+	_fResponseTemplateEnabled    = "response.template_enabled"
 	_fResponseTemplateModel      = "response.template_model"
 	_fResponseSequence           = "response_sequence"
 	_fResponseSequenceEntries    = "response_sequence.responses"
@@ -46,6 +49,17 @@ const (
 	_fResponseRandom             = "response_random"
 	_fResponseRandomEntries      = "response_random.responses"
 	_fResponseRandomSeed         = "response_random.seed"
+)
+
+// Response fields
+const (
+	_resStatus          = "status"
+	_resHeader          = "header"
+	_resBody            = "body"
+	_resBodyFile        = "body_file"
+	_resTemplateEnabled = "template_enabled"
+	_resTemplateModel   = "template_model"
+	_resEncoding        = "encoding"
 )
 
 type MockExternalBuilder struct {
@@ -207,7 +221,7 @@ func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
 	var rep Reply
 
 	if v.IsSet(_fResponse) {
-		rep, err = buildResponse(v.Sub(_fResponse))
+		rep, err = b.buildReply(v.Sub(_fResponse))
 		if err != nil {
 			return nil, err
 		}
@@ -237,7 +251,7 @@ func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
 					fmt.Errorf("[response_random.responses[%d]] error building random response. %w", i, err)
 			}
 
-			rr, err := buildResponse(sub)
+			rr, err := b.buildReply(sub)
 			if err != nil {
 				return nil,
 					fmt.Errorf("[response_random.responses[%d]] building error. %w", i, err)
@@ -255,7 +269,7 @@ func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
 		seq := Seq()
 
 		if v.IsSet(_fResponseSequenceAfterEnded) {
-			rr, err := buildResponse(v.Sub(_fResponseSequenceAfterEnded))
+			rr, err := b.buildReply(v.Sub(_fResponseSequenceAfterEnded))
 			if err != nil {
 				return nil,
 					fmt.Errorf("[response_response.after_ended] building error. %w", err)
@@ -276,7 +290,7 @@ func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
 				return nil, err
 			}
 
-			rr, err := buildResponse(sub)
+			rr, err := b.buildReply(sub)
 			if err != nil {
 				return nil,
 					fmt.Errorf("[response_sequence.responses[%d]] building error. %w", i, err)
@@ -300,20 +314,33 @@ func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
 	return b.builder.Build()
 }
 
-func buildResponse(v *viper.Viper) (Reply, error) {
-	v.SetDefault(_fResponseStatus, http.StatusOK)
-	v.SetDefault(_fResponseIsTemplate, false)
+// buildReply expects a sub instance of viper.Viper, containing the response definition.
+// Fields should not be accessed using "response.", given that the argument v already contains only the
+// response.* fields.
+func (b *MockExternalBuilder) buildReply(v *viper.Viper) (Reply, error) {
+	v.SetDefault(_resStatus, http.StatusOK)
+	v.SetDefault(_resTemplateEnabled, false)
 
 	res := NewReply()
-	res.Status(v.GetInt(_fResponseStatus))
+	res.Status(v.GetInt(_resStatus))
 
-	for k, v := range v.GetStringMapString(_fResponseHeader) {
+	for k, v := range v.GetStringMapString(_resHeader) {
 		res.Header(k, v)
 	}
 
-	if v.IsSet(_fResponseBodyFile) {
-		filename := v.GetString(_fResponseBodyFile)
-		file, err := os.Open(v.GetString(_fResponseBodyFile))
+	switch v.GetString(_resEncoding) {
+	case "gzip":
+		res.Gzip()
+	}
+
+	if v.IsSet(_resBodyFile) {
+		filename := v.GetString(_resBodyFile)
+		if !path.IsAbs(filename) {
+			dirs := strings.Split(b.filename, "/")
+			filename = path.Join(strings.Join(dirs[:len(dirs)-1], "/"), filename)
+		}
+
+		file, err := os.Open(filename)
 		if err != nil {
 			return nil, fmt.Errorf(
 				"[%s] error opening file. %w",
@@ -333,24 +360,22 @@ func buildResponse(v *viper.Viper) (Reply, error) {
 			)
 		}
 
-		if v.GetBool(_fResponseIsTemplate) {
-			res.BodyTemplate(string(b), v.Get(_fResponseTemplateModel))
+		if v.GetBool(_resTemplateEnabled) {
+			res.BodyTemplate(string(b), v.Get(_resTemplateEnabled))
 		} else {
 			res.Body(b)
 		}
 	} else {
-		b := v.Get(_fResponseBody)
+		b := v.Get(_resBody)
 		switch e := b.(type) {
 		case string:
-			if v.GetBool(_fResponseIsTemplate) {
-				res.BodyTemplate(e, v.Get(_fResponseTemplateModel))
+			if v.GetBool(_resTemplateEnabled) {
+				res.BodyTemplate(e, v.Get(_resTemplateModel))
 			} else {
 				res.Body([]byte(e))
 			}
-		case nil:
-			break
-		default:
-			res.BodyJSON(b)
+		case []map[string]any, map[string]any, bool, float64:
+			res.BodyJSON(e)
 		}
 	}
 

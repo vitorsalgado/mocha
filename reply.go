@@ -34,6 +34,18 @@ type Stub struct {
 	Trailer    http.Header
 }
 
+// Gunzip decompresses Gzip body.
+func (s *Stub) Gunzip() ([]byte, error) {
+	gz, err := gzip.NewReader(bytes.NewReader(s.Body))
+	if err != nil {
+		return nil, err
+	}
+
+	defer gz.Close()
+
+	return io.ReadAll(gz)
+}
+
 // -- Standard Reply
 
 var _ Reply = (*StdReply)(nil)
@@ -131,6 +143,12 @@ func (rep *StdReply) Status(status int) *StdReply {
 // Header adds a header to the Stub.
 func (rep *StdReply) Header(key, value string) *StdReply {
 	rep.response.Header.Add(key, value)
+	return rep
+}
+
+// ContentType sets the response content-type header.
+func (rep *StdReply) ContentType(mime string) *StdReply {
+	rep.Header(header.ContentType, mime)
 	return rep
 }
 
@@ -232,6 +250,10 @@ func (rep *StdReply) Pre() error {
 		return rep.err
 	}
 
+	if len(rep.response.Body) == 0 {
+		return nil
+	}
+
 	switch rep.bodyType {
 	case _bodyGZIP:
 		buf := new(bytes.Buffer)
@@ -248,6 +270,7 @@ func (rep *StdReply) Pre() error {
 		}
 
 		rep.response.Body = buf.Bytes()
+		rep.response.Header.Add(header.ContentEncoding, "gzip")
 	}
 
 	return nil

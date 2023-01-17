@@ -59,7 +59,6 @@ const (
 	_kRecordP               = "r"
 	_kRecordRequestHeaders  = "record.request_headers"
 	_kRecordResponseHeaders = "record.response_headers"
-	_kRecordSave            = "record.save"
 	_kRecordSaveDir         = "record.save_dir"
 	_kRecordSaveBodyToFile  = "record.save_body_file"
 
@@ -176,16 +175,14 @@ func (c *localConfigurer) Apply(conf *Config) (err error) {
 
 		v.SetDefault(_kRecordRequestHeaders, defRec.RequestHeaders)
 		v.SetDefault(_kRecordResponseHeaders, defRec.ResponseHeaders)
-		v.SetDefault(_kRecordSave, defRec.Save)
 		v.SetDefault(_kRecordSaveDir, defRec.SaveDir)
-		v.SetDefault(_kRecordSaveBodyToFile, defRec.SaveBodyToFile)
+		v.SetDefault(_kRecordSaveBodyToFile, defRec.SaveResponseBodyToFile)
 
 		conf.Record = &RecordConfig{
-			RequestHeaders:  v.GetStringSlice(_kRecordRequestHeaders),
-			ResponseHeaders: v.GetStringSlice(_kRecordResponseHeaders),
-			Save:            v.GetBool(_kRecordSave),
-			SaveDir:         v.GetString(_kRecordSaveDir),
-			SaveBodyToFile:  v.GetBool(_kRecordSaveBodyToFile),
+			RequestHeaders:         v.GetStringSlice(_kRecordRequestHeaders),
+			ResponseHeaders:        v.GetStringSlice(_kRecordResponseHeaders),
+			SaveDir:                v.GetString(_kRecordSaveDir),
+			SaveResponseBodyToFile: v.GetBool(_kRecordSaveBodyToFile),
 		}
 	}
 

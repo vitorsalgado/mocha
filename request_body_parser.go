@@ -31,6 +31,10 @@ func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (parsedBody 
 			return nil, nil, err
 		}
 
+		if len(rawBody) == 0 {
+			return nil, nil, nil
+		}
+
 		r.Body.Close()
 		r.Body = io.NopCloser(bytes.NewBuffer(rawBody))
 

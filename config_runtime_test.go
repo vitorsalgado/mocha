@@ -53,8 +53,7 @@ func TestLocals_UsingDifferentExtensions(t *testing.T) {
 			assert.NotNil(t, config.Record)
 			assert.Equal(t, []string{"header1", "header2"}, config.Record.RequestHeaders)
 			assert.Equal(t, []string{"header3", "header4"}, config.Record.ResponseHeaders)
-			assert.True(t, config.Record.Save)
-			assert.True(t, config.Record.SaveBodyToFile)
+			assert.True(t, config.Record.SaveResponseBodyToFile)
 			assert.Equal(t, "nowhere", config.Record.SaveDir)
 		})
 	}

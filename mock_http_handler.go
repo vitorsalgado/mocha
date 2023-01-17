@@ -29,8 +29,8 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		reqPath += "?" + r.URL.RawQuery
 	}
 
-	segments := strings.Split(reqPath, "/")
-	rawURL, _ := url.Parse(h.app.URL() + reqPath)
+	urlSegments := strings.Split(reqPath, "/")
+	parsedURL, _ := url.Parse(h.app.URL() + reqPath)
 
 	if h.app.config.Record != nil {
 		w = httpx.Wrap(w)
@@ -38,7 +38,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	parsedBody, rawBody, err := parseRequestBody(r, h.app.requestBodyParsers)
 
-	evtReq.URL = rawURL.String()
+	evtReq.URL = parsedURL.String()
 	evtReq.Body = rawBody
 	h.app.listener.Emit(&event.OnRequest{Request: evtReq, StartedAt: start})
 
@@ -46,7 +46,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.app.listener.Emit(&event.OnError{Request: evtReq, Err: fmt.Errorf("error parsing request body. reason=%w", err)})
 	}
 
-	result := findMockForRequest(h.app.storage, &valueSelectorInput{r, rawURL, parsedBody})
+	result := findMockForRequest(h.app.storage, &valueSelectorInput{r, parsedURL, parsedBody})
 
 	if !result.Pass {
 		if h.app.proxy != nil {
@@ -54,13 +54,13 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			h.app.proxy.ServeHTTP(w, r)
 
 			if h.app.rec != nil {
-				res, err := h.buildResponseFromWriter(w)
+				res, err := h.buildStubFromWriter(w)
 				if err != nil {
 					h.app.log.Logf(err.Error())
 					return
 				}
 
-				h.app.rec.record(r, rawBody, res)
+				h.app.rec.dispatch(r, parsedURL, rawBody, res)
 			}
 			return
 		} else {
@@ -75,7 +75,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		<-time.After(mock.Delay)
 	}
 
-	reqValues := &RequestValues{r, rawURL, segments, parsedBody, h.app, mock}
+	reqValues := &RequestValues{r, parsedURL, urlSegments, parsedBody, h.app, mock}
 	res, err := result.Matched.Reply.Build(w, reqValues)
 	if err != nil {
 		h.app.log.Logf(err.Error())
@@ -121,7 +121,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
-		res, err = h.buildResponseFromWriter(w)
+		res, err = h.buildStubFromWriter(w)
 		if err != nil {
 			h.app.log.Logf(err.Error())
 			return
@@ -135,7 +135,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	input := &PostActionInput{r, rawURL, parsedBody, h.app, mock, res, nil}
+	input := &PostActionInput{r, parsedURL, parsedBody, h.app, mock, res, nil}
 	for i, action := range mock.PostActions {
 		err = action.Run(input)
 		if err != nil {
@@ -150,7 +150,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Elapsed:            time.Since(start)})
 
 	if h.app.rec != nil && h.app.config.Proxy == nil {
-		h.app.rec.record(r, rawBody, res)
+		h.app.rec.dispatch(r, parsedURL, rawBody, res)
 	}
 }
 
@@ -201,7 +201,7 @@ func (h *mockHandler) onError(w http.ResponseWriter, r *event.EvtReq, err error)
 	w.Write([]byte(fmt.Sprintf("An error occurred.\n%s", err.Error())))
 }
 
-func (h *mockHandler) buildResponseFromWriter(w http.ResponseWriter) (*Stub, error) {
+func (h *mockHandler) buildStubFromWriter(w http.ResponseWriter) (*Stub, error) {
 	rw := w.(*httpx.Rw)
 	result := rw.Result()
 
@@ -212,9 +212,19 @@ func (h *mockHandler) buildResponseFromWriter(w http.ResponseWriter) (*Stub, err
 
 	defer result.Body.Close()
 
+	if len(w.Header()) != len(result.Header) {
+		for k, v := range w.Header() {
+			if result.Header.Get(k) == "" {
+				for _, vv := range v {
+					result.Header.Add(k, vv)
+				}
+			}
+		}
+	}
+
 	stub := &Stub{
 		StatusCode: result.StatusCode,
-		Header:     result.Header,
+		Header:     result.Header.Clone(),
 		Cookies:    result.Cookies(),
 	}
 

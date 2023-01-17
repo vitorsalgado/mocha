@@ -23,6 +23,12 @@ func Request() *MockBuilder {
 	return &MockBuilder{mock: newMock()}
 }
 
+// AnyMethod creates a new empty Builder.
+func AnyMethod() *MockBuilder {
+	b := &MockBuilder{mock: newMock()}
+	return b.MethodMatches(matcher.Anything())
+}
+
 // Get inits a mock for GET method.
 func Get(m matcher.Matcher) *MockBuilder {
 	return Request().URL(m).Method(http.MethodGet)

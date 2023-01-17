@@ -160,7 +160,7 @@ func TestPostJSON(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NoError(t, res.Body.Close())
 		assert.False(t, scoped.HasBeenCalled())
-		assert.Equal(t, mocha.StatusRequestWasNotMatch, res.StatusCode)
+		assert.Equal(t, mocha.StatusNoMatch, res.StatusCode)
 	})
 
 	t.Run("should match null fields", func(t *testing.T) {

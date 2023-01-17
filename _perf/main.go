@@ -125,7 +125,7 @@ func main() {
 			JSONPath("active", StrictEqual(true)),
 			JSONPath("result", StrictEqual("ok")))).
 		Reply(mocha.OK().
-			JSON().
+			ContentType(mimetype.JSON).
 			BodyReader(f)),
 	)
 
