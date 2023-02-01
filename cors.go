@@ -58,7 +58,7 @@ type CORSConfigBuilder struct {
 	origins []string
 }
 
-// CORS inits a CORSConfig builder for a fluent configuration.
+// CORS initializes a CORSConfig builder for a fluent configuration.
 func CORS() *CORSConfigBuilder {
 	return &CORSConfigBuilder{
 		origins: make([]string, 0),

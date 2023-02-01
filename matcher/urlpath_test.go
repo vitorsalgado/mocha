@@ -17,7 +17,7 @@ func TestURLPath(t *testing.T) {
 	}{
 		{"should accept a pointer", "/test/hello", true},
 		{"should accept a string", "/test/hello", true},
-		{"should return false when it doesnt match", "/test/bye", false},
+		{"should return false when it doesn't match", "/test/bye", false},
 	}
 
 	for _, tt := range testCases {

@@ -29,22 +29,22 @@ func AnyMethod() *MockBuilder {
 	return b.MethodMatches(matcher.Anything())
 }
 
-// Get inits a mock for GET method.
+// Get initializes a mock for GET method.
 func Get(m matcher.Matcher) *MockBuilder {
 	return Request().URL(m).Method(http.MethodGet)
 }
 
-// Getf inits a mock for GET method.
+// Getf initializes a mock for GET method.
 func Getf(path string, a ...any) *MockBuilder {
 	return Request().URLPathf(path, a...).Method(http.MethodGet)
 }
 
-// Post inits a mock for Post method.
+// Post initializes a mock for Post method.
 func Post(m matcher.Matcher) *MockBuilder {
 	return Request().URL(m).Method(http.MethodPost)
 }
 
-// Postf inits a mock for Post method.
+// Postf initializes a mock for Post method.
 func Postf(path string, a ...any) *MockBuilder {
 	return Request().URLPathf(path, a...).Method(http.MethodPost)
 }
@@ -54,37 +54,37 @@ func Put(m matcher.Matcher) *MockBuilder {
 	return Request().URL(m).Method(http.MethodPut)
 }
 
-// Putf inits a mock for Put method.
+// Putf initializes a mock for Put method.
 func Putf(path string, a ...any) *MockBuilder {
 	return Request().URLPathf(path, a...).Method(http.MethodPut)
 }
 
-// Patch inits a mock for Patch method.
+// Patch initializes a mock for Patch method.
 func Patch(u matcher.Matcher) *MockBuilder {
 	return Request().URL(u).Method(http.MethodPatch)
 }
 
-// Patchf inits a mock for Patch method.
+// Patchf initializes a mock for Patch method.
 func Patchf(path string, a ...any) *MockBuilder {
 	return Request().URLPathf(path, a...).Method(http.MethodPatch)
 }
 
-// Delete inits a mock for Delete method.
+// Delete initializes a mock for Delete method.
 func Delete(m matcher.Matcher) *MockBuilder {
 	return Request().URL(m).Method(http.MethodDelete)
 }
 
-// Deletef inits a mock for Delete method.
+// Deletef initializes a mock for Delete method.
 func Deletef(path string, a ...any) *MockBuilder {
 	return Request().URLPathf(path, a...).Method(http.MethodDelete)
 }
 
-// Head inits a mock for Head method.
+// Head initializes a mock for Head method.
 func Head(m matcher.Matcher) *MockBuilder {
 	return Request().URL(m).Method(http.MethodHead)
 }
 
-// Headf inits a mock for Head method.
+// Headf initializes a mock for Head method.
 func Headf(path string, a ...any) *MockBuilder {
 	return Request().URLPathf(path, a...).Method(http.MethodHead)
 }

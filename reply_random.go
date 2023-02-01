@@ -16,7 +16,7 @@ type RandomReply struct {
 	mu      sync.Mutex
 }
 
-// Rand inits a new RandomReply.
+// Rand initializes a new RandomReply.
 func Rand(reply ...Reply) *RandomReply {
 	return &RandomReply{
 		replies: reply,
