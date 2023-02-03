@@ -14,10 +14,6 @@ import (
 var _ Reply = (*ProxyReply)(nil)
 
 var (
-	_client = &http.Client{Transport: &http.Transport{
-		DisableCompression: true,
-		TLSClientConfig:    &tls.Config{InsecureSkipVerify: true},
-	}}
 	_forbiddenHeaders = []string{
 		"Connection",
 		"Keep-Alive",
@@ -44,6 +40,7 @@ type ProxyReply struct {
 	trimPrefix           string
 	trimSuffix           string
 	timeout              time.Duration
+	httpClient           *http.Client
 }
 
 // From creates a ProxyReply with the given target.
@@ -68,7 +65,18 @@ func From[T FromTypes](target T) *ProxyReply {
 		proxyHeaders:         make(http.Header),
 		proxyHeadersToRemove: make([]string, 0),
 		timeout:              _defaultTimeout,
+		httpClient: &http.Client{
+			Transport: &http.Transport{
+				DisableCompression: true,
+				TLSClientConfig:    &tls.Config{InsecureSkipVerify: true},
+			}},
 	}
+}
+
+// NoFollow disables following redirects.
+func (r *ProxyReply) NoFollow() *ProxyReply {
+	r.httpClient.CheckRedirect = noFollow
+	return r
 }
 
 // Header sets an extra response header that will be set after proxy target responds.
@@ -161,7 +169,7 @@ func (r *ProxyReply) Build(_ http.ResponseWriter, req *RequestValues) (*Stub, er
 	ctx, cancel := context.WithTimeout(req.RawRequest.Context(), r.timeout)
 	defer cancel()
 
-	res, err := _client.Transport.RoundTrip(req.RawRequest.WithContext(ctx))
+	res, err := r.httpClient.Do(req.RawRequest.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -203,4 +211,8 @@ func (r *ProxyReply) Build(_ http.ResponseWriter, req *RequestValues) (*Stub, er
 	}
 
 	return stub, nil
+}
+
+func noFollow(_ *http.Request, _ []*http.Request) error {
+	return http.ErrUseLastResponse
 }

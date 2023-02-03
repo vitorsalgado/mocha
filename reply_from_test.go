@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3/internal/header"
+	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 )
 
 func TestForward(t *testing.T) {
@@ -201,5 +202,56 @@ func TestForward(t *testing.T) {
 
 		require.Error(t, err)
 		require.Nil(t, res)
+	})
+
+	t.Run("should follow redirects when using default configs", func(t *testing.T) {
+		target := New()
+		target.MustStart()
+
+		defer target.Close()
+
+		m := New()
+		m.MustStart()
+
+		defer m.Close()
+
+		redirectScope := target.MustMock(Getf("/redirected").Reply(Accepted()))
+		proxyScope := target.MustMock(Getf("/proxy").Reply(MovedPermanently(target.URL() + "/redirected")))
+		scoped := m.MustMock(Getf("/proxy").Reply(From(target.URL())))
+
+		res, err := testutil.Get(m.URL() + "/proxy").Do()
+
+		require.NoError(t, err)
+		require.Equal(t, http.StatusAccepted, res.StatusCode)
+
+		scoped.AssertCalled(t)
+		proxyScope.AssertCalled(t)
+		redirectScope.AssertCalled(t)
+	})
+
+	t.Run("should NOT follow redirects when it is disabled", func(t *testing.T) {
+		target := New()
+		target.MustStart()
+
+		defer target.Close()
+
+		m := New()
+		m.MustStart()
+
+		defer m.Close()
+
+		redirectScope := target.MustMock(Getf("/redirected").Reply(Accepted()))
+		proxyScope := target.MustMock(Getf("/proxy").Reply(MovedPermanently(target.URL() + "/redirected")))
+		scoped := m.MustMock(Getf("/proxy").Reply(From(target.URL()).NoFollow()))
+
+		httpClient := &http.Client{CheckRedirect: noFollow}
+		res, err := httpClient.Get(m.URL() + "/proxy")
+
+		require.NoError(t, err)
+		require.Equal(t, http.StatusMovedPermanently, res.StatusCode)
+
+		scoped.AssertCalled(t)
+		proxyScope.AssertCalled(t)
+		redirectScope.AssertNotCalled(t)
 	})
 }

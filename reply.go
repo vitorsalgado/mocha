@@ -93,7 +93,9 @@ func NoContent() *StdReply { return NewReply().Status(http.StatusNoContent) }
 func PartialContent() *StdReply { return NewReply().Status(http.StatusPartialContent) }
 
 // MovedPermanently creates a new Reply with http.StatusMovedPermanently already.
-func MovedPermanently() *StdReply { return NewReply().Status(http.StatusMovedPermanently) }
+func MovedPermanently(location string) *StdReply {
+	return NewReply().Status(http.StatusMovedPermanently).Header(header.Location, location)
+}
 
 // NotModified creates a new Reply with http.StatusNotModified already.
 func NotModified() *StdReply { return NewReply().Status(http.StatusNotModified) }

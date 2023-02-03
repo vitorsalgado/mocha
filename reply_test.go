@@ -18,7 +18,7 @@ func TestReplyFactories(t *testing.T) {
 	assert.Equal(t, http.StatusAccepted, Accepted().response.StatusCode)
 	assert.Equal(t, http.StatusNoContent, NoContent().response.StatusCode)
 	assert.Equal(t, http.StatusPartialContent, PartialContent().response.StatusCode)
-	assert.Equal(t, http.StatusMovedPermanently, MovedPermanently().response.StatusCode)
+	assert.Equal(t, http.StatusMovedPermanently, MovedPermanently("https://nowhere.com.br").response.StatusCode)
 	assert.Equal(t, http.StatusNotModified, NotModified().response.StatusCode)
 	assert.Equal(t, http.StatusBadRequest, BadRequest().response.StatusCode)
 	assert.Equal(t, http.StatusUnauthorized, Unauthorized().response.StatusCode)
