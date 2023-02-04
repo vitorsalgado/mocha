@@ -13,18 +13,16 @@ import (
 
 var _ Reply = (*ProxyReply)(nil)
 
-var (
-	_forbiddenHeaders = []string{
-		"Connection",
-		"Keep-Alive",
-		"Proxy-Authenticate",
-		"Proxy-Authorization",
-		"TE",
-		"Trailer",
-		"Transfer-Encoding",
-		"Upgrade",
-	}
-)
+var _forbiddenHeaders = []string{
+	"Connection",
+	"Keep-Alive",
+	"Proxy-Authenticate",
+	"Proxy-Authorization",
+	"TE",
+	"Trailer",
+	"Transfer-Encoding",
+	"Upgrade",
+}
 
 const _defaultTimeout = 30 * time.Second
 
@@ -169,7 +167,7 @@ func (r *ProxyReply) Build(_ http.ResponseWriter, req *RequestValues) (*Stub, er
 	ctx, cancel := context.WithTimeout(req.RawRequest.Context(), r.timeout)
 	defer cancel()
 
-	res, err := r.httpClient.Do(req.RawRequest.WithContext(ctx))
+	res, err := r.httpClient.Transport.RoundTrip(req.RawRequest.WithContext(ctx))
 	if err != nil {
 		return nil, err
 	}
