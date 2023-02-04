@@ -42,8 +42,8 @@ func (mr *SequentialReply) Build(r *http.Request, m M, p params.P) (*Response, e
 
 	var reply Reply
 
-	if hits <= size {
-		reply = mr.replies[hits-1]
+	if hits < size {
+		reply = mr.replies[hits]
 	}
 
 	if reply == nil {
