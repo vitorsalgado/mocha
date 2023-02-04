@@ -32,7 +32,8 @@ type Mocha struct {
 	scopes             []*Scoped
 	loaders            []Loader
 	rec                *record
-	mu                 sync.Mutex
+	rmu                sync.RWMutex
+	rmuMock            sync.RWMutex
 	proxy              *reverseProxy
 	extensions         map[string]Extension
 }
@@ -229,8 +230,8 @@ func (m *Mocha) MustStartTLS() ServerInfo {
 //
 //	assert.True(t, scoped.HasBeenCalled())
 func (m *Mocha) Mock(builders ...Builder) (*Scoped, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+	m.rmuMock.Lock()
+	defer m.rmuMock.Unlock()
 
 	size := len(builders)
 	added := make([]*Mock, size)
@@ -303,9 +304,6 @@ func (m *Mocha) Name() string {
 
 // Subscribe add a new event listener.
 func (m *Mocha) Subscribe(evt reflect.Type, fn func(payload any)) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
 	return m.listener.Subscribe(evt, fn)
 }
 
@@ -369,6 +367,9 @@ func (m *Mocha) CloseWithT(t TestingT) *Mocha {
 
 // Hits returns the total matched request hits.
 func (m *Mocha) Hits() int {
+	m.rmu.RLock()
+	defer m.rmu.RUnlock()
+
 	hits := 0
 
 	for _, s := range m.scopes {
@@ -380,6 +381,9 @@ func (m *Mocha) Hits() int {
 
 // Enable enables all mocks.
 func (m *Mocha) Enable() {
+	m.rmu.Lock()
+	defer m.rmu.Unlock()
+
 	for _, scoped := range m.scopes {
 		scoped.Enable()
 	}
@@ -387,6 +391,9 @@ func (m *Mocha) Enable() {
 
 // Disable disables all mocks.
 func (m *Mocha) Disable() {
+	m.rmu.Lock()
+	defer m.rmu.Unlock()
+
 	for _, scoped := range m.scopes {
 		scoped.Disable()
 	}
@@ -394,8 +401,8 @@ func (m *Mocha) Disable() {
 
 // Clean removes all scoped mocks.
 func (m *Mocha) Clean() {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+	m.rmu.Lock()
+	defer m.rmu.Unlock()
 
 	for _, s := range m.scopes {
 		s.Clean()
@@ -407,8 +414,8 @@ func (m *Mocha) StopRecording() {
 }
 
 func (m *Mocha) RegisterExtension(extension Extension) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
+	m.rmu.Lock()
+	defer m.rmu.Unlock()
 
 	_, ok := m.extensions[extension.UniqueName()]
 	if ok {

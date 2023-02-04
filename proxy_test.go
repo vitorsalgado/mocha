@@ -16,9 +16,13 @@ func TestProxy(t *testing.T) {
 	proxySrv.MustStart()
 	proxyScope := proxySrv.MustMock(Get(URLPath("/test")).Reply(Accepted()))
 
+	defer proxySrv.Close()
+
 	targetSrv := New().CloseWithT(t)
 	targetSrv.MustStart()
 	targetScope := targetSrv.MustMock(Get(URLPath("/other")).Reply(Created()))
+
+	defer targetSrv.Close()
 
 	// client that acts like a browser proxying requests to our server
 	proxyURL, _ := url.Parse(proxySrv.URL())
@@ -41,9 +45,13 @@ func TestProxyTLS(t *testing.T) {
 	proxySrv.MustStartTLS()
 	proxyScope := proxySrv.MustMock(Get(URLPath("/test")).Reply(Accepted()))
 
+	defer proxySrv.Close()
+
 	targetSrv := New().CloseWithT(t)
 	targetSrv.MustStart()
 	targetScope := targetSrv.MustMock(Get(URLPath("/other")).Reply(Created()))
+
+	defer targetSrv.Close()
 
 	// client that acts like a browser proxying requests to our server
 	proxyURL, _ := url.Parse(proxySrv.URL())
@@ -69,13 +77,19 @@ func TestProxy_ViaAnotherProxy(t *testing.T) {
 	p.MustStart()
 	scope1 := p.MustMock(Get(URLPath("/test")).Reply(Accepted()))
 
+	defer p.Close()
+
 	v := New(WithProxy(&ProxyConfig{ProxyVia: p.URL()})).CloseWithT(t)
 	v.MustStart()
 	scope2 := v.MustMock(Get(URLPath("/unknown")).Reply(NoContent()))
 
+	defer v.Close()
+
 	m := New().CloseWithT(t)
 	m.MustStart()
 	m.MustMock(Get(URLPath("/other")).Reply(Created()))
+
+	defer m.Close()
 
 	u, _ := url.Parse(v.URL())
 	client := &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(u)}}

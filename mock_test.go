@@ -24,12 +24,14 @@ func TestRace(t *testing.T) {
 			}
 
 			m.Inc()
+			m.Hits()
 			wg.Done()
 		}(i)
 
 		m.Inc()
 	}
 
+	m.Hits()
 	m.Inc()
 	m.Inc()
 

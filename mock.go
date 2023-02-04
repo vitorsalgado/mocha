@@ -47,7 +47,7 @@ type Mock struct {
 
 	after        []matcher.OnAfterMockServed
 	expectations []*expectation
-	mu           sync.Mutex
+	mu           sync.RWMutex
 	hits         int
 }
 
@@ -205,8 +205,6 @@ func newMock() *Mock {
 		Enabled:      true,
 		expectations: make([]*expectation, 0),
 		PostActions:  make([]PostAction, 0),
-
-		mu: sync.Mutex{},
 	}
 }
 
@@ -226,11 +224,15 @@ func (m *Mock) Dec() {
 
 // Hits returns the amount of time this Mock was matched to a request and served.
 func (m *Mock) Hits() int {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	return m.hits
 }
 
 // HasBeenCalled checks if the Mock was called at least once.
 func (m *Mock) HasBeenCalled() bool {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	return m.hits > 0
 }
 

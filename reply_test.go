@@ -61,10 +61,9 @@ func TestStdReply_BodyString(t *testing.T) {
 		Status(http.StatusCreated).
 		PlainText("text").
 		Build(nil, newReqValues(_req))
-	require.NoError(t, err)
 
-	assert.NoError(t, err)
-	assert.Equal(t, "text", string(res.Body))
+	require.NoError(t, err)
+	require.Equal(t, "text", string(res.Body))
 }
 
 func TestStdReply_BodyJSON(t *testing.T) {
@@ -118,7 +117,6 @@ func TestStdReply_BodyReader(t *testing.T) {
 		BodyReader(f).
 		Build(nil, newReqValues(_req))
 
-	require.NoError(t, err)
 	assert.NoError(t, err)
 	assert.Equal(t, "hello\nworld\n", string(res.Body))
 }

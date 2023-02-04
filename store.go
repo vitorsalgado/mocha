@@ -34,7 +34,7 @@ type mockStore interface {
 
 type builtInStore struct {
 	data []*Mock
-	mu   sync.Mutex
+	mu   sync.RWMutex
 }
 
 // newStore returns Mock mockStore implementation.
@@ -54,6 +54,9 @@ func (repo *builtInStore) Save(mock *Mock) {
 }
 
 func (repo *builtInStore) Get(id string) *Mock {
+	repo.mu.RLock()
+	defer repo.mu.RUnlock()
+
 	for _, datum := range repo.data {
 		if datum.ID == id {
 			return datum
@@ -64,6 +67,9 @@ func (repo *builtInStore) Get(id string) *Mock {
 }
 
 func (repo *builtInStore) GetEligible() []*Mock {
+	repo.mu.RLock()
+	defer repo.mu.RUnlock()
+
 	mocks := make([]*Mock, 0)
 
 	for _, mock := range repo.data {
@@ -76,10 +82,16 @@ func (repo *builtInStore) GetEligible() []*Mock {
 }
 
 func (repo *builtInStore) GetAll() []*Mock {
+	repo.mu.RLock()
+	defer repo.mu.RUnlock()
+
 	return repo.data
 }
 
 func (repo *builtInStore) Delete(id string) {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
 	index := -1
 	for i, m := range repo.data {
 		if m.ID == id {
@@ -92,6 +104,9 @@ func (repo *builtInStore) Delete(id string) {
 }
 
 func (repo *builtInStore) DeleteExternal() {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
 	for i, m := range repo.data {
 		if m.Source != "" {
 			repo.data = repo.data[:i+copy(repo.data[i:], repo.data[i+1:])]
@@ -100,6 +115,9 @@ func (repo *builtInStore) DeleteExternal() {
 }
 
 func (repo *builtInStore) DeleteAll() {
+	repo.mu.Lock()
+	defer repo.mu.Unlock()
+
 	repo.data = nil
 	repo.data = make([]*Mock, 0)
 }

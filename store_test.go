@@ -1,7 +1,6 @@
 package mocha
 
 import (
-	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -10,9 +9,9 @@ import (
 func TestInMemoryStorage(t *testing.T) {
 	st := newStore()
 
-	mock1 := &Mock{ID: "1", Name: "mock_1", Enabled: true, mu: sync.Mutex{}, Priority: 0}
-	mock2 := &Mock{ID: "2", Name: "mock_2", Enabled: true, mu: sync.Mutex{}, Priority: 1}
-	mock3 := &Mock{ID: "3", Name: "mock_3", Enabled: true, mu: sync.Mutex{}, Priority: 2}
+	mock1 := &Mock{ID: "1", Name: "mock_1", Enabled: true, Priority: 0}
+	mock2 := &Mock{ID: "2", Name: "mock_2", Enabled: true, Priority: 1}
+	mock3 := &Mock{ID: "3", Name: "mock_3", Enabled: true, Priority: 2}
 
 	st.Save(mock1)
 	st.Save(mock2)
@@ -46,8 +45,8 @@ func TestInMemoryStorage(t *testing.T) {
 
 	assert.Len(t, mocks, 0)
 
-	st.Save(&Mock{ID: "10", Name: "mock_ext_1", Enabled: true, mu: sync.Mutex{}, Priority: 0, Source: "ext"})
-	st.Save(&Mock{ID: "11", Name: "mock_11", Enabled: true, mu: sync.Mutex{}, Priority: 0})
+	st.Save(&Mock{ID: "10", Name: "mock_ext_1", Enabled: true, Priority: 0, Source: "ext"})
+	st.Save(&Mock{ID: "11", Name: "mock_11", Enabled: true, Priority: 0})
 
 	assert.Len(t, st.GetAll(), 2)
 

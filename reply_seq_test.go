@@ -2,13 +2,17 @@ package mocha
 
 import (
 	"net/http"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestSequentialReply(t *testing.T) {
+	t.Parallel()
+
 	t.Run("should return replies based configure sequence and return error when over", func(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 		builder := Seq(InternalServerError(), BadRequest(), OK(), NotFound())
@@ -64,4 +68,43 @@ func TestSequentialReply_Pre(t *testing.T) {
 	seq.Add(OK())
 
 	require.NoError(t, seq.Pre())
+}
+
+func TestSeqRace(t *testing.T) {
+	req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
+	builder := Seq(InternalServerError(), BadRequest(), OK(), NotFound())
+
+	jobs := 3
+	wg := sync.WaitGroup{}
+
+	for i := 0; i < jobs; i++ {
+		wg.Add(1)
+		go func(index int) {
+			if index%2 == 0 {
+				time.Sleep(100 * time.Millisecond)
+			}
+
+			res, err := builder.Build(nil, newReqValues(req))
+			require.NoError(t, err)
+			require.True(t, res.StatusCode != StatusNoMatch)
+
+			builder.curHits()
+
+			wg.Done()
+		}(i)
+
+		builder.curHits()
+	}
+
+	res, err := builder.Build(nil, newReqValues(req))
+	require.NoError(t, err)
+	require.True(t, res.StatusCode != StatusNoMatch)
+
+	builder.curHits()
+
+	require.Eventually(t, func() bool {
+		wg.Wait()
+		return true
+	}, 1*time.Second, 100*time.Millisecond)
+	require.Equal(t, 4, builder.curHits())
 }

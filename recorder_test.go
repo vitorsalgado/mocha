@@ -29,8 +29,6 @@ func TestRecordConfig_Apply(t *testing.T) {
 
 func TestRecording_WithWebProxy(t *testing.T) {
 	dir := t.TempDir()
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
 
 	includedReqHeader := "x-request-excluded"
 	excludedReqHeader := "x-req-excluded"
@@ -84,7 +82,7 @@ func TestRecording_WithWebProxy(t *testing.T) {
 	scope1.AssertCalled(t)
 	scope2.AssertCalled(t)
 
-	<-ctx.Done()
+	time.Sleep(5 * time.Second)
 
 	entries, err := os.ReadDir(dir)
 

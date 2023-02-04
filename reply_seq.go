@@ -13,7 +13,7 @@ type SequentialReply struct {
 	replyAfterSeqEnded Reply
 	replies            []Reply
 	hits               int
-	mu                 sync.Mutex
+	mu                 sync.RWMutex
 }
 
 // Seq creates a new SequentialReply.
@@ -45,14 +45,12 @@ func (r *SequentialReply) Pre() error {
 // Build builds a new response based on current mock.Mock call sequence.
 // When the sequence is over, it will return an error or a previously configured reply for this scenario.
 func (r *SequentialReply) Build(w http.ResponseWriter, req *RequestValues) (*Stub, error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
 	var size = len(r.replies)
 	var reply Reply
+	var hits = r.curHits()
 
-	if r.hits < size && r.hits >= 0 {
-		reply = r.replies[r.hits]
+	if hits < size && hits >= 0 {
+		reply = r.replies[hits]
 	}
 
 	if reply == nil {
@@ -63,11 +61,25 @@ func (r *SequentialReply) Build(w http.ResponseWriter, req *RequestValues) (*Stu
 		return nil,
 			fmt.Errorf(
 				"unable to obtain a response and no default response was set. request number: %d - sequence size: %d",
-				r.hits,
+				hits,
 				size)
 	}
 
-	r.hits++
+	r.updateHits()
 
 	return reply.Build(w, req)
+}
+
+func (r *SequentialReply) curHits() int {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	return r.hits
+}
+
+func (r *SequentialReply) updateHits() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	r.hits++
 }
