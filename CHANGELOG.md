@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [3.0.2](https://github.com/vitorsalgado/mocha/compare/v3.0.1...v3.0.2) (2023-02-04)
+
+### Bug Fixes
+
+- sequence reply ([b0fe8e7](https://github.com/vitorsalgado/mocha/commit/b0fe8e784b67e7cc9c4895314f505a48703fcce4))
+
 ### [3.0.1](https://github.com/vitorsalgado/mocha/compare/v3.0.0...v3.0.1) (2022-11-13)
 
 ### Chore
