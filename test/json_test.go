@@ -266,7 +266,7 @@ func TestSimpleJSONValues(t *testing.T) {
 		{"bool", http.StatusCreated, true},
 		{"int", http.StatusAccepted, 100},
 		{"float32", http.StatusOK, float32(300.50)},
-		{"float64", http.StatusPartialContent, float64(100.50)},
+		{"float64", http.StatusPartialContent, 100.50},
 		{"null", http.StatusAccepted, nil},
 	}
 

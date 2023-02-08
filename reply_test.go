@@ -11,6 +11,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var _req, _ = http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
+
 func TestReplyFactories(t *testing.T) {
 	assert.Equal(t, http.StatusOK, Status(http.StatusOK).response.StatusCode)
 	assert.Equal(t, http.StatusOK, OK().response.StatusCode)
@@ -35,6 +37,7 @@ func TestReplyFactories(t *testing.T) {
 }
 
 func TestReply(t *testing.T) {
+	rv := &RequestValues{RawRequest: _req, URL: _req.URL}
 	res, err := NewReply().
 		Status(http.StatusCreated).
 		Header("test", "dev").
@@ -43,7 +46,7 @@ func TestReply(t *testing.T) {
 		Cookie(&http.Cookie{Name: "cookie_test"}).
 		ExpireCookie(http.Cookie{Name: "cookie_test_remove"}).
 		Body([]byte("hi")).
-		Build(nil, newReqValues(_req))
+		Build(nil, rv)
 
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusCreated, res.StatusCode)
@@ -57,10 +60,11 @@ func TestReply(t *testing.T) {
 }
 
 func TestStdReply_BodyString(t *testing.T) {
+	rv := &RequestValues{RawRequest: _req, URL: _req.URL}
 	res, err := NewReply().
 		Status(http.StatusCreated).
 		PlainText("text").
-		Build(nil, newReqValues(_req))
+		Build(nil, rv)
 
 	require.NoError(t, err)
 	require.Equal(t, "text", string(res.Body))
@@ -73,6 +77,8 @@ func TestStdReply_BodyJSON(t *testing.T) {
 		Active bool   `json:"active"`
 	}
 
+	rv := &RequestValues{RawRequest: _req, URL: _req.URL}
+
 	t.Run("should convert struct to json", func(t *testing.T) {
 		model := jsonData{
 			Name:   "the name",
@@ -83,7 +89,7 @@ func TestStdReply_BodyJSON(t *testing.T) {
 		res, err := NewReply().
 			Status(http.StatusCreated).
 			BodyJSON(model).
-			Build(nil, newReqValues(_req))
+			Build(nil, rv)
 
 		assert.NoError(t, err)
 
@@ -98,7 +104,7 @@ func TestStdReply_BodyJSON(t *testing.T) {
 		res, err := NewReply().
 			Status(http.StatusCreated).
 			BodyJSON(make(chan int)).
-			Build(nil, newReqValues(_req))
+			Build(nil, rv)
 
 		assert.Nil(t, res)
 		assert.NotNil(t, err)
@@ -112,10 +118,11 @@ func TestStdReply_BodyReader(t *testing.T) {
 
 	defer f.Close()
 
+	rv := &RequestValues{RawRequest: _req, URL: _req.URL}
 	res, err := NewReply().
 		Status(http.StatusCreated).
 		BodyReader(f).
-		Build(nil, newReqValues(_req))
+		Build(nil, rv)
 
 	assert.NoError(t, err)
 	assert.Equal(t, "hello\nworld\n", string(res.Body))

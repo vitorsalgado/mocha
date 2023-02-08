@@ -43,6 +43,7 @@ func TestForward(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080/path/test/example?filter=all", nil)
 		req.Header.Set("x-to-be-removed", "nok")
 		req.Header.Set("x-present", "ok")
+		rv := &RequestValues{RawRequest: req, URL: req.URL}
 
 		res, err := From(dest.URL).
 			ProxyHeader("x-proxy", "proxied").
@@ -50,7 +51,7 @@ func TestForward(t *testing.T) {
 			RemoveProxyHeaders("x-to-be-removed").
 			Header("x-res", "response").
 			Headers(h).
-			Build(nil, newReqValues(req))
+			Build(nil, rv)
 
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusCreated, res.StatusCode)
@@ -74,10 +75,11 @@ func TestForward(t *testing.T) {
 		expected := "test text"
 		body := strings.NewReader(expected)
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", body)
+		rv := &RequestValues{RawRequest: req, URL: req.URL}
 
 		u, _ := url.Parse(dest.URL)
 		forward := From(u)
-		res, err := forward.Build(nil, newReqValues(req))
+		res, err := forward.Build(nil, rv)
 
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -105,10 +107,11 @@ func TestForward(t *testing.T) {
 		expected := "test text"
 		body := strings.NewReader(expected)
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", body)
+		rv := &RequestValues{RawRequest: req, URL: req.URL}
 
 		u, _ := url.Parse(dest.URL)
 		forward := From(u)
-		res, err := forward.Build(nil, newReqValues(req))
+		res, err := forward.Build(nil, rv)
 		require.NoError(t, err)
 
 		g, err := res.Gunzip()
@@ -126,9 +129,10 @@ func TestForward(t *testing.T) {
 		defer dest.Close()
 
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
+		rv := &RequestValues{RawRequest: req, URL: req.URL}
 
 		forward := From(dest.URL)
-		res, err := forward.Build(nil, newReqValues(req))
+		res, err := forward.Build(nil, rv)
 
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusNoContent, res.StatusCode)
@@ -146,7 +150,8 @@ func TestForward(t *testing.T) {
 		defer dest.Close()
 
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080/path/test/example?filter=all", nil)
-		res, err := From(dest.URL).TrimPrefix("/path/test").Build(nil, newReqValues(req))
+		rv := &RequestValues{RawRequest: req, URL: req.URL}
+		res, err := From(dest.URL).TrimPrefix("/path/test").Build(nil, rv)
 
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -163,7 +168,8 @@ func TestForward(t *testing.T) {
 		defer dest.Close()
 
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080/path/test/example?filter=all", nil)
-		res, err := From(dest.URL).TrimSuffix("/example").Build(nil, newReqValues(req))
+		rv := &RequestValues{RawRequest: req, URL: req.URL}
+		res, err := From(dest.URL).TrimSuffix("/example").Build(nil, rv)
 
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -196,9 +202,10 @@ func TestForward(t *testing.T) {
 		defer dest.Close()
 
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080/path/test/example", nil)
+		rv := &RequestValues{RawRequest: req, URL: req.URL}
 		res, err := From(dest.URL).
 			Timeout(100*time.Millisecond).
-			Build(nil, newReqValues(req))
+			Build(nil, rv)
 
 		require.Error(t, err)
 		require.Nil(t, res)

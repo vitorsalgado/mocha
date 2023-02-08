@@ -15,39 +15,41 @@ func TestSequentialReply(t *testing.T) {
 
 	t.Run("should return replies based configure sequence and return error when over", func(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
+		rv := &RequestValues{RawRequest: req, URL: req.URL}
 		builder := Seq(InternalServerError(), BadRequest(), OK(), NotFound())
 
-		res, err := builder.Build(nil, newReqValues(req))
+		res, err := builder.Build(nil, rv)
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
 
-		res, err = builder.Build(nil, newReqValues(req))
+		res, err = builder.Build(nil, rv)
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 
-		res, err = builder.Build(nil, newReqValues(req))
+		res, err = builder.Build(nil, rv)
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 
-		res, err = builder.Build(nil, newReqValues(req))
+		res, err = builder.Build(nil, rv)
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 
-		_, err = builder.Build(nil, newReqValues(req))
+		_, err = builder.Build(nil, rv)
 		assert.NotNil(t, err)
 	})
 
 	t.Run("should return replies based configure sequence and return error when over", func(t *testing.T) {
 		req, err := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
+		rv := &RequestValues{RawRequest: req, URL: req.URL}
 		require.NoError(t, err)
 
 		builder := Seq().Add(OK()).OnSequenceEnded(NotFound())
 
-		res, err := builder.Build(nil, newReqValues(req))
+		res, err := builder.Build(nil, rv)
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 
-		res, err = builder.Build(nil, newReqValues(req))
+		res, err = builder.Build(nil, rv)
 		assert.Nil(t, err)
 		assert.Equal(t, http.StatusNotFound, res.StatusCode)
 	})
@@ -55,7 +57,8 @@ func TestSequentialReply(t *testing.T) {
 
 func TestSequentialReply_ShouldReturnErrorWhenSequenceDoesNotContainReplies(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
-	res, err := Seq().Build(nil, newReqValues(req))
+	rv := &RequestValues{RawRequest: req, URL: req.URL}
+	res, err := Seq().Build(nil, rv)
 	assert.Nil(t, res)
 	assert.NotNil(t, err)
 }
@@ -72,6 +75,7 @@ func TestSequentialReply_Pre(t *testing.T) {
 
 func TestSeqRace(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
+	rv := &RequestValues{RawRequest: req, URL: req.URL}
 	builder := Seq(InternalServerError(), BadRequest(), OK(), NotFound())
 
 	jobs := 3
@@ -84,7 +88,7 @@ func TestSeqRace(t *testing.T) {
 				time.Sleep(100 * time.Millisecond)
 			}
 
-			res, err := builder.Build(nil, newReqValues(req))
+			res, err := builder.Build(nil, rv)
 			require.NoError(t, err)
 			require.True(t, res.StatusCode != StatusNoMatch)
 
@@ -96,7 +100,7 @@ func TestSeqRace(t *testing.T) {
 		builder.curHits()
 	}
 
-	res, err := builder.Build(nil, newReqValues(req))
+	res, err := builder.Build(nil, rv)
 	require.NoError(t, err)
 	require.True(t, res.StatusCode != StatusNoMatch)
 

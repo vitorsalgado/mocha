@@ -1,16 +1,8 @@
 package mocha
 
 import (
-	"net/http"
-
 	"github.com/stretchr/testify/mock"
 )
-
-var _req, _ = http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
-
-func newReqValues(req *http.Request) *RequestValues {
-	return &RequestValues{RawRequest: req, URL: req.URL}
-}
 
 var _ TestingT = (*fakeT)(nil)
 

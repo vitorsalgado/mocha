@@ -1,7 +1,6 @@
 package mocha
 
 import (
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -19,6 +18,17 @@ func TestWithRequestBodyParsers_CanParse(t *testing.T) {
 	formParser := &formURLEncodedParser{}
 	textParser := &plainTextParser{}
 	noop := &noopParser{}
+
+	newReq := func(header map[string]string) *http.Request {
+		req, err := http.NewRequest(http.MethodPost, "https://localhost:8080", nil)
+		require.NoError(t, err)
+
+		for k, v := range header {
+			req.Header.Add(k, v)
+		}
+
+		return req
+	}
 
 	testCases := []struct {
 		name        string
@@ -85,17 +95,4 @@ func TestWithRequestBodyParsers_Parse(t *testing.T) {
 			assert.Equal(t, tc.expected, b)
 		})
 	}
-}
-
-func newReq(header map[string]string) *http.Request {
-	req, err := http.NewRequest(http.MethodPost, "https://localhost:8080", nil)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	for k, v := range header {
-		req.Header.Add(k, v)
-	}
-
-	return req
 }

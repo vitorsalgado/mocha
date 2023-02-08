@@ -36,7 +36,7 @@ func (r *SequentialReply) Add(reply ...Reply) *SequentialReply {
 func (r *SequentialReply) Pre() error {
 	size := len(r.replies)
 	if size == 0 {
-		return fmt.Errorf("you need to set at least one response when using multiple response builder")
+		return fmt.Errorf("[reply.sequence] you need to set at least one response when using multiple response builder")
 	}
 
 	return nil
@@ -60,7 +60,7 @@ func (r *SequentialReply) Build(w http.ResponseWriter, req *RequestValues) (*Stu
 
 		return nil,
 			fmt.Errorf(
-				"unable to obtain a response and no default response was set. request number: %d - sequence size: %d",
+				"[reply.sequence] unable to obtain a response and no default response was set. request number: %d - sequence size: %d",
 				hits,
 				size)
 	}

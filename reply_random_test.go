@@ -12,6 +12,7 @@ import (
 
 func TestRandomReplies(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
+	rv := &RequestValues{RawRequest: req, URL: req.URL}
 	statuses := []int{
 		http.StatusOK, http.StatusInternalServerError, http.StatusCreated, http.StatusBadRequest}
 
@@ -21,7 +22,7 @@ func TestRandomReplies(t *testing.T) {
 			OK(),
 			Created()).
 			Add(InternalServerError()).
-			Build(nil, newReqValues(req))
+			Build(nil, rv)
 
 		contains := false
 		for _, status := range statuses {
@@ -42,6 +43,7 @@ func TestShouldReturnErrorWhenRandomDoesNotContainReplies(t *testing.T) {
 
 func TestRandWithCustom(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
+	rv := &RequestValues{RawRequest: req, URL: req.URL}
 	statuses := []int{
 		http.StatusOK, http.StatusInternalServerError, http.StatusCreated, http.StatusBadRequest}
 
@@ -54,7 +56,7 @@ func TestRandWithCustom(t *testing.T) {
 			OK(),
 			Created(),
 			InternalServerError(),
-		).Build(nil, newReqValues(req))
+		).Build(nil, rv)
 
 		contains := false
 		for _, status := range statuses {

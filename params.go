@@ -1,6 +1,9 @@
 package mocha
 
-import "context"
+import (
+	"context"
+	"sync"
+)
 
 // Params defines a contract for a generic parameters repository.
 type Params interface {
@@ -22,32 +25,48 @@ type Params interface {
 
 type paramsStore struct {
 	data map[string]any
+	mu   sync.RWMutex
 }
 
 func newInMemoryParameters() Params {
 	return &paramsStore{data: make(map[string]any)}
 }
 
-func (p paramsStore) Get(_ context.Context, key string) (datum any, exists bool, err error) {
+func (p *paramsStore) Get(_ context.Context, key string) (datum any, exists bool, err error) {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
 	datum, exists = p.data[key]
 	return
 }
 
-func (p paramsStore) GetAll(_ context.Context) (map[string]any, error) {
+func (p *paramsStore) GetAll(_ context.Context) (map[string]any, error) {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
 	return p.data, nil
 }
 
-func (p paramsStore) Set(_ context.Context, key string, dep any) error {
+func (p *paramsStore) Set(_ context.Context, key string, dep any) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
 	p.data[key] = dep
 	return nil
 }
 
-func (p paramsStore) Remove(_ context.Context, key string) error {
+func (p *paramsStore) Remove(_ context.Context, key string) error {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
 	delete(p.data, key)
 	return nil
 }
 
-func (p paramsStore) Has(_ context.Context, key string) (bool, error) {
+func (p *paramsStore) Has(_ context.Context, key string) (bool, error) {
+	p.mu.RLock()
+	defer p.mu.RUnlock()
+
 	_, ok := p.data[key]
 	return ok, nil
 }

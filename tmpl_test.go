@@ -14,12 +14,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type testData struct {
-	Key   string
-	Value string
-}
-
 func TestGoTemplating(t *testing.T) {
+	type testData struct {
+		Key   string
+		Value string
+	}
+
 	wd, _ := os.Getwd()
 	filename := path.Join(wd, "testdata/test.tmpl")
 
@@ -59,12 +59,13 @@ func TestReplyWithTemplate(t *testing.T) {
 		Name: " test  ",
 	}
 
+	rv := &RequestValues{RawRequest: req, URL: req.URL}
 	res, err := NewReply().
 		Status(http.StatusOK).
 		BodyTemplate(NewTextTemplate().
 			FuncMap(template.FuncMap{"trim": strings.TrimSpace}).
 			Template(string(b)), data).
-		Build(nil, newReqValues(req))
+		Build(nil, rv)
 
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -85,12 +86,13 @@ func TestReplyWithTemplateText(t *testing.T) {
 {{ .Request.Header.Get "x-test" }}
 `
 
+	rv := &RequestValues{RawRequest: req, URL: req.URL}
 	res, err := NewReply().
 		Status(http.StatusOK).
 		BodyTemplate(NewTextTemplate().
 			FuncMap(template.FuncMap{"trim": strings.TrimSpace}).
 			Template(tmpl), data).
-		Build(nil, newReqValues(req))
+		Build(nil, rv)
 
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, res.StatusCode)

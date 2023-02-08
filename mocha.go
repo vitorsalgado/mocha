@@ -401,8 +401,8 @@ func (m *Mocha) Disable() {
 
 // Clean removes all scoped mocks.
 func (m *Mocha) Clean() {
-	m.rmu.Lock()
-	defer m.rmu.Unlock()
+	m.rmuMock.Lock()
+	defer m.rmuMock.Unlock()
 
 	for _, s := range m.scopes {
 		s.Clean()
