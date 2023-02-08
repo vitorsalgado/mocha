@@ -35,7 +35,7 @@ const (
 	_mXOR               = "xor"
 )
 
-func BuildMatcher(v any) (m Matcher, err error) {
+func BuildMatcher(possibleMatcher any) (m Matcher, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			m = nil
@@ -44,30 +44,37 @@ func BuildMatcher(v any) (m Matcher, err error) {
 		}
 	}()
 
-	t := reflect.TypeOf(v)
+	t := reflect.TypeOf(possibleMatcher)
 	switch t.Kind() {
 	case reflect.String:
-		return EqualIgnoreCase(v.(string)), nil
+		return EqualIgnoreCase(possibleMatcher.(string)), nil
 	case reflect.Slice, reflect.Array:
-		val := reflect.ValueOf(v)
-		if val.Len() == 0 {
-			return nil,
-				fmt.Errorf("matcher definition must be a string or an array in the format: [\"equal\", \"test\"]")
-		}
-
-		mk, ok := val.Index(0).Interface().(string)
-		if !ok {
-			return nil,
-				fmt.Errorf(
-					"first index of a matcher definition must be the matcher name. eg.: [\"equal\", \"test\"]. got: %v",
-					val.Index(0).Interface(),
-				)
-		}
-
-		return discoverAndBuild(strings.ToLower(mk), val.Slice(1, val.Len()).Interface())
+		return buildMatcherFromArray(possibleMatcher)
 	default:
-		return Equal(v), nil
+		return Equal(possibleMatcher), nil
 	}
+}
+
+func buildMatcherFromArray(possibleMatcher any) (Matcher, error) {
+	val := reflect.ValueOf(possibleMatcher)
+	if val.Len() == 0 {
+		return nil, fmt.Errorf("matcher definition must be a string or an array in the format: [\"equal\", \"test\"]")
+	}
+
+	mk, ok := val.Index(0).Interface().(string)
+	if !ok {
+		return nil, fmt.Errorf(
+			"first index of a matcher definition must be the matcher name. eg.: [\"equal\", \"test\"]. got: %v",
+			val.Index(0).Interface())
+	}
+
+	if val.Len() == 1 {
+		return discoverAndBuild(mk, nil)
+	} else if val.Len() == 2 {
+		return discoverAndBuild(mk, val.Index(1).Interface())
+	}
+
+	return discoverAndBuild(mk, val.Slice(1, val.Len()).Interface())
 }
 
 func extractMultipleMatchers(v any) ([]Matcher, error) {
@@ -80,13 +87,23 @@ func extractMultipleMatchers(v any) ([]Matcher, error) {
 	matchers := make([]Matcher, len(a))
 
 	for i, entry := range a {
-		mat, err := BuildMatcher(entry)
+		var mat Matcher
+		var err error
+
+		eType := reflect.TypeOf(entry)
+		switch eType.Kind() {
+		case reflect.Slice, reflect.Array:
+			mat, err = buildMatcherFromArray(entry)
+		case reflect.String:
+			mat, err = discoverAndBuild(entry.(string), nil)
+		}
+
 		if err != nil {
 			return nil,
 				fmt.Errorf("error building multiple matchers at index [%d]. %w", i, err)
 		}
 
-		matchers = append(matchers, mat)
+		matchers[i] = mat
 	}
 
 	return matchers, nil
@@ -192,7 +209,7 @@ func discoverAndBuild(key string, args any) (m Matcher, err error) {
 		return Empty(), nil
 
 	case _mEqualTo:
-		return StrictEqual(args), nil
+		return Equal(args), nil
 
 	case _mEqualToIgnoreCase:
 		str, ok := args.(string)

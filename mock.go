@@ -52,7 +52,7 @@ type Mock struct {
 }
 
 type Builder interface {
-	Build() (*Mock, error)
+	Build(app *Mocha) (*Mock, error)
 }
 
 // RequestValues groups HTTP request data, including the parsed body, if any.
@@ -111,6 +111,15 @@ type PostAction interface {
 // Mapper is the function definition to be used to map Mock Stub before serving it.
 // Mapper doesn't work with reply.From or Proxy.
 type Mapper func(requestValues *RequestValues, res *Stub) error
+
+// MockFileHandler defines a custom Mock file configuration handler.
+// It lets users define custom fields on mock configuration files that could be handled by a MockFileHandler instance.
+// It is also possible to change how built-in fields are handled.
+type MockFileHandler interface {
+	// Handle handles a Mock configuration file.
+	//  Parameter fields
+	Handle(fields map[string]any, b *MockBuilder) error
+}
 
 // Extension describes a component that can registered within the mock server, and used lately.
 // Only one instance of Extension should be registered, but, depending on the component, it could be used many times.
@@ -203,8 +212,8 @@ func newMock() *Mock {
 	return &Mock{
 		ID:           uuid.New().String(),
 		Enabled:      true,
-		expectations: make([]*expectation, 0),
 		PostActions:  make([]PostAction, 0),
+		expectations: make([]*expectation, 0),
 	}
 }
 
@@ -257,9 +266,9 @@ func (m *Mock) Build() (*Mock, error) {
 	return m, nil
 }
 
-// requestMatches checks if current Mock matches against a list of expectations.
+// matchExpectations checks if current Mock matches against a list of expectations.
 // Will iterate through all expectations even if it doesn't match early.
-func (m *Mock) requestMatches(ri *valueSelectorInput, expectations []*expectation) *matchResult {
+func (m *Mock) matchExpectations(ri *valueSelectorInput, expectations []*expectation) *matchResult {
 	w := 0
 	ok := true
 	details := make([]mismatchDetail, 0)
@@ -270,7 +279,7 @@ func (m *Mock) requestMatches(ri *valueSelectorInput, expectations []*expectatio
 			val = exp.ValueSelector(ri)
 		}
 
-		result, err := doMatches(exp, val)
+		result, err := m.matchExpectation(exp, val)
 
 		if err != nil {
 			ok = false
@@ -303,16 +312,7 @@ func (m *Mock) requestMatches(ri *valueSelectorInput, expectations []*expectatio
 	return &matchResult{Pass: ok, Weight: w, Details: details}
 }
 
-func (m *Mock) prepare() {
-	for _, e := range m.expectations {
-		ee, ok := e.Matcher.(matcher.OnAfterMockServed)
-		if ok {
-			m.after = append(m.after, ee)
-		}
-	}
-}
-
-func doMatches(e *expectation, value any) (result *matcher.Result, err error) {
+func (m *Mock) matchExpectation(e *expectation, value any) (result *matcher.Result, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("matcher %s panicked. reason=%v", e.Matcher.Name(), r)
@@ -323,4 +323,13 @@ func doMatches(e *expectation, value any) (result *matcher.Result, err error) {
 	result, err = e.Matcher.Match(value)
 
 	return
+}
+
+func (m *Mock) prepare() {
+	for _, e := range m.expectations {
+		ee, ok := e.Matcher.(matcher.OnAfterMockServed)
+		if ok {
+			m.after = append(m.after, ee)
+		}
+	}
 }

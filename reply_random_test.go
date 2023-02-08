@@ -48,7 +48,7 @@ func TestRandWithCustom(t *testing.T) {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	for i := 0; i < 5000; i++ {
-		res, err := RandWithCustom(
+		res, err := RandWith(
 			r,
 			BadRequest(),
 			OK(),

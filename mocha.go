@@ -17,6 +17,10 @@ import (
 	"github.com/vitorsalgado/mocha/v3/x/event"
 )
 
+const (
+	Version = "3.0.0"
+)
+
 // Mocha is the base for the mock server.
 type Mocha struct {
 	log                logger.Log
@@ -49,11 +53,7 @@ type TestingT interface {
 // New creates a new Mocha mock server with the given configurations.
 // Parameter config accepts a Config or a ConfigBuilder implementation.
 func New(config ...Configurer) *Mocha {
-	return NewWithContext(context.Background(), config...)
-}
-
-func NewWithContext(ctx context.Context, config ...Configurer) (m *Mocha) {
-	m = &Mocha{}
+	m := &Mocha{}
 	l := logger.NewConsole()
 
 	conf := defaultConfig()
@@ -65,7 +65,7 @@ func NewWithContext(ctx context.Context, config ...Configurer) (m *Mocha) {
 		}
 	}
 
-	ctx, cancel := context.WithCancel(ctx)
+	ctx, cancel := context.WithCancel(context.Background())
 	store := newStore()
 	events := event.New()
 
@@ -160,7 +160,7 @@ func NewWithContext(ctx context.Context, config ...Configurer) (m *Mocha) {
 				TrimSuffix(m.config.Forward.TrimSuffix)))
 	}
 
-	return
+	return m
 }
 
 // Start starts the mock server.
@@ -237,7 +237,7 @@ func (m *Mocha) Mock(builders ...Builder) (*Scoped, error) {
 	added := make([]*Mock, size)
 
 	for i, b := range builders {
-		mock, err := b.Build()
+		mock, err := b.Build(m)
 		if err != nil {
 			return nil, fmt.Errorf("error building mock at index [%d]. %w", i, err)
 		}

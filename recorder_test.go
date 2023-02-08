@@ -111,6 +111,7 @@ func TestRecording_WithWebProxy(t *testing.T) {
 	req, _ = http.NewRequest(http.MethodGet, srv.URL()+"/other", nil)
 	req.Header.Add(includedReqHeader, "included")
 	res, err = httpClient.Do(req)
+	require.NoError(t, err)
 
 	b, err := io.ReadAll(res.Body)
 	res.Body.Close()

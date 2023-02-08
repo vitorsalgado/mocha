@@ -85,7 +85,7 @@ func TestMock_Matches(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			res := m.requestMatches(params, []*expectation{{
+			res := m.matchExpectations(params, []*expectation{{
 				Matcher: StrictEqual(tc.value),
 				ValueSelector: func(r *valueSelectorInput) any {
 					return tc.selector
@@ -97,7 +97,7 @@ func TestMock_Matches(t *testing.T) {
 
 	t.Run("should return not matched and error when one of expectations returns error", func(t *testing.T) {
 		// string
-		res := m.requestMatches(params, []*expectation{{
+		res := m.matchExpectations(params, []*expectation{{
 			Matcher: Func(func(_ any) (bool, error) {
 				return false, fmt.Errorf("fail")
 			}),
@@ -110,7 +110,7 @@ func TestMock_Matches(t *testing.T) {
 
 	t.Run("should not pass when it panics", func(t *testing.T) {
 		// string
-		res := m.requestMatches(params, []*expectation{{
+		res := m.matchExpectations(params, []*expectation{{
 			Matcher: Func(func(_ any) (bool, error) {
 				panic("boom!")
 			}),
@@ -123,7 +123,7 @@ func TestMock_Matches(t *testing.T) {
 
 	t.Run("should return the sum of the matchers weight when it matches", func(t *testing.T) {
 		// any
-		res := m.requestMatches(params, []*expectation{
+		res := m.matchExpectations(params, []*expectation{
 			{
 				Matcher: StrictEqual("test"),
 				ValueSelector: func(r *valueSelectorInput) any {
@@ -152,7 +152,7 @@ func TestMock_Matches(t *testing.T) {
 
 	t.Run("should return the sum of the matchers weight when one of then doesn't match", func(t *testing.T) {
 		// any
-		res := m.requestMatches(params, []*expectation{
+		res := m.matchExpectations(params, []*expectation{
 			{
 				Matcher: StrictEqual("test"),
 				ValueSelector: func(r *valueSelectorInput) any {

@@ -18,7 +18,7 @@ func findMockForRequest(storage mockStore, requestValues *valueSelectorInput) *f
 	var details = make([]mismatchDetail, 0)
 
 	for _, m := range mocks {
-		result := m.requestMatches(requestValues, m.expectations)
+		result := m.matchExpectations(requestValues, m.expectations)
 
 		if result.Pass {
 			return &findResult{Pass: true, Matched: m}

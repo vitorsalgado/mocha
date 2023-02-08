@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
@@ -20,16 +21,18 @@ func TestPriority(t *testing.T) {
 	one := m.MustMock(mocha.Get(matcher.URLPath("/test")).
 		Priority(3).
 		Reply(mocha.OK()))
+
 	two := m.MustMock(mocha.Get(matcher.URLPath("/test")).
 		Priority(1).
 		Reply(mocha.BadRequest()))
+
 	three := m.MustMock(mocha.Get(matcher.URLPath("/test")).
 		Priority(100).
 		Reply(mocha.Created()))
 
 	res, err := testutil.Get(m.URL() + "/test").Do()
 
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 	assert.False(t, one.HasBeenCalled())
 	assert.True(t, two.HasBeenCalled())

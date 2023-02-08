@@ -1,0 +1,23 @@
+{
+  "name": "test-custom_field_parsers",
+  "request": {
+    "method": "GET",
+    "url_path": "/test",
+    "query": {
+      "term": "test",
+      "filter": ["contains", "all"],
+      "page": ["allOf", "present", ["equalTo", 10]]
+    }
+  },
+  "response": {
+    "status": 201,
+    "body": "hi"
+  },
+  "custom": {
+    "query": {
+      "key": "q",
+      "value": "hello-world"
+    }
+  },
+  "another_custom_field": 100
+}

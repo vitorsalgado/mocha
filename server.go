@@ -7,6 +7,8 @@ import (
 	"strconv"
 )
 
+var _ Server = (*httpTestServer)(nil)
+
 // ServerInfo holds HTTP server information, like its URL.
 type ServerInfo struct {
 	URL string

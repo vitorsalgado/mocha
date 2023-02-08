@@ -2,6 +2,7 @@ package matcher
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -30,12 +31,27 @@ func equalValues(expected any, actual any) bool {
 
 	actualKind := actualType.Kind()
 	expectedKind := eType.Kind()
+	actualValue := reflect.ValueOf(actual)
 
 	if actualKind != expectedKind {
+		switch actualKind {
+		case reflect.String:
+			switch expectedKind {
+			case reflect.Float64, reflect.Float32:
+				return equalValues(actualValue.String(), fmt.Sprintf("%v", expectedValue.Float()))
+			}
+		}
+
+		switch expectedKind {
+		case reflect.String:
+			switch actualKind {
+			case reflect.Float64, reflect.Float32:
+				return equalValues(expectedValue.String(), fmt.Sprintf("%v", actualValue.Float()))
+			}
+		}
+
 		return false
 	}
-
-	actualValue := reflect.ValueOf(actual)
 
 	switch actualKind {
 	case reflect.Array, reflect.Slice:

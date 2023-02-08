@@ -97,6 +97,8 @@ type Config struct {
 	// Needs to be used with Proxy.
 	Record *RecordConfig
 
+	MockFileHandlers []MockFileHandler
+
 	// CLI Only Options
 
 	// UseHTTPS defines that the mock server should use HTTPS.
@@ -138,6 +140,7 @@ func (c *Config) Apply(conf *Config) error {
 	conf.Record = c.Record
 	conf.Forward = c.Forward
 	conf.UseHTTPS = c.UseHTTPS
+	conf.MockFileHandlers = c.MockFileHandlers
 
 	return nil
 }
@@ -164,6 +167,7 @@ func defaultConfig() *Config {
 		RequestBodyParsers:     make([]RequestBodyParser, 0),
 		Middlewares:            make([]func(http.Handler) http.Handler, 0),
 		Loaders:                make([]Loader, 0),
+		MockFileHandlers:       make([]MockFileHandler, 0),
 	}
 }
 
@@ -289,6 +293,11 @@ func (cb *ConfigBuilder) Record(options ...RecordConfigurer) *ConfigBuilder {
 	}
 
 	cb.recorderConf = options
+	return cb
+}
+
+func (cb *ConfigBuilder) MockFileHandlers(handlers ...MockFileHandler) *ConfigBuilder {
+	cb.conf.MockFileHandlers = append(cb.conf.MockFileHandlers, handlers...)
 	return cb
 }
 

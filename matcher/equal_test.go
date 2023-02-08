@@ -29,6 +29,9 @@ func TestEqual(t *testing.T) {
 		result         bool
 	}{
 		{"string with nil", "test", nil, false},
+		{"string with float64", "10", float64(10), true},
+		{"string with bool", "true", true, false},
+		{"float64 with string", float64(10), "10", true},
 		{"nil", nil, nil, true},
 		{"bool (true)", true, true, true},
 		{"bool (false)", true, false, false},
@@ -70,6 +73,11 @@ func TestEqual(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := Equal(tc.value).Match(tc.valueToCompare)
+
+			assert.NoError(t, err)
+			assert.Equal(t, tc.result, res.Pass)
+
+			res, err = Equal(tc.valueToCompare).Match(tc.value)
 
 			assert.NoError(t, err)
 			assert.Equal(t, tc.result, res.Pass)

@@ -348,7 +348,7 @@ func (b *MockBuilder) Enable(enabled bool) *MockBuilder {
 
 // Build builds a Mock with previously configured parameters.
 // Used internally by Mocha.
-func (b *MockBuilder) Build() (*Mock, error) {
+func (b *MockBuilder) Build(_ *Mocha) (*Mock, error) {
 	if len(b.mock.expectations) == 0 {
 		return nil, fmt.Errorf("at least 1 request matcher must be set")
 	}

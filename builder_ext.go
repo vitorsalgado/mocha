@@ -71,7 +71,7 @@ func MockFromFile(filename string) Builder {
 	return &MockExternalBuilder{filename: filename, builder: Request()}
 }
 
-func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
+func (b *MockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("[panic] building external mock. reason: %v", r)
@@ -233,7 +233,7 @@ func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
 		var random *RandomReply
 
 		if v.IsSet(_fResponseRandomSeed) {
-			random = RandWithCustom(rand.New(rand.NewSource(v.GetInt64(_fResponseRandomSeed))))
+			random = RandWith(rand.New(rand.NewSource(v.GetInt64(_fResponseRandomSeed))))
 		} else {
 			random = Rand()
 		}
@@ -275,7 +275,7 @@ func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
 					fmt.Errorf("[response_response.after_ended] building error. %w", err)
 			}
 
-			seq.AfterSequenceEnded(rr)
+			seq.OnSequenceEnded(rr)
 		}
 
 		entries, ok := v.Get(_fResponseSequenceEntries).([]any)
@@ -311,7 +311,20 @@ func (b *MockExternalBuilder) Build() (mock *Mock, err error) {
 	// --
 	// End Stub
 
-	return b.builder.Build()
+	// User defined handlers
+
+	if len(app.config.MockFileHandlers) > 0 {
+		settings := v.AllSettings()
+
+		for i, handler := range app.config.MockFileHandlers {
+			err = handler.Handle(settings, b.builder)
+			if err != nil {
+				return nil, fmt.Errorf("custom field parser [%d] failed. reason=%v", i, err)
+			}
+		}
+	}
+
+	return b.builder.Build(app)
 }
 
 // buildReply expects a sub instance of viper.Viper, containing the response definition.

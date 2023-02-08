@@ -41,7 +41,7 @@ func TestSequentialReply(t *testing.T) {
 		req, err := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 		require.NoError(t, err)
 
-		builder := Seq().Add(OK()).AfterSequenceEnded(NotFound())
+		builder := Seq().Add(OK()).OnSequenceEnded(NotFound())
 
 		res, err := builder.Build(nil, newReqValues(req))
 		assert.Nil(t, err)

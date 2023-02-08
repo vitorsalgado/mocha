@@ -23,8 +23,8 @@ func Rand(reply ...Reply) *RandomReply {
 	}
 }
 
-// RandWithCustom creates a new RandomReply with a custom *rand.Rand.
-func RandWithCustom(random *rand.Rand, reply ...Reply) *RandomReply {
+// RandWith creates a new RandomReply with a custom *rand.Rand.
+func RandWith(random *rand.Rand, reply ...Reply) *RandomReply {
 	r := Rand(reply...)
 	r.random = random
 
