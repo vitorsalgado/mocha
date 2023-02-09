@@ -11,9 +11,9 @@ func (m *lessMatcher) Name() string {
 }
 
 func (m *lessMatcher) Match(v any) (*Result, error) {
-	vv, ok := v.(float64)
-	if !ok {
-		return nil, fmt.Errorf("matcher Less only works with float64 type")
+	vv, err := convToFloat64(v)
+	if err != nil {
+		return nil, fmt.Errorf("unhandled data type. %w", err)
 	}
 
 	if vv < m.expected {
