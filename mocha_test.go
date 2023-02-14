@@ -329,10 +329,6 @@ func TestMocha_Concurrency(t *testing.T) {
 	for i := 0; i < jobs; i++ {
 		wg.Add(1)
 		go func(index int) {
-			if index%2 == 0 {
-				time.Sleep(100 * time.Millisecond)
-			}
-
 			m.MustMock(Getf("/test--" + strconv.FormatInt(int64(index), 10)).Reply(OK()))
 			m.MustMock(Getf("/concurrency--" + strconv.FormatInt(int64(index), 10)).Reply(Accepted()))
 
@@ -377,10 +373,6 @@ func TestMocha_Concurrent_Requests(t *testing.T) {
 	for i := 0; i < jobs; i++ {
 		wg.Add(1)
 		go func(index int) {
-			if index%2 == 0 {
-				time.Sleep(100 * time.Millisecond)
-			}
-
 			num := strconv.FormatInt(int64(index), 10)
 
 			scope1 := m.MustMock(Getf("/test--" + num).Reply(OK()))

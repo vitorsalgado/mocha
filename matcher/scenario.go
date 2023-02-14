@@ -73,12 +73,10 @@ func (m *scenarioMatcher) Match(_ any) (*Result, error) {
 		return &Result{Pass: true}, nil
 	}
 
-	return &Result{Pass: false, Message: fmt.Sprintf(
-		"%s %s %s",
-		hint(m.Name(), printExpected(m.requiredState)),
-		_separator,
-		printReceived(scn.state),
-	)}, nil
+	return &Result{
+		Ext:     []string{m.requiredState},
+		Message: fmt.Sprintf("Scenario state: %s", scn.state),
+	}, nil
 }
 
 func (m *scenarioMatcher) AfterMockServed() error {

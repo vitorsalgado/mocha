@@ -34,23 +34,16 @@ func (m *allOfMatcher) Match(v any) (*Result, error) {
 		}
 	}
 
+	var err error
 	if len(errs) > 0 {
-		return &Result{
-			Pass: false,
-			Message: fmt.Sprintf(
-				"%s\n%s",
-				hint(m.Name(), fmt.Sprintf("+%d", len(m.matchers))),
-				indent(strings.Join(failed, "\n")),
-			),
-		}, fmt.Errorf(strings.Join(errs, "\n"))
+		err = fmt.Errorf(strings.Join(errs, "\n"))
 	}
 
-	if !ok {
-		return &Result{Message: fmt.Sprintf(
-			"%s\n%s",
-			hint(m.Name(), fmt.Sprintf("+%d", len(m.matchers))),
-			indent(strings.Join(failed, "\n")),
-		)}, nil
+	if !ok || err != nil {
+		return &Result{
+			Message: indent(strings.Join(failed, "\n")),
+			Ext:     []string{fmt.Sprintf("+%d", len(m.matchers))},
+		}, err
 	}
 
 	return &Result{Pass: true}, nil

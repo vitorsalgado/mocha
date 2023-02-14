@@ -30,13 +30,8 @@ func (m *eachMatcher) Match(v any) (*Result, error) {
 
 			if !res.Pass {
 				return &Result{
-					Pass: false,
-					Message: fmt.Sprintf("%s %s %s",
-						hint(
-							m.Name(),
-							fmt.Sprintf("key=%v, value=%v", iter.Key().Interface(), mv)),
-						_separator,
-						res.Message),
+					Message: res.Message,
+					Ext:     []string{fmt.Sprintf("key=%v, value=%v", iter.Key().Interface(), mv)},
 				}, nil
 			}
 		}
@@ -53,12 +48,8 @@ func (m *eachMatcher) Match(v any) (*Result, error) {
 
 			if !res.Pass {
 				return &Result{
-					Pass: false,
-					Message: fmt.Sprintf("%s %s %s", hint(
-						m.Name(),
-						fmt.Sprintf("index=%d, item=%v", i, entry)),
-						_separator,
-						res.Message),
+					Message: res.Message,
+					Ext:     []string{fmt.Sprintf("index=%d, item=%v", i, entry)},
 				}, nil
 			}
 		}
@@ -67,8 +58,7 @@ func (m *eachMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		Pass:    false,
-		Message: hint(m.Name(), printReceived(fmt.Sprintf("type %s is not supported", valType.String()))),
+		Message: fmt.Sprintf("type %s is not supported", valType.String()),
 	}, nil
 }
 

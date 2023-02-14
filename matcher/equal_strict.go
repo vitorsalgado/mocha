@@ -14,12 +14,13 @@ func (m *equalStrictMatcher) Name() string {
 }
 
 func (m *equalStrictMatcher) Match(v any) (*Result, error) {
+	if reflect.DeepEqual(m.expected, v) {
+		return &Result{Pass: true}, nil
+	}
+
 	return &Result{
-		Pass: reflect.DeepEqual(m.expected, v),
-		Message: fmt.Sprintf("%s %s %v",
-			hint(m.Name(), printExpected(m.expected)),
-			_separator,
-			printReceived(v)),
+		Ext:     []string{stringify(m.expected)},
+		Message: fmt.Sprintf("Received: %v", v),
 	}, nil
 }
 

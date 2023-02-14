@@ -9,7 +9,6 @@ import (
 
 	"github.com/google/uuid"
 
-	"github.com/vitorsalgado/mocha/v3/internal/colorize"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
@@ -109,7 +108,7 @@ type PostAction interface {
 }
 
 // Mapper is the function definition to be used to map Mock Stub before serving it.
-// Mapper doesn't work with reply.From or Proxy.
+// Mapper doesn'txtTemplate work with reply.From or Proxy.
 type Mapper func(requestValues *RequestValues, res *Stub) error
 
 // MockFileHandler defines a custom Mock file configuration handler.
@@ -176,7 +175,7 @@ type (
 	mismatchDetail struct {
 		MatchersName string
 		Target       matchTarget
-		Desc         string
+		Result       *matcher.Result
 		Err          error
 	}
 )
@@ -267,7 +266,7 @@ func (m *Mock) Build() (*Mock, error) {
 }
 
 // matchExpectations checks if current Mock matches against a list of expectations.
-// Will iterate through all expectations even if it doesn't match early.
+// Will iterate through all expectations even if it doesn'txtTemplate match early.
 func (m *Mock) matchExpectations(ri *valueSelectorInput, expectations []*expectation) *matchResult {
 	w := 0
 	ok := true
@@ -286,12 +285,7 @@ func (m *Mock) matchExpectations(ri *valueSelectorInput, expectations []*expecta
 			details = append(details, mismatchDetail{
 				MatchersName: exp.Matcher.Name(),
 				Target:       exp.Target,
-				Desc: fmt.Sprintf(
-					"%s => Error: %s",
-					colorize.Bold(exp.Matcher.Name()),
-					colorize.Red(err.Error()),
-				),
-				Err: err,
+				Err:          err,
 			})
 
 			continue
@@ -304,7 +298,7 @@ func (m *Mock) matchExpectations(ri *valueSelectorInput, expectations []*expecta
 			details = append(details, mismatchDetail{
 				MatchersName: exp.Matcher.Name(),
 				Target:       exp.Target,
-				Desc:         result.Message,
+				Result:       result,
 			})
 		}
 	}

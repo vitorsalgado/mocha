@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -19,10 +18,6 @@ func TestRace(t *testing.T) {
 	for i := 0; i < jobs; i++ {
 		wg.Add(1)
 		go func(index int) {
-			if index%2 == 0 {
-				time.Sleep(100 * time.Millisecond)
-			}
-
 			m.Inc()
 			m.Hits()
 			wg.Done()
@@ -150,7 +145,7 @@ func TestMock_Matches(t *testing.T) {
 		assert.Equal(t, 5, res.Weight)
 	})
 
-	t.Run("should return the sum of the matchers weight when one of then doesn't match", func(t *testing.T) {
+	t.Run("should return the sum of the matchers weight when one of then doesn'txtTemplate match", func(t *testing.T) {
 		// any
 		res := m.matchExpectations(params, []*expectation{
 			{

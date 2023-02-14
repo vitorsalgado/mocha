@@ -20,11 +20,10 @@ func (m *lessOrEqualMatcher) Match(v any) (*Result, error) {
 		return &Result{Pass: true}, nil
 	}
 
-	return &Result{Message: fmt.Sprintf(
-		"%s %s %v",
-		hint(m.Name(), printExpected(m.expected)),
-		_separator,
-		printReceived(vv))}, nil
+	return &Result{
+			Ext:     []string{stringify(m.expected)},
+			Message: printReceived(vv)},
+		nil
 }
 
 func LessOrEqual(expected float64) Matcher {

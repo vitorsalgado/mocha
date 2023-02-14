@@ -1,8 +1,7 @@
 package matcher
 
 import (
-	"errors"
-	"fmt"
+	"strconv"
 )
 
 type truthyMatcher struct {
@@ -13,16 +12,23 @@ func (m *truthyMatcher) Name() string {
 }
 
 func (m *truthyMatcher) Match(v any) (*Result, error) {
-	b, ok := v.(bool)
-	if !ok {
-		return nil, errors.New("truthy matcher only works with bool values")
+	var b bool
+	var err error
+
+	switch e := v.(type) {
+	case bool:
+		b = e
+	case string:
+		b, err = strconv.ParseBool(e)
+	case int:
+		b, err = strconv.ParseBool(strconv.FormatInt(int64(e), 10))
 	}
 
-	if !b {
-		return &Result{Message: fmt.Sprintf("%s %v", hint(m.Name()), v)}, nil
+	if err != nil {
+		return nil, err
 	}
 
-	return &Result{Pass: true}, nil
+	return &Result{Pass: b}, nil
 }
 
 func Truthy() Matcher {

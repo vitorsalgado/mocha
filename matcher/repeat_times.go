@@ -1,7 +1,6 @@
 package matcher
 
 import (
-	"fmt"
 	"sync"
 )
 
@@ -16,11 +15,13 @@ func (m *repeatMatcher) Name() string {
 }
 
 func (m *repeatMatcher) Match(_ any) (*Result, error) {
-	return &Result{Pass: m.hits < m.max, Message: fmt.Sprintf(
-		"%s %s %s",
-		hint(m.Name(), printExpected(m.max)),
-		_separator,
-		printReceived(m.hits)),
+	if m.hits < m.max {
+		return &Result{Pass: true}, nil
+	}
+
+	return &Result{
+		Ext:     []string{stringify(m.max)},
+		Message: printReceived(m.hits),
 	}, nil
 }
 

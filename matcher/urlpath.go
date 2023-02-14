@@ -14,15 +14,6 @@ func (m *urlPathMatcher) Name() string {
 }
 
 func (m *urlPathMatcher) Match(v any) (*Result, error) {
-	message := func(failure string) string {
-		return fmt.Sprintf(
-			"%s %s %s",
-			hint(m.Name()),
-			_separator,
-			failure,
-		)
-	}
-
 	var value any
 
 	switch e := v.(type) {
@@ -31,14 +22,14 @@ func (m *urlPathMatcher) Match(v any) (*Result, error) {
 	case string:
 		u, err := url.Parse(e)
 		if err != nil {
-			return &Result{}, err
+			return nil, err
 		}
 
 		value = u.Path
 	case fmt.Stringer:
 		u, err := url.Parse(e.String())
 		if err != nil {
-			return &Result{}, err
+			return nil, err
 		}
 
 		value = u.Path
@@ -51,7 +42,11 @@ func (m *urlPathMatcher) Match(v any) (*Result, error) {
 		return nil, err
 	}
 
-	return &Result{Pass: res.Pass, Message: message(res.Message)}, nil
+	if res.Pass {
+		return &Result{Pass: true}, nil
+	}
+
+	return &Result{Message: res.Message}, nil
 }
 
 // URLPath compares the URL path with the expected value and matches if they are equal.

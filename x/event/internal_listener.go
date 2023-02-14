@@ -108,7 +108,18 @@ func (h *InternalListener) OnRequestNotMatched(evt any) {
 		builder.WriteString(fmt.Sprintf("%s:\n", colorize.Bold("Mismatches")))
 
 		for _, detail := range e.Result.Details {
-			builder.WriteString(detail.Description)
+			builder.WriteString(detail.Name)
+			builder.WriteString("(")
+
+			if len(detail.Ext) == 0 {
+				builder.WriteString(colorize.Bold(detail.Message))
+				builder.WriteString(")")
+			} else {
+				builder.WriteString(colorize.Bold(strings.Join(detail.Ext, ", ")))
+				builder.WriteString(") ")
+				builder.WriteString(detail.Message)
+			}
+
 			builder.WriteString("\n")
 		}
 	}

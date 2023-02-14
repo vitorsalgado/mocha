@@ -66,11 +66,11 @@ func TestSequentialReply_ShouldReturnErrorWhenSequenceDoesNotContainReplies(t *t
 func TestSequentialReply_Pre(t *testing.T) {
 	seq := Seq()
 
-	require.Error(t, seq.Pre())
+	require.Error(t, seq.Validate())
 
 	seq.Add(OK())
 
-	require.NoError(t, seq.Pre())
+	require.NoError(t, seq.Validate())
 }
 
 func TestSeqRace(t *testing.T) {
@@ -84,10 +84,6 @@ func TestSeqRace(t *testing.T) {
 	for i := 0; i < jobs; i++ {
 		wg.Add(1)
 		go func(index int) {
-			if index%2 == 0 {
-				time.Sleep(100 * time.Millisecond)
-			}
-
 			res, err := builder.Build(nil, rv)
 			require.NoError(t, err)
 			require.True(t, res.StatusCode != StatusNoMatch)

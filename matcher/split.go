@@ -18,19 +18,21 @@ func (m *splitMatcher) Name() string {
 func (m *splitMatcher) Match(v any) (*Result, error) {
 	txt, ok := v.(string)
 	if !ok {
-		return &Result{}, fmt.Errorf("type %s is not supported. only string is acceptable", reflect.TypeOf(v).Name())
+		return nil, fmt.Errorf("type %s is not supported. only string is acceptable", reflect.TypeOf(v).Name())
 	}
 
 	result, err := m.matcher.Match(strings.Split(txt, m.separator))
 	if err != nil {
-		return &Result{}, err
+		return nil, err
+	}
+
+	if result.Pass {
+		return &Result{Pass: true}, err
 	}
 
 	return &Result{
-		Pass: result.Pass,
-		Message: fmt.Sprintf("%s %s",
-			hint(m.Name(), printExpected(txt)),
-			result.Message),
+		Ext:     []string{txt},
+		Message: result.Message,
 	}, nil
 }
 

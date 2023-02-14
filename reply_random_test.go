@@ -38,7 +38,7 @@ func TestRandomReplies(t *testing.T) {
 }
 
 func TestShouldReturnErrorWhenRandomDoesNotContainReplies(t *testing.T) {
-	assert.Error(t, Rand().Pre())
+	assert.Error(t, Rand().Validate())
 }
 
 func TestRandWithCustom(t *testing.T) {
@@ -74,9 +74,9 @@ func TestRandWithCustom(t *testing.T) {
 func TestRandomReply_Pre(t *testing.T) {
 	r := Rand()
 
-	require.Error(t, r.Pre())
+	require.Error(t, r.Validate())
 
 	r.Add(OK())
 
-	require.NoError(t, r.Pre())
+	require.NoError(t, r.Validate())
 }

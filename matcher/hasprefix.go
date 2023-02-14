@@ -1,7 +1,6 @@
 package matcher
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -15,14 +14,13 @@ func (m *hasPrefixMatcher) Name() string {
 
 func (m *hasPrefixMatcher) Match(v any) (*Result, error) {
 	txt := v.(string)
+	if strings.HasPrefix(txt, m.prefix) {
+		return &Result{Pass: true}, nil
+	}
 
 	return &Result{
-		Pass: strings.HasPrefix(txt, m.prefix),
-		Message: fmt.Sprintf(
-			"%s %s %s",
-			hint(m.Name(), printExpected(m.prefix)),
-			_separator,
-			txt),
+		Ext:     []string{m.prefix},
+		Message: printReceived(txt),
 	}, nil
 }
 

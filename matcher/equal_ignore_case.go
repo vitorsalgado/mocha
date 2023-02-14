@@ -18,12 +18,13 @@ func (m *equalIgnoreCaseMatcher) Match(v any) (*Result, error) {
 		v = ""
 	}
 
+	if strings.EqualFold(m.expected, v.(string)) {
+		return &Result{Pass: true}, nil
+	}
+
 	return &Result{
-		Pass: strings.EqualFold(m.expected, v.(string)),
-		Message: fmt.Sprintf("%s %s %s",
-			hint(m.Name(), printExpected(m.expected)),
-			_separator,
-			printReceived(v)),
+		Message: fmt.Sprintf("Received: %v", v),
+		Ext:     []string{stringify(m.expected)},
 	}, nil
 }
 

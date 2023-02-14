@@ -1,6 +1,7 @@
 package matcher
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -19,46 +20,37 @@ func (m *containsMatcher) Match(list any) (*Result, error) {
 	var sub = reflect.ValueOf(m.expected)
 	var listType = reflect.TypeOf(list)
 	if listType == nil {
-		return nil, fmt.Errorf("unknown typeof value")
+		return nil, errors.New("unknown typeof value")
 	}
-
-	describeFailure := fmt.Sprintf(
-		"%s %s %v",
-		hint(m.Name(), printExpected(m.expected)),
-		_separator,
-		printReceived(listValue),
-	)
 
 	switch listType.Kind() {
 	case reflect.String:
+		if pass := strings.Contains(listValue.String(), sub.String()); pass {
+			return &Result{Pass: true}, nil
+		}
+
 		return &Result{
-			Pass:    strings.Contains(listValue.String(), sub.String()),
-			Message: describeFailure,
+			Message: stringify(listValue),
+			Ext:     []string{stringify(m.expected)},
 		}, nil
 	case reflect.Map:
 		keys := listValue.MapKeys()
 		for i := 0; i < len(keys); i++ {
 			if equalValues(keys[i].Interface(), m.expected) {
-				return &Result{
-					Pass:    true,
-					Message: describeFailure,
-				}, nil
+				return &Result{Pass: true}, nil
 			}
 		}
 
-		return &Result{Message: describeFailure}, nil
+		return &Result{Message: stringify(listValue)}, nil
 	}
 
 	for i := 0; i < listValue.Len(); i++ {
 		if equalValues(listValue.Index(i).Interface(), sub.Interface()) {
-			return &Result{
-				Pass:    true,
-				Message: describeFailure,
-			}, nil
+			return &Result{Pass: true}, nil
 		}
 	}
 
-	return &Result{Message: describeFailure}, nil
+	return &Result{Message: stringify(listValue)}, nil
 }
 
 // Contain returns true when the items value is contained in the matcher argument.

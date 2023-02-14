@@ -1,7 +1,5 @@
 package matcher
 
-import "fmt"
-
 type xorMatcher struct {
 	first  Matcher
 	second Matcher
@@ -14,12 +12,12 @@ func (m *xorMatcher) Name() string {
 func (m *xorMatcher) Match(v any) (*Result, error) {
 	a, err := m.first.Match(v)
 	if err != nil {
-		return &Result{}, err
+		return nil, err
 	}
 
 	b, err := m.second.Match(v)
 	if err != nil {
-		return &Result{}, err
+		return nil, err
 	}
 
 	if a.Pass != b.Pass {
@@ -37,15 +35,9 @@ func (m *xorMatcher) Match(v any) (*Result, error) {
 		desc += b.Message
 	}
 
-	msg := fmt.Sprintf(
-		"%s %s %s",
-		hint(m.Name(), m.first.Name(), m.second.Name()),
-		_separator,
-		desc)
-
 	return &Result{
-		Pass:    false,
-		Message: msg,
+		Ext:     []string{m.first.Name(), m.second.Name()},
+		Message: desc,
 	}, nil
 }
 

@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"net/url"
+	"text/template"
 
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
@@ -18,11 +20,11 @@ type Reply interface {
 	Build(w http.ResponseWriter, r *RequestValues) (*Stub, error)
 }
 
-// Pre describes a Reply that has preparations steps to run on mocking building.
-type Pre interface {
-	// Pre runs once during mock building.
+// replyValidation describes a Reply that has preparations steps to run on mocking building.
+type replyValidation interface {
+	// Validate runs once during mock building.
 	// Useful for pre-configurations or validations that needs to be executed once.
-	Pre() error
+	Validate() error
 }
 
 // Stub defines the HTTP response that will be served once a Mock is matched for an HTTP Request.
@@ -46,7 +48,31 @@ func (s *Stub) Gunzip() ([]byte, error) {
 	return io.ReadAll(gz)
 }
 
-// -- Standard Reply
+// Template defines a template parser for response bodies.
+type Template interface {
+	// Compile allows pre-compilation of the given template.
+	Compile() error
+
+	// Render parses the given template.
+	Render(io.Writer, any) error
+}
+
+// templateData is the data templateExtras used to render the templates.
+type templateData struct {
+	// Request is HTTP request ref.
+	Request templateRequest
+
+	// Extras is an additional data that can be passed to the template.
+	// This value is set using the TemplateExtra() function from StdReply.
+	Extras any
+}
+
+type templateRequest struct {
+	Method string
+	URL    url.URL
+	Header http.Header
+	Body   any
+}
 
 var _ Reply = (*StdReply)(nil)
 
@@ -214,7 +240,7 @@ func (rep *StdReply) BodyReader(reader io.Reader) *StdReply {
 func (rep *StdReply) BodyTemplate(tpl any, extras any) *StdReply {
 	switch e := tpl.(type) {
 	case string:
-		rep.template = NewTextTemplate().Template(e)
+		rep.template = NewGoTextTemplate().Template(e)
 	case Template:
 		rep.err = e.Compile()
 		rep.template = e
@@ -247,7 +273,7 @@ func (rep *StdReply) Gzip() *StdReply {
 	return rep
 }
 
-func (rep *StdReply) Pre() error {
+func (rep *StdReply) Validate() error {
 	if rep.err != nil {
 		return rep.err
 	}
@@ -299,4 +325,53 @@ func (rep *StdReply) Build(_ http.ResponseWriter, r *RequestValues) (*Stub, erro
 	}
 
 	return rep.response, nil
+}
+
+// Templates
+
+// GoTextTemplate is the built-in Template implementation.
+// It uses Go templates.
+type GoTextTemplate struct {
+	name        string
+	funcMap     template.FuncMap
+	template    string
+	txtTemplate *template.Template
+}
+
+// NewGoTextTemplate creates a new BuiltInTemplate.
+func NewGoTextTemplate() *GoTextTemplate {
+	return &GoTextTemplate{funcMap: make(template.FuncMap)}
+}
+
+// Name sets the name of the template.
+func (gt *GoTextTemplate) Name(name string) *GoTextTemplate {
+	gt.name = name
+	return gt
+}
+
+// FuncMap adds a new function to be used inside the Go template.
+func (gt *GoTextTemplate) FuncMap(fn template.FuncMap) *GoTextTemplate {
+	gt.funcMap = fn
+	return gt
+}
+
+// Template sets the actual template.
+func (gt *GoTextTemplate) Template(tmpl string) *GoTextTemplate {
+	gt.template = tmpl
+	return gt
+}
+
+func (gt *GoTextTemplate) Compile() error {
+	t, err := template.New(gt.name).Funcs(gt.funcMap).Parse(gt.template)
+	if err != nil {
+		return err
+	}
+
+	gt.txtTemplate = t
+
+	return nil
+}
+
+func (gt *GoTextTemplate) Render(w io.Writer, data any) error {
+	return gt.txtTemplate.Execute(w, data)
 }

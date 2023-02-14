@@ -1,7 +1,5 @@
 package matcher
 
-import "fmt"
-
 type nilMatcher struct {
 }
 
@@ -14,11 +12,7 @@ func (m *nilMatcher) Match(v any) (*Result, error) {
 		return &Result{Pass: true}, nil
 	}
 
-	return &Result{Message: fmt.Sprintf("%s %s %v",
-		hint(m.Name()),
-		_separator,
-		printReceived(v)),
-	}, nil
+	return &Result{Message: printReceived(v)}, nil
 }
 
 func Nil() Matcher {

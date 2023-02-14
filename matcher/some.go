@@ -18,12 +18,11 @@ func (m *someMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
+		Ext: []string{stringify(m.items)},
 		Message: fmt.Sprintf(
-			"%s %s value %v is not contained in the %v",
-			hint(m.Name(), m.items),
-			_separator,
-			printReceived(v),
-			printExpected(m.items)),
+			"Value %v is not contained in the %v",
+			v,
+			m.items),
 	}, nil
 }
 

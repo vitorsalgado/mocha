@@ -1,9 +1,5 @@
 package matcher
 
-import (
-	"fmt"
-)
-
 type eitherMatcher struct {
 	first  Matcher
 	second Matcher
@@ -39,13 +35,7 @@ func (m *eitherMatcher) Match(v any) (*Result, error) {
 		desc += r2.Message
 	}
 
-	msg := fmt.Sprintf(
-		"%s %s %s",
-		hint(m.Name(), m.first.Name(), m.second.Name()),
-		_separator,
-		desc)
-
-	return &Result{Pass: false, Message: msg}, nil
+	return &Result{Pass: false, Message: desc, Ext: []string{m.first.Name(), m.second.Name()}}, nil
 }
 
 func (m *eitherMatcher) AfterMockServed() error {

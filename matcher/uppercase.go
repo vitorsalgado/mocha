@@ -1,7 +1,6 @@
 package matcher
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -17,14 +16,16 @@ func (m *upperCaseMatcher) Match(v any) (*Result, error) {
 	txt := v.(string)
 	result, err := m.matcher.Match(strings.ToUpper(txt))
 	if err != nil {
-		return &Result{}, err
+		return nil, err
+	}
+
+	if result.Pass {
+		return &Result{Pass: true}, nil
 	}
 
 	return &Result{
-		Pass: result.Pass,
-		Message: fmt.Sprintf("%s %s",
-			hint(m.Name(), m.matcher.Name()),
-			result.Message),
+		Ext:     []string{m.matcher.Name()},
+		Message: result.Message,
 	}, nil
 }
 

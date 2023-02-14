@@ -32,7 +32,11 @@ func (m *jsonPathMatcher) Match(v any) (*Result, error) {
 		return &Result{}, err
 	}
 
-	return &Result{Pass: r.Pass, Message: hint(m.Name(), printExpected(m.path), r.Message)}, nil
+	if r.Pass {
+		return &Result{Pass: true}, nil
+	}
+
+	return &Result{Ext: []string{m.path}, Message: r.Message}, nil
 }
 
 func (m *jsonPathMatcher) AfterMockServed() error {

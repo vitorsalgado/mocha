@@ -14,11 +14,11 @@ func (m *lenMatcher) Name() string {
 
 func (m *lenMatcher) Match(v any) (*Result, error) {
 	value := reflect.ValueOf(v)
+	if value.Len() == m.length {
+		return &Result{Pass: true}, nil
+	}
 
-	return &Result{
-		Pass:    value.Len() == m.length,
-		Message: hint(m.Name(), printExpected(m.length)),
-	}, nil
+	return &Result{Message: stringify(m.length)}, nil
 }
 
 // HaveLen returns true when matcher argument length is equal to the items value.

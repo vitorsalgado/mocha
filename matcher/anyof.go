@@ -39,26 +39,19 @@ func (m *anyOfMatcher) Match(v any) (*Result, error) {
 		break
 	}
 
+	var err error
 	if len(errs) > 0 {
+		err = fmt.Errorf(strings.Join(errs, "\n"))
+	}
+
+	if !ok || err != nil {
 		return &Result{
-			Pass: false,
-			Message: fmt.Sprintf(
-				"%s\n%s",
-				hint(m.Name(), fmt.Sprintf("+%d", len(m.matchers))),
-				indent(strings.Join(failed, "\n")),
-			),
-		}, fmt.Errorf(strings.Join(errs, "\n"))
+			Message: indent(strings.Join(failed, "\n")),
+			Ext:     []string{fmt.Sprintf("+%d", len(m.matchers))},
+		}, err
 	}
 
-	if !ok {
-		return &Result{Message: fmt.Sprintf(
-			"%s\n%s",
-			hint(m.Name(), fmt.Sprintf("+%d", len(m.matchers))),
-			indent(strings.Join(failed, "\n")),
-		)}, nil
-	}
-
-	return &Result{Pass: ok}, nil
+	return &Result{Pass: true}, nil
 }
 
 func (m *anyOfMatcher) AfterMockServed() error {

@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -72,10 +71,6 @@ func TestParameters_Concurrency(t *testing.T) {
 		value := "value"
 
 		go func(index int) {
-			if index%2 == 0 {
-				time.Sleep(100 * time.Millisecond)
-			}
-
 			kk := "key--" + strconv.FormatInt(int64(i), 10)
 			vv := "value"
 

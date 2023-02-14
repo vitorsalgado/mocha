@@ -22,7 +22,6 @@ func (m *convertMatcher) Match(v any) (*Result, error) {
 	}
 
 	converted := vValue.Convert(m.to)
-
 	res, err := m.matcher.Match(converted.Interface())
 	if err != nil {
 		return nil, err
@@ -32,13 +31,10 @@ func (m *convertMatcher) Match(v any) (*Result, error) {
 		return res, nil
 	}
 
-	return &Result{Message: fmt.Sprintf(
-		"%s %s %v\n %s",
-		hint(m.Name(), printExpected(m.to)),
-		_separator,
-		printReceived(v),
-		res.Message,
-	)}, nil
+	return &Result{
+		Message: fmt.Sprintf("(%s) %s", stringify(v), res.Message),
+		Ext:     []string{stringify(m.to)},
+	}, nil
 }
 
 func ConvertTo[T any](matcher Matcher) Matcher {

@@ -21,13 +21,12 @@ func (m *itemsMatchMatcher) Match(v any) (*Result, error) {
 	bLen := b.Len()
 
 	if aLen != bLen {
-		return &Result{Message: fmt.Sprintf(
-			"%s %s Expected value length %d. Received length %d.",
-			hint(m.Name(), printExpected(m.expected)),
-			_separator,
-			aLen,
-			bLen,
-		)}, nil
+		return &Result{
+			Ext: []string{stringify(m.expected)},
+			Message: fmt.Sprintf(
+				"Expected value length %d. Received length %d",
+				aLen,
+				bLen)}, nil
 	}
 
 	var extraA, extraB []interface{}

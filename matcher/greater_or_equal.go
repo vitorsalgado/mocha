@@ -22,11 +22,10 @@ func (m *greaterOrEqualMatcher) Match(v any) (*Result, error) {
 		return &Result{Pass: true}, nil
 	}
 
-	return &Result{Message: fmt.Sprintf(
-		"%s %s %v",
-		hint(m.Name(), printExpected(m.expected)),
-		_separator,
-		printReceived(vv))}, nil
+	return &Result{
+		Ext:     []string{stringify(m.expected)},
+		Message: fmt.Sprintf("Received: %v", vv),
+	}, nil
 }
 
 func GreaterOrEqualThan(expected float64) Matcher {

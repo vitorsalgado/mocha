@@ -1,0 +1,14 @@
+name: '003'
+request:
+  method: GET
+  url_path: /test003
+  query:
+    term: test
+    filter:
+      - equalTo
+      - none
+response:
+  status: 200
+  body: "[]"
+  header:
+    Content-Type: application/json

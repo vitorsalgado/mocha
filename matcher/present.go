@@ -1,7 +1,6 @@
 package matcher
 
 import (
-	"fmt"
 	"reflect"
 )
 
@@ -18,16 +17,15 @@ func (m *bePresentMatcher) Match(v any) (*Result, error) {
 	}
 
 	val := reflect.ValueOf(v)
-	message := fmt.Sprintf("%s %v", hint(m.Name()), v)
 
 	switch val.Kind() {
 	case reflect.String, reflect.Array, reflect.Slice, reflect.Map, reflect.Struct, reflect.Interface:
-		return &Result{Pass: !val.IsZero(), Message: message}, nil
+		return &Result{Pass: !val.IsZero(), Message: stringify(v)}, nil
 	case reflect.Pointer:
-		return &Result{Pass: !val.IsNil(), Message: message}, nil
+		return &Result{Pass: !val.IsNil(), Message: stringify(v)}, nil
 	}
 
-	return &Result{Pass: true, Message: message}, nil
+	return &Result{Pass: true}, nil
 }
 
 // Present checks if matcher argument contains a value that is not nil or the zero value for the argument type.

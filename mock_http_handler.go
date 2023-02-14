@@ -72,7 +72,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	mock := result.Matched
 
 	if mock.Delay > 0 {
-		<-time.After(mock.Delay)
+		time.Sleep(mock.Delay)
 	}
 
 	reqValues := &RequestValues{r, parsedURL, urlSegments, parsedBody, h.app, mock}
@@ -164,9 +164,10 @@ func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *event.EvtReq, result
 
 	for _, detail := range result.MismatchDetails {
 		e.Result.Details = append(e.Result.Details, event.EvtResultExt{
-			Name:        detail.MatchersName,
-			Description: detail.Desc,
-			Target:      strconv.FormatInt(int64(detail.Target), 10),
+			Name:    detail.MatchersName,
+			Message: detail.Result.Message,
+			Ext:     detail.Result.Ext,
+			Target:  strconv.FormatInt(int64(detail.Target), 10),
 		})
 	}
 
@@ -184,7 +185,7 @@ func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *event.EvtReq, result
 
 	for _, detail := range result.MismatchDetails {
 		builder.WriteString(fmt.Sprintf("%s, reason=%s, applied-to=%v\n",
-			detail.MatchersName, detail.Desc, detail.Target))
+			detail.MatchersName, detail.Result.Message, detail.Target))
 	}
 
 	w.Header().Add(header.ContentType, mimetype.TextPlain)

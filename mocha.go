@@ -228,7 +228,7 @@ func (m *Mocha) MustStartTLS() ServerInfo {
 //			Query("filter", matcher.StrictEqual("all")).
 //			Reply(reply.Created().PlainText("hello world")))
 //
-//	assert.True(t, scoped.HasBeenCalled())
+//	assert.True(txtTemplate, scoped.HasBeenCalled())
 func (m *Mocha) Mock(builders ...Builder) (*Scoped, error) {
 	m.rmuMock.Lock()
 	defer m.rmuMock.Unlock()
@@ -266,7 +266,7 @@ func (m *Mocha) Mock(builders ...Builder) (*Scoped, error) {
 //			Query("filter", matcher.StrictEqual("all")).
 //			Reply(reply.Created().PlainText("hello world")))
 //
-//	assert.True(t, scoped.HasBeenCalled())
+//	assert.True(txtTemplate, scoped.HasBeenCalled())
 func (m *Mocha) MustMock(builders ...Builder) *Scoped {
 	scoped, err := m.Mock(builders...)
 	if err != nil {

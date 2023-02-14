@@ -11,18 +11,18 @@ func (m *funcMatcher) Name() string {
 }
 
 func (m *funcMatcher) Match(v any) (*Result, error) {
-	r, err := m.fn(v)
+	pass, err := m.fn(v)
 	if err != nil {
-		return &Result{}, err
+		return nil, err
+	}
+
+	if pass {
+		return &Result{Pass: true}, nil
 	}
 
 	return &Result{
-		Pass: r,
-		Message: fmt.Sprintf(
-			"%s %s %v",
-			hint(m.Name()),
-			_separator,
-			v),
+		Ext:     []string{stringify(v)},
+		Message: fmt.Sprintf("Received: %v", v),
 	}, nil
 }
 

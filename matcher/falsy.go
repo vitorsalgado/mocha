@@ -1,10 +1,5 @@
 package matcher
 
-import (
-	"errors"
-	"fmt"
-)
-
 type falsyMatcher struct {
 }
 
@@ -13,16 +8,12 @@ func (m *falsyMatcher) Name() string {
 }
 
 func (m *falsyMatcher) Match(v any) (*Result, error) {
-	b, ok := v.(bool)
-	if !ok {
-		return nil, errors.New("falsy matcher only works with bool values")
+	res, err := Truthy().Match(v)
+	if err != nil {
+		return nil, err
 	}
 
-	if b {
-		return &Result{Message: fmt.Sprintf("%s %v", hint(m.Name()), v)}, nil
-	}
-
-	return &Result{Pass: true}, nil
+	return &Result{Pass: !res.Pass, Ext: res.Ext, Message: res.Message}, nil
 }
 
 func Falsy() Matcher {

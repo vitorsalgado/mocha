@@ -17,12 +17,10 @@ func (m *equalMatcher) Match(v any) (*Result, error) {
 		return &Result{Pass: true}, nil
 	}
 
-	return &Result{Message: fmt.Sprintf(
-			"%s %s %v",
-			hint(m.Name(), printExpected(m.expected)),
-			_separator,
-			printReceived(v),
-		)},
+	return &Result{
+			Ext:     []string{stringify(m.expected)},
+			Message: fmt.Sprintf("Received: %v", v),
+		},
 		nil
 }
 

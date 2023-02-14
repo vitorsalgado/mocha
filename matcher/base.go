@@ -29,4 +29,7 @@ type Result struct {
 
 	// Message describes why the associated Matcher did not pass.
 	Message string
+
+	// Ext ...
+	Ext []string
 }

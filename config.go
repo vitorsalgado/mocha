@@ -37,7 +37,7 @@ const (
 	//
 	// It uses http.StatusTeapot to reduce the chance of using the same
 	// expected response from the actual server being mocked.
-	// Basically, every request that doesn't match against to a Mock will return http.StatusTeapot.
+	// Basically, every request that doesn'txtTemplate match against to a Mock will return http.StatusTeapot.
 	StatusNoMatch = http.StatusTeapot
 )
 
@@ -57,7 +57,7 @@ type Config struct {
 	Addr string
 
 	// MockNotFoundStatusCode defines the status code that should be used when
-	// an HTTP request doesn't match with any mock.
+	// an HTTP request doesn'txtTemplate match with any mock.
 	// Defaults to 418 (I'm a teapot).
 	MockNotFoundStatusCode int
 

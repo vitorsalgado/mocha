@@ -1,7 +1,5 @@
 package matcher
 
-import "fmt"
-
 type emptyMatcher struct {
 }
 
@@ -17,7 +15,7 @@ func (m *emptyMatcher) Match(v any) (*Result, error) {
 
 	return &Result{
 		Pass:    result.Pass,
-		Message: fmt.Sprintf("%s %s %s", hint(m.Name()), _separator, v),
+		Message: stringify(v),
 	}, nil
 }
 

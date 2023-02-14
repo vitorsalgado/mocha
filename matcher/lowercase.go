@@ -1,7 +1,6 @@
 package matcher
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -20,11 +19,13 @@ func (m *lowerCaseMatcher) Match(v any) (*Result, error) {
 		return &Result{}, err
 	}
 
+	if result.Pass {
+		return &Result{Pass: true}, nil
+	}
+
 	return &Result{
-		Pass: result.Pass,
-		Message: fmt.Sprintf("%s %s",
-			hint(m.Name(), printExpected(txt)),
-			result.Message),
+		Ext:     []string{stringify(txt)},
+		Message: result.Message,
 	}, nil
 }
 

@@ -25,12 +25,13 @@ func (m *equalJSONMatcher) Match(v any) (*Result, error) {
 		return nil, err
 	}
 
+	if equalValues(v, exp) {
+		return &Result{Pass: true}, err
+	}
+
 	return &Result{
-		Pass: equalValues(v, exp),
-		Message: fmt.Sprintf("%s\nExpected:\n%s\nReceived:\n%s",
-			hint(m.Name()),
-			printExpected(m.expected),
-			printReceived(v)),
+		Ext:     []string{stringify(m.expected)},
+		Message: fmt.Sprintf("Received: %v", v),
 	}, nil
 }
 

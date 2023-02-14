@@ -18,13 +18,11 @@ func (m *notMatcher) Match(v any) (*Result, error) {
 		return nil, err
 	}
 
-	return &Result{
-		Pass: !result.Pass,
-		Message: fmt.Sprintf(
-			"%s ! %s",
-			hint(m.Name(), m.matcher.Name()),
-			result.Message),
-	}, nil
+	if !result.Pass {
+		return &Result{Pass: true}, nil
+	}
+
+	return &Result{Message: fmt.Sprintf("!(%s)", result.Message)}, nil
 }
 
 func (m *notMatcher) AfterMockServed() error {

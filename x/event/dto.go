@@ -36,7 +36,8 @@ type EvtResult struct {
 
 // EvtResultExt defines matching result details to be logged.
 type EvtResultExt struct {
-	Name        string
-	Target      string
-	Description string
+	Name    string
+	Target  string
+	Message string
+	Ext     []string
 }

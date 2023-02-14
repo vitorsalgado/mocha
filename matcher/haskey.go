@@ -18,10 +18,11 @@ func (m *hasKeyMatcher) Match(v any) (*Result, error) {
 		return nil, err
 	}
 
-	return &Result{
-		Pass:    value != nil,
-		Message: hint(m.Name(), printExpected(m.path)),
-	}, nil
+	if value != nil {
+		return &Result{Pass: true}, nil
+	}
+
+	return &Result{Message: m.path}, nil
 }
 
 // HaveKey returns true if the JSON key in the given path is present.

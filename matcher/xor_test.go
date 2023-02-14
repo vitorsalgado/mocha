@@ -30,7 +30,7 @@ func TestXor(t *testing.T) {
 }
 
 func TestXorError(t *testing.T) {
-	t.Run("should return error from right matcher and return false", func(t *testing.T) {
+	t.Run("should return error from right matcher", func(t *testing.T) {
 		m := XOR(Contain("dev"), Func(func(_ any) (bool, error) {
 			return false, fmt.Errorf("fail")
 		}))
@@ -38,10 +38,10 @@ func TestXorError(t *testing.T) {
 		res, err := m.Match("dev")
 
 		assert.Error(t, err)
-		assert.False(t, res.Pass)
+		assert.Nil(t, res)
 	})
 
-	t.Run("should return error from left matcher and return false", func(t *testing.T) {
+	t.Run("should return error from left matcher", func(t *testing.T) {
 		m := XOR(
 			Func(func(_ any) (bool, error) {
 				return false, fmt.Errorf("fail")
@@ -51,7 +51,7 @@ func TestXorError(t *testing.T) {
 		res, err := m.Match("dev")
 
 		assert.Error(t, err)
-		assert.False(t, res.Pass)
+		assert.Nil(t, res)
 	})
 
 	t.Run("should return error when both matchers fails", func(t *testing.T) {
@@ -66,6 +66,6 @@ func TestXorError(t *testing.T) {
 		res, err := m.Match("nothing")
 
 		assert.Error(t, err)
-		assert.False(t, res.Pass)
+		assert.Nil(t, res)
 	})
 }

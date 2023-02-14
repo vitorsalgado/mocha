@@ -41,9 +41,5 @@ func printExpected(val any) string {
 }
 
 func printReceived(val any) string {
-	if val == nil {
-		return colorize.Yellow("<nil>")
-	}
-
-	return colorize.Yellow(fmt.Sprintf("%v", val))
+	return fmt.Sprintf("Received: %v", val)
 }

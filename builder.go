@@ -327,7 +327,7 @@ func (b *MockBuilder) Delay(duration time.Duration) *MockBuilder {
 
 // Map adds a Mapper that allows modifying the response after it was built.
 // Multiple mappers can be added.
-// Map doesn't work with reply.From or Proxy.
+// Map doesn'txtTemplate work with reply.From or Proxy.
 func (b *MockBuilder) Map(mapper Mapper) *MockBuilder {
 	b.mock.Mappers = append(b.mock.Mappers, mapper)
 	return b
@@ -358,8 +358,8 @@ func (b *MockBuilder) Build(_ *Mocha) (*Mock, error) {
 			fmt.Errorf("no reply set. use .Reply() or any equivalent to set the expected mock response")
 	}
 
-	if r, ok := b.mock.Reply.(Pre); ok {
-		err := r.Pre()
+	if r, ok := b.mock.Reply.(replyValidation); ok {
+		err := r.Validate()
 		if err != nil {
 			return nil, err
 		}

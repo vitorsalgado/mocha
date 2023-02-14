@@ -160,7 +160,7 @@ func corsMid(options *CORSConfig) func(http.Handler) http.Handler {
 }
 
 func configureHeaders(options *CORSConfig, w http.ResponseWriter, r *http.Request) {
-	// when allowed headers aren't specified, use values from header access-control-request-headers
+	// when allowed headers aren'txtTemplate specified, use values from header access-control-request-headers
 	if options.AllowedHeaders != "" {
 		w.Header().Add(header.AccessControlAllowHeaders, options.AllowedHeaders)
 	} else {
