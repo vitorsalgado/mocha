@@ -261,4 +261,43 @@ func TestForward(t *testing.T) {
 		proxyScope.AssertCalled(t)
 		redirectScope.AssertNotCalled(t)
 	})
+
+	t.Run("tls", func(t *testing.T) {
+		target := NewT(t)
+		target.MustStartTLS()
+
+		m := NewT(t)
+		m.MustStart()
+
+		s1 := target.MustMock(Getf("/test").Reply(OK().PlainText("hi")))
+		s2 := m.MustMock(Getf("/test").Reply(From(target.URL())))
+
+		httpClient := &http.Client{}
+		res, err := httpClient.Get(m.URL() + "/test")
+		require.NoError(t, err)
+
+		defer res.Body.Close()
+
+		s1.AssertNotCalled(t)
+		s2.AssertNotCalled(t)
+
+		require.Equal(t, StatusNoMatch, res.StatusCode)
+
+		s2.Clean()
+		s2 = m.MustMock(Getf("/test").Reply(From(target.URL()).SkipVerify()))
+
+		res, err = httpClient.Get(m.URL() + "/test")
+		require.NoError(t, err)
+
+		defer res.Body.Close()
+
+		b, err := io.ReadAll(res.Body)
+		require.NoError(t, err)
+
+		s1.AssertCalled(t)
+		s2.AssertCalled(t)
+
+		require.Equal(t, http.StatusOK, res.StatusCode)
+		require.Equal(t, "hi", string(b))
+	})
 }

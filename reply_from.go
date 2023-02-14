@@ -66,7 +66,7 @@ func From[T FromTypes](target T) *ProxyReply {
 		httpClient: &http.Client{
 			Transport: &http.Transport{
 				DisableCompression: true,
-				TLSClientConfig:    &tls.Config{InsecureSkipVerify: true},
+				TLSClientConfig:    &tls.Config{InsecureSkipVerify: false},
 			}},
 	}
 }
@@ -133,6 +133,12 @@ func (r *ProxyReply) TrimSuffix(suffix string) *ProxyReply {
 // Defaults to 30s.
 func (r *ProxyReply) Timeout(timeout time.Duration) *ProxyReply {
 	r.timeout = timeout
+	return r
+}
+
+// SkipVerify skips server certificate verification.
+func (r *ProxyReply) SkipVerify() *ProxyReply {
+	r.httpClient.Transport.(*http.Transport).TLSClientConfig.InsecureSkipVerify = true
 	return r
 }
 

@@ -163,6 +163,15 @@ func New(config ...Configurer) *Mocha {
 	return m
 }
 
+// NewT creates a new Mocha mock server with the given configurations and closes the server when the provided test
+// instance finishes.
+func NewT(t TestingT, config ...Configurer) *Mocha {
+	app := New(config...)
+	t.Cleanup(app.Close)
+
+	return app
+}
+
 // Start starts the mock server.
 func (m *Mocha) Start() (ServerInfo, error) {
 	info, err := m.server.Start()
