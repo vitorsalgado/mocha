@@ -1,9 +1,5 @@
 package matcher
 
-const (
-	_separator = "=>"
-)
-
 // Matcher defines request matchers.
 // Request matchers are used to match requests in order to find a mock to serve a stub response.
 type Matcher interface {
