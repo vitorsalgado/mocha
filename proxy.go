@@ -1,6 +1,7 @@
 package mocha
 
 import (
+	"crypto/tls"
 	"io"
 	"net"
 	"net/http"
@@ -22,6 +23,9 @@ type ProxyConfig struct {
 	// Timeout is the timeout used when calling the proxy client.
 	Timeout time.Duration
 
+	// SkipSSLVerify disable/enable server certificate verification.
+	SkipSSLVerify bool
+
 	// Transport sets a custom http.RoundTripper.
 	// Target config will be ignored. Set it manually in your http.RoundTripper implementation.
 	// If none is provided, a default one will be used.
@@ -39,6 +43,7 @@ func (p *ProxyConfig) Apply(c *ProxyConfig) error {
 	c.Transport = p.Transport
 	c.Timeout = p.Timeout
 	c.ProxyVia = p.ProxyVia
+	c.SkipSSLVerify = p.SkipSSLVerify
 
 	return nil
 }
@@ -68,6 +73,7 @@ func newProxy(conf *ProxyConfig, events *event.Listener) *reverseProxy {
 		transport.IdleConnTimeout = 15 * time.Second
 		transport.ExpectContinueTimeout = 1 * time.Second
 		transport.ResponseHeaderTimeout = conf.Timeout
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: conf.SkipSSLVerify}
 
 		conf.Transport = transport
 	}

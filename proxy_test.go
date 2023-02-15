@@ -41,7 +41,7 @@ func TestProxy(t *testing.T) {
 }
 
 func TestProxyTLS(t *testing.T) {
-	proxySrv := New(Configure().Proxy()).CloseWithT(t)
+	proxySrv := New(Configure().Proxy(&ProxyConfig{SkipSSLVerify: true})).CloseWithT(t)
 	proxySrv.MustStartTLS()
 	proxyScope := proxySrv.MustMock(Get(URLPath("/test")).Reply(Accepted()))
 
