@@ -2,6 +2,7 @@
 package jsonx
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -14,13 +15,7 @@ var (
 	idxRegExp   = regexp.MustCompile(`^\[(\d+)](.*)`)
 )
 
-type ErrKeyNotFound struct {
-	p string
-}
-
-func (e *ErrKeyNotFound) Error() string {
-	return fmt.Sprintf("field \"%s\" is not present", e.p)
-}
+var ErrKeyNotFound = errors.New("field is not present")
 
 // Reach returns the field with the given path from the given json data
 // Example:
@@ -51,7 +46,7 @@ func Reach(path string, data any) (any, error) {
 			size := len(field)
 
 			if idx > size-1 {
-				return nil, fieldNotFound(path)
+				return nil, ErrKeyNotFound
 			}
 
 			entry := field[idx]
@@ -66,7 +61,7 @@ func Reach(path string, data any) (any, error) {
 					return nil, nil
 				}
 
-				return nil, fieldNotFound(path)
+				return nil, ErrKeyNotFound
 			}
 
 			return entry, nil
@@ -82,7 +77,7 @@ func Reach(path string, data any) (any, error) {
 		if s == 1 {
 			val, ok := data.(map[string]any)[parts[0]]
 			if !ok {
-				return nil, fieldNotFound(path)
+				return nil, ErrKeyNotFound
 			}
 
 			return val, nil
@@ -91,7 +86,7 @@ func Reach(path string, data any) (any, error) {
 		ch := strings.Join(parts[1:], ".")
 		val, ok := data.(map[string]any)[parts[0]]
 		if !ok {
-			return nil, fieldNotFound(path)
+			return nil, ErrKeyNotFound
 		}
 
 		return Reach(ch, val)
@@ -110,7 +105,7 @@ func Reach(path string, data any) (any, error) {
 			size := len(d)
 
 			if idx > size-1 {
-				return nil, fieldNotFound(path)
+				return nil, ErrKeyNotFound
 			}
 
 			next := values[2]
@@ -118,7 +113,7 @@ func Reach(path string, data any) (any, error) {
 
 			if next == "" {
 				if field == nil && len(data.([]any)) < (idx+1) {
-					return nil, fieldNotFound(path)
+					return nil, ErrKeyNotFound
 				}
 
 				return field, nil
@@ -128,9 +123,5 @@ func Reach(path string, data any) (any, error) {
 		}
 	}
 
-	return nil, fieldNotFound(path)
-}
-
-func fieldNotFound(p string) error {
-	return &ErrKeyNotFound{p: p}
+	return nil, ErrKeyNotFound
 }

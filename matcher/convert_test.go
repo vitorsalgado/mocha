@@ -3,7 +3,6 @@ package matcher
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,6 +13,5 @@ func TestConvert(t *testing.T) {
 
 	result, err := ConvertTo[int](StrictEqual(100)).Match(float64(100))
 	require.NoError(t, err)
-
-	assert.True(t, result.Pass)
+	require.True(t, result.Pass)
 }

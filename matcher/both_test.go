@@ -4,42 +4,37 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestBothMatcher(t *testing.T) {
-	t.Run("should return false when only left matcher evaluates to true", func(t *testing.T) {
-		result, err := Both(StrictEqual("test"), Contain("qa")).Match("test")
-		assert.Nil(t, err)
-		assert.False(t, result.Pass)
-	})
+	testCases := []struct {
+		name     string
+		matchers []Matcher
+		expected bool
+	}{
+		{"left true", []Matcher{StrictEqual("test"), Contain("qa")}, false},
+		{"right true", []Matcher{StrictEqual("qa"), Contain("tes")}, false},
+		{"both true", []Matcher{StrictEqual("test"), Contain("te")}, true},
+		{"both false", []Matcher{StrictEqual("qa"), Contain("dev")}, false},
+	}
 
-	t.Run("should return false when only right matcher evaluates to true", func(t *testing.T) {
-		result, err := Both(StrictEqual("qa"), Contain("tes")).Match("test")
-		assert.Nil(t, err)
-		assert.False(t, result.Pass)
-	})
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := Both(tc.matchers[0], tc.matchers[1]).Match("test")
+			require.Nil(t, err)
+			require.Equal(t, tc.expected, result.Pass)
+		})
+	}
+}
 
-	t.Run("should return true when both matchers evaluates to true", func(t *testing.T) {
-		result, err := Both(StrictEqual("test"), Contain("te")).Match("test")
-		assert.Nil(t, err)
-		assert.True(t, result.Pass)
-	})
+func TestBothMatcherErr(t *testing.T) {
+	result, err := Both(
+		Func(func(_ any) (bool, error) {
+			return false, fmt.Errorf("fail")
+		}),
+		Contain("qa")).Match("test")
 
-	t.Run("should return false when only left matcher evaluates to true", func(t *testing.T) {
-		result, err := Both(StrictEqual("test"), Contain("qa")).Match("test")
-		assert.Nil(t, err)
-		assert.False(t, result.Pass)
-	})
-
-	t.Run("should return false when matchers throws errors", func(t *testing.T) {
-		result, err := Both(
-			Func(func(_ any) (bool, error) {
-				return false, fmt.Errorf("fail")
-			}),
-			Contain("qa")).Match("test")
-
-		assert.NotNil(t, err)
-		assert.False(t, result.Pass)
-	})
+	require.Error(t, err)
+	require.Nil(t, result)
 }

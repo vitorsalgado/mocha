@@ -3,21 +3,23 @@ package matcher
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHasPrefix(t *testing.T) {
-	t.Run("should return true when string has prefix", func(t *testing.T) {
-		result, err := HasPrefix("hello").Match("hello world")
+	tcs := []struct {
+		value    string
+		expected bool
+	}{
+		{"hello", true},
+		{"world", false},
+	}
 
-		assert.Nil(t, err)
-		assert.True(t, result.Pass)
-	})
-
-	t.Run("should return true when string hasn't prefix", func(t *testing.T) {
-		result, err := HasPrefix("world").Match("hello world")
-
-		assert.Nil(t, err)
-		assert.False(t, result.Pass)
-	})
+	for _, tc := range tcs {
+		t.Run(tc.value, func(t *testing.T) {
+			result, err := HasPrefix(tc.value).Match("hello world")
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, result.Pass)
+		})
+	}
 }

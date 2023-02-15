@@ -3,23 +3,25 @@ package matcher
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNot(t *testing.T) {
-	value := "test"
+	tcs := []struct {
+		name     string
+		matcher  Matcher
+		expected bool
+	}{
+		{"is not equal", StrictEqual("dev"), true},
+		{"is equal", StrictEqual("test"), false},
+	}
 
-	t.Run("should return true when value is not equal", func(t *testing.T) {
-		result, err := Not(StrictEqual("dev")).Match(value)
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := Not(tc.matcher).Match("test")
 
-		assert.Nil(t, err)
-		assert.True(t, result.Pass)
-	})
-
-	t.Run("should return false when value is equal", func(t *testing.T) {
-		result, err := Not(StrictEqual("test")).Match(value)
-
-		assert.Nil(t, err)
-		assert.False(t, result.Pass)
-	})
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, result.Pass)
+		})
+	}
 }

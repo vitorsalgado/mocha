@@ -3,21 +3,24 @@ package matcher
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHasSuffix(t *testing.T) {
-	t.Run("should return true when string has suffix", func(t *testing.T) {
-		result, err := HasSuffix("world").Match("hello world")
+	tcs := []struct {
+		value    string
+		expected bool
+	}{
+		{"world", true},
+		{"hello", false},
+	}
 
-		assert.Nil(t, err)
-		assert.True(t, result.Pass)
-	})
+	for _, tc := range tcs {
+		t.Run(tc.value, func(t *testing.T) {
+			result, err := HasSuffix(tc.value).Match("hello world")
 
-	t.Run("should return true when string hasn't suffix", func(t *testing.T) {
-		result, err := HasSuffix("hello").Match("hello world")
-
-		assert.Nil(t, err)
-		assert.False(t, result.Pass)
-	})
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, result.Pass)
+		})
+	}
 }

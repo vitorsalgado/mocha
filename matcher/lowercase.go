@@ -16,7 +16,7 @@ func (m *lowerCaseMatcher) Match(v any) (*Result, error) {
 	txt := v.(string)
 	result, err := m.matcher.Match(strings.ToLower(txt))
 	if err != nil {
-		return &Result{}, err
+		return nil, err
 	}
 
 	if result.Pass {

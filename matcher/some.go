@@ -1,9 +1,13 @@
 package matcher
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"reflect"
+)
 
 type someMatcher struct {
-	items []any
+	items any
 }
 
 func (m *someMatcher) Name() string {
@@ -11,8 +15,15 @@ func (m *someMatcher) Name() string {
 }
 
 func (m *someMatcher) Match(v any) (*Result, error) {
-	for _, item := range m.items {
-		if equalValues(v, item) {
+	kind := reflect.TypeOf(m.items).Kind()
+	if kind != reflect.Slice && kind != reflect.Array {
+		return nil, errors.New("matcher only works with arrays/slices")
+	}
+
+	valueOf := reflect.ValueOf(m.items)
+
+	for i := 0; i < valueOf.Len(); i++ {
+		if equalValues(v, valueOf.Index(i).Interface()) {
 			return &Result{Pass: true}, nil
 		}
 	}
@@ -26,6 +37,6 @@ func (m *someMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func Some(items ...any) Matcher {
+func Some(items any) Matcher {
 	return &someMatcher{items: items}
 }

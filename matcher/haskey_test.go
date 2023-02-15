@@ -3,7 +3,7 @@ package matcher
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestHasKey(t *testing.T) {
@@ -19,31 +19,26 @@ func TestHasKey(t *testing.T) {
 		"zero":    0,
 	}
 
-	result, err := HaveKey("name").Match(m)
-	assert.True(t, result.Pass)
-	assert.Nil(t, err)
+	tcs := []struct {
+		key      string
+		expected bool
+	}{
+		{"name", true},
+		{"age", true},
+		{"address", true},
+		{"address.street", true},
+		{"address.city", false},
+		{"active", true},
+		{"zero", true},
+		{"options", true},
+		{"none", false},
+	}
 
-	result, err = HaveKey("age").Match(m)
-	assert.True(t, result.Pass)
-	assert.Nil(t, err)
-
-	result, err = HaveKey("address").Match(m)
-	assert.True(t, result.Pass)
-	assert.Nil(t, err)
-
-	result, err = HaveKey("active").Match(m)
-	assert.True(t, result.Pass)
-	assert.Nil(t, err)
-
-	result, err = HaveKey("zero").Match(m)
-	assert.True(t, result.Pass)
-	assert.Nil(t, err)
-
-	result, err = HaveKey("options").Match(m)
-	assert.True(t, result.Pass)
-	assert.Nil(t, err)
-
-	result, err = HaveKey("none").Match(m)
-	assert.False(t, result.Pass)
-	assert.Nil(t, err)
+	for _, tc := range tcs {
+		t.Run(tc.key, func(t *testing.T) {
+			result, err := HaveKey(tc.key).Match(m)
+			require.Equal(t, tc.expected, result.Pass)
+			require.Nil(t, err)
+		})
+	}
 }

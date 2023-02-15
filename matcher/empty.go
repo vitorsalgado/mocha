@@ -10,7 +10,7 @@ func (m *emptyMatcher) Name() string {
 func (m *emptyMatcher) Match(v any) (*Result, error) {
 	result, err := HaveLen(0).Match(v)
 	if err != nil {
-		return &Result{}, err
+		return nil, err
 	}
 
 	return &Result{

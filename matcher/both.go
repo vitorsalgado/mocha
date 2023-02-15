@@ -12,12 +12,12 @@ func (m *bothMatcher) Name() string {
 func (m *bothMatcher) Match(value any) (*Result, error) {
 	r1, err := m.first.Match(value)
 	if err != nil {
-		return &Result{Pass: false}, err
+		return nil, err
 	}
 
 	r2, err := m.second.Match(value)
 	if err != nil {
-		return &Result{Pass: false}, err
+		return nil, err
 	}
 
 	if r1.Pass && r2.Pass {

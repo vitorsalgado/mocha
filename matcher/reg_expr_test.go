@@ -4,45 +4,28 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestRegExpMatches(t *testing.T) {
-	t.Run("should match the regular expression string pattern", func(t *testing.T) {
-		result, err := Matches("tEsT").Match("tEsT")
+	tcs := []struct {
+		name       string
+		expression any
+		value      any
+		expected   bool
+	}{
+		{"string pattern", "tEsT", "tEsT", true},
+		{"string pattern using a non string argument", "10", 10, true},
+		{"regular expression (pointer)", regexp.MustCompile("tEsT"), "tEsT", true},
+		{"regular expression (non-pointer)", *regexp.MustCompile("tEsT"), "tEsT", true},
+		{"regular expression (does not match)", regexp.MustCompile("tEsT"), "dev", false},
+	}
 
-		assert.Nil(t, err)
-		assert.True(t, result.Pass)
-	})
-
-	t.Run("should match the regular expression string pattern using a non string argument", func(t *testing.T) {
-		result, err := Matches("10").Match(10)
-
-		assert.NoError(t, err)
-		assert.True(t, result.Pass)
-	})
-
-	t.Run("should match the provided regular expression against matcher argument", func(t *testing.T) {
-		re := regexp.MustCompile("tEsT")
-		result, err := Matches(re).Match("tEsT")
-
-		assert.Nil(t, err)
-		assert.True(t, result.Pass)
-	})
-
-	t.Run("should accept a non pointer regular expression", func(t *testing.T) {
-		re := regexp.MustCompile("tEsT")
-		result, err := Matches(*re).Match("tEsT")
-
-		assert.Nil(t, err)
-		assert.True(t, result.Pass)
-	})
-
-	t.Run("should return false when regexp does not match", func(t *testing.T) {
-		re := regexp.MustCompile("tEsT")
-		result, err := Matches(re).Match("dev")
-
-		assert.Nil(t, err)
-		assert.False(t, result.Pass)
-	})
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			result, err := Matches(tc.expression).Match(tc.value)
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, result.Pass)
+		})
+	}
 }
