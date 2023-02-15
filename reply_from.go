@@ -136,8 +136,8 @@ func (r *ProxyReply) Timeout(timeout time.Duration) *ProxyReply {
 	return r
 }
 
-// SkipVerify skips server certificate verification.
-func (r *ProxyReply) SkipVerify() *ProxyReply {
+// SkipSSLVerify skips server certificate verification.
+func (r *ProxyReply) SkipSSLVerify() *ProxyReply {
 	r.httpClient.Transport.(*http.Transport).TLSClientConfig.InsecureSkipVerify = true
 	return r
 }

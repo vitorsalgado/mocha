@@ -391,7 +391,7 @@ func TestRecord_TargetTLS(t *testing.T) {
 		RecordResponseBodyToFile(false),
 	))
 	recorder.MustStart()
-	recorderScope := recorder.MustMock(AnyMethod().Reply(From(target.URL())))
+	recorderScope := recorder.MustMock(AnyMethod().Reply(From(target.URL()).SkipSSLVerify()))
 
 	httpClient := &http.Client{}
 
@@ -633,7 +633,7 @@ func TestRecord_BothTLS(t *testing.T) {
 		RecordResponseBodyToFile(false),
 	))
 	recorder.MustStartTLS()
-	recorderScope := recorder.MustMock(AnyMethod().Reply(From(target.URL())))
+	recorderScope := recorder.MustMock(AnyMethod().Reply(From(target.URL()).SkipSSLVerify()))
 
 	httpClient := &http.Client{Transport: &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},

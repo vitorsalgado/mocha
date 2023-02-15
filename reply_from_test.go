@@ -284,7 +284,7 @@ func TestForward(t *testing.T) {
 		require.Equal(t, StatusNoMatch, res.StatusCode)
 
 		s2.Clean()
-		s2 = m.MustMock(Getf("/test").Reply(From(target.URL()).SkipVerify()))
+		s2 = m.MustMock(Getf("/test").Reply(From(target.URL()).SkipSSLVerify()))
 
 		res, err = httpClient.Get(m.URL() + "/test")
 		require.NoError(t, err)
