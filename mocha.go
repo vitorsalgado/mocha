@@ -23,6 +23,13 @@ const (
 	Version = "3.0.0"
 )
 
+// StatusNoMatch describes an HTTP response where no Mock was found.
+//
+// It uses http.StatusTeapot to reduce the chance of using the same
+// expected response from the actual server being mocked.
+// Basically, every request that doesn't match against to a Mock, will have a response with http.StatusTeapot.
+const StatusNoMatch = http.StatusTeapot
+
 // Mocha is the base for the mock server.
 type Mocha struct {
 	log                logger.Log

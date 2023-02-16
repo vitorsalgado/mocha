@@ -32,13 +32,6 @@ func (l LogLevel) String() string {
 const (
 	// ConfigMockFilePattern is the default filename glob pattern to search for local mock files.
 	ConfigMockFilePattern = "testdata/*mock.json"
-
-	// StatusNoMatch describes an HTTP response where no Mock was found.
-	//
-	// It uses http.StatusTeapot to reduce the chance of using the same
-	// expected response from the actual server being mocked.
-	// Basically, every request that doesn't match against to a Mock, will have a response with http.StatusTeapot.
-	StatusNoMatch = http.StatusTeapot
 )
 
 // Configurer lets users configure the Mock API.
