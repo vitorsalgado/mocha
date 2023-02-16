@@ -3,37 +3,42 @@ package matcher
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestEach_Slice(t *testing.T) {
+func TestEachSlice(t *testing.T) {
 	s := []string{"test", "tested", "testing"}
 	r, err := Each(HasPrefix("test")).Match(s)
 
-	assert.NoError(t, err)
-	assert.True(t, r.Pass)
+	require.NoError(t, err)
+	require.True(t, r.Pass)
 }
 
-func TestEach_Slice_NotPass(t *testing.T) {
+func TestEachSliceNotPass(t *testing.T) {
 	s := []string{"test", "tested", "dev"}
 	r, err := Each(HasPrefix("test")).Match(s)
 
-	assert.NoError(t, err)
-	assert.False(t, r.Pass)
+	require.NoError(t, err)
+	require.False(t, r.Pass)
 }
 
-func TestEach_Map(t *testing.T) {
+func TestEachMap(t *testing.T) {
 	m := map[string]string{"1": "test", "2": "testing", "3": "tested"}
 	r, err := Each(HasPrefix("test")).Match(m)
 
-	assert.NoError(t, err)
-	assert.True(t, r.Pass)
+	require.NoError(t, err)
+	require.True(t, r.Pass)
 }
 
-func TestEach_Map_NotPass(t *testing.T) {
+func TestEachMapNotPass(t *testing.T) {
 	m := map[string]string{"1": "dev", "2": "testing", "3": "tested"}
 	r, err := Each(HasPrefix("test")).Match(m)
 
-	assert.NoError(t, err)
-	assert.False(t, r.Pass)
+	require.NoError(t, err)
+	require.False(t, r.Pass)
+}
+
+func TestEachInvalidValueType(t *testing.T) {
+	_, err := Each(Anything()).Match("hello")
+	require.Error(t, err)
 }

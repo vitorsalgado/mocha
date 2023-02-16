@@ -84,3 +84,25 @@ func TestEqual(t *testing.T) {
 		})
 	}
 }
+
+func TestEqualf(t *testing.T) {
+	tcs := []struct {
+		name     string
+		format   string
+		args     []any
+		value    any
+		expected bool
+	}{
+		{"", "hello world %s", []any{"dev"}, "hello world dev", true},
+		{"", "hello world %d %v", []any{10, true}, "hello world 10 true", true},
+		{"", "hello world", []any{"dev", "qa"}, "hello world", false},
+	}
+
+	for _, tc := range tcs {
+		t.Run(tc.name, func(t *testing.T) {
+			res, err := Equalf(tc.format, tc.args...).Match(tc.value)
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, res.Pass)
+		})
+	}
+}

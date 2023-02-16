@@ -23,7 +23,7 @@ func (m *allOfMatcher) Match(v any) (*Result, error) {
 		if err != nil {
 			ok = false
 			errs = append(errs, err.Error())
-			failed = append(failed, result.Message)
+			failed = append(failed, err.Error())
 
 			continue
 		}

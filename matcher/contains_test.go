@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestContains(t *testing.T) {
@@ -64,4 +65,9 @@ func TestContainf(t *testing.T) {
 	result, err := Containf("%s", "qa").Match("dev and qa")
 	assert.Nil(t, err)
 	assert.True(t, result.Pass)
+}
+
+func TestContainNilValue(t *testing.T) {
+	_, err := Contain("any").Match(nil)
+	require.Error(t, err)
 }

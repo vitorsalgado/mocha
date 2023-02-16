@@ -1,6 +1,8 @@
 package matcher
 
 import (
+	"errors"
+
 	"github.com/vitorsalgado/mocha/v3/internal/jsonx"
 )
 
@@ -23,7 +25,7 @@ func (m *jsonPathMatcher) Match(v any) (*Result, error) {
 		value, err = jsonx.Reach(m.path, v)
 	}
 
-	if err != nil {
+	if err != nil && !errors.Is(err, jsonx.ErrKeyNotFound) {
 		return nil, err
 	}
 

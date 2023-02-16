@@ -23,7 +23,7 @@ func (m *anyOfMatcher) Match(v any) (*Result, error) {
 		if err != nil {
 			ok = false
 			errs = append(errs, err.Error())
-			failed = append(failed, result.Message)
+			failed = append(failed, err.Error())
 
 			continue
 		}
@@ -63,5 +63,9 @@ func (m *anyOfMatcher) AfterMockServed() error {
 //
 //	AnyOf(EqualTo("test"),EqualIgnoreCase("TEST"),ToContains("tes"))
 func AnyOf(matchers ...Matcher) Matcher {
+	if len(matchers) == 0 {
+		panic("[AnyOf] requires at least 1 matcher")
+	}
+
 	return &anyOfMatcher{matchers: matchers}
 }

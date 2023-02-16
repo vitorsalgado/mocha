@@ -3,7 +3,7 @@ package matcher
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 var _json = map[string]any{
@@ -15,7 +15,7 @@ var _json = map[string]any{
 	"job": nil,
 }
 
-func TestJSONPathMatcher(t *testing.T) {
+func TestJSONPath(t *testing.T) {
 	testCases := []struct {
 		name     string
 		path     string
@@ -46,18 +46,24 @@ func TestJSONPathMatcher(t *testing.T) {
 			matcher:  StrictEqual(nil),
 			expected: true,
 		},
+		{
+			name:     "not present matchers for absent field",
+			path:     "address.city",
+			matcher:  Not(Present()),
+			expected: true,
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := JSONPath(tc.path, tc.matcher).Match(_json)
-			assert.Nil(t, err)
-			assert.Equal(t, tc.expected, res.Pass)
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, res.Pass)
 		})
 	}
 }
 
-func TestJSONPathMatcher_Match_Errors(t *testing.T) {
+func TestJSONPathMatcherMatchErrors(t *testing.T) {
 	testCases := []struct {
 		name    string
 		path    string
@@ -71,8 +77,8 @@ func TestJSONPathMatcher_Match_Errors(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := JSONPath(tc.path, tc.matcher).Match(_json)
-			assert.NotNil(t, err)
-			assert.Nil(t, res)
+			require.NoError(t, err)
+			require.False(t, res.Pass)
 		})
 	}
 }

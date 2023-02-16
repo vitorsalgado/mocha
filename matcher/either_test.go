@@ -28,12 +28,23 @@ func TestEither(t *testing.T) {
 	}
 }
 
-func TestEitherErr(t *testing.T) {
+func TestEitherLeftErr(t *testing.T) {
 	result, err := Either(
 		Func(func(_ any) (bool, error) {
 			return false, fmt.Errorf("fail")
 		}),
 		Contain("qa")).Match("test")
+
+	require.Error(t, err)
+	require.Nil(t, result)
+}
+
+func TestEitherRightErr(t *testing.T) {
+	result, err := Either(
+		Contain("qa"),
+		Func(func(_ any) (bool, error) {
+			return false, fmt.Errorf("fail")
+		})).Match("test")
 
 	require.Error(t, err)
 	require.Nil(t, result)

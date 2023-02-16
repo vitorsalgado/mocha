@@ -57,9 +57,7 @@ func (m *eachMatcher) Match(v any) (*Result, error) {
 		return &Result{Pass: true}, nil
 	}
 
-	return &Result{
-		Message: fmt.Sprintf("type %s is not supported", valType.String()),
-	}, nil
+	return nil, fmt.Errorf("type %s is not supported", valType.String())
 }
 
 func (m *eachMatcher) AfterMockServed() error {

@@ -1,9 +1,10 @@
 package matcher
 
 import (
+	"errors"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestAllOf(t *testing.T) {
@@ -14,8 +15,8 @@ func TestAllOf(t *testing.T) {
 			ToUpper(StrictEqual("TEST")),
 			Contain("tes")).
 			Match("test")
-		assert.Nil(t, err)
-		assert.True(t, result.Pass)
+		require.NoError(t, err)
+		require.True(t, result.Pass)
 	})
 
 	t.Run("should return false when just one matcher evaluates to false", func(t *testing.T) {
@@ -25,8 +26,8 @@ func TestAllOf(t *testing.T) {
 			ToUpper(StrictEqual("TEST")),
 			Contain("tes")).
 			Match("test")
-		assert.Nil(t, err)
-		assert.False(t, result.Pass)
+		require.NoError(t, err)
+		require.False(t, result.Pass)
 	})
 
 	t.Run("should return false when all matchers evaluates to false", func(t *testing.T) {
@@ -36,12 +37,24 @@ func TestAllOf(t *testing.T) {
 			ToUpper(StrictEqual("none")),
 			Contain("blah")).
 			Match("test")
-		assert.Nil(t, err)
-		assert.False(t, result.Pass)
+		require.NoError(t, err)
+		require.False(t, result.Pass)
 	})
 
-	t.Run("mismatch description is not empty", func(t *testing.T) {
-		assert.Panics(t, func() {
+	t.Run("should return false when an error occurs", func(t *testing.T) {
+		_, err := AllOf(
+			StrictEqual("dev"),
+			EqualIgnoreCase("qa"),
+			ToUpper(StrictEqual("none")),
+			Func(func(v any) (bool, error) {
+				return false, errors.New("boom")
+			})).
+			Match("test")
+		require.Error(t, err)
+	})
+
+	t.Run("no matchers", func(t *testing.T) {
+		require.Panics(t, func() {
 			AllOf()
 		})
 	})
