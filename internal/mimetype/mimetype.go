@@ -16,7 +16,6 @@ const (
 	ApplicationXML                   = "application/xml"
 	ApplicationXMLCharsetUTF8        = ApplicationXML + "; " + _charsetUTF8
 	ApplicationProtobuf              = "application/protobuf"
-	ApplicationMsgpack               = "application/msgpack"
 	TextHTMLCharsetUTF8              = TextHTML + "; " + _charsetUTF8
 	MultipartForm                    = "multipart/form-data"
 	OctetStream                      = "application/octet-stream"

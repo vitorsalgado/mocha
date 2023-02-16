@@ -10,9 +10,11 @@ import (
 	"sync"
 
 	"github.com/vitorsalgado/mocha/v3/internal/colorize"
+	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/logger"
 	"github.com/vitorsalgado/mocha/v3/internal/mid"
 	"github.com/vitorsalgado/mocha/v3/internal/mid/recover"
+	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/x/event"
 )
@@ -49,6 +51,81 @@ type TestingT interface {
 	Errorf(format string, a ...any)
 	Cleanup(func())
 }
+
+// Headers
+const (
+	HeaderAccept              = header.Accept
+	HeaderAcceptEncoding      = header.AcceptEncoding
+	HeaderContentType         = header.ContentType
+	HeaderContentEncoding     = header.ContentEncoding
+	HeaderAllow               = header.Allow
+	HeaderAuthorization       = header.Authorization
+	HeaderContentDisposition  = header.ContentDisposition
+	HeaderVary                = header.Vary
+	HeaderOrigin              = header.Origin
+	HeaderContentLength       = header.ContentLength
+	HeaderConnection          = header.Connection
+	HeaderTrailer             = header.Trailer
+	HeaderLocation            = header.Location
+	HeaderCacheControl        = header.CacheControl
+	HeaderCookie              = header.Cookie
+	HeaderSetCookie           = header.SetCookie
+	HeaderIfModifiedSince     = header.IfModifiedSince
+	HeaderLastModified        = header.LastModified
+	HeaderRetryAfter          = header.RetryAfter
+	HeaderUpgrade             = header.Upgrade
+	HeaderWWWAuthenticate     = header.WWWAuthenticate
+	HeaderServer              = header.Server
+	HeaderXForwardedFor       = header.XForwardedFor
+	HeaderXForwardedProto     = header.XForwardedProto
+	HeaderXForwardedProtocol  = header.XForwardedProtocol
+	HeaderXForwardedSsl       = header.XForwardedSsl
+	HeaderXUrlScheme          = header.XUrlScheme
+	HeaderXHTTPMethodOverride = header.XHTTPMethodOverride
+	HeaderXRealIP             = header.XRealIP
+	HeaderXRequestID          = header.XRequestID
+	HeaderXCorrelationID      = header.XCorrelationID
+	HeaderXRequestedWith      = header.XRequestedWith
+
+	HeaderAccessControlRequestMethod    = header.AccessControlRequestMethod
+	HeaderAccessControlAllowOrigin      = header.AccessControlAllowOrigin
+	HeaderAccessControlAllowMethods     = header.AccessControlAllowMethods
+	HeaderAccessControlAllowHeaders     = header.AccessControlAllowHeaders
+	HeaderAccessControlExposeHeaders    = header.AccessControlExposeHeaders
+	HeaderAccessControlMaxAge           = header.AccessControlMaxAge
+	HeaderAccessControlAllowCredentials = header.AccessControlAllowCredentials
+	HeaderAccessControlRequestHeaders   = header.AccessControlRequestHeaders
+
+	HeaderStrictTransportSecurity         = header.StrictTransportSecurity
+	HeaderXContentTypeOptions             = header.XContentTypeOptions
+	HeaderXXSSProtection                  = header.XXSSProtection
+	HeaderXFrameOptions                   = header.XFrameOptions
+	HeaderContentSecurityPolicy           = header.ContentSecurityPolicy
+	HeaderContentSecurityPolicyReportOnly = header.ContentSecurityPolicyReportOnly
+	HeaderXCSRFToken                      = header.XCSRFToken
+	HeaderReferrerPolicy                  = header.ReferrerPolicy
+)
+
+// MIME Types
+const (
+	MIMEApplicationJSON                  = mimetype.JSON
+	MIMEApplicationJSONCharsetUTF8       = mimetype.JSONCharsetUTF8
+	MIMETextPlain                        = mimetype.TextPlain
+	MIMETextPlainCharsetUTF8             = mimetype.TextPlainCharsetUTF8
+	MIMETextHTML                         = mimetype.TextHTML
+	MIMETextHTMLCharsetUTF8              = mimetype.TextHTMLCharsetUTF8
+	MIMETextXML                          = mimetype.TextXML
+	MIMETextXMLCharsetUTF8               = mimetype.TextXMLCharsetUTF8
+	MIMEFormURLEncoded                   = mimetype.FormURLEncoded
+	MIMEFormURLEncodedCharsetUTF8        = mimetype.FormURLEncodedCharsetUTF8
+	MIMEApplicationJavaScript            = mimetype.ApplicationJavaScript
+	MIMEApplicationJavaScriptCharsetUTF8 = mimetype.ApplicationJavaScriptCharsetUTF8
+	MIMEApplicationXML                   = mimetype.ApplicationXML
+	MIMEApplicationXMLCharsetUTF8        = mimetype.ApplicationXMLCharsetUTF8
+	MIMEApplicationProtobuf              = mimetype.ApplicationProtobuf
+	MIMEMultipartForm                    = mimetype.MultipartForm
+	MIMEOctetStream                      = mimetype.OctetStream
+)
 
 // New creates a new Mocha mock server with the given configurations.
 // Parameter config accepts a Config or a ConfigBuilder implementation.

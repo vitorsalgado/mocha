@@ -108,7 +108,7 @@ type PostAction interface {
 }
 
 // Mapper is the function definition to be used to map Mock Stub before serving it.
-// Mapper doesn'txtTemplate work with reply.From or Proxy.
+// Mapper doesn't work with reply.From or Proxy.
 type Mapper func(requestValues *RequestValues, res *Stub) error
 
 // MockFileHandler defines a custom Mock file configuration handler.
@@ -266,7 +266,7 @@ func (m *Mock) Build() (*Mock, error) {
 }
 
 // matchExpectations checks if current Mock matches against a list of expectations.
-// Will iterate through all expectations even if it doesn'txtTemplate match early.
+// Will iterate through all expectations even if it doesn't match early.
 func (m *Mock) matchExpectations(ri *valueSelectorInput, expectations []*expectation) *matchResult {
 	w := 0
 	ok := true

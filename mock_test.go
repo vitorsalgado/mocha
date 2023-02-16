@@ -145,7 +145,7 @@ func TestMock_Matches(t *testing.T) {
 		assert.Equal(t, 5, res.Weight)
 	})
 
-	t.Run("should return the sum of the matchers weight when one of then doesn'txtTemplate match", func(t *testing.T) {
+	t.Run("should return the sum of the matchers weight when one of then doesn't match", func(t *testing.T) {
 		// any
 		res := m.matchExpectations(params, []*expectation{
 			{

@@ -243,7 +243,7 @@ func TestRecord_SaveResponseBodyToFile(t *testing.T) {
 	require.Equal(t, http.StatusCreated, res.StatusCode)
 }
 
-func TestRecord_EmbeddedResponseBodies(t *testing.T) {
+func TestRecord_EmbeddedResponseBodies_YAML(t *testing.T) {
 	dir := t.TempDir()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -269,6 +269,7 @@ func TestRecord_EmbeddedResponseBodies(t *testing.T) {
 	recorder := New(Configure().Name("recorder").Record(
 		RecordDir(dir),
 		RecordResponseBodyToFile(false),
+		RecordExtension("yaml"),
 	))
 	recorder.MustStart()
 	recorderScope := recorder.MustMock(AnyMethod().Reply(From(target.URL())))
@@ -323,7 +324,7 @@ func TestRecord_EmbeddedResponseBodies(t *testing.T) {
 
 	// Creating a new server that will use the recorded mocks
 
-	m := New(Configure().Dirs(dir + "/*mock.json"))
+	m := New(Configure().Dirs(dir + "/*mock.yaml"))
 	m.MustStart()
 
 	defer m.Close()

@@ -19,10 +19,10 @@ func (m *eachMatcher) Match(v any) (*Result, error) {
 
 	switch valType {
 	case reflect.Map:
-		iter := val.MapRange()
+		iterator := val.MapRange()
 
-		for iter.Next() {
-			mv := iter.Value().Interface()
+		for iterator.Next() {
+			mv := iterator.Value().Interface()
 			res, err := m.matcher.Match(mv)
 			if err != nil {
 				return nil, err
@@ -31,7 +31,7 @@ func (m *eachMatcher) Match(v any) (*Result, error) {
 			if !res.Pass {
 				return &Result{
 					Message: res.Message,
-					Ext:     []string{fmt.Sprintf("key=%v, value=%v", iter.Key().Interface(), mv)},
+					Ext:     []string{fmt.Sprintf("key=%v, value=%v", iterator.Key().Interface(), mv)},
 				}, nil
 			}
 		}

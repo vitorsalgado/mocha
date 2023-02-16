@@ -43,13 +43,14 @@ For more information, visit: %s`,
 )
 
 func main() {
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+	ctx := context.Background()
+	ctx, cancel := signal.NotifyContext(ctx, os.Interrupt, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
 	defer cancel()
 
-	run(ctx)
+	run(ctx) // should block
 }
 
-func run(ctx context.Context) {
+func run(ctx context.Context, custom ...mocha.Configurer) {
 	rootCmd := &cobra.Command{
 		Use:     _usage,
 		Short:   _shortDescription,
@@ -57,7 +58,12 @@ func run(ctx context.Context) {
 		Args:    cobra.MinimumNArgs(0),
 		Example: _example,
 		Run: func(cmd *cobra.Command, args []string) {
-			configurers := []mocha.Configurer{mocha.UseLocals()}
+			configurers := make([]mocha.Configurer, 0)
+			if len(custom) > 0 {
+				configurers = append(configurers, custom...)
+			}
+
+			configurers = append(configurers, mocha.UseLocals())
 
 			_, exists := os.LookupEnv(_dockerHostEnv)
 			if exists {

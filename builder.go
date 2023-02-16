@@ -327,7 +327,7 @@ func (b *MockBuilder) Delay(duration time.Duration) *MockBuilder {
 
 // Map adds a Mapper that allows modifying the response after it was built.
 // Multiple mappers can be added.
-// Map doesn'txtTemplate work with reply.From or Proxy.
+// Map doesn't work with reply.From or Proxy.
 func (b *MockBuilder) Map(mapper Mapper) *MockBuilder {
 	b.mock.Mappers = append(b.mock.Mappers, mapper)
 	return b

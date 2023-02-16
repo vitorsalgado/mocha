@@ -55,3 +55,9 @@ func TestStrictEqual(t *testing.T) {
 		})
 	}
 }
+
+func TestStrictEqualf(t *testing.T) {
+	result, err := StrictEqualf("hello %s %d", "world", 10).Match("hello world 10")
+	require.NoError(t, err)
+	require.True(t, result.Pass)
+}
