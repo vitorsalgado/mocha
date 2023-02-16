@@ -6,6 +6,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -76,13 +77,13 @@ func TestParameters_Concurrency(t *testing.T) {
 
 			err := params.Set(ctx, kk, vv)
 
-			require.NoError(t, err)
+			assert.NoError(t, err)
 
 			v, exists, err := params.Get(ctx, kk)
 
-			require.NoError(t, err)
-			require.True(t, exists)
-			require.Equal(t, vv, v)
+			assert.NoError(t, err)
+			assert.True(t, exists)
+			assert.Equal(t, vv, v)
 
 			_ = params.Remove(ctx, "k001")
 			_ = params.Remove(ctx, kk)
