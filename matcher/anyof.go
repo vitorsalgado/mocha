@@ -3,6 +3,8 @@ package matcher
 import (
 	"fmt"
 	"strings"
+
+	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
 type anyOfMatcher struct {
@@ -46,7 +48,7 @@ func (m *anyOfMatcher) Match(v any) (*Result, error) {
 
 	if !ok || err != nil {
 		return &Result{
-			Message: indent(strings.Join(failed, "\n")),
+			Message: mfmt.Indent(strings.Join(failed, "\n")),
 			Ext:     []string{fmt.Sprintf("+%d", len(m.matchers))},
 		}, err
 	}

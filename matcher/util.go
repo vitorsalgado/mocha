@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strconv"
 	"strings"
 )
 
@@ -129,34 +128,4 @@ func runAfterMockServed(matchers ...Matcher) error {
 	}
 
 	return nil
-}
-
-func convToFloat64(v any) (float64, error) {
-	switch e := v.(type) {
-	case string:
-		return strconv.ParseFloat(e, 64)
-	case float64:
-		return e, nil
-	case float32:
-		return float64(e), nil
-	case int:
-		return float64(e), nil
-	default:
-		return 0, fmt.Errorf("value cannot be parsed to float64")
-	}
-}
-
-type stringer interface {
-	String() string
-}
-
-func stringify(v any) string {
-	switch s := v.(type) {
-	case stringer:
-		return s.String()
-	case string:
-		return s
-	}
-
-	return fmt.Sprintf("%v", v)
 }

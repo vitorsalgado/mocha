@@ -2,6 +2,10 @@ package matcher
 
 import (
 	"fmt"
+	"reflect"
+
+	"github.com/vitorsalgado/mocha/v3/matcher/internal/mconv"
+	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
 type greaterOrEqualMatcher struct {
@@ -13,9 +17,13 @@ func (m *greaterOrEqualMatcher) Name() string {
 }
 
 func (m *greaterOrEqualMatcher) Match(v any) (*Result, error) {
-	vv, err := convToFloat64(v)
+	vv, err := mconv.ConvToFloat64(v)
 	if err != nil {
-		return nil, fmt.Errorf("unhandled data type. %w", err)
+		return nil, fmt.Errorf(
+			"type %s is not supported. value must be compatible with float64. %w",
+			reflect.TypeOf(v),
+			err,
+		)
 	}
 
 	if vv >= m.expected {
@@ -23,7 +31,7 @@ func (m *greaterOrEqualMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		Ext:     []string{stringify(m.expected)},
+		Ext:     []string{mfmt.Stringify(m.expected)},
 		Message: fmt.Sprintf("Received: %v", vv),
 	}, nil
 }

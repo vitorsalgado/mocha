@@ -1,6 +1,12 @@
 package matcher
 
-import "fmt"
+import (
+	"fmt"
+	"reflect"
+
+	"github.com/vitorsalgado/mocha/v3/matcher/internal/mconv"
+	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
+)
 
 type lessMatcher struct {
 	expected float64
@@ -11,9 +17,9 @@ func (m *lessMatcher) Name() string {
 }
 
 func (m *lessMatcher) Match(v any) (*Result, error) {
-	vv, err := convToFloat64(v)
+	vv, err := mconv.ConvToFloat64(v)
 	if err != nil {
-		return nil, fmt.Errorf("unhandled data type. %w", err)
+		return nil, fmt.Errorf("type %s is not supported. value must be compatible with float64. %w", reflect.TypeOf(v), err)
 	}
 
 	if vv < m.expected {
@@ -21,8 +27,8 @@ func (m *lessMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		Ext:     []string{stringify(m.expected)},
-		Message: printReceived(vv),
+		Ext:     []string{mfmt.Stringify(m.expected)},
+		Message: mfmt.PrintReceived(vv),
 	}, nil
 }
 

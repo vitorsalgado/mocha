@@ -3,6 +3,8 @@ package matcher
 import (
 	"encoding/json"
 	"fmt"
+
+	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
 type equalJSONMatcher struct {
@@ -30,7 +32,7 @@ func (m *equalJSONMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		Ext:     []string{stringify(m.expected)},
+		Ext:     []string{mfmt.Stringify(m.expected)},
 		Message: fmt.Sprintf("Received: %v", v),
 	}, nil
 }

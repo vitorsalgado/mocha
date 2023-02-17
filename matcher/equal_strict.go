@@ -3,6 +3,8 @@ package matcher
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
 type equalStrictMatcher struct {
@@ -19,7 +21,7 @@ func (m *equalStrictMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		Ext:     []string{stringify(m.expected)},
+		Ext:     []string{mfmt.Stringify(m.expected)},
 		Message: fmt.Sprintf("Received: %v", v),
 	}, nil
 }

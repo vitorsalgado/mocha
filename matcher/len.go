@@ -2,6 +2,8 @@ package matcher
 
 import (
 	"reflect"
+
+	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
 type lenMatcher struct {
@@ -18,7 +20,7 @@ func (m *lenMatcher) Match(v any) (*Result, error) {
 		return &Result{Pass: true}, nil
 	}
 
-	return &Result{Message: stringify(m.length)}, nil
+	return &Result{Message: mfmt.Stringify(m.length)}, nil
 }
 
 // HaveLen returns true when matcher argument length is equal to the items value.

@@ -38,7 +38,7 @@ func (m *eachMatcher) Match(v any) (*Result, error) {
 
 		return &Result{Pass: true}, nil
 
-	case reflect.Slice:
+	case reflect.Slice, reflect.Array:
 		for i := 0; i < val.Len(); i++ {
 			entry := val.Index(i).Interface()
 			res, err := m.matcher.Match(entry)
@@ -57,7 +57,7 @@ func (m *eachMatcher) Match(v any) (*Result, error) {
 		return &Result{Pass: true}, nil
 	}
 
-	return nil, fmt.Errorf("type %s is not supported", valType.String())
+	return nil, fmt.Errorf("type %s is not supported. accepted types: map, array", valType.String())
 }
 
 func (m *eachMatcher) AfterMockServed() error {

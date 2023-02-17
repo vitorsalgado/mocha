@@ -2,6 +2,8 @@ package matcher
 
 import (
 	"strings"
+
+	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
 type hasSuffixMatcher struct {
@@ -20,7 +22,7 @@ func (m *hasSuffixMatcher) Match(v any) (*Result, error) {
 
 	return &Result{
 		Ext:     []string{m.suffix},
-		Message: printReceived(txt),
+		Message: mfmt.PrintReceived(txt),
 	}, nil
 }
 

@@ -51,7 +51,7 @@ func From[T FromTypes](target T) *ProxyReply {
 
 		u, err = url.Parse(e)
 		if err != nil {
-			panic(fmt.Errorf("[reply.proxy] unable to url.Parse the value \"%s\". reason=%w", e, err))
+			panic(fmt.Errorf("[reply.proxy] unable to url.Parse the value \"%s\". %w", e, err))
 		}
 	case *url.URL:
 		u = e

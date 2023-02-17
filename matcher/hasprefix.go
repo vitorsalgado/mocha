@@ -2,6 +2,8 @@ package matcher
 
 import (
 	"strings"
+
+	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
 type hasPrefixMatcher struct {
@@ -20,7 +22,7 @@ func (m *hasPrefixMatcher) Match(v any) (*Result, error) {
 
 	return &Result{
 		Ext:     []string{m.prefix},
-		Message: printReceived(txt),
+		Message: mfmt.PrintReceived(txt),
 	}, nil
 }
 

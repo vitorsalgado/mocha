@@ -2,6 +2,8 @@ package matcher
 
 import (
 	"sync"
+
+	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
 type repeatMatcher struct {
@@ -20,8 +22,8 @@ func (m *repeatMatcher) Match(_ any) (*Result, error) {
 	}
 
 	return &Result{
-		Ext:     []string{stringify(m.max)},
-		Message: printReceived(m.hits),
+		Ext:     []string{mfmt.Stringify(m.max)},
+		Message: mfmt.PrintReceived(m.hits),
 	}, nil
 }
 

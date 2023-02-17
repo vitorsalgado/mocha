@@ -3,6 +3,8 @@ package matcher
 import (
 	"fmt"
 	"strings"
+
+	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
 type equalIgnoreCaseMatcher struct {
@@ -24,7 +26,7 @@ func (m *equalIgnoreCaseMatcher) Match(v any) (*Result, error) {
 
 	return &Result{
 		Message: fmt.Sprintf("Received: %v", v),
-		Ext:     []string{stringify(m.expected)},
+		Ext:     []string{mfmt.Stringify(m.expected)},
 	}, nil
 }
 

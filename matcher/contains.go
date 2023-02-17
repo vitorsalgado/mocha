@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
 type containsMatcher struct {
@@ -30,8 +32,8 @@ func (m *containsMatcher) Match(list any) (*Result, error) {
 		}
 
 		return &Result{
-			Message: stringify(listValue),
-			Ext:     []string{stringify(m.expected)},
+			Message: mfmt.Stringify(listValue),
+			Ext:     []string{mfmt.Stringify(m.expected)},
 		}, nil
 	case reflect.Map:
 		keys := listValue.MapKeys()
@@ -41,7 +43,7 @@ func (m *containsMatcher) Match(list any) (*Result, error) {
 			}
 		}
 
-		return &Result{Message: stringify(listValue)}, nil
+		return &Result{Message: mfmt.Stringify(listValue)}, nil
 	}
 
 	for i := 0; i < listValue.Len(); i++ {
@@ -50,7 +52,7 @@ func (m *containsMatcher) Match(list any) (*Result, error) {
 		}
 	}
 
-	return &Result{Message: stringify(listValue)}, nil
+	return &Result{Message: mfmt.Stringify(listValue)}, nil
 }
 
 // Contain returns true when the items value is contained in the matcher argument.

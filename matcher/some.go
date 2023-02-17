@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+
+	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
 type someMatcher struct {
@@ -29,7 +31,7 @@ func (m *someMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		Ext: []string{stringify(m.items)},
+		Ext: []string{mfmt.Stringify(m.items)},
 		Message: fmt.Sprintf(
 			"Value %v is not contained in the %v",
 			v,

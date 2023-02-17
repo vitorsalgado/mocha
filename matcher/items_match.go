@@ -3,6 +3,8 @@ package matcher
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
 type itemsMatchMatcher struct {
@@ -22,7 +24,7 @@ func (m *itemsMatchMatcher) Match(v any) (*Result, error) {
 
 	if aLen != bLen {
 		return &Result{
-			Ext: []string{stringify(m.expected)},
+			Ext: []string{mfmt.Stringify(m.expected)},
 			Message: fmt.Sprintf(
 				"Expected value length %d. Received length %d",
 				aLen,

@@ -1,6 +1,7 @@
 package mocha
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -9,6 +10,11 @@ import (
 )
 
 var _ Builder = (*MockBuilder)(nil)
+
+var (
+	ErrNoExpectations = errors.New("[mocking] at least 1 request matcher must be set")
+	ErrNoReplies      = errors.New("no reply set. Use .Reply() or any equivalent to set the expected mock response")
+)
 
 // MockBuilder is a builder for Mock.
 type MockBuilder struct {
@@ -350,12 +356,11 @@ func (b *MockBuilder) Enable(enabled bool) *MockBuilder {
 // Used internally by Mocha.
 func (b *MockBuilder) Build(_ *Mocha) (*Mock, error) {
 	if len(b.mock.expectations) == 0 {
-		return nil, fmt.Errorf("at least 1 request matcher must be set")
+		return nil, ErrNoExpectations
 	}
 
 	if b.mock.Reply == nil {
-		return nil,
-			fmt.Errorf("no reply set. use .Reply() or any equivalent to set the expected mock response")
+		return nil, ErrNoReplies
 	}
 
 	if r, ok := b.mock.Reply.(replyValidation); ok {

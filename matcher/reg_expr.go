@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+
+	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
 type regExpMatcher struct {
@@ -16,8 +18,8 @@ func (m *regExpMatcher) Name() string {
 
 func (m *regExpMatcher) Match(v any) (*Result, error) {
 	txt := fmt.Sprintf("%v", v)
-	msg := printReceived(txt)
-	ext := []string{stringify(m.expression)}
+	msg := mfmt.PrintReceived(txt)
+	ext := []string{mfmt.Stringify(m.expression)}
 
 	switch e := m.expression.(type) {
 	case string:
@@ -29,8 +31,7 @@ func (m *regExpMatcher) Match(v any) (*Result, error) {
 		return &Result{Pass: e.Match([]byte(txt)), Ext: ext, Message: msg}, nil
 	default:
 		return nil,
-			fmt.Errorf("regular expression matcher does not accept the expression of type %s",
-				reflect.TypeOf(v).Name())
+			fmt.Errorf("matcher does not accept the expression of type %s", reflect.TypeOf(v))
 	}
 }
 

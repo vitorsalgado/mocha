@@ -1,5 +1,7 @@
 package matcher
 
+import "github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
+
 type emptyMatcher struct {
 }
 
@@ -15,7 +17,7 @@ func (m *emptyMatcher) Match(v any) (*Result, error) {
 
 	return &Result{
 		Pass:    result.Pass,
-		Message: stringify(v),
+		Message: mfmt.Stringify(v),
 	}, nil
 }
 
