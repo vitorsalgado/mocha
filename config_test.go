@@ -160,7 +160,7 @@ func TestConfig_WithFunctions(t *testing.T) {
 		WithLogLevel(LogInfo),
 		WithParams(newInMemoryParameters()),
 		WithDirs("test", "dev"),
-		WithLoader(&FileLoader{}),
+		WithLoader(&fileLoader{}),
 		WithProxy(&ProxyConfig{}, &ProxyConfig{}))
 	conf := m.Config()
 
@@ -194,7 +194,7 @@ func TestConfig_Builder(t *testing.T) {
 		LogLevel(LogInfo).
 		Parameters(newInMemoryParameters()).
 		Dirs("test", "dev").
-		Loader(&FileLoader{}).
+		Loader(&fileLoader{}).
 		Proxy(&ProxyConfig{}, &ProxyConfig{}))
 	conf := m.Config()
 

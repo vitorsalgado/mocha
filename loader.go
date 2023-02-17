@@ -13,13 +13,13 @@ type Loader interface {
 	Load(app *Mocha) error
 }
 
-var _ Loader = (*FileLoader)(nil)
+var _ Loader = (*fileLoader)(nil)
 
-type FileLoader struct {
+type fileLoader struct {
 	mu sync.Mutex
 }
 
-func (l *FileLoader) Load(app *Mocha) error {
+func (l *fileLoader) Load(app *Mocha) error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
@@ -63,7 +63,7 @@ func (l *FileLoader) Load(app *Mocha) error {
 					}
 
 					fn := func(filename string, c *errContainer) error {
-						_, err := app.Mock(MockFromFile(filename))
+						_, err := app.Mock(FromFile(filename))
 						return err
 					}
 

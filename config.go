@@ -100,12 +100,12 @@ type Config struct {
 	UseHTTPS bool
 
 	// Forward configures a forward proxy for matched requests.
-	Forward *ForwardConfig
+	Forward *forwardConfig
 }
 
-// ForwardConfig configures a forward proxy for matched requests.
+// forwardConfig configures a forward proxy for matched requests.
 // Only for CLI.
-type ForwardConfig struct {
+type forwardConfig struct {
 	Target               string
 	Headers              http.Header
 	ProxyHeaders         http.Header

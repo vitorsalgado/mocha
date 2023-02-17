@@ -12,7 +12,7 @@ import (
 func TestFileLoader_Load(t *testing.T) {
 	app := New(
 		Configure().Dirs("testdata/0/*mock.json", "testdata/0/*.json"))
-	loader := &FileLoader{}
+	loader := &fileLoader{}
 
 	err := loader.Load(app)
 

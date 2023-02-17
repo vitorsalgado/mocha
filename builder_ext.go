@@ -68,7 +68,7 @@ type mockExternalBuilder struct {
 	builder  *MockBuilder
 }
 
-func MockFromFile(filename string) Builder {
+func FromFile(filename string) Builder {
 	return &mockExternalBuilder{filename: filename, builder: Request()}
 }
 

@@ -211,7 +211,7 @@ func New(config ...Configurer) *Mocha {
 	}
 
 	loaders := make([]Loader, len(conf.Loaders)+1 /* number of internal loaders */)
-	loaders[0] = &FileLoader{}
+	loaders[0] = &fileLoader{}
 	for i, loader := range conf.Loaders {
 		loaders[i+1] = loader
 	}

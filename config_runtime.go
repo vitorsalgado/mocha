@@ -207,7 +207,7 @@ func (c *localConfigurer) Apply(conf *Config) (err error) {
 			hp.Add(k, v)
 		}
 
-		conf.Forward = &ForwardConfig{
+		conf.Forward = &forwardConfig{
 			Target:               targetURL.String(),
 			Headers:              h,
 			ProxyHeaders:         hp,

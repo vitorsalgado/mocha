@@ -33,7 +33,7 @@ func TestCustomMockFileHandlers(t *testing.T) {
 
 	defer m.Close()
 
-	m.MustMock(MockFromFile("testdata/mock_file_handler/handler.json"))
+	m.MustMock(FromFile("testdata/mock_file_handler/handler.json"))
 
 	httpClient := &http.Client{}
 	res, err := httpClient.Get(m.URL() + "/test?term=test&filter=all&page=10&q=hello-world&custom=100")
