@@ -71,7 +71,7 @@ func TestRandWithCustom(t *testing.T) {
 	}
 }
 
-func TestRandomReply_Pre(t *testing.T) {
+func TestRandomReplyValidate(t *testing.T) {
 	r := Rand()
 
 	require.Error(t, r.Validate())

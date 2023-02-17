@@ -56,7 +56,7 @@ func TestMocha(t *testing.T) {
 	assert.Equal(t, string(body), "hello world")
 }
 
-func TestResponseMapper_ModifyingResponse(t *testing.T) {
+func TestResponseMapperModifyingResponse(t *testing.T) {
 	const k = "key"
 	const v = "test-ok"
 
@@ -138,7 +138,7 @@ func TestErrors(t *testing.T) {
 	assert.Equal(t, StatusNoMatch, res.StatusCode)
 }
 
-func TestMocha_Assertions(t *testing.T) {
+func TestMochaAssertions(t *testing.T) {
 	m := New()
 	m.MustStart()
 
@@ -167,7 +167,7 @@ func TestMocha_Assertions(t *testing.T) {
 	assert.Equal(t, 1, m.Hits())
 }
 
-func TestMocha_Enable_Disable(t *testing.T) {
+func TestMochaEnableDisable(t *testing.T) {
 	m := New()
 	m.MustStart()
 
@@ -230,7 +230,7 @@ func (h *FakeEvents) OnError(e any) {
 	h.Called(e)
 }
 
-func TestMocha_Subscribe(t *testing.T) {
+func TestMochaSubscribe(t *testing.T) {
 	f := &FakeEvents{}
 	f.On("OnRequest", mock.Anything).Return()
 	f.On("OnRequestMatched", mock.Anything).Return()
@@ -257,7 +257,7 @@ func TestMocha_Subscribe(t *testing.T) {
 	f.AssertExpectations(t)
 }
 
-func TestMocha_Silently(t *testing.T) {
+func TestMochaSilently(t *testing.T) {
 	m := New(Configure().LogLevel(LogSilently))
 	m.MustStart()
 
@@ -305,7 +305,7 @@ func TestSchemeMatching(t *testing.T) {
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 }
 
-func TestMocha_NoReply(t *testing.T) {
+func TestMochaNoReply(t *testing.T) {
 	m := New()
 
 	scoped, err := m.Mock(Get(URLPath("/test")))
@@ -313,7 +313,7 @@ func TestMocha_NoReply(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestMocha_NoMatchers(t *testing.T) {
+func TestMochaNoMatchers(t *testing.T) {
 	m := New()
 
 	scoped, err := m.Mock(Request())
@@ -321,7 +321,7 @@ func TestMocha_NoMatchers(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestMocha_Concurrency(t *testing.T) {
+func TestMochaConcurrency(t *testing.T) {
 	m := New()
 	jobs := 10
 	wg := sync.WaitGroup{}
@@ -360,7 +360,7 @@ func TestMocha_Concurrency(t *testing.T) {
 	wg.Wait()
 }
 
-func TestMocha_Concurrent_Requests(t *testing.T) {
+func TestMochaConcurrentRequests(t *testing.T) {
 	jobs := 20
 	wg := sync.WaitGroup{}
 	httpClient := &http.Client{}

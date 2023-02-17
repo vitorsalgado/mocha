@@ -59,7 +59,7 @@ func TestParameters(t *testing.T) {
 	require.False(t, h1)
 }
 
-func TestParameters_Concurrency(t *testing.T) {
+func TestParametersConcurrency(t *testing.T) {
 	ctx := context.Background()
 	params := newInMemoryParameters()
 	jobs := 10

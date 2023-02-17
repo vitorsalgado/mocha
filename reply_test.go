@@ -63,7 +63,7 @@ func TestReply(t *testing.T) {
 	assert.Equal(t, "hi", string(res.Body))
 }
 
-func TestStdReply_BodyString(t *testing.T) {
+func TestStdReplyBodyString(t *testing.T) {
 	rv := &RequestValues{RawRequest: _req, URL: _req.URL}
 	res, err := NewReply().
 		Status(http.StatusCreated).
@@ -74,7 +74,7 @@ func TestStdReply_BodyString(t *testing.T) {
 	require.Equal(t, "text", string(res.Body))
 }
 
-func TestStdReply_BodyJSON(t *testing.T) {
+func TestStdReplyBodyJSON(t *testing.T) {
 	type jsonData struct {
 		Name   string `json:"name"`
 		Job    string `json:"job"`
@@ -115,7 +115,7 @@ func TestStdReply_BodyJSON(t *testing.T) {
 	})
 }
 
-func TestStdReply_BodyReader(t *testing.T) {
+func TestStdReplyBodyReader(t *testing.T) {
 	wd, _ := os.Getwd()
 	f, err := os.Open(path.Join(wd, "testdata", "data.txt"))
 	require.NoError(t, err)

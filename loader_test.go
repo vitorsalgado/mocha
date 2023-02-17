@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFileLoader_Load(t *testing.T) {
+func TestFileLoaderLoad(t *testing.T) {
 	app := New(
 		Configure().Dirs("testdata/0/*mock.json", "testdata/0/*.json"))
 	loader := &fileLoader{}

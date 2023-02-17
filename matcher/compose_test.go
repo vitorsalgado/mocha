@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestExpect_Compositions(t *testing.T) {
+func TestExpectCompositions(t *testing.T) {
 	m, err := Compose(StrictEqual("hello world")).
 		And(Contain("hello")).
 		And(HasPrefix("hello")).

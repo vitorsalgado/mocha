@@ -72,7 +72,7 @@ func TestProxyTLS(t *testing.T) {
 	targetScope.AssertCalled(t)
 }
 
-func TestProxy_ViaAnotherProxy(t *testing.T) {
+func TestProxyViaAnotherProxy(t *testing.T) {
 	p := New(WithProxy()).CloseWithT(t)
 	p.MustStart()
 	scope1 := p.MustMock(Get(URLPath("/test")).Reply(Accepted()))

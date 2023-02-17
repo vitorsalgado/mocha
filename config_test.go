@@ -144,7 +144,7 @@ func TestConfig(t *testing.T) {
 	})
 }
 
-func TestConfig_WithFunctions(t *testing.T) {
+func TestConfigWithFunctions(t *testing.T) {
 	addr := ""
 	nm := "test"
 
@@ -178,7 +178,7 @@ func TestConfig_WithFunctions(t *testing.T) {
 	assert.NotNil(t, conf.Proxy)
 }
 
-func TestConfig_Builder(t *testing.T) {
+func TestConfigBuilder(t *testing.T) {
 	addr := ""
 	nm := "test"
 
@@ -223,7 +223,7 @@ func TestUseColors(t *testing.T) {
 	SetColors(true)
 }
 
-func TestLogLevel_String(t *testing.T) {
+func TestLogLevelString(t *testing.T) {
 	assert.Equal(t, LogSilently.String(), "silent")
 	assert.Equal(t, LogInfo.String(), "info")
 	assert.Equal(t, LogVerbose.String(), "verbose")

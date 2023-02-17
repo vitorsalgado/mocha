@@ -11,7 +11,7 @@ import (
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
-func TestHandler_GetById(t *testing.T) {
+func TestHandlerGetById(t *testing.T) {
 	m := mocha.New().CloseWithT(t)
 	m.MustStart()
 

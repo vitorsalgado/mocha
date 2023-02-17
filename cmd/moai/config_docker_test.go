@@ -10,7 +10,7 @@ import (
 	"github.com/vitorsalgado/mocha/v3"
 )
 
-func TestConfigDocker_DefaultHTTPHost(t *testing.T) {
+func TestConfigDockerDefaultHTTPHost(t *testing.T) {
 	config := &mocha.Config{}
 	conf := &dockerConfigurer{}
 	err := conf.Apply(config)
@@ -20,7 +20,7 @@ func TestConfigDocker_DefaultHTTPHost(t *testing.T) {
 	assert.Equal(t, "0.0.0.0:8080", config.Addr)
 }
 
-func TestConfigDocker_DefaultHTTPsHost(t *testing.T) {
+func TestConfigDockerDefaultHTTPsHost(t *testing.T) {
 	config := &mocha.Config{}
 	config.UseHTTPS = true
 
@@ -32,7 +32,7 @@ func TestConfigDocker_DefaultHTTPsHost(t *testing.T) {
 	assert.Equal(t, "0.0.0.0:8443", config.Addr)
 }
 
-func TestConfigDocker_HostDefined(t *testing.T) {
+func TestConfigDockerHostDefined(t *testing.T) {
 	t.Cleanup(func() {
 		_ = os.Unsetenv(_dockerHostEnv)
 	})
@@ -48,7 +48,7 @@ func TestConfigDocker_HostDefined(t *testing.T) {
 	assert.Equal(t, "example.org:8080", config.Addr)
 }
 
-func TestConfigDocker_HostDefined_WithDots(t *testing.T) {
+func TestConfigDockerHostDefinedWithDots(t *testing.T) {
 	t.Cleanup(func() {
 		_ = os.Unsetenv(_dockerHostEnv)
 	})

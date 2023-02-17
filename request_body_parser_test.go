@@ -13,7 +13,7 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 )
 
-func TestWithRequestBodyParsers_CanParse(t *testing.T) {
+func TestWithRequestBodyParsersCanParse(t *testing.T) {
 	jsonParser := &jsonBodyParser{}
 	formParser := &formURLEncodedParser{}
 	textParser := &plainTextParser{}
@@ -59,7 +59,7 @@ func TestWithRequestBodyParsers_CanParse(t *testing.T) {
 	}
 }
 
-func TestWithRequestBodyParsers_Parse(t *testing.T) {
+func TestWithRequestBodyParsersParse(t *testing.T) {
 	jsonParser := &jsonBodyParser{}
 	formParser := &formURLEncodedParser{}
 	textParser := &plainTextParser{}

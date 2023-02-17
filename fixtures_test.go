@@ -30,4 +30,4 @@ func (m *fakeT) Errorf(format string, args ...any) {
 	m.Called(format, args)
 }
 
-func (m *fakeT) Cleanup(_ func()) {}
+func (m *fakeT) Cleanup(_ func()) { /* not necessary */ }

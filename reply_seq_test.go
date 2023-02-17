@@ -55,7 +55,7 @@ func TestSequentialReply(t *testing.T) {
 	})
 }
 
-func TestSequentialReply_ShouldReturnErrorWhenSequenceDoesNotContainReplies(t *testing.T) {
+func TestSequentialReplyShouldReturnErrorWhenSequenceDoesNotContainReplies(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 	rv := &RequestValues{RawRequest: req, URL: req.URL}
 	res, err := Seq().Build(nil, rv)
@@ -63,7 +63,7 @@ func TestSequentialReply_ShouldReturnErrorWhenSequenceDoesNotContainReplies(t *t
 	assert.NotNil(t, err)
 }
 
-func TestSequentialReply_Pre(t *testing.T) {
+func TestSequentialReplyValidate(t *testing.T) {
 	seq := Seq()
 
 	require.Error(t, seq.Validate())

@@ -157,7 +157,7 @@ func TestScoped(t *testing.T) {
 	})
 }
 
-func TestDelete(t *testing.T) {
+func TestScopedDelete(t *testing.T) {
 	m1 := newMock()
 	m2 := newMock()
 	m3 := newMock()

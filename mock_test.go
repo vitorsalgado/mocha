@@ -60,7 +60,7 @@ func TestMock(t *testing.T) {
 	})
 }
 
-func TestMock_Matches(t *testing.T) {
+func TestMockMatches(t *testing.T) {
 	m := newMock()
 	params := &valueSelectorInput{}
 
@@ -175,7 +175,7 @@ func TestMock_Matches(t *testing.T) {
 	})
 }
 
-func TestMock_Build(t *testing.T) {
+func TestMockBuild(t *testing.T) {
 	m := newMock()
 	m.Inc()
 	m.Disable()

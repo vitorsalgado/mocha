@@ -18,7 +18,7 @@ import (
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
-func TestRecordConfig_Apply(t *testing.T) {
+func TestRecordConfigApply(t *testing.T) {
 	conf := &RecordConfig{}
 
 	require.Error(t, conf.Apply(&RecordConfig{}), "no extension defined")
@@ -27,7 +27,7 @@ func TestRecordConfig_Apply(t *testing.T) {
 	require.NoError(t, conf.Apply(&RecordConfig{SaveExtension: "json"}), "should accept extension without dot prefix")
 }
 
-func TestRecording_WithWebProxy(t *testing.T) {
+func TestRecordingWithWebProxy(t *testing.T) {
 	dir := t.TempDir()
 
 	includedReqHeader := "x-request-excluded"
@@ -124,7 +124,7 @@ func TestRecording_WithWebProxy(t *testing.T) {
 	require.Equal(t, res.Header.Get(trailer), "the-trailer-value")
 }
 
-func TestRecord_SaveResponseBodyToFile(t *testing.T) {
+func TestRecordSaveResponseBodyToFile(t *testing.T) {
 	dir := t.TempDir()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -243,7 +243,7 @@ func TestRecord_SaveResponseBodyToFile(t *testing.T) {
 	require.Equal(t, http.StatusCreated, res.StatusCode)
 }
 
-func TestRecord_EmbeddedResponseBodies_YAML(t *testing.T) {
+func TestRecordEmbeddedResponseBodiesYAML(t *testing.T) {
 	dir := t.TempDir()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -364,7 +364,7 @@ func TestRecord_EmbeddedResponseBodies_YAML(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, res.StatusCode)
 }
 
-func TestRecord_TargetTLS(t *testing.T) {
+func TestRecordTargetTLS(t *testing.T) {
 	dir := t.TempDir()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -484,7 +484,7 @@ func TestRecord_TargetTLS(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, res.StatusCode)
 }
 
-func TestRecord_TLSClient(t *testing.T) {
+func TestRecordTLSClient(t *testing.T) {
 	dir := t.TempDir()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -606,7 +606,7 @@ func TestRecord_TLSClient(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, res.StatusCode)
 }
 
-func TestRecord_BothTLS(t *testing.T) {
+func TestRecordBothTLS(t *testing.T) {
 	dir := t.TempDir()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
