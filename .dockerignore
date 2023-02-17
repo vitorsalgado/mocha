@@ -7,16 +7,15 @@ bin/
 node_modules/
 test/
 testdata/
+tools/
 
 .editorconfig
 .gitattributes
 .golangci.yml
 CHANGELOG.md
 CODE_OF_CONDUCT.md
-commitlint.cjs
 CONTRIBUTING.md
 coverage.*
-lint-staged.config.cjs
 logo.png
 Makefile
 Makefile.overrides
