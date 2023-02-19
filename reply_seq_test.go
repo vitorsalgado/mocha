@@ -43,7 +43,7 @@ func TestSequentialReply(t *testing.T) {
 		rv := &RequestValues{RawRequest: req, URL: req.URL}
 		require.NoError(t, err)
 
-		builder := Seq().Add(OK()).OnSequenceEnds(NotFound())
+		builder := Seq().Add(OK()).OnSequenceEnded(NotFound())
 
 		res, err := builder.Build(nil, rv)
 		assert.Nil(t, err)

@@ -307,7 +307,7 @@ func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 					fmt.Errorf("[response_response.after_ended] building error.\n %w", err)
 			}
 
-			seq.OnSequenceEnds(rr)
+			seq.OnSequenceEnded(rr)
 		}
 
 		entries, ok := vi.Get(_fResponseSequenceEntries).([]any)

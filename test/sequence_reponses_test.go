@@ -42,7 +42,7 @@ func TestSequenceRepliesOnSequenceEndsSet(t *testing.T) {
 	m.MustMock(mocha.Get(URLPath("/test")).
 		Reply(mocha.Seq().
 			Add(mocha.Unauthorized(), mocha.OK()).
-			OnSequenceEnds(mocha.Created())))
+			OnSequenceEnded(mocha.Created())))
 
 	defer m.Close()
 

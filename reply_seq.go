@@ -21,8 +21,8 @@ func Seq(reply ...Reply) *SequentialReply {
 	return &SequentialReply{replies: reply}
 }
 
-// OnSequenceEnds sets a response to be used once the sequence is over.
-func (r *SequentialReply) OnSequenceEnds(reply Reply) *SequentialReply {
+// OnSequenceEnded sets a response to be used once the sequence is over.
+func (r *SequentialReply) OnSequenceEnded(reply Reply) *SequentialReply {
 	r.replyAfterSeqEnded = reply
 	return r
 }
