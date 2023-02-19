@@ -16,9 +16,10 @@ type EvtReq struct {
 
 // EvtRes defines HTTP EvtRes information to be logged.
 type EvtRes struct {
-	Status int
-	Header http.Header
-	Body   []byte
+	Status  int
+	Header  http.Header
+	Body    []byte
+	Encoded bool
 }
 
 // EvtMk defines core.EvtMk information to be logged.

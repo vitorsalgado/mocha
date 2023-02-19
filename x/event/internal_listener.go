@@ -79,9 +79,10 @@ func (h *InternalListener) OnRequestMatched(evt any) {
 			colorize.Green("Headers:"),
 			e.ResponseDefinition.Header))
 
-		if len(e.ResponseDefinition.Body) > 0 {
-			builder.WriteString(
-				fmt.Sprintf(" %s %s\n", colorize.Green("Body:"), string(e.ResponseDefinition.Body)))
+		if !e.ResponseDefinition.Encoded && len(e.ResponseDefinition.Body) > 0 {
+			builder.WriteString(colorize.Green("Body: "))
+			builder.WriteString(string(e.ResponseDefinition.Body))
+			builder.WriteString("\n")
 		}
 	}
 

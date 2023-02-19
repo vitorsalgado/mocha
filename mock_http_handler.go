@@ -144,10 +144,15 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.app.listener.Emit(&event.OnRequestMatch{
-		Request:            evtReq,
-		ResponseDefinition: event.EvtRes{Status: res.StatusCode, Header: res.Header},
-		Mock:               event.EvtMk{ID: mock.ID, Name: mock.Name},
-		Elapsed:            time.Since(start)})
+		Request: evtReq,
+		ResponseDefinition: event.EvtRes{
+			Status:  res.StatusCode,
+			Header:  res.Header,
+			Body:    res.Body,
+			Encoded: res.Header.Get(HeaderContentEncoding) != "",
+		},
+		Mock:    event.EvtMk{ID: mock.ID, Name: mock.Name},
+		Elapsed: time.Since(start)})
 
 	if h.app.rec != nil && h.app.config.Proxy == nil {
 		h.app.rec.dispatch(r, parsedURL, rawBody, res)
