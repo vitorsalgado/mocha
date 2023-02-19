@@ -163,6 +163,16 @@ func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *event.EvtReq, result
 	}
 
 	for _, detail := range result.MismatchDetails {
+		if detail.Err != nil {
+			e.Result.Details = append(e.Result.Details, event.EvtResultExt{
+				Name:    detail.MatchersName,
+				Message: detail.Err.Error(),
+				Target:  strconv.FormatInt(int64(detail.Target), 10),
+			})
+
+			continue
+		}
+
 		e.Result.Details = append(e.Result.Details, event.EvtResultExt{
 			Name:    detail.MatchersName,
 			Message: detail.Result.Message,
@@ -184,8 +194,15 @@ func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *event.EvtReq, result
 	builder.WriteString("Mismatches:\n")
 
 	for _, detail := range result.MismatchDetails {
+		message := ""
+		if detail.Err != nil {
+			message = detail.Err.Error()
+		} else {
+			message = detail.Result.Message
+		}
+
 		builder.WriteString(fmt.Sprintf("%s, reason=%s, applied-to=%v\n",
-			detail.MatchersName, detail.Result.Message, detail.Target))
+			detail.MatchersName, message, detail.Target))
 	}
 
 	w.Header().Add(header.ContentType, mimetype.TextPlain)

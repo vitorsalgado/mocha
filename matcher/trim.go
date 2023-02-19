@@ -24,7 +24,7 @@ func (m *trimMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		Ext:     []string{txt},
+		Ext:     []string{txt, prettierName(m.matcher, result)},
 		Message: result.Message,
 	}, nil
 }

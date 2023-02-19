@@ -1,7 +1,7 @@
 name: '003'
 request:
   method: GET
-  url_path: /test003
+  path: /test003
   query:
     term: test
     filter:

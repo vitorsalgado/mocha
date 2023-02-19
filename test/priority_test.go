@@ -30,11 +30,13 @@ func TestPriority(t *testing.T) {
 		Priority(100).
 		Reply(mocha.Created()))
 
-	res, err := testutil.Get(m.URL() + "/test").Do()
+	for i := 0; i < 5; i++ {
+		res, err := testutil.Get(m.URL() + "/test").Do()
 
-	require.NoError(t, err)
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-	assert.False(t, one.HasBeenCalled())
-	assert.True(t, two.HasBeenCalled())
-	assert.False(t, three.HasBeenCalled())
+		require.NoError(t, err)
+		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+		assert.False(t, one.HasBeenCalled())
+		assert.True(t, two.HasBeenCalled())
+		assert.False(t, three.HasBeenCalled())
+	}
 }

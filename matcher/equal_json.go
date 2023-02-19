@@ -33,7 +33,7 @@ func (m *equalJSONMatcher) Match(v any) (*Result, error) {
 
 	return &Result{
 		Ext:     []string{mfmt.Stringify(m.expected)},
-		Message: fmt.Sprintf("Received: %v", v),
+		Message: fmt.Sprintf("Expected: %v. Received: %v", m.expected, v),
 	}, nil
 }
 

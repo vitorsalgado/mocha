@@ -31,7 +31,7 @@ func (m *splitMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		Ext:     []string{txt},
+		Ext:     []string{m.separator, prettierName(m.matcher, result)},
 		Message: result.Message,
 	}, nil
 }

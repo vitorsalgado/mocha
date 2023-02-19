@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
@@ -34,13 +35,12 @@ func TestHandlerReply(t *testing.T) {
 	req := testutil.Get(m.URL() + "/test")
 	req.Header("test", "hello")
 	res, err := req.Do()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	txt, err := io.ReadAll(res.Body)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	assert.NoError(t, err)
-	assert.Nil(t, err)
+	require.NoError(t, err)
 	assert.Equal(t, res.StatusCode, http.StatusCreated)
 	assert.True(t, strings.Contains(string(txt), msg))
 }

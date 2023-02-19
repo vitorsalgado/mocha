@@ -9,7 +9,7 @@ import (
 
 func TestAnyOf(t *testing.T) {
 	t.Run("should return true if any of the given matchers returns true", func(t *testing.T) {
-		result, err := AnyOf(
+		result, err := Any(
 			StrictEqual("test"),
 			EqualIgnoreCase("dev"),
 			ToLower(StrictEqual("TEST")),
@@ -20,7 +20,7 @@ func TestAnyOf(t *testing.T) {
 	})
 
 	t.Run("should return false if all of the given matchers returns false", func(t *testing.T) {
-		result, err := AnyOf(
+		result, err := Any(
 			StrictEqual("abc"),
 			EqualIgnoreCase("def"),
 			ToLower(StrictEqual("TEST")),
@@ -31,7 +31,7 @@ func TestAnyOf(t *testing.T) {
 	})
 
 	t.Run("should return false when an error occurs", func(t *testing.T) {
-		_, err := AnyOf(
+		_, err := Any(
 			StrictEqual("dev"),
 			ToUpper(StrictEqual("none")),
 			Func(func(v any) (bool, error) {
@@ -44,7 +44,7 @@ func TestAnyOf(t *testing.T) {
 
 	t.Run("no matchers", func(t *testing.T) {
 		require.Panics(t, func() {
-			AnyOf()
+			Any()
 		})
 	})
 }

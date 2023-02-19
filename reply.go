@@ -24,7 +24,7 @@ type Reply interface {
 type replyValidation interface {
 	// Validate runs once during mock building.
 	// Useful for pre-configurations or validations that needs to be executed once.
-	Validate() error
+	validate() error
 }
 
 // Stub defines the HTTP response that will be served once a Mock is matched for an HTTP Request.
@@ -273,7 +273,7 @@ func (rep *StdReply) Gzip() *StdReply {
 	return rep
 }
 
-func (rep *StdReply) Validate() error {
+func (rep *StdReply) validate() error {
 	if rep.err != nil {
 		return rep.err
 	}

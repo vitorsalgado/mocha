@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
@@ -22,14 +22,14 @@ func TestRepeat(t *testing.T) {
 		Reply(mocha.OK()))
 
 	res, _ := testutil.Get(m.URL() + "/test").Do()
-	assert.Equal(t, http.StatusOK, res.StatusCode)
+	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	res, _ = testutil.Get(m.URL() + "/test").Do()
-	assert.Equal(t, http.StatusOK, res.StatusCode)
+	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	res, _ = testutil.Get(m.URL() + "/test").Do()
-	assert.Equal(t, http.StatusOK, res.StatusCode)
+	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	res, _ = testutil.Get(m.URL() + "/test").Do()
-	assert.Equal(t, mocha.StatusNoMatch, res.StatusCode)
+	require.Equal(t, mocha.StatusNoMatch, res.StatusCode)
 }

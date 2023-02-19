@@ -166,7 +166,7 @@ func (c *localConfigurer) Apply(conf *Config) (err error) {
 				Timeout:  time.Duration(v.GetInt64(_kProxyTimeout)),
 			}
 		default:
-			return errors.New(`field "proxy" has an unknown type. supported type are: object, bool`)
+			return errors.New(`[config] field "proxy" has an unknown type. supported type are: object, bool`)
 		}
 	}
 
@@ -189,12 +189,12 @@ func (c *localConfigurer) Apply(conf *Config) (err error) {
 	if v.IsSet(_kForward) || v.IsSet(_kForwardTarget) {
 		target := v.GetString(_kForwardTarget)
 		if target == "" {
-			return errors.New(`when specifying a "forward" configuration, the field "forward.target" is required`)
+			return errors.New(`[config] when specifying a "forward" configuration, the field "forward.target" is required`)
 		}
 
 		targetURL, err := url.Parse(target)
 		if err != nil {
-			return fmt.Errorf(`field "forward.target" must contain a valid URL. %w`, err)
+			return fmt.Errorf(`[config] field "forward.target" must contain a valid URL. %w`, err)
 		}
 
 		h := make(http.Header, len(v.GetStringMapString(_kForwardHeaders)))

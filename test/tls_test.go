@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3"
@@ -33,7 +32,7 @@ func TestTLS(t *testing.T) {
 
 	res, err := client.Do(req)
 
-	assert.NoError(t, err)
-	assert.NoError(t, res.Body.Close())
-	assert.True(t, scoped.HasBeenCalled())
+	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
+	require.True(t, scoped.HasBeenCalled())
 }

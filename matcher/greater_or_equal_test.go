@@ -24,7 +24,7 @@ func TestGreaterOrEqual(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			res, err := GreaterOrEqualThan(tc.expected).Match(tc.value)
+			res, err := GreaterThanOrEqual(tc.expected).Match(tc.value)
 
 			assert.NoError(t, err)
 			assert.Equal(t, tc.result, res.Pass)
@@ -33,7 +33,7 @@ func TestGreaterOrEqual(t *testing.T) {
 }
 
 func TestGreaterOrEqualUnhandledType(t *testing.T) {
-	res, err := GreaterOrEqualThan(10).Match(true)
+	res, err := GreaterThanOrEqual(10).Match(true)
 
 	require.Error(t, err)
 	require.Nil(t, res)

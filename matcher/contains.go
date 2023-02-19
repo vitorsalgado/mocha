@@ -14,45 +14,47 @@ type containsMatcher struct {
 }
 
 func (m *containsMatcher) Name() string {
-	return "Contain"
+	return "Contains"
 }
 
-func (m *containsMatcher) Match(list any) (*Result, error) {
-	var listValue = reflect.ValueOf(list)
-	var sub = reflect.ValueOf(m.expected)
-	var listType = reflect.TypeOf(list)
-	if listType == nil {
+func (m *containsMatcher) Match(v any) (*Result, error) {
+	var eValue = reflect.ValueOf(m.expected)
+	var vValue = reflect.ValueOf(v)
+	var vType = reflect.TypeOf(v)
+	if vType == nil {
 		return nil, errors.New("unknown typeof value")
 	}
 
-	switch listType.Kind() {
+	switch vType.Kind() {
 	case reflect.String:
-		if pass := strings.Contains(listValue.String(), sub.String()); pass {
+		if pass := strings.Contains(vValue.String(), eValue.String()); pass {
 			return &Result{Pass: true}, nil
 		}
 
 		return &Result{
-			Message: mfmt.Stringify(listValue),
+			Message: mfmt.Stringify(vValue),
 			Ext:     []string{mfmt.Stringify(m.expected)},
 		}, nil
+
 	case reflect.Map:
-		keys := listValue.MapKeys()
+		keys := vValue.MapKeys()
 		for i := 0; i < len(keys); i++ {
 			if equalValues(keys[i].Interface(), m.expected) {
 				return &Result{Pass: true}, nil
 			}
 		}
 
-		return &Result{Message: mfmt.Stringify(listValue)}, nil
-	}
+		return &Result{Message: mfmt.Stringify(vValue)}, nil
 
-	for i := 0; i < listValue.Len(); i++ {
-		if equalValues(listValue.Index(i).Interface(), sub.Interface()) {
-			return &Result{Pass: true}, nil
+	case reflect.Slice, reflect.Array:
+		for i := 0; i < vValue.Len(); i++ {
+			if equalValues(vValue.Index(i).Interface(), eValue.Interface()) {
+				return &Result{Pass: true}, nil
+			}
 		}
 	}
 
-	return &Result{Message: mfmt.Stringify(listValue)}, nil
+	return &Result{Message: mfmt.Stringify(vValue)}, nil
 }
 
 // Contain returns true when the items value is contained in the matcher argument.

@@ -10,6 +10,10 @@ func (m *emptyMatcher) Name() string {
 }
 
 func (m *emptyMatcher) Match(v any) (*Result, error) {
+	if v == nil {
+		return &Result{Pass: true}, nil
+	}
+
 	result, err := HaveLen(0).Match(v)
 	if err != nil {
 		return nil, err

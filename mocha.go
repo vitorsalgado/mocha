@@ -332,7 +332,7 @@ func (m *Mocha) Mock(builders ...Builder) (*Scoped, error) {
 	for i, b := range builders {
 		mock, err := b.Build(m)
 		if err != nil {
-			return nil, fmt.Errorf("error building mock at index [%d]. %w", i, err)
+			return nil, fmt.Errorf("[mock] error mocking [%d].\n %w", i, err)
 		}
 
 		mock.prepare()

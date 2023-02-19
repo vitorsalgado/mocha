@@ -36,6 +36,6 @@ func (m *greaterOrEqualMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-func GreaterOrEqualThan(expected float64) Matcher {
+func GreaterThanOrEqual(expected float64) Matcher {
 	return &greaterOrEqualMatcher{expected: expected}
 }

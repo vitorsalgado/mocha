@@ -129,3 +129,12 @@ func runAfterMockServed(matchers ...Matcher) error {
 
 	return nil
 }
+
+func prettierName(m Matcher, r *Result) string {
+	var ext []string
+	if r != nil {
+		ext = r.Ext
+	}
+
+	return fmt.Sprintf("%s(%s)", m.Name(), strings.Join(ext, ", "))
+}

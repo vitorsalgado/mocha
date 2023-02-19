@@ -1,7 +1,7 @@
 package mocha
 
 import (
-	"fmt"
+	"errors"
 	"math/rand"
 	"net/http"
 	"sync"
@@ -37,10 +37,10 @@ func (rep *RandomReply) Add(reply ...Reply) *RandomReply {
 	return rep
 }
 
-func (rep *RandomReply) Validate() error {
+func (rep *RandomReply) validate() error {
 	size := len(rep.replies)
 	if size == 0 {
-		return fmt.Errorf("[reply.random] you need to set at least one response when using random reply")
+		return errors.New("[reply.random] you need to set at least one response when using random reply")
 	}
 
 	return nil

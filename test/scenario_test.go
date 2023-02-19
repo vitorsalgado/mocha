@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/matcher"
@@ -43,23 +43,23 @@ func TestScenarioMatcher(t *testing.T) {
 	res, _ := http.DefaultClient.Do(req)
 	body, _ := io.ReadAll(res.Body)
 
-	assert.True(t, s1.HasBeenCalled())
-	assert.Equal(t, http.StatusOK, res.StatusCode)
-	assert.Equal(t, "step1", string(body))
+	require.True(t, s1.HasBeenCalled())
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.Equal(t, "step1", string(body))
 
 	req, _ = http.NewRequest(http.MethodGet, m.URL()+"/2", nil)
 	res, _ = http.DefaultClient.Do(req)
 	body, _ = io.ReadAll(res.Body)
 
-	assert.True(t, s2.HasBeenCalled())
-	assert.Equal(t, http.StatusOK, res.StatusCode)
-	assert.Equal(t, "step2", string(body))
+	require.True(t, s2.HasBeenCalled())
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.Equal(t, "step2", string(body))
 
 	req, _ = http.NewRequest(http.MethodGet, m.URL()+"/3", nil)
 	res, _ = http.DefaultClient.Do(req)
 	body, _ = io.ReadAll(res.Body)
 
-	assert.True(t, s3.HasBeenCalled())
-	assert.Equal(t, http.StatusOK, res.StatusCode)
-	assert.Equal(t, "step3", string(body))
+	require.True(t, s3.HasBeenCalled())
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.Equal(t, "step3", string(body))
 }

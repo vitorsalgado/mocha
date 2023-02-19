@@ -21,8 +21,8 @@ func Seq(reply ...Reply) *SequentialReply {
 	return &SequentialReply{replies: reply}
 }
 
-// OnSequenceEnded sets a response to be used once the sequence is over.
-func (r *SequentialReply) OnSequenceEnded(reply Reply) *SequentialReply {
+// OnSequenceEnds sets a response to be used once the sequence is over.
+func (r *SequentialReply) OnSequenceEnds(reply Reply) *SequentialReply {
 	r.replyAfterSeqEnded = reply
 	return r
 }
@@ -33,7 +33,7 @@ func (r *SequentialReply) Add(reply ...Reply) *SequentialReply {
 	return r
 }
 
-func (r *SequentialReply) Validate() error {
+func (r *SequentialReply) validate() error {
 	size := len(r.replies)
 	if size == 0 {
 		return fmt.Errorf("[reply.sequence] you need to set at least one response when using multiple response builder")

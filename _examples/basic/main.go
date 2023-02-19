@@ -25,7 +25,7 @@ func main() {
 		Get(URLPath("/test")).
 		Header(header.Accept, Contain(mimetype.TextHTML)).
 		Header(header.ContentType, StrictEqual("test")).
-		Header("any", AllOf(Contain("test"), EqualIgnoreCase("dev"))).
+		Header("any", All(Contain("test"), EqualIgnoreCase("dev"))).
 		Reply(mocha.OK().
 			PlainText("hello world").
 			Header("x-basic", "true")))

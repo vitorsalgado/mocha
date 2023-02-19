@@ -109,12 +109,24 @@ func (b *MockBuilder) Priority(p int) *MockBuilder {
 	return b
 }
 
-// Scheme sets a matcher.Matcher for the URL scheme part.
+// Scheme sets the HTTP request scheme to be matched.
 func (b *MockBuilder) Scheme(scheme string) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetScheme,
 		Key:           scheme,
 		Matcher:       matcher.EqualIgnoreCase(scheme),
+		ValueSelector: selectScheme,
+		Weight:        _weightVeryLow,
+	})
+
+	return b
+}
+
+// SchemeMatches sets a matcher.Matcher for the URL scheme part.
+func (b *MockBuilder) SchemeMatches(m matcher.Matcher) *MockBuilder {
+	b.appendExpectation(&expectation{
+		Target:        _targetScheme,
+		Matcher:       m,
 		ValueSelector: selectScheme,
 		Weight:        _weightVeryLow,
 	})
@@ -130,7 +142,7 @@ func (b *MockBuilder) Method(methods ...string) *MockBuilder {
 	} else if len(methods) == 1 {
 		m = matcher.EqualIgnoreCase(methods[0])
 	} else {
-		m = matcher.Some(methods)
+		m = matcher.IsIn(methods)
 	}
 
 	b.appendExpectation(&expectation{
@@ -230,6 +242,19 @@ func (b *MockBuilder) Queryf(key string, value string, a ...any) *MockBuilder {
 	return b.Query(key, matcher.StrictEqual(fmt.Sprintf(value, a...)))
 }
 
+// Queries defines a matcher.Matcher for query parameters that contains multiple values.
+func (b *MockBuilder) Queries(key string, m matcher.Matcher) *MockBuilder {
+	b.appendExpectation(&expectation{
+		Target:        _targetQuery,
+		Key:           key,
+		Matcher:       m,
+		ValueSelector: selectQueries(key),
+		Weight:        _weightVeryLow,
+	})
+
+	return b
+}
+
 // Body adds matchers to the request body.
 // If request contains a JSON body, you can provide multiple matchers to several fields.
 // Example:
@@ -242,7 +267,7 @@ func (b *MockBuilder) Body(matcherList ...matcher.Matcher) *MockBuilder {
 	} else if len(matcherList) == 1 {
 		m = matcherList[0]
 	} else {
-		m = matcher.AllOf(matcherList...)
+		m = matcher.All(matcherList...)
 	}
 
 	b.appendExpectation(&expectation{
@@ -364,7 +389,7 @@ func (b *MockBuilder) Build(_ *Mocha) (*Mock, error) {
 	}
 
 	if r, ok := b.mock.Reply.(replyValidation); ok {
-		err := r.Validate()
+		err := r.validate()
 		if err != nil {
 			return nil, err
 		}
@@ -397,6 +422,9 @@ func selectHeader(k string) valueSelector {
 }
 func selectQuery(k string) valueSelector {
 	return func(r *valueSelectorInput) any { return r.RawRequest.URL.Query().Get(k) }
+}
+func selectQueries(k string) valueSelector {
+	return func(r *valueSelectorInput) any { return r.RawRequest.URL.Query()[k] }
 }
 func selectBody(r *valueSelectorInput) any { return r.ParsedBody }
 func selectFormField(k string) valueSelector {

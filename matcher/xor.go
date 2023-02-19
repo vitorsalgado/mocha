@@ -36,8 +36,8 @@ func (m *xorMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		Ext:     []string{m.first.Name(), m.second.Name()},
 		Message: desc,
+		Ext:     []string{prettierName(m.first, a), prettierName(m.second, b)},
 	}, nil
 }
 

@@ -9,10 +9,11 @@ import (
 type jsonPathMatcher struct {
 	path    string
 	matcher Matcher
+	name    string
 }
 
 func (m *jsonPathMatcher) Name() string {
-	return "JSONPath"
+	return m.name
 }
 
 func (m *jsonPathMatcher) Match(v any) (*Result, error) {
@@ -38,7 +39,10 @@ func (m *jsonPathMatcher) Match(v any) (*Result, error) {
 		return &Result{Pass: true}, nil
 	}
 
-	return &Result{Ext: []string{m.path}, Message: r.Message}, nil
+	return &Result{
+		Ext:     []string{m.path, prettierName(m.matcher, r)},
+		Message: r.Message,
+	}, nil
 }
 
 func (m *jsonPathMatcher) AfterMockServed() error {
@@ -50,7 +54,7 @@ func (m *jsonPathMatcher) AfterMockServed() error {
 //
 //	JSONPath("address.city", EqualTo("Santiago"))
 func JSONPath(path string, matcher Matcher) Matcher {
-	return &jsonPathMatcher{path: path, matcher: matcher}
+	return &jsonPathMatcher{path: path, matcher: matcher, name: "JSONPath"}
 }
 
 // Field is an alias for JSONPath.
@@ -59,5 +63,5 @@ func JSONPath(path string, matcher Matcher) Matcher {
 //
 //	Field("address.city", EqualTo("Santiago"))
 func Field(path string, matcher Matcher) Matcher {
-	return JSONPath(path, matcher)
+	return &jsonPathMatcher{path: path, matcher: matcher, name: "Field"}
 }

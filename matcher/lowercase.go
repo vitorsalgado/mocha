@@ -2,8 +2,6 @@ package matcher
 
 import (
 	"strings"
-
-	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
 type lowerCaseMatcher struct {
@@ -26,7 +24,7 @@ func (m *lowerCaseMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		Ext:     []string{mfmt.Stringify(txt)},
+		Ext:     []string{txt, prettierName(m.matcher, result)},
 		Message: result.Message,
 	}, nil
 }

@@ -28,7 +28,7 @@ func (l *fileLoader) Load(app *Mocha) error {
 	for _, pattern := range app.config.Directories {
 		m, err := filepath.Glob(pattern)
 		if err != nil {
-			return fmt.Errorf("error searching mocks with the glob pattern %s. %w", pattern, err)
+			return fmt.Errorf("[loader] error searching mocks with the glob pattern %s.\n %w", pattern, err)
 		}
 
 		for _, s := range m {

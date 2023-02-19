@@ -5,10 +5,10 @@
     "query": {
       "term": "test",
       "filter": ["contains", "all"],
-      "page": ["allOf", "present", ["equalTo", 10]]
+      "page": ["all", "present", ["equalTo", 10]]
     },
     "body": [
-      "allOf",
+      "all",
       ["jsonPath", "name", ["equalTo", "john doe"]],
       [
         "jsonpath",

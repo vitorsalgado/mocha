@@ -13,7 +13,7 @@ type lessOrEqualMatcher struct {
 }
 
 func (m *lessOrEqualMatcher) Name() string {
-	return "LessOrEqual"
+	return "LessThanOrEqual"
 }
 
 func (m *lessOrEqualMatcher) Match(v any) (*Result, error) {
@@ -36,6 +36,6 @@ func (m *lessOrEqualMatcher) Match(v any) (*Result, error) {
 		nil
 }
 
-func LessOrEqual(expected float64) Matcher {
+func LessThanOrEqual(expected float64) Matcher {
 	return &lessOrEqualMatcher{expected: expected}
 }

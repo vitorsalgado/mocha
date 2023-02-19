@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
@@ -26,13 +27,13 @@ func TestHTTPMethods(t *testing.T) {
 
 		res, err := testutil.Get(m.URL() + "/test").Do()
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
 
 		other, err := testutil.Post(m.URL()+"/test", nil).Do()
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, mocha.StatusNoMatch, other.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
 	})
@@ -46,13 +47,13 @@ func TestHTTPMethods(t *testing.T) {
 
 		res, err := testutil.Get(m.URL() + "/test").Do()
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, mocha.StatusNoMatch, res.StatusCode)
 		assert.False(t, scoped.HasBeenCalled())
 
 		other, err := testutil.Post(m.URL()+"/test", nil).Do()
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, other.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
 		assert.True(t, scoped.HasBeenCalled())
@@ -67,13 +68,13 @@ func TestHTTPMethods(t *testing.T) {
 
 		res, err := testutil.Get(m.URL() + "/test").Do()
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, mocha.StatusNoMatch, res.StatusCode)
 		assert.False(t, scoped.HasBeenCalled())
 
 		other, err := testutil.NewRequest(http.MethodPut, m.URL()+"/test", nil).Do()
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, other.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
 		assert.True(t, scoped.HasBeenCalled())
@@ -88,13 +89,13 @@ func TestHTTPMethods(t *testing.T) {
 
 		res, err := testutil.Get(m.URL() + "/test").Do()
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, mocha.StatusNoMatch, res.StatusCode)
 		assert.False(t, scoped.HasBeenCalled())
 
 		other, err := testutil.NewRequest(http.MethodDelete, m.URL()+"/test", nil).Do()
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, other.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
 		assert.True(t, scoped.HasBeenCalled())
@@ -109,13 +110,13 @@ func TestHTTPMethods(t *testing.T) {
 
 		res, err := testutil.Get(m.URL() + "/test").Do()
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, mocha.StatusNoMatch, res.StatusCode)
 		assert.False(t, scoped.HasBeenCalled())
 
 		other, err := testutil.NewRequest(http.MethodPatch, m.URL()+"/test", nil).Do()
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, other.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
 		assert.True(t, scoped.HasBeenCalled())
@@ -130,13 +131,13 @@ func TestHTTPMethods(t *testing.T) {
 
 		res, err := testutil.Get(m.URL() + "/test").Do()
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, mocha.StatusNoMatch, res.StatusCode)
 		assert.False(t, scoped.HasBeenCalled())
 
 		other, err := testutil.NewRequest(http.MethodHead, m.URL()+"/test", nil).Do()
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		assert.Equal(t, http.StatusOK, other.StatusCode)
 		assert.Equal(t, 1, scoped.Hits())
 		assert.True(t, scoped.HasBeenCalled())

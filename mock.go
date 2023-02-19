@@ -309,12 +309,15 @@ func (m *Mock) matchExpectations(ri *valueSelectorInput, expectations []*expecta
 func (m *Mock) matchExpectation(e *expectation, value any) (result *matcher.Result, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("matcher %s panicked. reason=%v", e.Matcher.Name(), r)
+			err = fmt.Errorf("[matcher %s] panicked. reason=%v", e.Matcher.Name(), r)
 			return
 		}
 	}()
 
 	result, err = e.Matcher.Match(value)
+	if err != nil {
+		err = fmt.Errorf("[%s] %w", e.Matcher.Name(), err)
+	}
 
 	return
 }

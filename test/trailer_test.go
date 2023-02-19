@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3"
@@ -37,17 +36,17 @@ func TestTrailer_WithBody(t *testing.T) {
 	defer res.Body.Close()
 
 	scoped.AssertCalled(t)
-	assert.Equal(t, http.StatusOK, res.StatusCode)
-	assert.Equal(t, mimetype.TextPlain, res.Header.Get(header.ContentType))
-	assert.Len(t, res.Trailer, 2)
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.Equal(t, mimetype.TextPlain, res.Header.Get(header.ContentType))
+	require.Len(t, res.Trailer, 2)
 
 	b, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
 
-	assert.Len(t, res.Trailer, 2)
-	assert.Equal(t, "hello world", string(b))
-	assert.Equal(t, "trailer-1-value", res.Trailer.Get("trailer-1"))
-	assert.Equal(t, "trailer-2-value", res.Trailer.Get("trailer-2"))
+	require.Len(t, res.Trailer, 2)
+	require.Equal(t, "hello world", string(b))
+	require.Equal(t, "trailer-1-value", res.Trailer.Get("trailer-1"))
+	require.Equal(t, "trailer-2-value", res.Trailer.Get("trailer-2"))
 }
 
 func TestTrailer_WithoutBody(t *testing.T) {
@@ -69,14 +68,14 @@ func TestTrailer_WithoutBody(t *testing.T) {
 	require.NoError(t, err)
 
 	scoped.AssertCalled(t)
-	assert.Equal(t, http.StatusOK, res.StatusCode)
-	assert.Equal(t, mimetype.TextPlain, res.Header.Get(header.ContentType))
-	assert.Len(t, res.Trailer, 2)
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.Equal(t, mimetype.TextPlain, res.Header.Get(header.ContentType))
+	require.Len(t, res.Trailer, 2)
 
 	_, err = io.ReadAll(res.Body)
 	require.NoError(t, err)
 
-	assert.Len(t, res.Trailer, 2)
-	assert.Equal(t, "trailer-1-value", res.Trailer.Get("trailer-1"))
-	assert.Equal(t, "trailer-2-value", res.Trailer.Get("trailer-2"))
+	require.Len(t, res.Trailer, 2)
+	require.Equal(t, "trailer-1-value", res.Trailer.Get("trailer-1"))
+	require.Equal(t, "trailer-2-value", res.Trailer.Get("trailer-2"))
 }

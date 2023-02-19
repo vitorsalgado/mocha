@@ -4,12 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
 type someMatcher struct {
-	items any
+	matcher Matcher
 }
 
 func (m *someMatcher) Name() string {
@@ -17,28 +18,37 @@ func (m *someMatcher) Name() string {
 }
 
 func (m *someMatcher) Match(v any) (*Result, error) {
-	kind := reflect.TypeOf(m.items).Kind()
+	kind := reflect.TypeOf(v).Kind()
 	if kind != reflect.Slice && kind != reflect.Array {
 		return nil, errors.New("matcher only works with arrays/slices")
 	}
 
-	valueOf := reflect.ValueOf(m.items)
+	vv := reflect.ValueOf(v)
+	messages := make([]string, 0)
 
-	for i := 0; i < valueOf.Len(); i++ {
-		if equalValues(v, valueOf.Index(i).Interface()) {
+	for i := 0; i < vv.Len(); i++ {
+		res, err := m.matcher.Match(vv.Index(i).Interface())
+		if err != nil {
+			return nil, err
+		}
+
+		if res.Pass {
 			return &Result{Pass: true}, nil
 		}
+
+		messages = append(messages, res.Message)
 	}
 
 	return &Result{
-		Ext: []string{mfmt.Stringify(m.items)},
+		Ext: []string{mfmt.Stringify(v), prettierName(m.matcher, nil)},
 		Message: fmt.Sprintf(
-			"Value %v is not contained in the %v",
-			v,
-			m.items),
+			"%s\n%s",
+			prettierName(m.matcher, nil),
+			mfmt.Indent(strings.Join(messages, "\n")),
+		),
 	}, nil
 }
 
-func Some(items any) Matcher {
-	return &someMatcher{items: items}
+func Some(matcher Matcher) Matcher {
+	return &someMatcher{matcher: matcher}
 }

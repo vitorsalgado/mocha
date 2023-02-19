@@ -121,7 +121,7 @@ func main() {
 	m.MustMock(mocha.
 		Post(URLPath("/test")).
 		Header(header.ContentType, Contain(mimetype.JSON)).
-		Body(AllOf(
+		Body(All(
 			JSONPath("active", StrictEqual(true)),
 			JSONPath("result", StrictEqual("ok")))).
 		Reply(mocha.OK().

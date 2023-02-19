@@ -2,7 +2,7 @@
   "name": "002",
   "request": {
     "method": "GET",
-    "url_path": "/test/002"
+    "path": "/test/002"
   },
   "response": {
     "status": 200,

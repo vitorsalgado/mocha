@@ -22,7 +22,10 @@ func (m *notMatcher) Match(v any) (*Result, error) {
 		return &Result{Pass: true}, nil
 	}
 
-	return &Result{Message: fmt.Sprintf("!(%s)", result.Message)}, nil
+	return &Result{
+		Message: fmt.Sprintf("!(%s)", result.Message),
+		Ext:     []string{prettierName(m.matcher, result)},
+	}, nil
 }
 
 func (m *notMatcher) AfterMockServed() error {

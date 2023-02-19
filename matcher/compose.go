@@ -10,12 +10,12 @@ func (m *ComposeMatcher) AfterMockServed() error       { return runAfterMockServ
 
 // And compose the current Matcher with another one using the "and" operator.
 func (m *ComposeMatcher) And(and Matcher) *ComposeMatcher {
-	return Compose(AllOf(m, and))
+	return Compose(All(m, and))
 }
 
 // Or compose the current Matcher with another one using the "or" operator.
 func (m *ComposeMatcher) Or(or Matcher) *ComposeMatcher {
-	return Compose(AnyOf(m, or))
+	return Compose(Any(m, or))
 }
 
 // Xor compose the current Matcher with another one using the "xor" operator.

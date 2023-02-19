@@ -46,7 +46,7 @@ func (m *urlPathMatcher) Match(v any) (*Result, error) {
 		return &Result{Pass: true}, nil
 	}
 
-	return &Result{Message: res.Message}, nil
+	return &Result{Message: res.Message, Ext: []string{prettierName(m.matcher, res)}}, nil
 }
 
 // URLPath compares the URL path with the expected value and matches if they are equal.

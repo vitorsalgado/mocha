@@ -43,7 +43,7 @@ func TestSequentialReply(t *testing.T) {
 		rv := &RequestValues{RawRequest: req, URL: req.URL}
 		require.NoError(t, err)
 
-		builder := Seq().Add(OK()).OnSequenceEnded(NotFound())
+		builder := Seq().Add(OK()).OnSequenceEnds(NotFound())
 
 		res, err := builder.Build(nil, rv)
 		assert.Nil(t, err)
@@ -66,11 +66,11 @@ func TestSequentialReplyShouldReturnErrorWhenSequenceDoesNotContainReplies(t *te
 func TestSequentialReplyValidate(t *testing.T) {
 	seq := Seq()
 
-	require.Error(t, seq.Validate())
+	require.Error(t, seq.validate())
 
 	seq.Add(OK())
 
-	require.NoError(t, seq.Validate())
+	require.NoError(t, seq.validate())
 }
 
 func TestSeqRace(t *testing.T) {

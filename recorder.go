@@ -251,7 +251,7 @@ func (r *record) process(arg *recArgs) error {
 	}
 
 	if exists {
-		return fmt.Errorf("file %s already exists", mockFile)
+		return fmt.Errorf("[record] file %s already exists", mockFile)
 	}
 
 	if hasResBody {

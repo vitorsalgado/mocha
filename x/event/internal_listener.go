@@ -52,13 +52,14 @@ func (h *InternalListener) OnRequestMatched(evt any) {
 	e := evt.(*OnRequestMatch)
 
 	builder := strings.Builder{}
-	builder.WriteString(fmt.Sprintf("\n%s %s <--- %s %s\n%s %s\n",
+	builder.WriteString(fmt.Sprintf("\n%s %s <--- %s %s\n%s ",
 		colorize.GreenBright(colorize.Bold("REQUEST MATCHED")),
 		time.Now().Format(time.RFC3339),
 		colorize.Green(e.Request.Method),
 		colorize.Green(e.Request.Path),
-		e.Request.Method,
-		e.Request.URL))
+		e.Request.Method))
+	builder.WriteString(e.Request.URL)
+	builder.WriteString("\n")
 
 	nm := e.Mock.Name
 	if nm == "" {

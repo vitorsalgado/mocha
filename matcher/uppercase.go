@@ -24,7 +24,7 @@ func (m *upperCaseMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		Ext:     []string{m.matcher.Name()},
+		Ext:     []string{txt, prettierName(m.matcher, result)},
 		Message: result.Message,
 	}, nil
 }

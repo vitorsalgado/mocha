@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
@@ -23,12 +23,12 @@ func TestCORS(t *testing.T) {
 	corsReq := testutil.NewRequest(http.MethodOptions, m.URL()+"/test", nil)
 	res, err := corsReq.Do()
 
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusNoContent, res.StatusCode)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusNoContent, res.StatusCode)
 
 	req := testutil.NewRequest(http.MethodGet, m.URL()+"/test", nil)
 	res, err = req.Do()
 
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, res.StatusCode)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, res.StatusCode)
 }

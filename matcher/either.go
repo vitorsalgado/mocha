@@ -35,7 +35,10 @@ func (m *eitherMatcher) Match(v any) (*Result, error) {
 		desc += r2.Message
 	}
 
-	return &Result{Pass: false, Message: desc, Ext: []string{m.first.Name(), m.second.Name()}}, nil
+	return &Result{
+		Message: desc,
+		Ext:     []string{prettierName(m.first, r1), prettierName(m.second, r2)},
+	}, nil
 }
 
 func (m *eitherMatcher) AfterMockServed() error {

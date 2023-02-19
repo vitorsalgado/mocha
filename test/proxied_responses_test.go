@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/header"
@@ -23,7 +24,7 @@ func TestForward(t *testing.T) {
 
 		b, err := io.ReadAll(r.Body)
 		if err != nil && err != io.EOF {
-			assert.NoError(t, err)
+			require.NoError(t, err)
 		}
 
 		w.WriteHeader(http.StatusOK)
@@ -50,12 +51,12 @@ func TestForward(t *testing.T) {
 	req.Header.Add(header.ContentType, mimetype.TextPlain)
 
 	res, err := http.DefaultClient.Do(req)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	b, err := io.ReadAll(res.Body)
 
-	assert.NoError(t, err)
-	assert.NoError(t, res.Body.Close())
+	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	scoped.AssertCalled(t)
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.Equal(t, "example", res.Header.Get("x-res"))

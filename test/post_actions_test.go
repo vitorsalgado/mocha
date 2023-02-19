@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
@@ -39,7 +40,7 @@ func TestPostAction(t *testing.T) {
 		req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
 		res, err := req.Do()
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		scope.AssertCalled(t)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		act.AssertExpectations(t)
@@ -61,7 +62,7 @@ func TestPostAction(t *testing.T) {
 		req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
 		res, err := req.Do()
 
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		scope.AssertCalled(t)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 		act.AssertExpectations(t)

@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/header"
@@ -34,7 +34,7 @@ func TestFormUrlEncoded(t *testing.T) {
 	req.Header.Add(header.ContentType, mimetype.FormURLEncoded)
 	res, err := http.DefaultClient.Do(req)
 
-	assert.NoError(t, err)
-	assert.NoError(t, res.Body.Close())
-	assert.True(t, scoped.HasBeenCalled())
+	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
+	require.True(t, scoped.HasBeenCalled())
 }

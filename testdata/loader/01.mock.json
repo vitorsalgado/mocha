@@ -2,11 +2,11 @@
   "name": "001",
   "request": {
     "method": "GET",
-    "url_path": "/test",
+    "path": "/test",
     "query": {
       "term": "test",
       "filter": ["contains", "all"],
-      "page": ["allOf", "present", ["equalTo", 10]]
+      "page": ["all", "present", ["equalTo", 10]]
     }
   },
   "response": {

@@ -27,12 +27,14 @@ const (
 	_fScenarioName               = "scenario.name"
 	_fScenarioRequiredState      = "scenario.required_state"
 	_fScenarioNewState           = "scenario.new_state"
+	_fRequestScheme              = "request.scheme"
 	_fRequestMethod              = "request.method"
 	_fRequestURL                 = "request.url"
 	_fRequestURLMatch            = "request.url_match"
-	_fRequestURLPath             = "request.url_path"
-	_fRequestURLPathMatch        = "request.url_path_match"
+	_fRequestURLPath             = "request.path"
+	_fRequestURLPathMatch        = "request.path_match"
 	_fRequestQuery               = "request.query"
+	_fRequestQueries             = "request.queries"
 	_fRequestHeader              = "request.header"
 	_fRequestForm                = "request.form"
 	_fRequestBody                = "request.body"
@@ -75,7 +77,7 @@ func FromFile(filename string) Builder {
 func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("[panic] building external mock. reason: %v", r)
+			err = fmt.Errorf("[panic] error building external mock. reason=%v", r)
 		}
 	}()
 
@@ -120,36 +122,54 @@ func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 		case string:
 			b.builder.Method(t)
 		case []string:
-			b.builder.MethodMatches(matcher.Some(t))
+			b.builder.MethodMatches(matcher.IsIn(t))
 		default:
 			m, err := mbuild.BuildMatcher(mv)
 			if err != nil {
-				return nil, fmt.Errorf("[request.method] error building matcher %v. %w", mv, err)
+				return nil, fmt.Errorf("[request.method] error building matcher %v.\n %w", mv, err)
 			}
 
 			b.builder.MethodMatches(m)
 		}
 	}
 
+	if vi.IsSet(_fRequestScheme) {
+		scheme := vi.Get(_fRequestScheme)
+
+		switch t := scheme.(type) {
+		case string:
+			b.builder.Scheme(t)
+		case []string:
+			b.builder.SchemeMatches(matcher.IsIn(t))
+		default:
+			m, err := mbuild.BuildMatcher(scheme)
+			if err != nil {
+				return nil, fmt.Errorf("[request.scheme] error building matcher %v.\n %w", scheme, err)
+			}
+
+			b.builder.SchemeMatches(m)
+		}
+	}
+
 	if vi.IsSet(_fRequestURL) {
 		uv := vi.Get(_fRequestURL)
-		urlConv, ok := uv.(string)
 
-		if ok {
-			u, err := url.Parse(urlConv)
+		switch e := uv.(type) {
+		case string:
+			u, err := url.Parse(e)
 			if err != nil {
-				return nil, fmt.Errorf("[request.url] error parsing url \"%s\". %w", urlConv, err)
+				return nil, fmt.Errorf("[request.url] error parsing url \"%s\".\n %w", e, err)
 			}
 
 			if u.IsAbs() {
-				b.builder.URL(matcher.EqualIgnoreCase(urlConv))
+				b.builder.URL(matcher.EqualIgnoreCase(e))
 			} else {
 				b.builder.URL(matcher.URLPath(u.Path))
 			}
-		} else {
+		default:
 			m, err := mbuild.BuildMatcher(uv)
 			if err != nil {
-				return nil, fmt.Errorf("[request.url] error building url. %w", err)
+				return nil, fmt.Errorf("[request.url] error building url.\n %w", err)
 			}
 
 			b.builder.URL(m)
@@ -158,13 +178,14 @@ func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 		b.builder.URL(matcher.Matches(vi.GetString(_fRequestURLMatch)))
 	} else if vi.IsSet(_fRequestURLPath) {
 		uv := vi.Get(_fRequestURLPath)
-		urlConv, ok := uv.(string)
-		if ok {
-			b.builder.URL(matcher.URLPath(urlConv))
-		} else {
+
+		switch e := uv.(type) {
+		case string:
+			b.builder.URL(matcher.URLPath(e))
+		default:
 			m, err := mbuild.BuildMatcher(uv)
 			if err != nil {
-				return nil, fmt.Errorf("[request.url_path] error building matcher. %w", err)
+				return nil, fmt.Errorf("[request.url_path] error building matcher.\n %w", err)
 			}
 
 			b.builder.URLPath(m)
@@ -174,40 +195,50 @@ func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 	}
 
 	for k, v := range vi.GetStringMap(_fRequestQuery) {
-		m, err := mbuild.BuildMatcher(v)
+		m, err := mbuild.TryBuildMatcher(v)
 		if err != nil {
 			return nil,
-				fmt.Errorf("[request.query[%s]] error building matcher. %w", k, err)
+				fmt.Errorf("[request.query[%s]] error building matcher.\n %w", k, err)
 		}
 
 		b.builder.Query(k, m)
 	}
 
-	for k, v := range vi.GetStringMap(_fRequestHeader) {
-		m, err := mbuild.BuildMatcher(v)
+	for k, v := range vi.GetStringMap(_fRequestQueries) {
+		m, err := mbuild.TryBuildMatcher(v)
 		if err != nil {
 			return nil,
-				fmt.Errorf("[request.header[%s]] error building matcher. %w", k, err)
+				fmt.Errorf("[request.queries[%s]] error building matcher.\n %w", k, err)
+		}
+
+		b.builder.Queries(k, m)
+	}
+
+	for k, v := range vi.GetStringMap(_fRequestHeader) {
+		m, err := mbuild.TryBuildMatcher(v)
+		if err != nil {
+			return nil,
+				fmt.Errorf("[request.header[%s]] error building matcher.\n %w", k, err)
 		}
 
 		b.builder.Header(k, m)
 	}
 
 	for k, v := range vi.GetStringMap(_fRequestForm) {
-		m, err := mbuild.BuildMatcher(v)
+		m, err := mbuild.TryBuildMatcher(v)
 		if err != nil {
 			return nil,
-				fmt.Errorf("[request.form[%s]] error building matcher. %w", k, err)
+				fmt.Errorf("[request.form[%s]] error building matcher.\n %w", k, err)
 		}
 
 		b.builder.FormField(k, m)
 	}
 
 	if vi.IsSet(_fRequestBody) {
-		m, err := mbuild.BuildMatcher(vi.Get(_fRequestBody))
+		m, err := mbuild.TryBuildMatcher(vi.Get(_fRequestBody))
 		if err != nil {
 			return nil,
-				fmt.Errorf("[request.body] error building matcher. %w", err)
+				fmt.Errorf("[request.body] error building matcher.\n %w", err)
 		}
 
 		b.builder.Body(m)
@@ -249,13 +280,13 @@ func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 			err = sub.MergeConfigMap(r.(map[string]any))
 			if err != nil {
 				return nil,
-					fmt.Errorf("[response_random.responses[%d]] error building random response. %w", i, err)
+					fmt.Errorf("[response_random.responses[%d]] error building random response.\n %w", i, err)
 			}
 
 			rr, err := b.buildReply(sub)
 			if err != nil {
 				return nil,
-					fmt.Errorf("[response_random.responses[%d]] building error. %w", i, err)
+					fmt.Errorf("[response_random.responses[%d]] building error.\n %w", i, err)
 			}
 
 			random.Add(rr)
@@ -273,10 +304,10 @@ func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 			rr, err := b.buildReply(vi.Sub(_fResponseSequenceAfterEnded))
 			if err != nil {
 				return nil,
-					fmt.Errorf("[response_response.after_ended] building error. %w", err)
+					fmt.Errorf("[response_response.after_ended] building error.\n %w", err)
 			}
 
-			seq.OnSequenceEnded(rr)
+			seq.OnSequenceEnds(rr)
 		}
 
 		entries, ok := vi.Get(_fResponseSequenceEntries).([]any)
@@ -294,7 +325,7 @@ func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 			rr, err := b.buildReply(sub)
 			if err != nil {
 				return nil,
-					fmt.Errorf("[response_sequence.responses[%d]] building error. %w", i, err)
+					fmt.Errorf("[response_sequence.responses[%d]] building error.\n %w", i, err)
 			}
 
 			seq.Add(rr)
@@ -320,7 +351,7 @@ func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 		for i, handler := range app.config.MockFileHandlers {
 			err = handler.Handle(settings, b.builder)
 			if err != nil {
-				return nil, fmt.Errorf("custom field parser [%d] failed. %w", i, err)
+				return nil, fmt.Errorf("[custom field parser] [%d] failed.\n %w", i, err)
 			}
 		}
 	}
@@ -357,7 +388,7 @@ func (b *mockExternalBuilder) buildReply(v *viper.Viper) (Reply, error) {
 		file, err := os.Open(filename)
 		if err != nil {
 			return nil, fmt.Errorf(
-				"[%s] error opening file. %w",
+				"[body_file] [%s] error opening file.\n %w",
 				filename,
 				err,
 			)
@@ -368,7 +399,7 @@ func (b *mockExternalBuilder) buildReply(v *viper.Viper) (Reply, error) {
 		b, err := io.ReadAll(file)
 		if err != nil {
 			return nil, fmt.Errorf(
-				"[%s] error reading file content. %w",
+				"[body_file] [%s] error reading file content.\n %w",
 				filename,
 				err,
 			)

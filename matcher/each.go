@@ -31,7 +31,10 @@ func (m *eachMatcher) Match(v any) (*Result, error) {
 			if !res.Pass {
 				return &Result{
 					Message: res.Message,
-					Ext:     []string{fmt.Sprintf("key=%v, value=%v", iterator.Key().Interface(), mv)},
+					Ext: []string{
+						fmt.Sprintf("key=%v, value=%v", iterator.Key().Interface(), mv),
+						prettierName(m.matcher, res),
+					},
 				}, nil
 			}
 		}
@@ -49,7 +52,10 @@ func (m *eachMatcher) Match(v any) (*Result, error) {
 			if !res.Pass {
 				return &Result{
 					Message: res.Message,
-					Ext:     []string{fmt.Sprintf("index=%d, item=%v", i, entry)},
+					Ext: []string{
+						fmt.Sprintf("index=%d, item=%v", i, entry),
+						prettierName(m.matcher, res),
+					},
 				}, nil
 			}
 		}

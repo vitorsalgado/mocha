@@ -53,8 +53,8 @@ func TestPostJSON(t *testing.T) {
 
 		res, err := req.Do()
 
-		assert.NoError(t, err)
-		assert.NoError(t, res.Body.Close())
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
 		assert.True(t, scoped.HasBeenCalled())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
@@ -77,8 +77,8 @@ func TestPostJSON(t *testing.T) {
 
 		res, err := req.Do()
 
-		assert.NoError(t, err)
-		assert.NoError(t, res.Body.Close())
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
 		assert.True(t, scoped.HasBeenCalled())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
@@ -102,8 +102,8 @@ func TestPostJSON(t *testing.T) {
 
 		res, err := req.Do()
 
-		assert.NoError(t, err)
-		assert.NoError(t, res.Body.Close())
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
 		assert.True(t, scoped.HasBeenCalled())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
@@ -132,8 +132,8 @@ func TestPostJSON(t *testing.T) {
 
 		res, err := req.Do()
 
-		assert.NoError(t, err)
-		assert.NoError(t, res.Body.Close())
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
 		assert.True(t, scoped.HasBeenCalled())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
@@ -157,8 +157,8 @@ func TestPostJSON(t *testing.T) {
 
 		res, err := req.Do()
 
-		assert.NoError(t, err)
-		assert.NoError(t, res.Body.Close())
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
 		assert.False(t, scoped.HasBeenCalled())
 		assert.Equal(t, mocha.StatusNoMatch, res.StatusCode)
 	})
@@ -179,8 +179,8 @@ func TestPostJSON(t *testing.T) {
 
 		res, err := req.Do()
 
-		assert.NoError(t, err)
-		assert.NoError(t, res.Body.Close())
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
 		assert.True(t, scoped.HasBeenCalled())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
@@ -216,6 +216,8 @@ func TestPostJSON(t *testing.T) {
 				Field("name", StrictEqual("dev")),
 				Field("ok", StrictEqual(true)),
 				Field("ordered", Equal([]any{"dev", "qa", "devops"})),
+				Field("ordered", Contain("dev")),
+				Field("ordered", Some(Equal("qa"))),
 				Field("unordered", ItemsMatch([]any{"dev", "qa", "devops"})),
 				Field("diff[0]", Truthy()),
 				Field("diff[0]", Not(Falsy())),
@@ -234,7 +236,7 @@ func TestPostJSON(t *testing.T) {
 				Field("diff[7]", Nil()),
 				Field("level1.year", Equal(2022)),
 				Field("level1.year", GreaterThan(2021)),
-				Field("level1.year", GreaterOrEqualThan(2022)),
+				Field("level1.year", GreaterThanOrEqual(2022)),
 				Field("level1.level2.value", Equal(100.25)),
 			).
 			Reply(mocha.OK()))
@@ -244,8 +246,8 @@ func TestPostJSON(t *testing.T) {
 
 		res, err := req.Do()
 
-		assert.NoError(t, err)
-		assert.NoError(t, res.Body.Close())
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
 		assert.True(t, scoped.HasBeenCalled())
 		assert.Equal(t, http.StatusOK, res.StatusCode)
 	})
@@ -299,8 +301,8 @@ func TestMalformedJSON_ShouldMatchOtherFieldsAndContinue(t *testing.T) {
 
 	res, err := req.Do()
 
-	assert.NoError(t, err)
-	assert.NoError(t, res.Body.Close())
+	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	assert.True(t, scoped.HasBeenCalled())
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 }

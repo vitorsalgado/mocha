@@ -38,7 +38,7 @@ func (m *bothMatcher) Match(value any) (*Result, error) {
 	return &Result{
 		Pass:    false,
 		Message: desc,
-		Ext:     []string{m.first.Name(), m.second.Name()},
+		Ext:     []string{prettierName(m.first, r1), prettierName(m.second, r2)},
 	}, nil
 }
 

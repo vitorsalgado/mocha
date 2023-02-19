@@ -12,15 +12,33 @@ type allOfMatcher struct {
 }
 
 func (m *allOfMatcher) Name() string {
-	return "AllOf"
+	return "All"
 }
 
-func (m *allOfMatcher) Match(v any) (*Result, error) {
+func (m *allOfMatcher) Match(v any) (r *Result, e error) {
+	var idx int
+	var cur Matcher
+
+	defer func() {
+		if recovery := recover(); recovery != nil {
+			n := ""
+			if cur != nil {
+				n = cur.Name()
+			}
+
+			r = nil
+			e = fmt.Errorf("%v, matcher=%s, index=%d", recovery, n, idx)
+		}
+	}()
+
 	ok := true
 	errs := make([]string, 0)
 	failed := make([]string, 0)
 
-	for _, matcher := range m.matchers {
+	for i, matcher := range m.matchers {
+		idx = i
+		cur = matcher
+
 		result, err := matcher.Match(v)
 		if err != nil {
 			ok = false
@@ -32,7 +50,8 @@ func (m *allOfMatcher) Match(v any) (*Result, error) {
 
 		if !result.Pass {
 			ok = false
-			failed = append(failed, result.Message)
+			failed = append(failed,
+				fmt.Sprintf("%s(%s) %s", matcher.Name(), strings.Join(result.Ext, ", "), result.Message))
 		}
 	}
 
@@ -43,7 +62,7 @@ func (m *allOfMatcher) Match(v any) (*Result, error) {
 
 	if !ok || err != nil {
 		return &Result{
-			Message: mfmt.Indent(strings.Join(failed, "\n")),
+			Message: "\n" + mfmt.Indent(strings.Join(failed, "\n")),
 			Ext:     []string{fmt.Sprintf("+%d", len(m.matchers))},
 		}, err
 	}
@@ -55,13 +74,13 @@ func (m *allOfMatcher) AfterMockServed() error {
 	return runAfterMockServed(m.matchers...)
 }
 
-// AllOf matches when all the given matchers returns true.
+// All matches when all the given matchers returns true.
 // Example:
 //
-//	AllOf(EqualTo("test"),EqualIgnoreCase("test"),ToContains("tes"))
-func AllOf(matchers ...Matcher) Matcher {
+//	All(EqualTo("test"),EqualIgnoreCase("test"),ToContains("tes"))
+func All(matchers ...Matcher) Matcher {
 	if len(matchers) == 0 {
-		panic("[AllOf] requires at least 1 matcher")
+		panic("[All] requires at least 1 matcher")
 	}
 
 	return &allOfMatcher{matchers: matchers}
