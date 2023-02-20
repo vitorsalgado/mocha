@@ -13,10 +13,10 @@ import (
 	"github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
-	"github.com/vitorsalgado/mocha/v3/matcher"
+	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
-func TestForward(t *testing.T) {
+func TestProxiedReplies(t *testing.T) {
 	dest := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "ok", r.Header.Get("x-test"))
 		assert.Equal(t, "", r.Header.Get("x-del"))
@@ -38,10 +38,10 @@ func TestForward(t *testing.T) {
 
 	defer m.Close()
 
-	scoped := m.MustMock(mocha.Post(matcher.URLPath("/test")).
-		Body(matcher.StrictEqual("hello world")).
+	scoped := m.MustMock(mocha.Post(URLPath("/test")).
+		Body(StrictEqual("hello world")).
 		Reply(mocha.From(dest.URL).
-			ProxyHeader("x-test", "ok").
+			ForwardHeader("x-test", "ok").
 			Header("x-res", "example").
 			RemoveProxyHeaders("x-del")))
 
@@ -61,4 +61,43 @@ func TestForward(t *testing.T) {
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.Equal(t, "example", res.Header.Get("x-res"))
 	assert.Equal(t, "hello world", string(b))
+}
+
+func TestProxiedReplyMockFileWithTemplate(t *testing.T) {
+	target := mocha.New()
+	target.MustStart()
+	defer target.Close()
+
+	targetScoped := target.MustMock(
+		mocha.Postf("/test").
+			Headerf("test", "ok").
+			Header("del", Not(Present())).
+			Reply(mocha.OK().PlainText("done")))
+
+	m := mocha.New()
+	m.MustStart()
+	defer m.Close()
+
+	data := make(map[string]any)
+	data["target"] = target.URL()
+	m.SetData(data)
+
+	scoped := m.MustMock(mocha.FromFile("testdata/proxied_response.yaml"))
+	httpClient := &http.Client{}
+
+	req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", strings.NewReader("hello world"))
+	req.Header.Add(header.ContentType, mimetype.TextPlain)
+	req.Header.Add("del", "to be deleted")
+
+	res, err := httpClient.Do(req)
+	require.NoError(t, err)
+
+	b, err := io.ReadAll(res.Body)
+
+	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.Equal(t, "done", string(b))
+	targetScoped.AssertCalled(t)
+	scoped.AssertCalled(t)
 }

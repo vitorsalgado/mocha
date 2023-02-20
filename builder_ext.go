@@ -1,6 +1,7 @@
 package mocha
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -10,7 +11,7 @@ import (
 	"os"
 	"path"
 	"strings"
-	"time"
+	"text/template"
 
 	"github.com/spf13/viper"
 
@@ -20,38 +21,54 @@ import (
 
 // Mock configuration fields
 const (
-	_fName                       = "name"
-	_fEnabled                    = "enabled"
-	_fPriority                   = "priority"
-	_fDelayInMs                  = "delay_ms"
-	_fScenarioName               = "scenario.name"
-	_fScenarioRequiredState      = "scenario.required_state"
-	_fScenarioNewState           = "scenario.new_state"
-	_fRequestScheme              = "request.scheme"
-	_fRequestMethod              = "request.method"
-	_fRequestURL                 = "request.url"
-	_fRequestURLMatch            = "request.url_match"
-	_fRequestURLPath             = "request.path"
-	_fRequestURLPathMatch        = "request.path_match"
-	_fRequestQuery               = "request.query"
-	_fRequestQueries             = "request.queries"
-	_fRequestHeader              = "request.header"
-	_fRequestForm                = "request.form"
-	_fRequestBody                = "request.body"
-	_fResponse                   = "response"
-	_fResponseStatus             = "response.status"
-	_fResponseHeader             = "response.header"
-	_fResponseBody               = "response.body"
-	_fResponseEncoding           = "response.encoding"
-	_fResponseBodyFile           = "response.body_file"
-	_fResponseTemplateEnabled    = "response.template_enabled"
-	_fResponseTemplateModel      = "response.template_model"
+	_fName     = "name"
+	_fEnabled  = "enabled"
+	_fPriority = "priority"
+	_fDelay    = "delay"
+
+	_fScenarioName          = "scenario.name"
+	_fScenarioRequiredState = "scenario.required_state"
+	_fScenarioNewState      = "scenario.new_state"
+
+	_fRequestScheme       = "request.scheme"
+	_fRequestMethod       = "request.method"
+	_fRequestURL          = "request.url"
+	_fRequestURLMatch     = "request.url_match"
+	_fRequestURLPath      = "request.path"
+	_fRequestURLPathMatch = "request.path_match"
+	_fRequestQuery        = "request.query"
+	_fRequestQueries      = "request.queries"
+	_fRequestHeader       = "request.header"
+	_fRequestForm         = "request.form"
+	_fRequestBody         = "request.body"
+
+	_fResponse                = "response"
+	_fResponseStatus          = "response.status"
+	_fResponseHeader          = "response.header"
+	_fResponseBody            = "response.body"
+	_fResponseEncoding        = "response.encoding"
+	_fResponseBodyFile        = "response.body_file"
+	_fResponseTemplateEnabled = "response.template_enabled"
+	_fResponseTemplateModel   = "response.template_model"
+
 	_fResponseSequence           = "response_sequence"
 	_fResponseSequenceEntries    = "response_sequence.responses"
 	_fResponseSequenceAfterEnded = "response_sequence.after_ended"
-	_fResponseRandom             = "response_random"
-	_fResponseRandomEntries      = "response_random.responses"
-	_fResponseRandomSeed         = "response_random.seed"
+
+	_fResponseRandom        = "response_random"
+	_fResponseRandomEntries = "response_random.responses"
+	_fResponseRandomSeed    = "response_random.seed"
+
+	_fResponseProxy                   = "proxy"
+	_fResponseProxyTarget             = "proxy.target"
+	_fResponseProxyAdditionalHeader   = "proxy.forward_header"
+	_fResponseProxyHeader             = "proxy.header"
+	_fResponseProxyHeaderKeysToRemove = "proxy.remove_headers"
+	_fResponseProxyTrimPrefix         = "proxy.trim_prefix"
+	_fResponseProxyTrimSuffix         = "proxy.trim_suffix"
+	_fResponseProxyTimeout            = "proxy.timeout"
+	_fResponseProxySSLVerify          = "proxy.ssl_verify"
+	_fResponseProxyNoFollow           = "proxy.no_follow"
 )
 
 // Response fields
@@ -81,11 +98,36 @@ func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 		}
 	}()
 
+	file, err := os.Open(b.filename)
+	if err != nil {
+		return nil, err
+	}
+
+	content, err := io.ReadAll(file)
+	if err != nil {
+		return nil, err
+	}
+
+	t, err := template.New("").Parse(string(content))
+	if err != nil {
+		return nil, err
+	}
+
+	d := &mockFileData{App: app}
+	buf := &bytes.Buffer{}
+	err = t.Execute(buf, d)
+	if err != nil {
+		return nil, err
+	}
+
+	parts := strings.Split(b.filename, ".")
+	ext := parts[len(parts)-1]
+
 	vi := viper.New()
-	vi.SetConfigFile(b.filename)
+	vi.SetConfigType(ext)
 	vi.SetDefault(_fEnabled, true)
 
-	err = vi.ReadInConfig()
+	err = vi.ReadConfig(buf)
 	if err != nil {
 		return nil, err
 	}
@@ -105,8 +147,8 @@ func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 	b.builder.ScenarioStateIs(vi.GetString(_fScenarioRequiredState))
 	b.builder.ScenarioStateWillBe(vi.GetString(_fScenarioNewState))
 
-	if vi.IsSet(_fDelayInMs) {
-		b.builder.Delay(time.Duration(vi.GetInt64(_fDelayInMs)) * time.Millisecond)
+	if vi.IsSet(_fDelay) {
+		b.builder.Delay(vi.GetDuration(_fDelay))
 	}
 
 	// --
@@ -332,6 +374,48 @@ func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 		}
 
 		rep = seq
+	} else if vi.IsSet(_fResponseProxy) {
+		if !vi.IsSet(_fResponseProxyTarget) {
+			return nil, errors.New("[proxy.target] is required")
+		}
+
+		target := vi.GetString(_fResponseProxyTarget)
+		proxy := From(target)
+
+		for k, v := range vi.GetStringMapString(_fResponseProxyAdditionalHeader) {
+			proxy.ForwardHeader(k, v)
+		}
+
+		for k, v := range vi.GetStringMapString(_fResponseProxyHeader) {
+			proxy.Header(k, v)
+		}
+
+		for _, k := range vi.GetStringSlice(_fResponseProxyHeaderKeysToRemove) {
+			proxy.RemoveProxyHeaders(k)
+		}
+
+		if vi.IsSet(_fResponseProxyTrimPrefix) {
+			proxy.TrimPrefix(vi.GetString(_fResponseProxyTrimPrefix))
+		}
+
+		if vi.IsSet(_fResponseProxyTrimSuffix) {
+			proxy.TrimPrefix(vi.GetString(_fResponseProxyTrimSuffix))
+		}
+
+		if vi.IsSet(_fResponseProxyTimeout) {
+			proxy.Timeout(vi.GetDuration(_fResponseProxyTimeout))
+		}
+
+		if vi.IsSet(_fResponseProxySSLVerify) && !vi.GetBool(_fResponseProxySSLVerify) {
+			proxy.SkipSSLVerify()
+		}
+
+		if vi.IsSet(_fResponseProxyNoFollow) && vi.GetBool(_fResponseProxyNoFollow) {
+			proxy.NoFollow()
+		}
+
+		rep = proxy
+
 	} else {
 		// no response definition found.
 		// default to 200 (OK) with nothing more.

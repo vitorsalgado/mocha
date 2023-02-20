@@ -1,7 +1,6 @@
 package mocha
 
 import (
-	"context"
 	"strconv"
 	"sync"
 	"testing"
@@ -11,56 +10,51 @@ import (
 )
 
 func TestParameters(t *testing.T) {
-	ctx := context.Background()
 	params := newInMemoryParameters()
 	key1 := "k1"
 	val1 := "test"
 	key2 := "k2"
 	val2 := 100
 
-	require.NoError(t, params.Set(ctx, key1, val1))
-	require.NoError(t, params.Set(ctx, key2, val2))
+	require.NoError(t, params.Set(key1, val1))
+	require.NoError(t, params.Set(key2, val2))
 
-	v, ok, err := params.Get(ctx, key1)
+	v, err := params.Get(key1)
 	require.NoError(t, err)
 	require.Equal(t, val1, v)
-	require.True(t, ok)
 
-	all, err := params.GetAll(ctx)
+	all, err := params.GetAll()
 	require.NoError(t, err)
 	require.Equal(t, 2, len(all))
 
-	v, ok, err = params.Get(ctx, key2)
+	v, err = params.Get(key2)
 	require.NoError(t, err)
 	require.Equal(t, val2, v)
-	require.True(t, ok)
 
-	v, ok, err = params.Get(ctx, "unknown")
+	v, err = params.Get("unknown")
 	require.NoError(t, err)
 	require.Nil(t, v)
-	require.False(t, ok)
 
-	h1, err := params.Has(ctx, key1)
+	h1, err := params.Has(key1)
 	require.NoError(t, err)
-	h2, err := params.Has(ctx, key2)
+	h2, err := params.Has(key2)
 	require.NoError(t, err)
-	h3, err := params.Has(ctx, "unknown")
+	h3, err := params.Has("unknown")
 	require.NoError(t, err)
 
 	require.True(t, h1)
 	require.True(t, h2)
 	require.False(t, h3)
 
-	require.NoError(t, params.Remove(ctx, key1))
+	require.NoError(t, params.Remove(key1))
 
-	h1, err = params.Has(ctx, key1)
+	h1, err = params.Has(key1)
 
 	require.NoError(t, err)
 	require.False(t, h1)
 }
 
 func TestParametersConcurrency(t *testing.T) {
-	ctx := context.Background()
 	params := newInMemoryParameters()
 	jobs := 10
 	wg := sync.WaitGroup{}
@@ -75,32 +69,31 @@ func TestParametersConcurrency(t *testing.T) {
 			kk := "key--" + strconv.FormatInt(int64(i), 10)
 			vv := "value"
 
-			err := params.Set(ctx, kk, vv)
+			err := params.Set(kk, vv)
 
 			assert.NoError(t, err)
 
-			v, exists, err := params.Get(ctx, kk)
+			v, err := params.Get(kk)
 
 			assert.NoError(t, err)
-			assert.True(t, exists)
 			assert.Equal(t, vv, v)
 
-			_ = params.Remove(ctx, "k001")
-			_ = params.Remove(ctx, kk)
+			_ = params.Remove("k001")
+			_ = params.Remove(kk)
 
 			wg.Done()
 		}(i)
 
-		err := params.Set(ctx, key, value)
+		err := params.Set(key, value)
 		require.NoError(t, err)
 	}
 
-	_, _, _ = params.Get(ctx, "key--100")
-	_, _, _ = params.Get(ctx, "key--0")
+	_, _ = params.Get("key--100")
+	_, _ = params.Get("key--0")
 
-	_ = params.Set(ctx, "k1", "v1")
-	_ = params.Set(ctx, "k2", "v2")
-	_ = params.Set(ctx, "k1", "v2")
+	_ = params.Set("k1", "v1")
+	_ = params.Set("k2", "v2")
+	_ = params.Set("k1", "v2")
 
 	wg.Wait()
 }

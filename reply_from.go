@@ -94,8 +94,8 @@ func (r *ProxyReply) Headers(header http.Header) *ProxyReply {
 	return r
 }
 
-// ProxyHeader sets an extra header to be sent to the proxy target.
-func (r *ProxyReply) ProxyHeader(key, value string) *ProxyReply {
+// ForwardHeader sets an extra header to be sent to the proxy target.
+func (r *ProxyReply) ForwardHeader(key, value string) *ProxyReply {
 	r.proxyHeaders.Add(key, value)
 	return r
 }

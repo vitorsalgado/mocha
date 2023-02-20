@@ -46,7 +46,7 @@ func TestForward(t *testing.T) {
 		rv := &RequestValues{RawRequest: req, URL: req.URL}
 
 		res, err := From(dest.URL).
-			ProxyHeader("x-proxy", "proxied").
+			ForwardHeader("x-proxy", "proxied").
 			ProxyHeaders(ph).
 			RemoveProxyHeaders("x-to-be-removed").
 			Header("x-res", "response").

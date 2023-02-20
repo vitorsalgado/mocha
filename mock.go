@@ -54,7 +54,7 @@ type Builder interface {
 	Build(app *Mocha) (*Mock, error)
 }
 
-// RequestValues groups HTTP request data, including the parsed body, if any.
+// RequestValues groups HTTP request data, including the parsed body.
 type RequestValues struct {
 	// RawRequest is the original incoming http.Request.
 	RawRequest *http.Request
@@ -126,59 +126,62 @@ type Extension interface {
 	UniqueName() string
 }
 
-type (
-	// valueSelector defines a function that will be used to extract the value that will be passed to the associated matcher.
-	valueSelector func(r *valueSelectorInput) any
+// valueSelector defines a function that will be used to extract the value that will be passed to the associated matcher.
+type valueSelector func(r *valueSelectorInput) any
 
-	valueSelectorInput struct {
-		// RawRequest is the original incoming http.Request.
-		RawRequest *http.Request
+type valueSelectorInput struct {
+	// RawRequest is the original incoming http.Request.
+	RawRequest *http.Request
 
-		// URL is full request url.URL, including scheme, host, port.
-		URL *url.URL
+	// URL is full request url.URL, including scheme, host, port.
+	URL *url.URL
 
-		// ParsedBody is the parsed http.Request body.
-		ParsedBody any
-	}
+	// ParsedBody is the parsed http.Request body.
+	ParsedBody any
+}
 
-	// expectation holds metadata related to one http.Request Matcher.
-	expectation struct {
-		// Target is an optional metadata that describes the target of the matcher.
-		// Example: the target could have the "header", meaning that the matcher will be applied to one request header.
-		Target matchTarget
+// expectation holds metadata related to one http.Request Matcher.
+type expectation struct {
+	// Target is an optional metadata that describes the target of the matcher.
+	// Example: the target could have the "header", meaning that the matcher will be applied to one request header.
+	Target matchTarget
 
-		Key string
+	Key string
 
-		// Matcher associated with this expectation.
-		Matcher matcher.Matcher
+	// Matcher associated with this expectation.
+	Matcher matcher.Matcher
 
-		// ValueSelector will extract the http.Request or a portion of it and feed it to the associated Matcher.
-		ValueSelector valueSelector
+	// ValueSelector will extract the http.Request or a portion of it and feed it to the associated Matcher.
+	ValueSelector valueSelector
 
-		// Weight of this expectation.
-		Weight weight
-	}
+	// Weight of this expectation.
+	Weight weight
+}
 
-	// matchResult holds information related to a matching operation.
-	matchResult struct {
-		// Details is the list of non matches messages.
-		Details []mismatchDetail
+// matchResult holds information related to a matching operation.
+type matchResult struct {
+	// Details is the list of non matches messages.
+	Details []mismatchDetail
 
-		// Weight for the matcher. It helps determine the closest match.
-		Weight int
+	// Weight for the matcher. It helps determine the closest match.
+	Weight int
 
-		// Pass indicates whether it matched or not.
-		Pass bool
-	}
+	// Pass indicates whether it matched or not.
+	Pass bool
+}
 
-	// mismatchDetail gives more ctx about why a matcher did not match.
-	mismatchDetail struct {
-		MatchersName string
-		Target       matchTarget
-		Result       *matcher.Result
-		Err          error
-	}
-)
+// mismatchDetail gives more ctx about why a matcher did not match.
+type mismatchDetail struct {
+	MatchersName string
+	Target       matchTarget
+	Result       *matcher.Result
+	Err          error
+}
+
+// mockFileData represents the data that is passed to Mock files during template parsing.
+type mockFileData struct {
+	App *Mocha
+}
 
 // weight helps to detect the closest mock match.
 type weight int
@@ -309,7 +312,7 @@ func (m *Mock) matchExpectations(ri *valueSelectorInput, expectations []*expecta
 func (m *Mock) matchExpectation(e *expectation, value any) (result *matcher.Result, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("[matcher %s] panicked. reason=%v", e.Matcher.Name(), r)
+			err = fmt.Errorf("[%s] matcher panicked. reason=%v", e.Matcher.Name(), r)
 			return
 		}
 	}()

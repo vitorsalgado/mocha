@@ -49,6 +49,8 @@ type Mocha struct {
 	rmuMock            sync.RWMutex
 	proxy              *reverseProxy
 	extensions         map[string]Extension
+
+	data map[string]any
 }
 
 // TestingT is based on testing.T and allow mocha components to log information and errors.
@@ -518,6 +520,16 @@ func (m *Mocha) RegisterExtension(extension Extension) error {
 	m.extensions[extension.UniqueName()] = extension
 
 	return nil
+}
+
+// SetData sets the data to be used as template data during mock configurations parsing.
+func (m *Mocha) SetData(data map[string]any) {
+	m.data = data
+}
+
+// Data returns the template data associated to this instance.
+func (m *Mocha) Data() map[string]any {
+	return m.data
 }
 
 // PrintConfig prints key configurations using the given io.Writer.

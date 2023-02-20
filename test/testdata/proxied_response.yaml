@@ -1,0 +1,15 @@
+request:
+  path: /test
+  method: POST
+  body: "hello world"
+
+proxy:
+  target: '{{ .App.Data.target }}'
+  forward_header:
+    test: ok
+  header:
+    res: example
+  remove_headers:
+    - del
+  ssl_verify: false
+  timeout: 5s

@@ -1,7 +1,6 @@
 package mocha
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"log"
@@ -61,7 +60,7 @@ func TestResponseMapperModifyingResponse(t *testing.T) {
 	const v = "test-ok"
 
 	m := New()
-	_ = m.Parameters().Set(context.Background(), k, v)
+	_ = m.Parameters().Set(k, v)
 	m.MustStart()
 
 	defer m.Close()
@@ -69,7 +68,7 @@ func TestResponseMapperModifyingResponse(t *testing.T) {
 	scoped := m.MustMock(Get(URLPath("/test")).
 		Reply(OK()).
 		Map(func(rv *RequestValues, r *Stub) error {
-			val, _, _ := rv.App.Parameters().Get(rv.RawRequest.Context(), k)
+			val, _ := rv.App.Parameters().Get(k)
 
 			r.Header.Add("x-param-key", val.(string))
 			r.Header.Add("x-test", rv.RawRequest.Header.Get("x-param"))
