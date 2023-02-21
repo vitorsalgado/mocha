@@ -13,7 +13,7 @@ var _ Builder = (*MockBuilder)(nil)
 
 var (
 	ErrNoExpectations = errors.New("[mocking] at least 1 request matcher must be set")
-	ErrNoReplies      = errors.New("no reply set. Use .Reply() or any equivalent to set the expected mock response")
+	ErrNoReplies      = errors.New("[mocking] no reply set. Use .Reply() or any equivalent to set the expected mock response")
 )
 
 // MockBuilder is a builder for Mock.
@@ -415,7 +415,7 @@ func (b *MockBuilder) appendExpectation(e *expectation) {
 
 func selectScheme(r *valueSelectorInput) any  { return r.URL.Scheme }
 func selectMethod(r *valueSelectorInput) any  { return r.RawRequest.Method }
-func selectURL(r *valueSelectorInput) any     { return r.URL }
+func selectURL(r *valueSelectorInput) any     { return r.URL.String() }
 func selectURLPath(r *valueSelectorInput) any { return r.URL.Path }
 func selectHeader(k string) valueSelector {
 	return func(r *valueSelectorInput) any { return r.RawRequest.Header.Get(k) }

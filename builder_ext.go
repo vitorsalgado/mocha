@@ -94,7 +94,7 @@ func FromFile(filename string) Builder {
 func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("[panic] error building external mock. reason=%v", r)
+			err = fmt.Errorf("[panic] error building external mock from file %s.\n %v", b.filename, r)
 		}
 	}()
 
@@ -125,6 +125,8 @@ func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 
 	vi := viper.New()
 	vi.SetConfigType(ext)
+
+	// Setting defaults before reading the configuration file
 	vi.SetDefault(_fEnabled, true)
 
 	err = vi.ReadConfig(buf)
@@ -435,7 +437,7 @@ func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 		for i, handler := range app.config.MockFileHandlers {
 			err = handler.Handle(settings, b.builder)
 			if err != nil {
-				return nil, fmt.Errorf("[custom field parser] [%d] failed.\n %w", i, err)
+				return nil, fmt.Errorf("[custom field handler] [%d] failed.\n %w", i, err)
 			}
 		}
 	}
