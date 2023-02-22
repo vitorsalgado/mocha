@@ -66,7 +66,7 @@ func TestParametersConcurrency(t *testing.T) {
 		value := "value"
 
 		go func(index int) {
-			kk := "key--" + strconv.FormatInt(int64(i), 10)
+			kk := "key--" + strconv.FormatInt(int64(index), 10)
 			vv := "value"
 
 			err := params.Set(kk, vv)

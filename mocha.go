@@ -46,7 +46,6 @@ type Mocha struct {
 	loaders            []Loader
 	rec                *record
 	rmu                sync.RWMutex
-	rmuMock            sync.RWMutex
 	proxy              *reverseProxy
 	extensions         map[string]Extension
 
@@ -325,8 +324,8 @@ func (m *Mocha) MustStartTLS() ServerInfo {
 //
 //	assert.True(txtTemplate, scoped.HasBeenCalled())
 func (m *Mocha) Mock(builders ...Builder) (*Scoped, error) {
-	m.rmuMock.Lock()
-	defer m.rmuMock.Unlock()
+	m.rmu.Lock()
+	defer m.rmu.Unlock()
 
 	size := len(builders)
 	added := make([]*Mock, size)
@@ -496,8 +495,8 @@ func (m *Mocha) Disable() {
 
 // Clean removes all scoped mocks.
 func (m *Mocha) Clean() {
-	m.rmuMock.Lock()
-	defer m.rmuMock.Unlock()
+	m.rmu.Lock()
+	defer m.rmu.Unlock()
 
 	for _, s := range m.scopes {
 		s.Clean()
