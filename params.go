@@ -35,7 +35,7 @@ func (p *paramsStore) Get(key string) (datum any, err error) {
 	p.mu.RLock()
 	defer p.mu.RUnlock()
 
-	datum, _ = p.data[key]
+	datum = p.data[key]
 
 	return
 }

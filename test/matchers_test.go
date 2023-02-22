@@ -75,6 +75,7 @@ func TestMatcherCombinations(t *testing.T) {
 
 	buf := new(bytes.Buffer)
 	err := json.NewEncoder(buf).Encode(body)
+	require.NoError(t, err)
 
 	qry := url.Values{}
 	qry.Add("q", "test")
