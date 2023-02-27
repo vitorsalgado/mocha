@@ -37,7 +37,7 @@ func (rep *RandomReply) Add(reply ...Reply) *RandomReply {
 	return rep
 }
 
-func (rep *RandomReply) validate() error {
+func (rep *RandomReply) validate(_ *Mocha) error {
 	size := len(rep.replies)
 	if size == 0 {
 		return errors.New("[reply.random] you need to set at least one response when using random reply")

@@ -20,7 +20,7 @@ func Indent(str string) string {
 }
 
 func PrintReceived(val any) string {
-	return fmt.Sprintf("Received: %v", val)
+	return fmt.Sprintf("Received: %s", Stringify(val))
 }
 
 type stringer interface {
@@ -31,6 +31,8 @@ func Stringify(v any) string {
 	switch s := v.(type) {
 	case stringer:
 		return s.String()
+	case []byte:
+		return string(s)
 	case string:
 		return s
 	}

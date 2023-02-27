@@ -1,0 +1,2 @@
+Method is: {{ .Request.Method }}
+Message is: {{ .App.Parameters.Get "message" }}

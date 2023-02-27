@@ -21,7 +21,7 @@ func (m *equalMatcher) Match(v any) (*Result, error) {
 
 	return &Result{
 			Ext:     []string{mfmt.Stringify(m.expected)},
-			Message: fmt.Sprintf("Received: %v", v),
+			Message: fmt.Sprintf("Received: %s", mfmt.Stringify(v)),
 		},
 		nil
 }

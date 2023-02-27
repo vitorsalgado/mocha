@@ -1,13 +1,16 @@
 package mocha
 
 import (
+	"bufio"
 	"bytes"
 	"compress/gzip"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
-	"net/url"
-	"text/template"
+	"net/textproto"
+	"os"
+	"runtime/debug"
 
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
@@ -24,7 +27,7 @@ type Reply interface {
 type replyValidation interface {
 	// Validate runs once during mock building.
 	// Useful for pre-configurations or validations that needs to be executed once.
-	validate() error
+	validate(app *Mocha) error
 }
 
 // Stub defines the HTTP response that will be served once a Mock is matched for an HTTP Request.
@@ -48,41 +51,23 @@ func (s *Stub) Gunzip() ([]byte, error) {
 	return io.ReadAll(gz)
 }
 
-// Template defines a template parser for response bodies.
-type Template interface {
-	// Compile allows pre-compilation of the given template.
-	Compile() error
-
-	// Render parses the given template.
-	Render(io.Writer, any) error
-}
-
-// templateData is the data templateExtras used to render the templates.
-type templateData struct {
-	// Request is HTTP request ref.
-	Request templateRequest
-
-	// Extras is an additional data that can be passed to the template.
-	// This value is set using the TemplateExtra() function from StdReply.
-	Extras any
-}
-
-type templateRequest struct {
-	Method string
-	URL    url.URL
-	Header http.Header
-	Body   any
-}
-
 var _ Reply = (*StdReply)(nil)
 
 // StdReply holds the configuration on how the Stub should be built.
 type StdReply struct {
-	response       *Stub
-	bodyType       bodyType
-	template       Template
-	templateExtras any
-	err            error
+	response            *Stub
+	bodyType            bodyType
+	bodyEncoding        bodyEncoding
+	bodyFilename        string
+	bodyTeRender        TemplateRenderer
+	bodyFnTeRender      TemplateRenderer
+	headerTeRender      TemplateRenderer
+	teType              teType
+	teHeader            http.Header
+	bodyTemplateContent string
+	teData              any
+	err                 error
+	encoded             bool
 }
 
 type bodyType int
@@ -90,14 +75,31 @@ type bodyType int
 const (
 	_bodyDefault bodyType = iota
 	_bodyTemplate
-	_bodyGZIP
+	_bodyFile
+)
+
+type bodyEncoding int
+
+const (
+	_bodyEncodingNone bodyEncoding = iota
+	_bodyEncodingGZIP
+)
+
+type teType byte
+
+const (
+	_teBody teType = 1 << iota
+	_teBodyFilename
+	_teHeader
 )
 
 // NewReply creates a new StdReply. Prefer to use factory functions for each status code.
 func NewReply() *StdReply {
 	return &StdReply{
-		response: &Stub{Cookies: make([]*http.Cookie, 0), Header: make(http.Header), Trailer: make(http.Header)},
-		bodyType: _bodyDefault}
+		response:     &Stub{Cookies: make([]*http.Cookie, 0), Header: make(http.Header), Trailer: make(http.Header)},
+		bodyType:     _bodyDefault,
+		bodyEncoding: _bodyEncodingNone,
+		teHeader:     make(http.Header)}
 }
 
 // Status creates a new Reply with the given HTTP status code.
@@ -174,6 +176,12 @@ func (rep *StdReply) Header(key, value string) *StdReply {
 	return rep
 }
 
+func (rep *StdReply) HeaderTemplate(key, value string) *StdReply {
+	rep.teHeader.Add(key, value)
+	rep.teType += _teHeader
+	return rep
+}
+
 // ContentType sets the response content-type header.
 func (rep *StdReply) ContentType(mime string) *StdReply {
 	rep.Header(header.ContentType, mime)
@@ -193,9 +201,9 @@ func (rep *StdReply) Cookie(cookie *http.Cookie) *StdReply {
 }
 
 // ExpireCookie expires a cookie.
-func (rep *StdReply) ExpireCookie(cookie http.Cookie) *StdReply {
+func (rep *StdReply) ExpireCookie(cookie *http.Cookie) *StdReply {
 	cookie.MaxAge = -1
-	rep.response.Cookies = append(rep.response.Cookies, &cookie)
+	rep.response.Cookies = append(rep.response.Cookies, cookie)
 	return rep
 }
 
@@ -232,26 +240,42 @@ func (rep *StdReply) BodyReader(reader io.Reader) *StdReply {
 	}
 
 	rep.response.Body = b
+
+	return rep
+}
+
+// BodyFile loads the body content from the given filename.
+func (rep *StdReply) BodyFile(filename string) *StdReply {
+	rep.bodyFilename = filename
+	rep.bodyType = _bodyFile
+	rep.teType += _teBodyFilename
+
 	return rep
 }
 
 // BodyTemplate defines the response body using a template.
-// It accepts a string or a reply.Template implementation. If a different type is provided, it panics.
-func (rep *StdReply) BodyTemplate(tpl any, extras any) *StdReply {
-	switch e := tpl.(type) {
-	case string:
-		rep.template = NewGoTextTemplate().Template(e)
-	case Template:
-		rep.err = e.Compile()
-		rep.template = e
-
-	default:
-		panic(".BodyTemplate() parameter must be: string | reply.Template")
-	}
-
+// The parameter content must be the actual template content that should be parsed and rendered.
+// Use BodyFileWithTemplate function to load the template from a file.
+func (rep *StdReply) BodyTemplate(content string) *StdReply {
+	rep.bodyTemplateContent = content
 	rep.bodyType = _bodyTemplate
-	rep.templateExtras = extras
+	rep.teType += _teBody
 
+	return rep
+}
+
+// BodyFileWithTemplate loads the body content from the given filename.
+func (rep *StdReply) BodyFileWithTemplate(filename string) *StdReply {
+	rep.bodyFilename = filename
+	rep.bodyType = _bodyFile
+	rep.teType = _teBodyFilename | _teBody
+
+	return rep
+}
+
+// SetTemplateData sets the data model to be used by templates during response building.
+func (rep *StdReply) SetTemplateData(data any) *StdReply {
+	rep.teData = data
 	return rep
 }
 
@@ -269,21 +293,167 @@ func (rep *StdReply) PlainText(text string) *StdReply {
 
 // Gzip indicates that the response should be gzip encoded.
 func (rep *StdReply) Gzip() *StdReply {
-	rep.bodyType = _bodyGZIP
+	rep.bodyEncoding = _bodyEncodingGZIP
 	return rep
 }
 
-func (rep *StdReply) validate() error {
+func (rep *StdReply) validate(app *Mocha) error {
 	if rep.err != nil {
 		return rep.err
 	}
 
-	if len(rep.response.Body) == 0 {
-		return nil
+	if rep.teType&_teBodyFilename == _teBodyFilename {
+		r, err := app.te.Parse(rep.bodyFilename)
+		if err != nil {
+			return err
+		}
+
+		rep.bodyFnTeRender = r
+	}
+
+	if rep.teType&_teBody == _teBody {
+		r, err := app.te.Parse(rep.bodyTemplateContent)
+		if err != nil {
+			return err
+		}
+
+		rep.bodyTeRender = r
+	}
+
+	if rep.teType&_teHeader == _teHeader {
+		buf := &bytes.Buffer{}
+		err := rep.teHeader.Write(buf)
+		if err != nil {
+			return err
+		}
+
+		r, err := app.te.Parse(buf.String() + "\r\n")
+		if err != nil {
+			return err
+		}
+
+		rep.headerTeRender = r
+	}
+
+	err := rep.encodeBody()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Build builds a Stub based on StdReply definition.
+func (rep *StdReply) Build(_ http.ResponseWriter, r *RequestValues) (stub *Stub, err error) {
+	if rep.err != nil {
+		return nil, rep.err
 	}
 
 	switch rep.bodyType {
-	case _bodyGZIP:
+	case _bodyTemplate:
+		defer func() {
+			if recovered := recover(); recovered != nil {
+				err = fmt.Errorf(
+					"[reply] panic parsing body template.\n [panic] %v\n %v",
+					recovered,
+					string(debug.Stack()),
+				)
+			}
+		}()
+
+		buf := &bytes.Buffer{}
+		err = rep.bodyTeRender.Render(buf, buildTemplateData(r, rep.teData))
+		if err != nil {
+			return nil, err
+		}
+
+		rep.response.Body = buf.Bytes()
+
+	case _bodyFile:
+		defer func() {
+			if recovered := recover(); recovered != nil {
+				err = fmt.Errorf(
+					"[reply] panic loading body from %s.\n [panic] %v\n %v",
+					rep.bodyFilename,
+					recovered,
+					string(debug.Stack()),
+				)
+			}
+		}()
+
+		buf := &bytes.Buffer{}
+		err = rep.bodyFnTeRender.Render(buf, buildTemplateData(r, rep.teData))
+		if err != nil {
+			return nil, err
+		}
+
+		filename := buf.String()
+		file, err := os.Open(filename)
+		if err != nil {
+			return nil, err
+		}
+
+		defer file.Close()
+
+		b, err := io.ReadAll(file)
+		if err != nil {
+			return nil, err
+		}
+
+		if rep.teType&_teBody == _teBody {
+			buf.Reset()
+			t, err := r.App.TemplateEngine().Parse(string(b))
+			if err != nil {
+				return nil, err
+			}
+
+			err = t.Render(buf, buildTemplateData(r, rep.teData))
+			if err != nil {
+				return nil, err
+			}
+
+			rep.response.Body = buf.Bytes()
+		} else {
+			rep.response.Body = b
+		}
+	}
+
+	if rep.teType&_teHeader == _teHeader {
+		buf := &bytes.Buffer{}
+		err = rep.headerTeRender.Render(buf, buildTemplateData(r, rep.teData))
+		if err != nil {
+			return nil, err
+		}
+
+		tp := textproto.NewReader(bufio.NewReader(buf))
+		mimeHeader, err := tp.ReadMIMEHeader()
+		if err != nil {
+			return nil, err
+		}
+
+		h := http.Header(mimeHeader)
+		for k, v := range h {
+			for _, vv := range v {
+				rep.Header(k, vv)
+			}
+		}
+	}
+
+	err = rep.encodeBody()
+	if err != nil {
+		return nil, err
+	}
+
+	return rep.response, nil
+}
+
+func (rep *StdReply) encodeBody() error {
+	if rep.encoded || len(rep.response.Body) == 0 {
+		return nil
+	}
+
+	switch rep.bodyEncoding {
+	case _bodyEncodingGZIP:
 		buf := new(bytes.Buffer)
 		gz := gzip.NewWriter(buf)
 
@@ -299,79 +469,21 @@ func (rep *StdReply) validate() error {
 
 		rep.response.Body = buf.Bytes()
 		rep.response.Header.Add(header.ContentEncoding, "gzip")
+		rep.encoded = true
 	}
 
 	return nil
 }
 
-// Build builds a Stub based on StdReply definition.
-func (rep *StdReply) Build(_ http.ResponseWriter, r *RequestValues) (*Stub, error) {
-	if rep.err != nil {
-		return nil, rep.err
+func buildTemplateData(r *RequestValues, ext any) *templateData {
+	reqExtra := templateRequest{
+		Method:          r.RawRequest.Method,
+		URL:             r.URL,
+		URLPathSegments: r.URLPathSegments,
+		Header:          r.RawRequest.Header.Clone(),
+		Cookies:         r.RawRequest.Cookies(),
+		Body:            r.ParsedBody,
 	}
 
-	switch rep.bodyType {
-	case _bodyTemplate:
-		buf := &bytes.Buffer{}
-		reqExtra := templateRequest{r.RawRequest.Method, *r.URL, r.RawRequest.Header.Clone(), r.ParsedBody}
-		model := &templateData{Request: reqExtra, Extras: rep.templateExtras}
-
-		err := rep.template.Render(buf, model)
-		if err != nil {
-			return nil, err
-		}
-
-		rep.response.Body = buf.Bytes()
-	}
-
-	return rep.response, nil
-}
-
-// Templates
-
-// GoTextTemplate is the built-in Template implementation.
-// It uses Go templates.
-type GoTextTemplate struct {
-	name        string
-	funcMap     template.FuncMap
-	template    string
-	txtTemplate *template.Template
-}
-
-// NewGoTextTemplate creates a new BuiltInTemplate.
-func NewGoTextTemplate() *GoTextTemplate {
-	return &GoTextTemplate{funcMap: make(template.FuncMap)}
-}
-
-// Name sets the name of the template.
-func (gt *GoTextTemplate) Name(name string) *GoTextTemplate {
-	gt.name = name
-	return gt
-}
-
-// FuncMap adds a new function to be used inside the Go template.
-func (gt *GoTextTemplate) FuncMap(fn template.FuncMap) *GoTextTemplate {
-	gt.funcMap = fn
-	return gt
-}
-
-// Template sets the actual template.
-func (gt *GoTextTemplate) Template(tmpl string) *GoTextTemplate {
-	gt.template = tmpl
-	return gt
-}
-
-func (gt *GoTextTemplate) Compile() error {
-	t, err := template.New(gt.name).Funcs(gt.funcMap).Parse(gt.template)
-	if err != nil {
-		return err
-	}
-
-	gt.txtTemplate = t
-
-	return nil
-}
-
-func (gt *GoTextTemplate) Render(w io.Writer, data any) error {
-	return gt.txtTemplate.Execute(w, data)
+	return &templateData{Request: reqExtra, App: r.App, Ext: ext}
 }

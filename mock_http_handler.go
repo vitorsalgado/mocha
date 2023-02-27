@@ -30,6 +30,11 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	urlSegments := strings.Split(reqPath, "/")
+	for i, segment := range urlSegments {
+		if segment == "" {
+			urlSegments = append(urlSegments[:i], urlSegments[i+1:]...)
+		}
+	}
 	parsedURL, _ := url.Parse(h.app.URL() + reqPath)
 
 	if h.app.config.Record != nil {
@@ -78,8 +83,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	reqValues := &RequestValues{r, parsedURL, urlSegments, parsedBody, h.app, mock}
 	res, err := result.Matched.Reply.Build(w, reqValues)
 	if err != nil {
-		h.app.log.Logf(err.Error())
-		h.onError(w, evtReq, fmt.Errorf("error building reply. reason=%w", err))
+		h.onError(w, evtReq, fmt.Errorf("[http] error building reply.\n %w", err))
 		return
 	}
 

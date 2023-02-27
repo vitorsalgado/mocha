@@ -17,11 +17,11 @@ func TestRace(t *testing.T) {
 
 	for i := 0; i < jobs; i++ {
 		wg.Add(1)
-		go func(index int) {
+		go func() {
 			m.Inc()
 			m.Hits()
 			wg.Done()
-		}(i)
+		}()
 
 		m.Inc()
 	}

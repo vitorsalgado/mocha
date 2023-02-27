@@ -25,7 +25,7 @@ func (m *equalIgnoreCaseMatcher) Match(v any) (*Result, error) {
 	}
 
 	return &Result{
-		Message: fmt.Sprintf("Received: %v", v),
+		Message: mfmt.PrintReceived(v),
 		Ext:     []string{mfmt.Stringify(m.expected)},
 	}, nil
 }

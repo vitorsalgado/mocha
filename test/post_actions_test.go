@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
@@ -41,8 +40,8 @@ func TestPostAction(t *testing.T) {
 		res, err := req.Do()
 
 		require.NoError(t, err)
-		scope.AssertCalled(t)
-		assert.Equal(t, http.StatusOK, res.StatusCode)
+		require.True(t, scope.AssertCalled(t))
+		require.Equal(t, http.StatusOK, res.StatusCode)
 		act.AssertExpectations(t)
 	})
 
@@ -63,8 +62,8 @@ func TestPostAction(t *testing.T) {
 		res, err := req.Do()
 
 		require.NoError(t, err)
-		scope.AssertCalled(t)
-		assert.Equal(t, http.StatusOK, res.StatusCode)
+		require.True(t, scope.AssertCalled(t))
+		require.Equal(t, http.StatusOK, res.StatusCode)
 		act.AssertExpectations(t)
 	})
 }

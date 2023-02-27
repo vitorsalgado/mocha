@@ -25,7 +25,7 @@ func TestRecover(t *testing.T) {
 	evt := event.New()
 	evt.StartListening(ctx)
 
-	ts := httptest.NewServer(New(t).Recover(http.HandlerFunc(fn)))
+	ts := httptest.NewServer(New(t, http.StatusInternalServerError).Recover(http.HandlerFunc(fn)))
 	defer ts.Close()
 
 	res, err := http.Get(ts.URL)
@@ -34,7 +34,7 @@ func TestRecover(t *testing.T) {
 	body, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
 
-	assert.Equal(t, http.StatusTeapot, res.StatusCode)
+	assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
 	assert.Equal(t, "text/plain; charset=utf-8", res.Header.Get("content-type"))
 	assert.True(t, strings.Contains(string(body), msg))
 }

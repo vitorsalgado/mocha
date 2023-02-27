@@ -2,6 +2,7 @@ package mocha
 
 import (
 	"net/http"
+	"text/template"
 
 	"github.com/vitorsalgado/mocha/v3/internal/colorize"
 )
@@ -90,7 +91,12 @@ type Config struct {
 	// Needs to be used with Proxy.
 	Record *RecordConfig
 
+	// MockFileHandlers sets custom Mock file handlers for a server instance.
 	MockFileHandlers []MockFileHandler
+
+	TemplateEngine TemplateEngine
+
+	TemplateFunctions template.FuncMap
 
 	// CLI Only Options
 
@@ -134,6 +140,8 @@ func (c *Config) Apply(conf *Config) error {
 	conf.Forward = c.Forward
 	conf.UseHTTPS = c.UseHTTPS
 	conf.MockFileHandlers = c.MockFileHandlers
+	conf.TemplateEngine = c.TemplateEngine
+	conf.TemplateFunctions = c.TemplateFunctions
 
 	return nil
 }
@@ -291,6 +299,16 @@ func (cb *ConfigBuilder) Record(options ...RecordConfigurer) *ConfigBuilder {
 
 func (cb *ConfigBuilder) MockFileHandlers(handlers ...MockFileHandler) *ConfigBuilder {
 	cb.conf.MockFileHandlers = append(cb.conf.MockFileHandlers, handlers...)
+	return cb
+}
+
+func (cb *ConfigBuilder) TemplateEngine(te TemplateEngine) *ConfigBuilder {
+	cb.conf.TemplateEngine = te
+	return cb
+}
+
+func (cb *ConfigBuilder) BuiltInTemplateEngineFunctions(fm template.FuncMap) *ConfigBuilder {
+	cb.conf.TemplateFunctions = fm
 	return cb
 }
 
@@ -461,6 +479,28 @@ func WithProxy(options ...ProxyConfigurer) Configurer {
 
 		c.Proxy = opts
 
+		return nil
+	})
+}
+
+// WithMockFileHandlers configures MockFileHandler.
+func WithMockFileHandlers(handlers ...MockFileHandler) Configurer {
+	return configFunc(func(c *Config) error {
+		c.MockFileHandlers = append(c.MockFileHandlers, handlers...)
+		return nil
+	})
+}
+
+func WithTemplateEngine(ve TemplateEngine) Configurer {
+	return configFunc(func(c *Config) error {
+		c.TemplateEngine = ve
+		return nil
+	})
+}
+
+func WithTemplateEngineFunctions(fm template.FuncMap) Configurer {
+	return configFunc(func(c *Config) error {
+		c.TemplateFunctions = fm
 		return nil
 	})
 }

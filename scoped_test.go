@@ -28,28 +28,28 @@ func TestScoped(t *testing.T) {
 	assert.Nil(t, scoped.Get("unknown"))
 
 	t.Run("should not return done when there is still pending store", func(t *testing.T) {
-		fakeT := newFakeT()
+		ft := newFakeT()
 
 		assert.False(t, scoped.HasBeenCalled())
 		assert.Equal(t, 3, len(scoped.GetPending()))
 		assert.True(t, scoped.IsPending())
 
-		scoped.AssertCalled(fakeT)
-		fakeT.AssertNumberOfCalls(t, "Errorf", 1)
+		scoped.AssertCalled(ft)
+		ft.AssertNumberOfCalls(t, "Errorf", 1)
 	})
 
 	t.Run("should return done when all store were called", func(t *testing.T) {
-		fakeT := newFakeT()
+		ft := newFakeT()
 
 		m1.Inc()
 
 		assert.False(t, scoped.HasBeenCalled())
-		scoped.AssertCalled(fakeT)
+		scoped.AssertCalled(ft)
 
 		m2.Inc()
 		m3.Inc()
 
-		fakeT.AssertNumberOfCalls(t, "Errorf", 1)
+		ft.AssertNumberOfCalls(t, "Errorf", 1)
 		assert.True(t, scoped.AssertCalled(t))
 		assert.True(t, scoped.HasBeenCalled())
 		assert.Equal(t, 0, len(scoped.GetPending()))

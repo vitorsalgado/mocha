@@ -379,7 +379,7 @@ func (b *MockBuilder) Enable(enabled bool) *MockBuilder {
 
 // Build builds a Mock with previously configured parameters.
 // Used internally by Mocha.
-func (b *MockBuilder) Build(_ *Mocha) (*Mock, error) {
+func (b *MockBuilder) Build(app *Mocha) (*Mock, error) {
 	if len(b.mock.expectations) == 0 {
 		return nil, ErrNoExpectations
 	}
@@ -389,7 +389,7 @@ func (b *MockBuilder) Build(_ *Mocha) (*Mock, error) {
 	}
 
 	if r, ok := b.mock.Reply.(replyValidation); ok {
-		err := r.validate()
+		err := r.validate(app)
 		if err != nil {
 			return nil, err
 		}

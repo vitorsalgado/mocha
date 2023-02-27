@@ -32,8 +32,8 @@ func TestCompressedResponse_GZIP(t *testing.T) {
 	defer res.Body.Close()
 
 	b, err := io.ReadAll(res.Body)
-	require.NoError(t, err)
 
+	require.NoError(t, err)
 	assert.True(t, res.Uncompressed)
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.Equal(t, "hello world", string(b))
@@ -69,8 +69,8 @@ func Test_GZIPProxiedResponse(t *testing.T) {
 	require.NoError(t, err)
 
 	b, err := io.ReadAll(gz)
-	require.NoError(t, err)
 
+	require.NoError(t, err)
 	assert.False(t, res.Uncompressed)
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.Equal(t, "hello world", string(b))

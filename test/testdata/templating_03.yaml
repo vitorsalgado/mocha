@@ -1,0 +1,8 @@
+request:
+  path: /templating_03_data.txt
+  method: GET
+
+response:
+  body_file: "{{`{{ index .Request.URLPathSegments 0 }}`}}"
+  template:
+    enabled: true

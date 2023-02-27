@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"runtime/debug"
 	"strings"
 	"text/template"
 
@@ -48,12 +49,12 @@ const (
 	_fResponseBody            = "response.body"
 	_fResponseEncoding        = "response.encoding"
 	_fResponseBodyFile        = "response.body_file"
-	_fResponseTemplateEnabled = "response.template_enabled"
-	_fResponseTemplateModel   = "response.template_model"
+	_fResponseTemplateEnabled = "response.template.enabled"
+	_fResponseTemplateModel   = "response.template.data"
 
-	_fResponseSequence           = "response_sequence"
-	_fResponseSequenceEntries    = "response_sequence.responses"
-	_fResponseSequenceAfterEnded = "response_sequence.after_ended"
+	_fResponseSequence        = "response_sequence"
+	_fResponseSequenceEntries = "response_sequence.responses"
+	_fResponseSequenceEnded   = "response_sequence.sequence_ended"
 
 	_fResponseRandom        = "response_random"
 	_fResponseRandomEntries = "response_random.responses"
@@ -75,10 +76,11 @@ const (
 const (
 	_resStatus          = "status"
 	_resHeader          = "header"
+	_resHeaderTemplate  = "header_template"
 	_resBody            = "body"
 	_resBodyFile        = "body_file"
-	_resTemplateEnabled = "template_enabled"
-	_resTemplateModel   = "template_model"
+	_resTemplateEnabled = "template.enabled"
+	_resTemplateData    = "template.data"
 	_resEncoding        = "encoding"
 )
 
@@ -94,7 +96,7 @@ func FromFile(filename string) Builder {
 func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("[panic] error building external mock from file %s.\n %v", b.filename, r)
+			err = fmt.Errorf("[panic] error building external mock from file %s.\n %v\n %s", b.filename, r, string(debug.Stack()))
 		}
 	}()
 
@@ -344,11 +346,11 @@ func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 
 		seq := Seq()
 
-		if vi.IsSet(_fResponseSequenceAfterEnded) {
-			rr, err := b.buildReply(vi.Sub(_fResponseSequenceAfterEnded))
+		if vi.IsSet(_fResponseSequenceEnded) {
+			rr, err := b.buildReply(vi.Sub(_fResponseSequenceEnded))
 			if err != nil {
 				return nil,
-					fmt.Errorf("[response_response.after_ended] building error.\n %w", err)
+					fmt.Errorf("[response_response.sequence_ended] building error.\n %w", err)
 			}
 
 			seq.OnSequenceEnded(rr)
@@ -417,7 +419,6 @@ func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 		}
 
 		rep = proxy
-
 	} else {
 		// no response definition found.
 		// default to 200 (OK) with nothing more.
@@ -459,9 +460,20 @@ func (b *mockExternalBuilder) buildReply(v *viper.Viper) (Reply, error) {
 		res.Header(k, v)
 	}
 
+	for k, v := range v.GetStringMapString(_resHeaderTemplate) {
+		res.HeaderTemplate(k, v)
+	}
+
 	switch v.GetString(_resEncoding) {
 	case "gzip":
 		res.Gzip()
+	}
+
+	teData := v.Get(_resTemplateData)
+	isTemplateEnabled := v.GetBool(_resTemplateEnabled) || teData != nil
+
+	if teData != nil {
+		res.SetTemplateData(teData)
 	}
 
 	if v.IsSet(_resBodyFile) {
@@ -471,37 +483,17 @@ func (b *mockExternalBuilder) buildReply(v *viper.Viper) (Reply, error) {
 			filename = path.Join(strings.Join(dirs[:len(dirs)-1], "/"), filename)
 		}
 
-		file, err := os.Open(filename)
-		if err != nil {
-			return nil, fmt.Errorf(
-				"[body_file] [%s] error opening file.\n %w",
-				filename,
-				err,
-			)
-		}
-
-		defer file.Close()
-
-		b, err := io.ReadAll(file)
-		if err != nil {
-			return nil, fmt.Errorf(
-				"[body_file] [%s] error reading file content.\n %w",
-				filename,
-				err,
-			)
-		}
-
-		if v.GetBool(_resTemplateEnabled) {
-			res.BodyTemplate(string(b), v.Get(_resTemplateEnabled))
+		if isTemplateEnabled {
+			res.BodyFileWithTemplate(filename)
 		} else {
-			res.Body(b)
+			res.BodyFile(filename)
 		}
 	} else {
-		b := v.Get(_resBody)
-		switch e := b.(type) {
+		body := v.Get(_resBody)
+		switch e := body.(type) {
 		case string:
-			if v.GetBool(_resTemplateEnabled) {
-				res.BodyTemplate(e, v.Get(_resTemplateModel))
+			if isTemplateEnabled {
+				res.BodyTemplate(e)
 			} else {
 				res.Body([]byte(e))
 			}

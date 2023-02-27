@@ -22,7 +22,7 @@ func (m *equalStrictMatcher) Match(v any) (*Result, error) {
 
 	return &Result{
 		Ext:     []string{mfmt.Stringify(m.expected)},
-		Message: fmt.Sprintf("Received: %v", v),
+		Message: mfmt.PrintReceived(v),
 	}, nil
 }
 

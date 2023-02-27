@@ -4,6 +4,8 @@ import (
 	"sync"
 )
 
+var _ Params = (*paramsStore)(nil)
+
 // Params defines a contract for a generic parameters repository.
 type Params interface {
 	// Get returns the parameter by its key.
@@ -14,6 +16,8 @@ type Params interface {
 
 	// Set sets a parameter.
 	Set(k string, v any) error
+
+	MustSet(k string, v any)
 
 	// Remove removes a parameter by its key.
 	Remove(k string) error
@@ -53,6 +57,13 @@ func (p *paramsStore) Set(key string, dep any) error {
 
 	p.data[key] = dep
 	return nil
+}
+
+func (p *paramsStore) MustSet(key string, dep any) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+
+	p.data[key] = dep
 }
 
 func (p *paramsStore) Remove(key string) error {

@@ -57,7 +57,7 @@ func TestProxiedReplies(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
-	scoped.AssertCalled(t)
+	require.True(t, scoped.AssertCalled(t))
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.Equal(t, "example", res.Header.Get("x-res"))
 	assert.Equal(t, "hello world", string(b))
@@ -98,6 +98,6 @@ func TestProxiedReplyMockFileWithTemplate(t *testing.T) {
 	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	require.Equal(t, "done", string(b))
-	targetScoped.AssertCalled(t)
-	scoped.AssertCalled(t)
+	require.True(t, targetScoped.AssertCalled(t))
+	require.True(t, scoped.AssertCalled(t))
 }

@@ -1,6 +1,7 @@
 package test
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 	"testing"
@@ -277,10 +278,10 @@ func TestSimpleJSONValues(t *testing.T) {
 			scoped := m.MustMock(mocha.Postf("/test").Body(Equal(tc.value)).Reply(mocha.Status(tc.status)))
 
 			res, err := testutil.PostJSON(m.URL()+"/test", tc.value).Do()
-			require.NoError(t, err)
 
-			assert.Equal(t, tc.status, res.StatusCode)
-			scoped.AssertCalled(t)
+			require.NoError(t, err)
+			require.Equal(t, tc.status, res.StatusCode)
+			require.True(t, scoped.AssertCalled(t))
 		})
 	}
 }
@@ -305,4 +306,31 @@ func TestMalformedJSON_ShouldMatchOtherFieldsAndContinue(t *testing.T) {
 	require.NoError(t, res.Body.Close())
 	assert.True(t, scoped.HasBeenCalled())
 	assert.Equal(t, http.StatusOK, res.StatusCode)
+}
+
+func TestJSONResponse(t *testing.T) {
+	m := mocha.New()
+	m.MustStart()
+
+	defer m.Close()
+
+	type payload struct {
+		Language string `json:"language"`
+		Active   bool   `json:"active"`
+	}
+
+	p := &payload{"go", true}
+
+	m.MustMock(mocha.Getf("/test").Reply(mocha.OK().JSON(p)))
+
+	res, err := testutil.Get(m.URL() + "/test").Do()
+	require.NoError(t, err)
+
+	defer res.Body.Close()
+
+	var body payload
+
+	require.NoError(t, json.NewDecoder(res.Body).Decode(&body))
+	assert.Equal(t, http.StatusOK, res.StatusCode)
+	assert.Equal(t, p, &body)
 }

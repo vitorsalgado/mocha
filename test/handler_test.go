@@ -38,8 +38,8 @@ func TestHandlerReply(t *testing.T) {
 	require.NoError(t, err)
 
 	txt, err := io.ReadAll(res.Body)
-	require.NoError(t, err)
 
+	require.NoError(t, err)
 	require.NoError(t, err)
 	assert.Equal(t, res.StatusCode, http.StatusCreated)
 	assert.True(t, strings.Contains(string(txt), msg))

@@ -1,0 +1,13 @@
+request:
+  path: /test/templating
+  method: GET
+
+response:
+  status: 200
+  header_template:
+    test: '{{`{{ .App.Parameters.Get "test" }}`}}'
+    ctx: '{{`{{ .App.Parameters.Get "context" }}`}}'
+    message: '{{`{{ .Ext.message }}`}}'
+  template:
+    data:
+      Message: hi

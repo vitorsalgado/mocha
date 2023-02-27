@@ -1,8 +1,6 @@
 package matcher
 
 import (
-	"fmt"
-
 	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
@@ -26,7 +24,7 @@ func (m *funcMatcher) Match(v any) (*Result, error) {
 
 	return &Result{
 		Ext:     []string{mfmt.Stringify(v)},
-		Message: fmt.Sprintf("Received: %v", v),
+		Message: mfmt.PrintReceived(v),
 	}, nil
 }
 

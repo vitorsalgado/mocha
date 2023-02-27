@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"text/template"
 
 	"github.com/stretchr/testify/assert"
 
@@ -161,7 +162,8 @@ func TestConfigWithFunctions(t *testing.T) {
 		WithParams(newInMemoryParameters()),
 		WithDirs("test", "dev"),
 		WithLoader(&fileLoader{}),
-		WithProxy(&ProxyConfig{}, &ProxyConfig{}))
+		WithProxy(&ProxyConfig{}, &ProxyConfig{}),
+		WithMockFileHandlers(&customMockFileHandler{}))
 	conf := m.Config()
 
 	assert.Equal(t, nm, conf.Name)
@@ -175,6 +177,7 @@ func TestConfigWithFunctions(t *testing.T) {
 	assert.Equal(t, newInMemoryParameters(), conf.Parameters)
 	assert.Equal(t, []string{ConfigMockFilePattern, "test", "dev"}, conf.Directories)
 	assert.Len(t, conf.Loaders, 1)
+	assert.Len(t, conf.MockFileHandlers, 1)
 	assert.NotNil(t, conf.Proxy)
 }
 
@@ -195,6 +198,9 @@ func TestConfigBuilder(t *testing.T) {
 		Parameters(newInMemoryParameters()).
 		Dirs("test", "dev").
 		Loader(&fileLoader{}).
+		MockFileHandlers(&customMockFileHandler{}).
+		TemplateEngine(newGoTemplate()).
+		BuiltInTemplateEngineFunctions(template.FuncMap{"trim": strings.TrimSpace}).
 		Proxy(&ProxyConfig{}, &ProxyConfig{}))
 	conf := m.Config()
 
@@ -209,6 +215,9 @@ func TestConfigBuilder(t *testing.T) {
 	assert.Equal(t, newInMemoryParameters(), conf.Parameters)
 	assert.Equal(t, []string{ConfigMockFilePattern, "test", "dev"}, conf.Directories)
 	assert.Len(t, conf.Loaders, 1)
+	assert.Len(t, conf.MockFileHandlers, 1)
+	assert.IsType(t, &builtInGoTemplate{}, conf.TemplateEngine)
+	assert.Len(t, conf.TemplateFunctions, 1)
 	assert.NotNil(t, conf.Proxy)
 }
 

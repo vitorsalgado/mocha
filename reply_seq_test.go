@@ -66,11 +66,11 @@ func TestSequentialReplyShouldReturnErrorWhenSequenceDoesNotContainReplies(t *te
 func TestSequentialReplyValidate(t *testing.T) {
 	seq := Seq()
 
-	require.Error(t, seq.validate())
+	require.Error(t, seq.validate(nil))
 
 	seq.Add(OK())
 
-	require.NoError(t, seq.validate())
+	require.NoError(t, seq.validate(nil))
 }
 
 func TestSeqRace(t *testing.T) {

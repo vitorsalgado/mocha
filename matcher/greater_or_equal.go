@@ -32,7 +32,7 @@ func (m *greaterOrEqualMatcher) Match(v any) (*Result, error) {
 
 	return &Result{
 		Ext:     []string{mfmt.Stringify(m.expected)},
-		Message: fmt.Sprintf("Received: %v", vv),
+		Message: mfmt.PrintReceived(vv),
 	}, nil
 }
 

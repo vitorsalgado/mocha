@@ -47,6 +47,7 @@ type Mocha struct {
 	rec                *record
 	rmu                sync.RWMutex
 	proxy              *reverseProxy
+	te                 TemplateEngine
 	extensions         map[string]Extension
 	data               map[string]any
 }
@@ -158,7 +159,7 @@ func New(config ...Configurer) *Mocha {
 	parsers = append(parsers, &jsonBodyParser{}, &plainTextParser{}, &formURLEncodedParser{}, &noopParser{})
 
 	middlewares := make([]func(handler http.Handler) http.Handler, 0)
-	middlewares = append(middlewares, recover.New(l).Recover)
+	middlewares = append(middlewares, recover.New(l, conf.MockNotFoundStatusCode).Recover)
 
 	if conf.LogLevel > LogSilently {
 		h := event.NewInternalListener(l, conf.LogLevel == LogVerbose)
@@ -214,6 +215,15 @@ func New(config ...Configurer) *Mocha {
 	loaders[0] = &fileLoader{}
 	for i, loader := range conf.Loaders {
 		loaders[i+1] = loader
+	}
+
+	if conf.TemplateEngine == nil {
+		tmpl := newGoTemplate()
+		if len(conf.TemplateFunctions) > 0 {
+			tmpl.FuncMap(conf.TemplateFunctions)
+		}
+
+		m.te = tmpl
 	}
 
 	m.config = conf
@@ -332,7 +342,7 @@ func (app *Mocha) Mock(builders ...Builder) (*Scoped, error) {
 	for i, b := range builders {
 		mock, err := b.Build(app)
 		if err != nil {
-			return nil, fmt.Errorf("[mock] error mocking [%d].\n %w", i, err)
+			return nil, fmt.Errorf("[mock] error adding mock [%d].\n %w", i, err)
 		}
 
 		mock.prepare()
@@ -363,7 +373,6 @@ func (app *Mocha) Mock(builders ...Builder) (*Scoped, error) {
 func (app *Mocha) MustMock(builders ...Builder) *Scoped {
 	scoped, err := app.Mock(builders...)
 	if err != nil {
-		app.log.Logf(err.Error())
 		panic(err)
 	}
 
@@ -388,6 +397,11 @@ func (app *Mocha) Context() context.Context {
 // Config returns the mock server configurations.
 func (app *Mocha) Config() Config {
 	return *app.config
+}
+
+// TemplateEngine returns the TemplateEngine associated to this instance.
+func (app *Mocha) TemplateEngine() TemplateEngine {
+	return app.te
 }
 
 // Name returns mock server name.
@@ -512,7 +526,10 @@ func (app *Mocha) RegisterExtension(extension Extension) error {
 
 	_, ok := app.extensions[extension.UniqueName()]
 	if ok {
-		return fmt.Errorf("there is already an extension registered with the name \"%s\"", extension.UniqueName())
+		return fmt.Errorf(
+			"there is already an extension registered with the name \"%s\"",
+			extension.UniqueName(),
+		)
 	}
 
 	app.extensions[extension.UniqueName()] = extension
