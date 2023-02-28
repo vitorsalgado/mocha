@@ -45,13 +45,14 @@ func TestForward(t *testing.T) {
 		req.Header.Set("x-present", "ok")
 		rv := &RequestValues{RawRequest: req, URL: req.URL}
 
-		res, err := From(dest.URL).
+		reply := From(dest.URL).
 			ForwardHeader("x-proxy", "proxied").
 			ProxyHeaders(ph).
 			RemoveProxyHeaders("x-to-be-removed").
 			Header("x-res", "response").
-			Headers(h).
-			Build(nil, rv)
+			Headers(h)
+		require.NoError(t, reply.beforeBuild(New()))
+		res, err := reply.Build(nil, rv)
 
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusCreated, res.StatusCode)
@@ -79,6 +80,7 @@ func TestForward(t *testing.T) {
 
 		u, _ := url.Parse(dest.URL)
 		forward := From(u)
+		require.NoError(t, forward.beforeBuild(New()))
 		res, err := forward.Build(nil, rv)
 
 		require.NoError(t, err)
@@ -111,6 +113,7 @@ func TestForward(t *testing.T) {
 
 		u, _ := url.Parse(dest.URL)
 		forward := From(u)
+		require.NoError(t, forward.beforeBuild(New()))
 		res, err := forward.Build(nil, rv)
 		require.NoError(t, err)
 
@@ -132,6 +135,7 @@ func TestForward(t *testing.T) {
 		rv := &RequestValues{RawRequest: req, URL: req.URL}
 
 		forward := From(dest.URL)
+		require.NoError(t, forward.beforeBuild(New()))
 		res, err := forward.Build(nil, rv)
 
 		require.NoError(t, err)
@@ -151,7 +155,9 @@ func TestForward(t *testing.T) {
 
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080/path/test/example?filter=all", nil)
 		rv := &RequestValues{RawRequest: req, URL: req.URL}
-		res, err := From(dest.URL).TrimPrefix("/path/test").Build(nil, rv)
+		reply := From(dest.URL).TrimPrefix("/path/test")
+		require.NoError(t, reply.beforeBuild(New()))
+		res, err := reply.Build(nil, rv)
 
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -169,7 +175,9 @@ func TestForward(t *testing.T) {
 
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080/path/test/example?filter=all", nil)
 		rv := &RequestValues{RawRequest: req, URL: req.URL}
-		res, err := From(dest.URL).TrimSuffix("/example").Build(nil, rv)
+		reply := From(dest.URL).TrimSuffix("/example")
+		require.NoError(t, reply.beforeBuild(New()))
+		res, err := reply.Build(nil, rv)
 
 		assert.NoError(t, err)
 		assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -203,9 +211,10 @@ func TestForward(t *testing.T) {
 
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080/path/test/example", nil)
 		rv := &RequestValues{RawRequest: req, URL: req.URL}
-		res, err := From(dest.URL).
-			Timeout(100*time.Millisecond).
-			Build(nil, rv)
+		reply := From(dest.URL).
+			Timeout(100 * time.Millisecond)
+		require.NoError(t, reply.beforeBuild(New()))
+		res, err := reply.Build(nil, rv)
 
 		require.Error(t, err)
 		require.Nil(t, res)
@@ -270,7 +279,7 @@ func TestForward(t *testing.T) {
 		m.MustStart()
 
 		s1 := target.MustMock(Getf("/test").Reply(OK().PlainText("hi")))
-		s2 := m.MustMock(Getf("/test").Reply(From(target.URL())))
+		s2 := m.MustMock(Getf("/test").Reply(From(target.URL()).SSLVerify(true)))
 
 		httpClient := &http.Client{}
 		res, err := httpClient.Get(m.URL() + "/test")

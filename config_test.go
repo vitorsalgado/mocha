@@ -163,7 +163,12 @@ func TestConfigWithFunctions(t *testing.T) {
 		WithDirs("test", "dev"),
 		WithLoader(&fileLoader{}),
 		WithProxy(&ProxyConfig{}, &ProxyConfig{}),
-		WithMockFileHandlers(&customMockFileHandler{}))
+		WithMockFileHandlers(&customMockFileHandler{}),
+		WithTemplateEngine(newGoTemplate()),
+		WithTemplateFunctions(template.FuncMap{"trim": strings.TrimSpace}),
+		WithHTTPClient(func() (*http.Client, error) {
+			return nil, nil
+		}))
 	conf := m.Config()
 
 	assert.Equal(t, nm, conf.Name)
@@ -179,6 +184,9 @@ func TestConfigWithFunctions(t *testing.T) {
 	assert.Len(t, conf.Loaders, 1)
 	assert.Len(t, conf.MockFileHandlers, 1)
 	assert.NotNil(t, conf.Proxy)
+	assert.IsType(t, &builtInGoTemplate{}, conf.TemplateEngine)
+	assert.Len(t, conf.TemplateFunctions, 1)
+	assert.NotNil(t, conf.HTTPClientFactory)
 }
 
 func TestConfigBuilder(t *testing.T) {

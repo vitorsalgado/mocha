@@ -27,7 +27,7 @@ type Reply interface {
 type replyValidation interface {
 	// Validate runs once during mock building.
 	// Useful for pre-configurations or validations that needs to be executed once.
-	validate(app *Mocha) error
+	beforeBuild(app *Mocha) error
 }
 
 // Stub defines the HTTP response that will be served once a Mock is matched for an HTTP Request.
@@ -297,7 +297,7 @@ func (rep *StdReply) Gzip() *StdReply {
 	return rep
 }
 
-func (rep *StdReply) validate(app *Mocha) error {
+func (rep *StdReply) beforeBuild(app *Mocha) error {
 	if rep.err != nil {
 		return rep.err
 	}
@@ -362,7 +362,7 @@ func (rep *StdReply) Build(_ http.ResponseWriter, r *RequestValues) (stub *Stub,
 		}()
 
 		buf := &bytes.Buffer{}
-		err = rep.bodyTeRender.Render(buf, buildTemplateData(r, rep.teData))
+		err = rep.bodyTeRender.Render(buf, rep.buildTemplateData(r, rep.teData))
 		if err != nil {
 			return nil, err
 		}
@@ -382,7 +382,7 @@ func (rep *StdReply) Build(_ http.ResponseWriter, r *RequestValues) (stub *Stub,
 		}()
 
 		buf := &bytes.Buffer{}
-		err = rep.bodyFnTeRender.Render(buf, buildTemplateData(r, rep.teData))
+		err = rep.bodyFnTeRender.Render(buf, rep.buildTemplateData(r, rep.teData))
 		if err != nil {
 			return nil, err
 		}
@@ -407,7 +407,7 @@ func (rep *StdReply) Build(_ http.ResponseWriter, r *RequestValues) (stub *Stub,
 				return nil, err
 			}
 
-			err = t.Render(buf, buildTemplateData(r, rep.teData))
+			err = t.Render(buf, rep.buildTemplateData(r, rep.teData))
 			if err != nil {
 				return nil, err
 			}
@@ -420,7 +420,7 @@ func (rep *StdReply) Build(_ http.ResponseWriter, r *RequestValues) (stub *Stub,
 
 	if rep.teType&_teHeader == _teHeader {
 		buf := &bytes.Buffer{}
-		err = rep.headerTeRender.Render(buf, buildTemplateData(r, rep.teData))
+		err = rep.headerTeRender.Render(buf, rep.buildTemplateData(r, rep.teData))
 		if err != nil {
 			return nil, err
 		}
@@ -475,7 +475,7 @@ func (rep *StdReply) encodeBody() error {
 	return nil
 }
 
-func buildTemplateData(r *RequestValues, ext any) *templateData {
+func (rep *StdReply) buildTemplateData(r *RequestValues, ext any) *templateData {
 	reqExtra := templateRequest{
 		Method:          r.RawRequest.Method,
 		URL:             r.URL,

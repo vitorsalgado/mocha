@@ -33,7 +33,7 @@ func (r *SequentialReply) Add(reply ...Reply) *SequentialReply {
 	return r
 }
 
-func (r *SequentialReply) validate(_ *Mocha) error {
+func (r *SequentialReply) beforeBuild(_ *Mocha) error {
 	size := len(r.replies)
 	if size == 0 {
 		return fmt.Errorf("[reply.sequence] you need to set at least one response when using multiple response builder")

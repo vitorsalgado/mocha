@@ -38,6 +38,8 @@ type ProxyReply struct {
 	trimPrefix           string
 	trimSuffix           string
 	timeout              time.Duration
+	noFollow             bool
+	sslVerify            bool
 	httpClient           *http.Client
 }
 
@@ -63,17 +65,12 @@ func From[T FromTypes](target T) *ProxyReply {
 		proxyHeaders:         make(http.Header),
 		proxyHeadersToRemove: make([]string, 0),
 		timeout:              _defaultTimeout,
-		httpClient: &http.Client{
-			Transport: &http.Transport{
-				DisableCompression: true,
-				TLSClientConfig:    &tls.Config{InsecureSkipVerify: false},
-			}},
 	}
 }
 
 // NoFollow disables following redirects.
 func (r *ProxyReply) NoFollow() *ProxyReply {
-	r.httpClient.CheckRedirect = noFollow
+	r.noFollow = true
 	return r
 }
 
@@ -138,7 +135,13 @@ func (r *ProxyReply) Timeout(timeout time.Duration) *ProxyReply {
 
 // SkipSSLVerify skips server certificate verification.
 func (r *ProxyReply) SkipSSLVerify() *ProxyReply {
-	r.httpClient.Transport.(*http.Transport).TLSClientConfig.InsecureSkipVerify = true
+	r.sslVerify = false
+	return r
+}
+
+// SSLVerify sets if the client should verify server certificate.
+func (r *ProxyReply) SSLVerify(v bool) *ProxyReply {
+	r.sslVerify = v
 	return r
 }
 
@@ -215,6 +218,32 @@ func (r *ProxyReply) Build(_ http.ResponseWriter, req *RequestValues) (*Stub, er
 	}
 
 	return stub, nil
+}
+
+func (r *ProxyReply) beforeBuild(app *Mocha) error {
+	if app.config.HTTPClientFactory == nil {
+		r.httpClient = &http.Client{
+			Transport: &http.Transport{
+				DisableCompression: true,
+				TLSClientConfig:    &tls.Config{InsecureSkipVerify: !r.sslVerify},
+			}}
+	} else {
+		h, err := app.config.HTTPClientFactory()
+		if err != nil {
+			return err
+		}
+
+		r.httpClient = h
+		if r.httpClient.Transport != nil {
+			r.httpClient.Transport.(*http.Transport).TLSClientConfig.InsecureSkipVerify = !r.sslVerify
+		}
+	}
+
+	if r.noFollow {
+		r.httpClient.CheckRedirect = noFollow
+	}
+
+	return nil
 }
 
 func noFollow(_ *http.Request, _ []*http.Request) error {

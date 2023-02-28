@@ -48,7 +48,7 @@ func (p *ProxyConfig) Apply(c *ProxyConfig) error {
 	return nil
 }
 
-var _defaultProxyConfig = ProxyConfig{Timeout: 10 * time.Second}
+var _defaultProxyConfig = ProxyConfig{Timeout: 10 * time.Second, SkipSSLVerify: true}
 
 type reverseProxy struct {
 	conf     *ProxyConfig

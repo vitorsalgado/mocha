@@ -389,7 +389,7 @@ func (b *MockBuilder) Build(app *Mocha) (*Mock, error) {
 	}
 
 	if r, ok := b.mock.Reply.(replyValidation); ok {
-		err := r.validate(app)
+		err := r.beforeBuild(app)
 		if err != nil {
 			return nil, err
 		}

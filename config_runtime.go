@@ -69,6 +69,7 @@ const (
 	_kForwardRemoveProxyHeaders = "forward.remove_proxy_headers"
 	_kForwardTrimPrefix         = "forward.trim_prefix"
 	_kForwardTrimSuffix         = "forward.trim_suffix"
+	_kForwardSSLVerify          = "forward.ssl_verify"
 )
 
 var _ Configurer = (*localConfigurer)(nil)
@@ -214,6 +215,7 @@ func (c *localConfigurer) Apply(conf *Config) (err error) {
 			ProxyHeadersToRemove: v.GetStringSlice(_kForwardRemoveProxyHeaders),
 			TrimPrefix:           v.GetString(_kForwardTrimPrefix),
 			TrimSuffix:           v.GetString(_kForwardTrimSuffix),
+			SSLVerify:            v.GetBool(_kForwardSSLVerify),
 		}
 	}
 
@@ -284,6 +286,7 @@ func bindFlags(v *viper.Viper) error {
 
 	pp.Bool(_kForward, false, "")
 	pp.String(_kForwardTarget, "", "Forward requests to the given URL.")
+	pp.Bool(_kForwardSSLVerify, false, "SSL verify")
 
 	v.RegisterAlias(_kDirectories, _kGlob)
 

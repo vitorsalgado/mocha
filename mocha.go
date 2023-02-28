@@ -251,7 +251,8 @@ func New(config ...Configurer) *Mocha {
 				ProxyHeaders(m.config.Forward.ProxyHeaders).
 				RemoveProxyHeaders(m.config.Forward.ProxyHeadersToRemove...).
 				TrimPrefix(m.config.Forward.TrimPrefix).
-				TrimSuffix(m.config.Forward.TrimSuffix)))
+				TrimSuffix(m.config.Forward.TrimSuffix).
+				SSLVerify(m.config.Forward.SSLVerify)))
 	}
 
 	return m

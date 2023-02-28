@@ -70,7 +70,7 @@ func TestReplyWithTemplate(t *testing.T) {
 		BodyTemplate(string(b)).
 		SetTemplateData(data)
 
-	require.NoError(t, reply.validate(app))
+	require.NoError(t, reply.beforeBuild(app))
 	res, err := reply.Build(nil, rv)
 
 	require.NoError(t, err)
@@ -101,7 +101,7 @@ func TestReplyWithTemplateText(t *testing.T) {
 		Status(http.StatusOK).
 		BodyTemplate(tmpl).
 		SetTemplateData(data)
-	require.NoError(t, reply.validate(app))
+	require.NoError(t, reply.beforeBuild(app))
 	res, err := reply.Build(nil, rv)
 
 	require.NoError(t, err)

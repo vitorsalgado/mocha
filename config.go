@@ -98,6 +98,10 @@ type Config struct {
 
 	TemplateFunctions template.FuncMap
 
+	// HTTPClientFactory builds an *http.Client that will be used by internal features, like ProxyReply.
+	// If none is set, a default one will be used.
+	HTTPClientFactory func() (*http.Client, error)
+
 	// CLI Only Options
 
 	// UseHTTPS defines that the mock server should use HTTPS.
@@ -118,6 +122,7 @@ type forwardConfig struct {
 	ProxyHeadersToRemove []string
 	TrimPrefix           string
 	TrimSuffix           string
+	SSLVerify            bool
 }
 
 // Apply copies the current Config struct values to the given Config parameter.
@@ -254,6 +259,7 @@ func (cb *ConfigBuilder) Dirs(patterns ...string) *ConfigBuilder {
 	dirs = append(dirs, patterns...)
 
 	cb.conf.Directories = dirs
+
 	return cb
 }
 
@@ -283,6 +289,7 @@ func (cb *ConfigBuilder) Proxy(options ...ProxyConfigurer) *ConfigBuilder {
 	}
 
 	cb.proxyConf = options
+
 	return cb
 }
 
@@ -294,6 +301,7 @@ func (cb *ConfigBuilder) Record(options ...RecordConfigurer) *ConfigBuilder {
 	}
 
 	cb.recorderConf = options
+
 	return cb
 }
 
@@ -309,6 +317,11 @@ func (cb *ConfigBuilder) TemplateEngine(te TemplateEngine) *ConfigBuilder {
 
 func (cb *ConfigBuilder) BuiltInTemplateEngineFunctions(fm template.FuncMap) *ConfigBuilder {
 	cb.conf.TemplateFunctions = fm
+	return cb
+}
+
+func (cb *ConfigBuilder) HTTPClient(f func() (*http.Client, error)) *ConfigBuilder {
+	cb.conf.HTTPClientFactory = f
 	return cb
 }
 
@@ -498,9 +511,16 @@ func WithTemplateEngine(ve TemplateEngine) Configurer {
 	})
 }
 
-func WithTemplateEngineFunctions(fm template.FuncMap) Configurer {
+func WithTemplateFunctions(fm template.FuncMap) Configurer {
 	return configFunc(func(c *Config) error {
 		c.TemplateFunctions = fm
+		return nil
+	})
+}
+
+func WithHTTPClient(f func() (*http.Client, error)) Configurer {
+	return configFunc(func(c *Config) error {
+		c.HTTPClientFactory = f
 		return nil
 	})
 }
