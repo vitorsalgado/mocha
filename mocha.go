@@ -145,8 +145,12 @@ func New(config ...Configurer) *Mocha {
 	for i, configurer := range config {
 		err := configurer.Apply(conf)
 		if err != nil {
-			l.Logf("error applying configuration [%d]. reason=%s", i, err.Error())
-			panic(err)
+			panic(fmt.Errorf(
+				"[server] error applying configuration [%d].\n config type=%s\n reason=%w",
+				i,
+				reflect.TypeOf(configurer),
+				err,
+			))
 		}
 	}
 
@@ -207,8 +211,7 @@ func New(config ...Configurer) *Mocha {
 
 	err := server.Setup(conf, handler)
 	if err != nil {
-		l.Logf("failed to configure server. reason=%v", err)
-		panic(err)
+		panic(fmt.Errorf("[server] setup failed\n reason=%w", err))
 	}
 
 	loaders := make([]Loader, len(conf.Loaders)+1 /* number of internal loaders */)
@@ -287,8 +290,7 @@ func (app *Mocha) Start() (ServerInfo, error) {
 func (app *Mocha) MustStart() ServerInfo {
 	info, err := app.Start()
 	if err != nil {
-		app.log.Logf("failed to start mock server. reason=%v", err)
-		panic(err)
+		panic(fmt.Errorf("[server] start failed. reason=%w", err))
 	}
 
 	return info
@@ -314,8 +316,7 @@ func (app *Mocha) StartTLS() (ServerInfo, error) {
 func (app *Mocha) MustStartTLS() ServerInfo {
 	info, err := app.StartTLS()
 	if err != nil {
-		app.log.Logf("failed to start a TLS mock server. reason=%v", err)
-		panic(err)
+		panic(fmt.Errorf("[server] failed to start server with TLS. reason=%w", err))
 	}
 
 	return info
@@ -447,8 +448,7 @@ func (app *Mocha) MustReload() {
 	err := app.Reload()
 
 	if err != nil {
-		app.log.Logf("error rebuild mock definitions. reason=%v", err.Error())
-		panic(err)
+		panic(fmt.Errorf("[server] error rebuilding mock definitions. reason=%w", err))
 	}
 }
 
@@ -528,7 +528,7 @@ func (app *Mocha) RegisterExtension(extension Extension) error {
 	_, ok := app.extensions[extension.UniqueName()]
 	if ok {
 		return fmt.Errorf(
-			"there is already an extension registered with the name \"%s\"",
+			"[extension] there is already an extension registered with the name \"%s\"",
 			extension.UniqueName(),
 		)
 	}
@@ -553,7 +553,7 @@ func (app *Mocha) PrintConfig(w io.Writer) error {
 	s := strings.Builder{}
 
 	if app.Name() != "" {
-		s.WriteString(colorize.Bold("Name: "))
+		s.WriteString(colorize.Bold("Server Name: "))
 		s.WriteString(app.Name())
 		s.WriteString("\n")
 	}
@@ -671,13 +671,33 @@ func (app *Mocha) AssertCalled(t TestingT) bool {
 	t.Helper()
 
 	result := true
+	size := 0
+	buf := strings.Builder{}
 
 	for i, s := range app.scopes {
 		if s.IsPending() {
-			t.Logf("\nscope [%d]\n", i)
-			s.AssertCalled(t)
+			buf.WriteString(fmt.Sprintf("   Scope %d\n", i))
+			pending := s.GetPending()
+			size += len(pending)
+
+			for _, p := range pending {
+				buf.WriteString("    Mock [")
+				buf.WriteString(p.ID)
+				buf.WriteString("] ")
+				buf.WriteString(p.Name)
+				buf.WriteString("\n")
+			}
+
 			result = false
 		}
+	}
+
+	if !result {
+		t.Errorf("\nServer: %s\n  There are still %d mocks that were not called.\n  Pending:\n%s",
+			app.name,
+			size,
+			buf.String(),
+		)
 	}
 
 	return result
@@ -688,13 +708,34 @@ func (app *Mocha) AssertNotCalled(t TestingT) bool {
 	t.Helper()
 
 	result := true
+	size := 0
+	buf := strings.Builder{}
 
 	for i, s := range app.scopes {
 		if !s.IsPending() {
-			t.Logf("\nscope [%d]\n", i)
-			s.AssertNotCalled(t)
+			buf.WriteString(fmt.Sprintf("   Scope %d\n", i))
+			called := s.GetCalled()
+			size += len(called)
+
+			for _, p := range called {
+				buf.WriteString("    Mock [")
+				buf.WriteString(p.ID)
+				buf.WriteString("] ")
+				buf.WriteString(p.Name)
+				buf.WriteString("\n")
+			}
+
 			result = false
 		}
+	}
+
+	if !result {
+		t.Errorf(
+			"\nServer: %s\n  %d Mock(s) were called at least once when none should be.\n  Called:\n%s",
+			app.name,
+			size,
+			buf.String(),
+		)
 	}
 
 	return result
@@ -711,7 +752,7 @@ func (app *Mocha) AssertNumberOfCalls(t TestingT, expected int) bool {
 		return true
 	}
 
-	t.Errorf("\nexpected [%d] matched request hits. got [%d]", expected, hits)
+	t.Errorf("\nServer: %s\n Expected %d matched request hits.\n Got %d", app.name, expected, hits)
 
 	return false
 }

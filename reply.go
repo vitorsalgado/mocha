@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/textproto"
 	"os"
-	"runtime/debug"
 
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
@@ -23,10 +22,7 @@ type Reply interface {
 	Build(w http.ResponseWriter, r *RequestValues) (*Stub, error)
 }
 
-// replyValidation describes a Reply that has preparations steps to run on mocking building.
-type replyValidation interface {
-	// Validate runs once during mock building.
-	// Useful for pre-configurations or validations that needs to be executed once.
+type replyOnBeforeBuild interface {
 	beforeBuild(app *Mocha) error
 }
 
@@ -354,9 +350,8 @@ func (rep *StdReply) Build(_ http.ResponseWriter, r *RequestValues) (stub *Stub,
 		defer func() {
 			if recovered := recover(); recovered != nil {
 				err = fmt.Errorf(
-					"[reply] panic parsing body template.\n [panic] %v\n %v",
+					"[reply] panic parsing body template.\n [panic] %v",
 					recovered,
-					string(debug.Stack()),
 				)
 			}
 		}()
@@ -373,10 +368,9 @@ func (rep *StdReply) Build(_ http.ResponseWriter, r *RequestValues) (stub *Stub,
 		defer func() {
 			if recovered := recover(); recovered != nil {
 				err = fmt.Errorf(
-					"[reply] panic loading body from %s.\n [panic] %v\n %v",
+					"[reply] panic loading body from %s.\n [panic] %v",
 					rep.bodyFilename,
 					recovered,
-					string(debug.Stack()),
 				)
 			}
 		}()

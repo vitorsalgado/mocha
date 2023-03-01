@@ -104,12 +104,12 @@ func (c *localConfigurer) Apply(conf *Config) (err error) {
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("[config] error binding configuration flags\n %w", err)
 	}
 
 	err = bindEnv(v)
 	if err != nil {
-		return err
+		return fmt.Errorf("[config] error binding environment variables\n %w", err)
 	}
 
 	// use config filename from flags, if present,
@@ -121,7 +121,12 @@ func (c *localConfigurer) Apply(conf *Config) (err error) {
 
 	err = bindFile(v, c.filename, c.paths)
 	if err != nil {
-		return err
+		return fmt.Errorf(
+			"[config] error binding configuration from file=%s, lookup_paths=%v\n %w",
+			c.filename,
+			c.paths,
+			err,
+		)
 	}
 
 	v.SetDefault(_kName, conf.Name)
@@ -195,7 +200,7 @@ func (c *localConfigurer) Apply(conf *Config) (err error) {
 
 		targetURL, err := url.Parse(target)
 		if err != nil {
-			return fmt.Errorf(`[config] field "forward.target" must contain a valid URL. %w`, err)
+			return fmt.Errorf(`[config] field "forward.target" must contain a valid URL. error=%w`, err)
 		}
 
 		h := make(http.Header, len(v.GetStringMapString(_kForwardHeaders)))

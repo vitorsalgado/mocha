@@ -3,8 +3,10 @@ package mocha
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
+	"reflect"
 	"strings"
 
 	"github.com/vitorsalgado/mocha/v3/internal/header"
@@ -40,11 +42,12 @@ func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (parsedBody 
 
 		contentType := r.Header.Get(header.ContentType)
 
-		for _, parse := range parsers {
-			if parse.CanParse(contentType, r) {
-				parsedBody, err = parse.Parse(rawBody, r)
+		for _, parser := range parsers {
+			if parser.CanParse(contentType, r) {
+				parsedBody, err = parser.Parse(rawBody, r)
 				if err != nil {
-					return nil, rawBody, err
+					return nil, rawBody,
+						fmt.Errorf("parser %s failed. reason=%w", reflect.TypeOf(parser), err)
 				}
 
 				return parsedBody, rawBody, nil

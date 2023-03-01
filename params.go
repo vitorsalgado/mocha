@@ -56,6 +56,7 @@ func (p *paramsStore) Set(key string, dep any) error {
 	defer p.mu.Unlock()
 
 	p.data[key] = dep
+
 	return nil
 }
 
@@ -71,6 +72,7 @@ func (p *paramsStore) Remove(key string) error {
 	defer p.mu.Unlock()
 
 	delete(p.data, key)
+
 	return nil
 }
 
@@ -79,5 +81,6 @@ func (p *paramsStore) Has(key string) (bool, error) {
 	defer p.mu.RUnlock()
 
 	_, ok := p.data[key]
+
 	return ok, nil
 }

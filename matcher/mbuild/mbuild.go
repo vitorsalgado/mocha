@@ -62,7 +62,7 @@ const (
 func TryBuildMatcher(possibleMatcher any) (m matcher.Matcher, err error) {
 	val := reflect.ValueOf(possibleMatcher)
 	if possibleMatcher == nil || !val.IsValid() {
-		return nil, fmt.Errorf("matcher definition must be a string or an array in the format: [\"<MATCHER_NAME>\", ARG_1, ARG_2...]")
+		return nil, fmt.Errorf("[matcher] definition must be a string or an array in the format: [\"<MATCHER_NAME>\", ARG_1, ARG_2...]")
 	}
 
 	switch val.Kind() {
@@ -76,7 +76,7 @@ func TryBuildMatcher(possibleMatcher any) (m matcher.Matcher, err error) {
 func BuildMatcher(possibleMatcher any) (m matcher.Matcher, err error) {
 	val := reflect.ValueOf(possibleMatcher)
 	if possibleMatcher == nil || !val.IsValid() {
-		return nil, fmt.Errorf("matcher definition must be a string or an array in the format: [\"<MATCHER_NAME>\", ARG_1, ARG_2...]")
+		return nil, fmt.Errorf("[matcher] definition must be a string or an array in the format: [\"<MATCHER_NAME>\", ARG_1, ARG_2...]")
 	}
 
 	switch val.Kind() {
@@ -90,13 +90,13 @@ func BuildMatcher(possibleMatcher any) (m matcher.Matcher, err error) {
 func buildMatcherFromArray(possibleMatcher any) (matcher.Matcher, error) {
 	val := reflect.ValueOf(possibleMatcher)
 	if val.Len() == 0 {
-		return nil, fmt.Errorf("matcher definition must be a string or an array in the format: [\"<MATCHER_NAME>\", ARG_1, ARG_2...]")
+		return nil, fmt.Errorf("[matcher] definition must be a string or an array in the format: [\"<MATCHER_NAME>\", ARG_1, ARG_2...]")
 	}
 
 	mk, ok := val.Index(0).Interface().(string)
 	if !ok {
 		return nil, fmt.Errorf(
-			"first index of a matcher definition must be the matcher name. eg.: [\"<MATCHER_NAME>\", ARGUMENTS...]. got: %v",
+			"[matcher] first index of a matcher definition must be the matcher name. eg.: [\"<MATCHER_NAME>\", ARGUMENTS...]. got: %v",
 			val.Index(0).Interface())
 	}
 
@@ -226,7 +226,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 		str, ok := args.(string)
 		if !ok {
 			return nil,
-				fmt.Errorf("[%s] expects a string argument. got=%v", _mEqualToIgnoreCase, args)
+				fmt.Errorf("[%s, %s] expects a string argument. got=%v", _mEqualToIgnoreCase, _mEqualToIgnoreCaseAlias, args)
 		}
 
 		return matcher.EqualIgnoreCase(str), nil
@@ -244,7 +244,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 		num, err := getFloat64(args)
 		if err != nil {
 			return nil,
-				fmt.Errorf("[%s] expects an numeric argument. got=%d", _mGreater, args)
+				fmt.Errorf("[%s, %s] expects an numeric argument. got=%d", _mGreater, _mGreaterAlias, args)
 		}
 
 		return matcher.GreaterThan(num), nil
@@ -253,7 +253,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 		num, err := getFloat64(args)
 		if err != nil {
 			return nil,
-				fmt.Errorf("[%s] expects an numeric argument. got=%d", _mGreaterThanOrEqual, args)
+				fmt.Errorf("[%s, %s] expects an numeric argument. got=%d", _mGreaterThanOrEqual, _mGreaterThanOrEqualAlias, args)
 		}
 
 		return matcher.GreaterThanOrEqual(num), nil
@@ -340,14 +340,15 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 		a, ok := args.([]any)
 		if !ok {
 			return nil,
-				fmt.Errorf("[%s] expects an array argument. got=%v", _mJSONPath, args)
+				fmt.Errorf("[%s, %s] expects an array argument. got=%v", _mJSONPath, _mField, args)
 		}
 
 		if len(a) != 2 {
 			return nil,
 				fmt.Errorf(
-					"[%s] expects at least 2 arguments, 1: JSON field path, 2: Matcher to be applied on JSON field. got=%v",
+					"[%s, %s] expects at least 2 arguments, 1: JSON field path, 2: Matcher to be applied on JSON field. got=%v",
 					_mJSONPath,
+					_mField,
 					args,
 				)
 		}
@@ -355,21 +356,21 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 		chain, ok := a[0].(string)
 		if !ok {
 			return nil,
-				fmt.Errorf("[%s] field path must be a string. got=%v", _mJSONPath, a[0])
+				fmt.Errorf("[%s, %s] field path must be a string. got=%v", _mJSONPath, _mField, a[0])
 		}
 
 		m, err := BuildMatcher(a[1])
 		if err != nil {
-			return nil, fmt.Errorf("[%s] building error.\n %w", _mJSONPath, err)
+			return nil, fmt.Errorf("[%s, %s] building error.\n %w", _mJSONPath, _mField, err)
 		}
 
-		return matcher.JSONPath(chain, m), nil
+		return matcher.Field(chain, m), nil
 
 	case _mLength, _mLen:
 		num, err := getInt(args)
 		if err != nil {
 			return nil,
-				fmt.Errorf("[%s] expects an integer argument. got=%d", _mLen, args)
+				fmt.Errorf("[%s, %s] expects an integer argument. got=%d", _mLen, _mLength, args)
 		}
 
 		return matcher.HaveLen(int(num)), nil
@@ -387,7 +388,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 		num, err := getFloat64(args)
 		if err != nil {
 			return nil,
-				fmt.Errorf("[%s] expects an numeric argument. got=%d", _mGreater, args)
+				fmt.Errorf("[%s, %s] expects an numeric argument. got=%d", _mGreater, _mLessThanAlias, args)
 		}
 
 		return matcher.LessThan(num), nil
@@ -396,7 +397,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 		num, err := getFloat64(args)
 		if err != nil {
 			return nil,
-				fmt.Errorf("[%s] expects an numeric argument. got=%d", _mGreaterThanOrEqual, args)
+				fmt.Errorf("[%s, %s] expects an numeric argument. got=%d", _mGreaterThanOrEqual, _mLessThanOrEqualAlias, args)
 		}
 
 		return matcher.LessThanOrEqual(num), nil

@@ -48,7 +48,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.app.listener.Emit(&event.OnRequest{Request: evtReq, StartedAt: start})
 
 	if err != nil {
-		h.app.listener.Emit(&event.OnError{Request: evtReq, Err: fmt.Errorf("error parsing request body. reason=%w", err)})
+		h.app.listener.Emit(&event.OnError{Request: evtReq, Err: fmt.Errorf("[request body parser] error. reason=%w", err)})
 	}
 
 	result := findMockForRequest(h.app.storage, &valueSelectorInput{r, parsedURL, parsedBody})

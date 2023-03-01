@@ -10,7 +10,6 @@ import (
 	"net/url"
 	"os"
 	"path"
-	"runtime/debug"
 	"strings"
 	"text/template"
 
@@ -94,11 +93,26 @@ func FromFile(filename string) Builder {
 }
 
 func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
+	mock, err = b.build(app)
+	if err != nil {
+		return nil, fmt.Errorf("[mock] error building mock from file %s\n %w", b.filename, err)
+	}
+
+	return mock, nil
+}
+
+func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("[panic] error building external mock from file %s.\n %v\n %s", b.filename, r, string(debug.Stack()))
+			err = fmt.Errorf("[panic] error building external mock from file %s.\n %v", b.filename, r)
 		}
 	}()
+
+	_, err = os.Stat(b.filename)
+
+	if os.IsNotExist(err) {
+		return nil, fmt.Errorf("file %s does not exist", b.filename)
+	}
 
 	file, err := os.Open(b.filename)
 	if err != nil {

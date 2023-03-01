@@ -44,7 +44,6 @@ func newServer() Server {
 
 func (s *httpTestServer) Setup(config *Config, handler http.Handler) error {
 	s.server = httptest.NewUnstartedServer(handler)
-	s.server.EnableHTTP2 = true
 
 	if config.Addr != "" {
 		addr := config.Addr
@@ -77,6 +76,7 @@ func (s *httpTestServer) Start() (ServerInfo, error) {
 }
 
 func (s *httpTestServer) StartTLS() (ServerInfo, error) {
+	s.server.EnableHTTP2 = true
 	s.server.StartTLS()
 	s.info.URL = s.server.URL
 

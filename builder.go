@@ -12,8 +12,8 @@ import (
 var _ Builder = (*MockBuilder)(nil)
 
 var (
-	ErrNoExpectations = errors.New("[mocking] at least 1 request matcher must be set")
-	ErrNoReplies      = errors.New("[mocking] no reply set. Use .Reply() or any equivalent to set the expected mock response")
+	ErrNoExpectations = errors.New("[mock] at least 1 request matcher must be set")
+	ErrNoReplies      = errors.New("[mock] no reply set. Use .Reply() or any equivalent to set the expected mock response")
 )
 
 // MockBuilder is a builder for Mock.
@@ -388,7 +388,7 @@ func (b *MockBuilder) Build(app *Mocha) (*Mock, error) {
 		return nil, ErrNoReplies
 	}
 
-	if r, ok := b.mock.Reply.(replyValidation); ok {
+	if r, ok := b.mock.Reply.(replyOnBeforeBuild); ok {
 		err := r.beforeBuild(app)
 		if err != nil {
 			return nil, err

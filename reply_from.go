@@ -178,7 +178,7 @@ func (r *ProxyReply) Build(_ http.ResponseWriter, req *RequestValues) (*Stub, er
 
 	res, err := r.httpClient.Transport.RoundTrip(req.RawRequest.WithContext(ctx))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("[reply.proxy] error calling target server %s.\n %w", r.target.String(), err)
 	}
 
 	defer res.Body.Close()

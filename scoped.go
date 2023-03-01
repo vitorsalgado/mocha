@@ -145,14 +145,14 @@ func (s *Scoped) AssertCalled(t TestingT) bool {
 	size := len(pending)
 
 	for _, p := range pending {
-		b.WriteString("  mock [")
+		b.WriteString("   Mock [")
 		b.WriteString(p.ID)
 		b.WriteString("] ")
 		b.WriteString(p.Name)
 		b.WriteString("\n")
 	}
 
-	t.Errorf("\nthere are still [%d] mocks that were not called.\npending:\n%s", size, b.String())
+	t.Errorf("\nThere are still %d mocks that were not called.\nPending:\n%s", size, b.String())
 
 	return false
 }
@@ -170,14 +170,14 @@ func (s *Scoped) AssertNotCalled(t TestingT) bool {
 	size := len(called)
 
 	for _, p := range called {
-		b.WriteString("  mock [")
+		b.WriteString("  Mock [")
 		b.WriteString(p.ID)
 		b.WriteString("] ")
 		b.WriteString(p.Name)
 		b.WriteString("\n")
 	}
 
-	t.Errorf("\nthere are [%d] mocks that were called at least once.\ncalled:\n%s", size, b.String())
+	t.Errorf("\n%d Mocks were called at least once when none should be.\nCalled:\n%s", size, b.String())
 
 	return false
 }
@@ -193,7 +193,7 @@ func (s *Scoped) AssertNumberOfCalls(t TestingT, expected int) bool {
 		return true
 	}
 
-	t.Errorf("\nexpected [%d] matched request hits. got [%d]", expected, hits)
+	t.Errorf("\nExpected %d matched request hits.\nGot %d", expected, hits)
 
 	return false
 }

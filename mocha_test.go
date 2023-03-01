@@ -143,16 +143,16 @@ func TestMochaAssertions(t *testing.T) {
 
 	defer m.Close()
 
-	fakeT := newFakeT()
+	ft := newFakeT()
 
 	scoped := m.MustMock(
 		Get(URLPath("/test-ok")).
 			Reply(OK()))
 
 	assert.Equal(t, 0, scoped.Hits())
-	assert.False(t, m.AssertCalled(fakeT))
-	assert.True(t, m.AssertNotCalled(fakeT))
-	assert.True(t, m.AssertNumberOfCalls(fakeT, 0))
+	assert.False(t, m.AssertCalled(ft))
+	assert.True(t, m.AssertNotCalled(ft))
+	assert.True(t, m.AssertNumberOfCalls(ft, 0))
 	assert.Equal(t, 0, m.Hits())
 
 	res, err := testutil.Get(m.URL() + "/test-ok").Do()
@@ -160,9 +160,9 @@ func TestMochaAssertions(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.Equal(t, 1, scoped.Hits())
-	assert.True(t, m.AssertCalled(fakeT))
-	assert.False(t, m.AssertNotCalled(fakeT))
-	assert.True(t, m.AssertNumberOfCalls(fakeT, 1))
+	assert.True(t, m.AssertCalled(ft))
+	assert.False(t, m.AssertNotCalled(ft))
+	assert.True(t, m.AssertNumberOfCalls(ft, 1))
 	assert.Equal(t, 1, m.Hits())
 }
 

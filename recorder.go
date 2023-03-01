@@ -153,7 +153,7 @@ func (r *record) start(ctx context.Context) {
 
 				err := r.process(a)
 				if err != nil {
-					log.Println(err)
+					log.Println(fmt.Errorf("[record] %w", err))
 				}
 
 			case <-ctx.Done():
@@ -251,7 +251,7 @@ func (r *record) process(arg *recArgs) error {
 	}
 
 	if exists {
-		return fmt.Errorf("[record] file %s already exists", mockFile)
+		return fmt.Errorf("file %s already exists", mockFile)
 	}
 
 	if hasResBody {
