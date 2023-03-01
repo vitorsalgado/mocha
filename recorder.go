@@ -16,6 +16,7 @@ import (
 	"path"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/spf13/viper"
 
@@ -126,22 +127,28 @@ type (
 		body   []byte
 	}
 
-	record struct {
+	recorder struct {
+		active bool
 		config *RecordConfig
 		in     chan *recArgs
 		cancel context.CancelFunc
+		mu     sync.Mutex
 	}
 )
 
-func newRecorder(config *RecordConfig) *record {
-	return &record{config: config}
+func newRecorder(config *RecordConfig) *recorder {
+	return &recorder{config: config}
 }
 
-func (r *record) start(ctx context.Context) {
+func (r *recorder) start(ctx context.Context) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
 	ctx, cancel := context.WithCancel(ctx)
 
 	r.in = make(chan *recArgs)
 	r.cancel = cancel
+	r.active = true
 
 	go func() {
 		for {
@@ -163,7 +170,11 @@ func (r *record) start(ctx context.Context) {
 	}()
 }
 
-func (r *record) dispatch(req *http.Request, parsedURL *url.URL, rawReqBody []byte, res *Stub) {
+func (r *recorder) dispatch(req *http.Request, parsedURL *url.URL, rawReqBody []byte, res *Stub) {
+	if !r.active {
+		return
+	}
+
 	input := &recArgs{
 		request: recRequest{
 			uri:    parsedURL.RequestURI(),
@@ -182,11 +193,12 @@ func (r *record) dispatch(req *http.Request, parsedURL *url.URL, rawReqBody []by
 	go func() { r.in <- input }()
 }
 
-func (r *record) stop() {
+func (r *recorder) stop() {
+	r.active = false
 	r.cancel()
 }
 
-func (r *record) process(arg *recArgs) error {
+func (r *recorder) process(arg *recArgs) error {
 	v := viper.New()
 
 	v.AddConfigPath(r.config.SaveDir)

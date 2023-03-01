@@ -44,7 +44,7 @@ type Mocha struct {
 	listener           *event.Listener
 	scopes             []*Scoped
 	loaders            []Loader
-	rec                *record
+	rec                *recorder
 	rmu                sync.RWMutex
 	proxy              *reverseProxy
 	te                 TemplateEngine
@@ -185,7 +185,7 @@ func New(config ...Configurer) *Mocha {
 		params = conf.Parameters
 	}
 
-	var rec *record
+	var rec *recorder
 	if conf.Record != nil {
 		rec = newRecorder(conf.Record)
 	}

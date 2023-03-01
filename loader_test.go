@@ -9,15 +9,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFileLoaderLoad(t *testing.T) {
-	app := New(
-		Configure().Dirs("testdata/0/*mock.json", "testdata/0/*.json"))
+func TestFileLoader_Load(t *testing.T) {
+	app := New(Configure().Dirs("testdata/0/*mock.json", "testdata/0/*.json"))
 	loader := &fileLoader{}
 
 	err := loader.Load(app)
 
 	require.NoError(t, err)
 	require.Equal(t, 2, len(app.storage.GetAll()))
+}
+
+func TestFileLoader_LoadWithError(t *testing.T) {
+	app := New(Configure().Dirs("testdata/invalid/*.json"))
+	loader := &fileLoader{}
+
+	err := loader.Load(app)
+
+	require.Error(t, err)
 }
 
 func TestFileLoader(t *testing.T) {

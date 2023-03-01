@@ -64,7 +64,11 @@ func (l *fileLoader) Load(app *Mocha) error {
 
 					fn := func(filename string, c *errContainer) error {
 						_, err := app.Mock(FromFile(filename))
-						return fmt.Errorf("[loader] error adding mock\n %w", err)
+						if err != nil {
+							return fmt.Errorf("[loader] error adding mock\n %w", err)
+						}
+
+						return nil
 					}
 
 					err := fn(filename, c)
