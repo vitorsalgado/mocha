@@ -32,9 +32,9 @@ func Equal(expected any) Matcher {
 	return &equalMatcher{expected: expected}
 }
 
-// Equalf returns true if matcher value is equal to the given parameter value.
+// Equalf returns true if the matcher value is equal to the given parameter value.
 // It considers equivalent value. Eg.: float64(10) is equal to int(10).
-// The expected value will be formatted with the provided format specifier.
+// This is short-hand to format the expected value.
 func Equalf(format string, a ...any) Matcher {
 	return &equalMatcher{expected: fmt.Sprintf(format, a...)}
 }

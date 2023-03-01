@@ -74,13 +74,13 @@ func (r *ProxyReply) NoFollow() *ProxyReply {
 	return r
 }
 
-// Header sets an extra response header that will be set after proxy target responds.
+// Header sets an extra response header that will be set after the proxy target replies.
 func (r *ProxyReply) Header(key, value string) *ProxyReply {
 	r.headers.Add(key, value)
 	return r
 }
 
-// Headers sets extra response headers that will be set after proxy target responds.
+// Headers sets extra response headers that will be set after the proxy target replies.
 func (r *ProxyReply) Headers(header http.Header) *ProxyReply {
 	for k, v := range header {
 		for _, vv := range v {

@@ -52,7 +52,8 @@ type Mocha struct {
 	data               map[string]any
 }
 
-// TestingT is based on testing.T and allow mocha components to log information and errors.
+// TestingT is based on testing.T and is used for assertions.
+// See Assert* methods on the application instance.
 type TestingT interface {
 	Helper()
 	Logf(format string, a ...any)
@@ -137,6 +138,8 @@ const (
 
 // New creates a new Mocha mock server with the given configurations.
 // Parameter config accepts a Config or a ConfigBuilder implementation.
+// If no configuration is provided, a default one will be used.
+// If no port is set, it will start the server on localhost using a random port.
 func New(config ...Configurer) *Mocha {
 	m := &Mocha{}
 	l := logger.NewConsole()
@@ -261,8 +264,8 @@ func New(config ...Configurer) *Mocha {
 	return m
 }
 
-// NewT creates a new Mocha mock server with the given configurations and closes the server when the provided test
-// instance finishes.
+// NewT creates a new Mocha mock server with the given configurations and
+// closes the server when the provided TestingT instance finishes.
 func NewT(t TestingT, config ...Configurer) *Mocha {
 	app := New(config...)
 	t.Cleanup(app.Close)
@@ -323,7 +326,7 @@ func (app *Mocha) MustStartTLS() ServerInfo {
 }
 
 // Mock adds one or multiple request mocks.
-// It returns a Scoped instance that allows control of the added mocks and also checking if they were called or not.
+// It returns a Scoped instance that allows control of the added mocks and also checks if they were called or not.
 //
 // Usage:
 //
@@ -360,7 +363,7 @@ func (app *Mocha) Mock(builders ...Builder) (*Scoped, error) {
 }
 
 // MustMock adds one or multiple request mocks.
-// It returns a Scoped instance that allows control of the added mocks and also checking if they were called or not.
+// It returns a Scoped instance that allows control of the added mocks and also checks if they were called or not.
 // It fails immediately if any error occurs.
 //
 // Usage:
@@ -381,7 +384,7 @@ func (app *Mocha) MustMock(builders ...Builder) *Scoped {
 	return scoped
 }
 
-// Parameters returns an editable parameters reply.Params that will be available when build a reply.Reply.
+// Parameters returns Params instance associated with this application.
 func (app *Mocha) Parameters() Params {
 	return app.params
 }
@@ -391,17 +394,17 @@ func (app *Mocha) URL() string {
 	return app.server.Info().URL
 }
 
-// Context returns internal context.Context.
+// Context returns the server internal context.Context.
 func (app *Mocha) Context() context.Context {
 	return app.ctx
 }
 
-// Config returns the mock server configurations.
+// Config returns a copy of the mock server Config.
 func (app *Mocha) Config() Config {
 	return *app.config
 }
 
-// TemplateEngine returns the TemplateEngine associated to this instance.
+// TemplateEngine returns the TemplateEngine associated with this instance.
 func (app *Mocha) TemplateEngine() TemplateEngine {
 	return app.te
 }
@@ -411,12 +414,12 @@ func (app *Mocha) Name() string {
 	return app.name
 }
 
-// Subscribe add a new event listener.
+// Subscribe adds a new event listener.
 func (app *Mocha) Subscribe(evt reflect.Type, fn func(payload any)) error {
 	return app.listener.Subscribe(evt, fn)
 }
 
-// MustSubscribe add a new event listener.
+// MustSubscribe adds a new event listener.
 // Panics if any errors occur.
 func (app *Mocha) MustSubscribe(evt reflect.Type, fn func(payload any)) {
 	err := app.Subscribe(evt, fn)
@@ -425,10 +428,9 @@ func (app *Mocha) MustSubscribe(evt reflect.Type, fn func(payload any)) {
 	}
 }
 
-// Reload reloads mocks from external sources, like Loader.
+// Reload reloads mocks from external sources, like the filesystem.
 // Coded mocks will be kept.
 func (app *Mocha) Reload() error {
-	// remove mocks set by Loaders and then, reload, keeping the ones set via code.
 	app.storage.DeleteExternal()
 
 	for _, loader := range app.loaders {
@@ -441,7 +443,7 @@ func (app *Mocha) Reload() error {
 	return nil
 }
 
-// MustReload reloads mocks from external sources, like Loader.
+// Reload reloads mocks from external sources, like the filesystem.
 // Coded mocks will be kept.
 // It panics if any error occurs.
 func (app *Mocha) MustReload() {
@@ -467,7 +469,7 @@ func (app *Mocha) Close() {
 }
 
 // CloseWithT register Server Close function on TestingT Cleanup().
-// Useful to close the server when tests finishes.
+// Useful to close the server when tests finish.
 func (app *Mocha) CloseWithT(t TestingT) *Mocha {
 	t.Cleanup(func() { app.Close() })
 	return app

@@ -51,7 +51,7 @@ type RecordConfig struct {
 	// Defaults to .json.
 	SaveExtension string
 
-	// SaveResponseBodyToFile defines if the recorded body should be saved to separate file.
+	// SaveResponseBodyToFile defines if the recorded body should be saved to a separate file.
 	// Defaults to false, embedding the response body into the mock definition file.
 	SaveResponseBodyToFile bool
 }
@@ -352,19 +352,11 @@ func (r *recorder) process(arg *recArgs) error {
 //
 
 // RecordRequestHeaders define the request headers that should be recorded.
-// Defaults to: "accept", "content-type"
 func RecordRequestHeaders(h ...string) RecordConfigurer {
 	return recordConfigFunc(func(c *RecordConfig) { c.RequestHeaders = h })
 }
 
 // RecordResponseHeaders define the response headers that should be recorded.
-// Defaults to:
-//
-//	"content-type"
-//	"link"
-//	"content-length"
-//	"cache-control"
-//	"retry-after"
 func RecordResponseHeaders(h ...string) RecordConfigurer {
 	return recordConfigFunc(func(c *RecordConfig) { c.ResponseHeaders = h })
 }

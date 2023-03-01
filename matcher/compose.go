@@ -23,6 +23,7 @@ func (m *ComposeMatcher) Xor(and Matcher) *ComposeMatcher {
 	return Compose(XOR(m, and))
 }
 
+// Compose allows Matcher composition using And Or or Xor functions.
 func Compose(base Matcher) *ComposeMatcher {
 	return &ComposeMatcher{M: base}
 }

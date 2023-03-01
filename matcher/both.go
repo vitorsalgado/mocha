@@ -46,8 +46,7 @@ func (m *bothMatcher) AfterMockServed() error {
 	return runAfterMockServed(m.first, m.second)
 }
 
-// Both matches true when both given matchers evaluates to true.
+// Both passes when both the given matchers pass.
 func Both(first Matcher, second Matcher) Matcher {
-	m := &bothMatcher{first: first, second: second}
-	return m
+	return &bothMatcher{first: first, second: second}
 }

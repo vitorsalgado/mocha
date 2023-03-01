@@ -17,11 +17,12 @@ import (
 const (
 	// DefaultConfigFileName is the default configuration filename.
 	DefaultConfigFileName = ".moairc"
-	EnvPrefix             = "MOAI"
+	// EnvPrefix is the standard prefix that should be present in all environment variables used by this application.
+	EnvPrefix = "MOAI"
 )
 
 var (
-	// DefaultConfigDirectories is the default configuration directories used lookup for a configuration file.
+	// DefaultConfigDirectories is the default configuration directories used to lookup for a configuration file.
 	DefaultConfigDirectories = []string{".", "testdata"}
 )
 
@@ -88,7 +89,7 @@ func UseLocals() Configurer {
 	return &localConfigurer{filename: DefaultConfigFileName, paths: DefaultConfigDirectories}
 }
 
-// UseLocalsWith enables lookup for local configuration file using standard naming conventions.
+// UseLocalsWith enables lookup for local configuration files using standard naming conventions.
 // Supported extensions (json|toml|yaml|yml|properties|props|prop|hcl|tfvars|dotenv|env|ini)".
 // If only the filename is provided, it must contain the full path and extension to the configuration.
 func UseLocalsWith(filename string, paths []string) Configurer {

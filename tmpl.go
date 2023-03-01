@@ -13,31 +13,29 @@ var (
 	_ TemplateRenderer = (*builtInGoTemplateRender)(nil)
 )
 
+// TemplateEngine initializes templates and creates TemplateRenderer instances.
 type TemplateEngine interface {
 	// Load is executed on server initialization.
 	Load() error
 
-	// Parse pre-compiles the source template. It will be called once during mock setup.
+	// Parse pre-compiles the source template and returns a renderer for it.
+	// It is usually run once during mock setup.
 	Parse(string) (TemplateRenderer, error)
 }
 
-// TemplateRenderer defines a template parser for response bodies.
+// TemplateRenderer defines a renderer for templates.
+// Each template will have a renderer associated to it.
 type TemplateRenderer interface {
 	// Render renders the previously parsed template to the given io.Writer.
-	// The second parameter is template data.
+	// The second parameter is template data and can be nil.
 	Render(io.Writer, any) error
 }
 
-// templateData is the data tmplExt used to render the templates.
+// templateData is the data used in templates during rendering.
 type templateData struct {
-	// Request is HTTP request ref.
 	Request templateRequest
-
-	// App is the server instance.
-	App *Mocha
-
-	// Ext is an additional data that can be passed to the template.
-	Ext any
+	App     *Mocha
+	Ext     any
 }
 
 type templateRequest struct {
@@ -59,13 +57,12 @@ func (t *templateRequest) Cookie(name string) (*http.Cookie, error) {
 	return nil, fmt.Errorf(`cookie "%s" not found`, name)
 }
 
-// builtInGoTemplate is the built-in Template implementation.
+// builtInGoTemplate is the built-in TemplateEngine implementation.
 // It uses Go templates.
 type builtInGoTemplate struct {
 	funcMap template.FuncMap
 }
 
-// newGoTemplate creates a new BuiltInTemplate.
 func newGoTemplate() *builtInGoTemplate {
 	return &builtInGoTemplate{funcMap: make(template.FuncMap)}
 }

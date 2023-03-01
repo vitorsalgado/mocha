@@ -20,7 +20,7 @@ func (m *greaterOrEqualMatcher) Match(v any) (*Result, error) {
 	vv, err := mconv.ConvToFloat64(v)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"type %s is not supported. value must be compatible with float64. %w",
+			"type %s is not supported. the value must be compatible with float64. %w",
 			reflect.TypeOf(v),
 			err,
 		)
@@ -36,6 +36,7 @@ func (m *greaterOrEqualMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
+// GreaterThanOrEqual passes if the incoming request value is greater than or equal to the given value.
 func GreaterThanOrEqual(expected float64) Matcher {
 	return &greaterOrEqualMatcher{expected: expected}
 }

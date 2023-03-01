@@ -30,7 +30,7 @@ func (m *bePresentMatcher) Match(v any) (*Result, error) {
 	return &Result{Pass: true}, nil
 }
 
-// Present checks if matcher argument contains a value that is not nil or the zero value for the argument type.
+// Present checks if the incoming request value contains a value that is not nil or the zero value for the argument type.
 func Present() Matcher {
 	return &bePresentMatcher{}
 }

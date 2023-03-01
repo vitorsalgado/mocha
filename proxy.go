@@ -14,9 +14,9 @@ import (
 
 var _ ProxyConfigurer = (*ProxyConfig)(nil)
 
-// ProxyConfig configures proxy.
+// ProxyConfig configures a proxy.
 type ProxyConfig struct {
-	// ProxyVia sets a URL to route request via another proxy server.
+	// ProxyVia sets a URL to route the request via another proxy server.
 	// ProxyVia is only valid when Transport configuration is not set.
 	ProxyVia string
 
@@ -33,7 +33,7 @@ type ProxyConfig struct {
 	Transport http.RoundTripper
 }
 
-// ProxyConfigurer lets users configure proxy.
+// ProxyConfigurer lets users configure the proxy.
 type ProxyConfigurer interface {
 	Apply(config *ProxyConfig) error
 }

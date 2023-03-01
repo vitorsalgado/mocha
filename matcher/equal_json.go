@@ -37,7 +37,7 @@ func (m *equalJSONMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-// EqualJSON returns true if matcher value is equal to the given parameter value.
+// EqualJSON matches JSON values.
 func EqualJSON(expected any) Matcher {
 	return &equalJSONMatcher{expected: expected}
 }

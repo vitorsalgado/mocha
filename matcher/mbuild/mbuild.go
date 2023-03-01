@@ -59,6 +59,8 @@ const (
 	_mXOR                     = "xor"
 )
 
+// TryBuildMatcher builds a matcher.Matcher if the given parameter is a slice following the matchers convention: [\"<MATCHER_NAME>\", ARG_1, ARG_2...]
+// If it is not slice, it will return a equal matcher by default.
 func TryBuildMatcher(possibleMatcher any) (m matcher.Matcher, err error) {
 	val := reflect.ValueOf(possibleMatcher)
 	if possibleMatcher == nil || !val.IsValid() {
@@ -73,6 +75,7 @@ func TryBuildMatcher(possibleMatcher any) (m matcher.Matcher, err error) {
 	}
 }
 
+// BuildMatcher always builds a matcher.Matcher from a text or a slice matcher specification.
 func BuildMatcher(possibleMatcher any) (m matcher.Matcher, err error) {
 	val := reflect.ValueOf(possibleMatcher)
 	if possibleMatcher == nil || !val.IsValid() {

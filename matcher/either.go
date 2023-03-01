@@ -45,7 +45,7 @@ func (m *eitherMatcher) AfterMockServed() error {
 	return runAfterMockServed(m.first, m.second)
 }
 
-// Either matches true when any of the two given matchers returns true.
+// Either passes when any of the two given matchers pass.
 func Either(first Matcher, second Matcher) Matcher {
 	return &eitherMatcher{first: first, second: second}
 }

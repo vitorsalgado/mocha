@@ -4,7 +4,9 @@ import (
 	"strings"
 )
 
-// Scoped holds references to one or more added store allowing users perform operations on them, like enabling/disabling.
+// Scoped holds keeps a reference to a group of mocks.
+// With a Scoped instance, it is possible to verify if one or a group of mocks were called,
+// how many times they were called and so on.
 type Scoped struct {
 	storage mockStore
 	mocks   []*Mock
@@ -25,12 +27,12 @@ func (s *Scoped) Get(id string) *Mock {
 	return nil
 }
 
-// GetAll returns all Mock(s) Scoped in this instance.
+// GetAll returns all Mock instances kept in this Scoped.
 func (s *Scoped) GetAll() []*Mock {
 	return s.mocks
 }
 
-// GetPending returns all Mock(s) that were not called at least once.
+// GetPending returns all Mock instances that were not called at least once.
 func (s *Scoped) GetPending() []*Mock {
 	ret := make([]*Mock, 0)
 	for _, m := range s.mocks {
@@ -42,7 +44,7 @@ func (s *Scoped) GetPending() []*Mock {
 	return ret
 }
 
-// GetCalled returns all store that were called.
+// GetCalled returns all Mock instances that were called.
 func (s *Scoped) GetCalled() []*Mock {
 	ret := make([]*Mock, 0)
 	for _, m := range s.mocks {
@@ -54,7 +56,7 @@ func (s *Scoped) GetCalled() []*Mock {
 	return ret
 }
 
-// HasBeenCalled returns true if all Scoped Mock(s) were called at least once.
+// HasBeenCalled returns true if all Scoped Mock instances were called at least once.
 func (s *Scoped) HasBeenCalled() bool {
 	for _, m := range s.mocks {
 		if !m.HasBeenCalled() {
@@ -65,7 +67,7 @@ func (s *Scoped) HasBeenCalled() bool {
 	return true
 }
 
-// IsPending returns true when there are one or more store that were not called at least once.
+// IsPending returns true when there are one or more Mock instances that were not called at least once.
 func (s *Scoped) IsPending() bool {
 	pending := false
 	for _, m := range s.mocks {
@@ -79,14 +81,14 @@ func (s *Scoped) IsPending() bool {
 }
 
 // Disable scoped store.
-// Disabled store will be ignored.
+// Disabled Mock will be ignored.
 func (s *Scoped) Disable() {
 	for _, m := range s.mocks {
 		m.Disable()
 	}
 }
 
-// Enable scoped store.
+// Enable all Mock instances kept in this Scoped.
 func (s *Scoped) Enable() {
 	for _, m := range s.mocks {
 		m.Enable()
@@ -107,7 +109,7 @@ func (s *Scoped) Delete(id string) bool {
 	return false
 }
 
-// Clean all scoped store.
+// Clean all scoped Mock instances.
 func (s *Scoped) Clean() {
 	ids := make([]string, len(s.mocks))
 
@@ -122,7 +124,7 @@ func (s *Scoped) Clean() {
 	s.mocks = make([]*Mock, 0)
 }
 
-// Hits returns the sum of the scoped store calls.
+// Hits returns the sum of the Scoped store calls.
 func (s *Scoped) Hits() int {
 	total := 0
 	for _, m := range s.mocks {
@@ -132,7 +134,7 @@ func (s *Scoped) Hits() int {
 	return total
 }
 
-// AssertCalled reports an error if there are still pending store.
+// AssertCalled reports an error if there are still pending Mock instances.
 func (s *Scoped) AssertCalled(t TestingT) bool {
 	t.Helper()
 

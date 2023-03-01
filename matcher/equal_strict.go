@@ -26,13 +26,13 @@ func (m *equalStrictMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-// StrictEqual returns true if matcher value and type are equal to the given parameter.
+// StrictEqual strictly compares the expected value with incoming request values, considering value and type.
 func StrictEqual(expected any) Matcher {
 	return &equalStrictMatcher{expected: expected}
 }
 
-// StrictEqualf returns true if matcher value and type are equal to the given parameter.
-// The expected value will be formatted with the provided format specifier.
+// StrictEqualf strictly compares the expected value with incoming request values, considering value and type.
+// This is short-hand to format the expected value.
 func StrictEqualf(format string, a ...any) Matcher {
 	return &equalStrictMatcher{expected: fmt.Sprintf(format, a...)}
 }

@@ -25,7 +25,7 @@ func (m *emptyMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-// Empty returns true if matcher value has zero length.
+// Empty passes if the incoming request value is empty or has zero value.
 func Empty() Matcher {
 	return &emptyMatcher{}
 }

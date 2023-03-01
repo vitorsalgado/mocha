@@ -35,8 +35,8 @@ func (m *regExpMatcher) Match(v any) (*Result, error) {
 	}
 }
 
-// Matches returns true then the given regular expression matches matcher argument.
-// It accepts a string or a regexp.Regexp.
+// Matches passes when the given regular expression matches the incoming request value.
+// It accepts a string, regexp.Regexp or *regexp.Regexp.
 func Matches(expression any) Matcher {
 	return &regExpMatcher{expression: expression}
 }

@@ -17,6 +17,7 @@ type Params interface {
 	// Set sets a parameter.
 	Set(k string, v any) error
 
+	// MustSet sets a parameter and if any error occurs, it should be discarded or panic.
 	MustSet(k string, v any)
 
 	// Remove removes a parameter by its key.

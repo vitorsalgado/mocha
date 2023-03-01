@@ -30,12 +30,13 @@ func (m *equalIgnoreCaseMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-// EqualIgnoreCase returns true if items value is equal to matcher value, ignoring case.
+// EqualIgnoreCase compares the expected value with the incoming request value ignoring the case.
 func EqualIgnoreCase(expected string) Matcher {
 	return &equalIgnoreCaseMatcher{expected: expected}
 }
 
-// EqualIgnoreCasef returns true if items value is equal to matcher value, ignoring case.
+// EqualIgnoreCasef compares the expected value with the incoming request value ignoring the case.
+// This is short-hand to format the expected value.
 func EqualIgnoreCasef(format string, a ...any) Matcher {
 	return EqualIgnoreCase(fmt.Sprintf(format, a...))
 }

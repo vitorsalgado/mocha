@@ -13,11 +13,11 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 )
 
-// RequestBodyParser parses request body if CanParse returns true.
-// Multiple implementations of RequestBodyParser can be provided to Mocha using options.
+// RequestBodyParser parses the request body if CanParse returns true.
+// Multiple implementations of RequestBodyParser can be provided via configuration.
 type RequestBodyParser interface {
-	// CanParse checks if current request body should be parsed by this component.
-	// first parameter is the incoming content-type.
+	// CanParse checks if the current request body should be parsed.
+	// The first parameter is the incoming content type.
 	CanParse(contentType string, r *http.Request) bool
 
 	// Parse parses the request body.
@@ -25,7 +25,7 @@ type RequestBodyParser interface {
 }
 
 // parseRequestBody tests given parsers until it finds one that can parse the request body.
-// User provided RequestBodyParser takes precedence.
+// The user provided RequestBodyParser takes precedence.
 func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (parsedBody any, rawBody []byte, err error) {
 	if r.Body != nil && r.Method != http.MethodGet && r.Method != http.MethodHead {
 		rawBody, err = io.ReadAll(r.Body)
@@ -93,8 +93,8 @@ func (parser *plainTextParser) Parse(body []byte, _ *http.Request) (any, error) 
 	return string(body), nil
 }
 
-// noopParser is default parser and runs when none is selected.
-// It basically returns the body []byte.
+// noopParser is the default parser and runs when none is selected.
+// It just returns the body []byte.
 type noopParser struct{}
 
 func (parser *noopParser) CanParse(_ string, _ *http.Request) bool         { return true }

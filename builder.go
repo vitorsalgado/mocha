@@ -16,7 +16,7 @@ var (
 	ErrNoReplies      = errors.New("[mock] no reply set. Use .Reply() or any equivalent to set the expected mock response")
 )
 
-// MockBuilder is a builder for Mock.
+// MockBuilder is a default builder for Mock.
 type MockBuilder struct {
 	mock                  *Mock
 	scenario              string
@@ -96,7 +96,7 @@ func Headf(path string, a ...any) *MockBuilder {
 }
 
 // Name defines a name for the mock.
-// Useful for debug.
+// Useful for debugging.
 func (b *MockBuilder) Name(name string) *MockBuilder {
 	b.mock.Name = name
 	return b
@@ -181,7 +181,7 @@ func (b *MockBuilder) URL(m matcher.Matcher) *MockBuilder {
 	return b
 }
 
-// URLf sets a matcher to the http.Request url.URL that compares the http.Request url.URL with given value.
+// URLf sets a matcher to the http.Request url.URL that compares the http.Request url.URL with the given value.
 // The expected value will be formatted with the provided format specifier.
 func (b *MockBuilder) URLf(format string, a ...any) *MockBuilder {
 	return b.URL(matcher.StrictEqual(fmt.Sprintf(format, a...)))
@@ -200,7 +200,7 @@ func (b *MockBuilder) URLPath(m matcher.Matcher) *MockBuilder {
 	return b
 }
 
-// URLPathf sets a Matcher that compares the http.Request url.URL path with given value, ignoring case.
+// URLPathf sets a Matcher that compares the http.Request url.URL path with the given value, ignoring the case.
 // The expected value will be formatted with the provided format specifier.
 func (b *MockBuilder) URLPathf(format string, a ...any) *MockBuilder {
 	return b.URLPath(matcher.StrictEqual(fmt.Sprintf(format, a...)))
@@ -242,7 +242,7 @@ func (b *MockBuilder) Queryf(key string, value string, a ...any) *MockBuilder {
 	return b.Query(key, matcher.StrictEqual(fmt.Sprintf(value, a...)))
 }
 
-// Queries defines a matcher.Matcher for query parameters that contains multiple values.
+// Queries define a matcher.Matcher for query parameters that contains multiple values.
 func (b *MockBuilder) Queries(key string, m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetQuery,
@@ -255,8 +255,8 @@ func (b *MockBuilder) Queries(key string, m matcher.Matcher) *MockBuilder {
 	return b
 }
 
-// Body adds matchers to the request body.
-// If request contains a JSON body, you can provide multiple matchers to several fields.
+// Body adds matchers to the HTTP request body.
+// If the request contains a JSON body, you can provide multiple matchers to several fields.
 // Example:
 //
 //	m.Body(JSONPath("name", EqualTo("test")), JSONPath("address.street", ToContains("nowhere")))
@@ -298,7 +298,7 @@ func (b *MockBuilder) FormFieldf(field string, value string, a ...any) *MockBuil
 	return b.FormField(field, matcher.StrictEqual(fmt.Sprintf(value, a...)))
 }
 
-// Times defines to total times that a mock should be served, if request matches.
+// Times defines to total times that a mock should be served if the request matches.
 func (b *MockBuilder) Times(times int) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:  _targetRequest,
@@ -308,7 +308,7 @@ func (b *MockBuilder) Times(times int) *MockBuilder {
 	return b
 }
 
-// RequestMatches defines matcher.Matcher to be applied to a http.Request.
+// RequestMatches defines matcher.Matcher to be applied to an http.Request.
 func (b *MockBuilder) RequestMatches(m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetRequest,
@@ -358,19 +358,18 @@ func (b *MockBuilder) Delay(duration time.Duration) *MockBuilder {
 
 // Map adds a Mapper that allows modifying the response after it was built.
 // Multiple mappers can be added.
-// Map doesn't work with reply.From or Proxy.
 func (b *MockBuilder) Map(mapper Mapper) *MockBuilder {
 	b.mock.Mappers = append(b.mock.Mappers, mapper)
 	return b
 }
 
-// Reply defines a response mock to be served if this mock matches to a request.
+// Reply defines a response mock to be served if this mock matches a request.
 func (b *MockBuilder) Reply(rep Reply) *MockBuilder {
 	b.mock.Reply = rep
 	return b
 }
 
-// Enable define if the Mock will enabled or disabled.
+// Enable define if the Mock will be enabled or disabled.
 // All mocks are enabled by default.
 func (b *MockBuilder) Enable(enabled bool) *MockBuilder {
 	b.mock.Enabled = enabled

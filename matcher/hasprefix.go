@@ -25,7 +25,7 @@ func (m *hasPrefixMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
-// HasPrefix returns true if the matcher argument starts with the given prefix.
+// HasPrefix passes if the matcher argument starts with the given prefix.
 func HasPrefix(prefix string) Matcher {
 	return &hasPrefixMatcher{prefix: prefix}
 }

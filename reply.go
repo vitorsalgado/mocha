@@ -15,10 +15,10 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 )
 
-// Reply defines the contract to configure an HTTP responder.
+// Reply defines the contract to setup an HTTP replier.
 type Reply interface {
-	// Build returns an HTTP response Stub to be served.
-	// Return Stub nil if the HTTP response was rendered inside the Build function.
+	// Build returns an HTTP response Stub to be served; after the HTTP request was matched.
+	// Return a nil Stub if the HTTP response was rendered inside the Build function.
 	Build(w http.ResponseWriter, r *RequestValues) (*Stub, error)
 }
 
@@ -172,6 +172,7 @@ func (rep *StdReply) Header(key, value string) *StdReply {
 	return rep
 }
 
+// HeaderTemplate adds a header that can have its value changed using templates.
 func (rep *StdReply) HeaderTemplate(key, value string) *StdReply {
 	rep.teHeader.Add(key, value)
 	rep.teType += _teHeader
@@ -184,13 +185,13 @@ func (rep *StdReply) ContentType(mime string) *StdReply {
 	return rep
 }
 
-// Trailer adds a trailer header to the response Stub.
+// Trailer adds a trailer header to the response.
 func (rep *StdReply) Trailer(key, value string) *StdReply {
 	rep.response.Trailer.Add(key, value)
 	return rep
 }
 
-// Cookie adds a http.Cookie to the Stub.
+// Cookie adds a http.Cookie to the response.
 func (rep *StdReply) Cookie(cookie *http.Cookie) *StdReply {
 	rep.response.Cookies = append(rep.response.Cookies, cookie)
 	return rep

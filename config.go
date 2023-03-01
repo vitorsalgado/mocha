@@ -12,7 +12,7 @@ type LogLevel int
 const (
 	// LogSilently enable minimum log mode.
 	LogSilently LogLevel = iota
-	// LogInfo logs only informative messages, without too much Details.
+	// LogInfo logs only informative messages, without too many details.
 	LogInfo
 	// LogVerbose logs detailed information about requests, matches and non-matches.
 	LogVerbose
@@ -59,7 +59,7 @@ type Config struct {
 	RequestBodyParsers []RequestBodyParser
 
 	// Middlewares defines a list of custom middlewares that will be
-	// set after panic recover and before mock handler.
+	// set after panic recovery and before mock handler.
 	Middlewares []func(http.Handler) http.Handler
 
 	// CORS defines CORS configurations.
@@ -68,7 +68,7 @@ type Config struct {
 	// Server defines a custom mock HTTP server.
 	Server Server
 
-	// HandlerDecorator provides a mean to configure a custom HTTP handler
+	// HandlerDecorator provide means to configure a custom HTTP handler
 	// while leveraging the default mock handler.
 	HandlerDecorator func(handler http.Handler) http.Handler
 
@@ -106,7 +106,7 @@ type Config struct {
 
 	// UseHTTPS defines that the mock server should use HTTPS.
 	// This is only used running the command-line version.
-	// To start an HTTPS server from code, call .StartTLS() or .MustStartTLS() from Moai instance.
+	// To start an HTTPS server from code, call StartTLS() or MustStartTLS() from application instance.
 	UseHTTPS bool
 
 	// Forward configures a forward proxy for matched requests.
@@ -125,7 +125,7 @@ type forwardConfig struct {
 	SSLVerify            bool
 }
 
-// Apply copies the current Config struct values to the given Config parameter.
+// Apply copies of the current Config struct values to the given Config parameter.
 // It allows the Config struct to be used as a Configurer.
 func (c *Config) Apply(conf *Config) error {
 	conf.Name = c.Name
@@ -158,7 +158,7 @@ func (f configFunc) Apply(config *Config) error {
 	return f(config)
 }
 
-// ConfigBuilder lets users create a Config with a fluent API.
+// ConfigBuilder lets users create a Config using a fluent API.
 type ConfigBuilder struct {
 	conf         *Config
 	recorderConf []RecordConfigurer
@@ -195,7 +195,7 @@ func (cb *ConfigBuilder) Addr(addr string) *ConfigBuilder {
 	return cb
 }
 
-// MockNotFoundStatusCode defines the status code to be used no mock matches with an HTTP request.
+// MockNotFoundStatusCode defines the status code to be used when no mock matches with an HTTP request.
 func (cb *ConfigBuilder) MockNotFoundStatusCode(code int) *ConfigBuilder {
 	cb.conf.MockNotFoundStatusCode = code
 	return cb
@@ -214,14 +214,14 @@ func (cb *ConfigBuilder) Middlewares(fn ...func(handler http.Handler) http.Handl
 	return cb
 }
 
-// CORS configures Cross Origin Resource Sharing for the mock server.
+// CORS configures CORS for the mock server.
 func (cb *ConfigBuilder) CORS(options ...CORSConfigurer) *ConfigBuilder {
-	opts := &_defaultCORSConfig
+	opts := _defaultCORSConfig
 	for _, option := range options {
-		option.Apply(opts)
+		option.Apply(&opts)
 	}
 
-	cb.conf.CORS = opts
+	cb.conf.CORS = &opts
 
 	return cb
 }
@@ -238,7 +238,7 @@ func (cb *ConfigBuilder) HandlerDecorator(fn func(handler http.Handler) http.Han
 	return cb
 }
 
-// LogLevel configure the verbosity of informative logs.
+// LogLevel sets the verbosity of informative logs.
 // Defaults to LogVerbose.
 func (cb *ConfigBuilder) LogLevel(l LogLevel) *ConfigBuilder {
 	cb.conf.LogLevel = l
@@ -251,7 +251,7 @@ func (cb *ConfigBuilder) Parameters(params Params) *ConfigBuilder {
 	return cb
 }
 
-// Dirs sets a custom Glob patterns to load mock from the file system.
+// Dirs sets custom Glob patterns to load mock from the file system.
 // Defaults to [testdata/*.mock.json, testdata/*.mock.yaml].
 func (cb *ConfigBuilder) Dirs(patterns ...string) *ConfigBuilder {
 	dirs := make([]string, 0)
@@ -305,21 +305,30 @@ func (cb *ConfigBuilder) Record(options ...RecordConfigurer) *ConfigBuilder {
 	return cb
 }
 
+// MockFileHandlers sets MockFileHandler implementations.
 func (cb *ConfigBuilder) MockFileHandlers(handlers ...MockFileHandler) *ConfigBuilder {
 	cb.conf.MockFileHandlers = append(cb.conf.MockFileHandlers, handlers...)
 	return cb
 }
 
+// TemplateEngine sets the TemplateEngine to be used by all components.
+// Defaults to a built-in implementation based on Go Templates.
 func (cb *ConfigBuilder) TemplateEngine(te TemplateEngine) *ConfigBuilder {
 	cb.conf.TemplateEngine = te
 	return cb
 }
 
-func (cb *ConfigBuilder) BuiltInTemplateEngineFunctions(fm template.FuncMap) *ConfigBuilder {
+// TemplateEngineFunctions sets custom functions to be used in templates.
+// This only works with the built-in TemplateEngine implementation.
+// Custom template engine implementations must provide their own mean to set custom functions.
+func (cb *ConfigBuilder) TemplateEngineFunctions(fm template.FuncMap) *ConfigBuilder {
 	cb.conf.TemplateFunctions = fm
 	return cb
 }
 
+// HTTPClient sets a custom http.Client factory.
+// Internal components that require an HTTP client will use this factory,
+// instead of using the default implementation.
 func (cb *ConfigBuilder) HTTPClient(f func() (*http.Client, error)) *ConfigBuilder {
 	cb.conf.HTTPClientFactory = f
 	return cb
@@ -504,6 +513,8 @@ func WithMockFileHandlers(handlers ...MockFileHandler) Configurer {
 	})
 }
 
+// WithTemplateEngine sets the TemplateEngine to be used by all components.
+// Defaults to a built-in implementation based on Go Templates.
 func WithTemplateEngine(ve TemplateEngine) Configurer {
 	return configFunc(func(c *Config) error {
 		c.TemplateEngine = ve
@@ -511,6 +522,9 @@ func WithTemplateEngine(ve TemplateEngine) Configurer {
 	})
 }
 
+// WithTemplateFunctions sets custom functions to be used in templates.
+// This only works with the built-in TemplateEngine implementation.
+// Custom template engine implementations must provide their own mean to set custom functions.
 func WithTemplateFunctions(fm template.FuncMap) Configurer {
 	return configFunc(func(c *Config) error {
 		c.TemplateFunctions = fm
@@ -518,6 +532,9 @@ func WithTemplateFunctions(fm template.FuncMap) Configurer {
 	})
 }
 
+// WithHTTPClient sets a custom http.Client factory.
+// Internal components that require an HTTP client will use this factory,
+// instead of using the default implementation.
 func WithHTTPClient(f func() (*http.Client, error)) Configurer {
 	return configFunc(func(c *Config) error {
 		c.HTTPClientFactory = f

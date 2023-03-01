@@ -7,7 +7,7 @@ import (
 
 var _ mockStore = (*builtInStore)(nil)
 
-// mockStore is the definition for Mock repository.
+// mockStore is the definition of a Mock repository.
 type mockStore interface {
 	// Save saves the Mock.
 	Save(mock *Mock)

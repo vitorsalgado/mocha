@@ -8,7 +8,7 @@ import (
 
 var _ Reply = (*SequentialReply)(nil)
 
-// SequentialReply configures a sequence of replies to be used after a mock.Mock is matched to a http.Request.
+// SequentialReply configures a sequence of replies to be used after a Mock is matched to a http.Request.
 type SequentialReply struct {
 	replyAfterSeqEnded Reply
 	replies            []Reply
@@ -42,7 +42,7 @@ func (r *SequentialReply) beforeBuild(_ *Mocha) error {
 	return nil
 }
 
-// Build builds a new response based on current mock.Mock call sequence.
+// Build builds a new response based on the current Mock call sequence.
 // When the sequence is over, it will return an error or a previously configured reply for this scenario.
 func (r *SequentialReply) Build(w http.ResponseWriter, req *RequestValues) (*Stub, error) {
 	var size = len(r.replies)

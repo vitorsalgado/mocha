@@ -71,6 +71,7 @@ func (m *itemsMatchMatcher) Match(v any) (*Result, error) {
 	return &Result{}, nil
 }
 
+// ItemsMatch if the given array items match with the incoming request value array.
 func ItemsMatch(items any) Matcher {
 	return &itemsMatchMatcher{expected: items}
 }

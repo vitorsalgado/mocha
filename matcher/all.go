@@ -74,10 +74,10 @@ func (m *allOfMatcher) AfterMockServed() error {
 	return runAfterMockServed(m.matchers...)
 }
 
-// All matches when all the given matchers returns true.
+// All matches when all the given matchers pass.
 // Example:
 //
-//	All(EqualTo("test"),EqualIgnoreCase("test"),ToContains("tes"))
+//	All(Equal("test"), EqualIgnoreCase("test"), Contain("tes"))
 func All(matchers ...Matcher) Matcher {
 	if len(matchers) == 0 {
 		panic("[All] requires at least 1 matcher")

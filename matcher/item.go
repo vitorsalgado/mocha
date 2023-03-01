@@ -50,6 +50,7 @@ func (m *itemMatcher) Match(v any) (*Result, error) {
 	}, nil
 }
 
+// Item matches a specific array item from the incoming request value.
 func Item(index int, matcher Matcher) Matcher {
 	return &itemMatcher{index: index, matcher: matcher}
 }

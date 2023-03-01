@@ -17,6 +17,7 @@ func (m *nilMatcher) Match(v any) (*Result, error) {
 	return &Result{Message: mfmt.PrintReceived(v)}, nil
 }
 
+// Nil passes if the incoming request value is nil.
 func Nil() Matcher {
 	return &nilMatcher{}
 }

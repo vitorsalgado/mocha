@@ -23,7 +23,7 @@ type Server interface {
 	// Start starts a server.
 	Start() (ServerInfo, error)
 
-	// StartTLS starts a TLS server.
+	// StartTLS starts a server with TLS.
 	StartTLS() (ServerInfo, error)
 
 	// Close closes the server.

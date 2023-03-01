@@ -45,7 +45,7 @@ func (m *xorMatcher) AfterMockServed() error {
 	return runAfterMockServed(m.first, m.second)
 }
 
-// XOR is an exclusive or matcher
+// XOR is an exclusive OR matcher.
 func XOR(first Matcher, second Matcher) Matcher {
 	return &xorMatcher{first: first, second: second}
 }

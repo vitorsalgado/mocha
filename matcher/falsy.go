@@ -16,6 +16,7 @@ func (m *falsyMatcher) Match(v any) (*Result, error) {
 	return &Result{Pass: !res.Pass, Ext: res.Ext, Message: res.Message}, nil
 }
 
+// Falsy checks if the incoming request value is false.
 func Falsy() Matcher {
 	return &falsyMatcher{}
 }

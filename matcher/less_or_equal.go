@@ -36,6 +36,7 @@ func (m *lessOrEqualMatcher) Match(v any) (*Result, error) {
 		nil
 }
 
+// LessThanOrEqual passes if the incoming request value is lower than or equal to the given value.
 func LessThanOrEqual(expected float64) Matcher {
 	return &lessOrEqualMatcher{expected: expected}
 }

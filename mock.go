@@ -13,28 +13,29 @@ import (
 )
 
 // Mock holds metadata and expectations to be matched against HTTP requests in order to serve mocked responses.
-// This is core entity of this project, mostly features works based on it.
+// This is the core entity of this project, and most features work based on it.
 type Mock struct {
-	// ID is unique identifier for a Mock
+	// ID is the unique identifier of a Mock
 	ID string
 
-	// Name is an optional metadata. It helps to find and debug mocks.
+	// Name describes the mock. Useful for debugging.
 	Name string
 
-	// Priority sets the priority for a Mock.
+	// Priority sets the priority of a Mock.
 	Priority int
 
 	// Reply is the responder that will be used to serve the HTTP response stub, once matched against an
 	// HTTP request.
 	Reply Reply
 
-	// Enabled indicates if the Mock is enabled or disabled. Only enabled mocks are matched.
+	// Enabled indicates if the Mock is enabled or disabled.
+	// Only enabled mocks are considered during the request matching phase.
 	Enabled bool
 
-	// PostActions holds PostAction list to be executed after the Mock was matched and served.
+	// PostActions holds a PostAction list to be executed after the Mock was matched and served.
 	PostActions []PostAction
 
-	// Source describes the source of the mock. E.g.: if it wast built from a file,
+	// Source describes the source of the mock. E.g.: if it was built from a file,
 	// it will contain the filename.
 	Source string
 
@@ -50,16 +51,18 @@ type Mock struct {
 	hits         int
 }
 
+// Builder describes a Mock builder.
 type Builder interface {
 	Build(app *Mocha) (*Mock, error)
 }
 
 // RequestValues groups HTTP request data, including the parsed body.
+// It is used by several components during the request matching phase.
 type RequestValues struct {
 	// RawRequest is the original incoming http.Request.
 	RawRequest *http.Request
 
-	// URL is full request url.URL, including scheme, host, port.
+	// URL is the full request url.URL, including scheme, host, port.
 	URL *url.URL
 
 	// URLPathSegments stores path segments.
@@ -70,7 +73,7 @@ type RequestValues struct {
 	// It'll be nil if the HTTP request does not contain a body.
 	ParsedBody any
 
-	// App exposes Mocha instance associated with the incoming HTTP request.
+	// App exposes application instance associated with the incoming HTTP request.
 	App *Mocha
 
 	// Mock is the matched Mock for the current HTTP request.
@@ -82,13 +85,13 @@ type PostActionInput struct {
 	// RawRequest is the original incoming http.Request.
 	RawRequest *http.Request
 
-	// URL is full request url.URL, including scheme, host, port.
+	// URL is the full request url.URL, including scheme, host, port.
 	URL *url.URL
 
 	// ParsedBody is the parsed http.Request body.
 	ParsedBody any
 
-	// App exposes Mocha instance associated with the incoming HTTP request.
+	// App exposes the application instance associated with the incoming HTTP request.
 	App *Mocha
 
 	// Mock is the matched Mock for the current HTTP request.
@@ -107,8 +110,7 @@ type PostAction interface {
 	Run(input *PostActionInput) error
 }
 
-// Mapper is the function definition to be used to map Mock Stub before serving it.
-// Mapper doesn't work with reply.From or Proxy.
+// Mapper is the function definition to be used to map a Mock response Stub before serving it.
 type Mapper func(requestValues *RequestValues, res *Stub) error
 
 // MockFileHandler defines a custom Mock file configuration handler.
@@ -120,8 +122,9 @@ type MockFileHandler interface {
 	Handle(fields map[string]any, b *MockBuilder) error
 }
 
-// Extension describes a component that can registered within the mock server, and used lately.
-// Only one instance of Extension should be registered, but, depending on the component, it could be used many times.
+// Extension describes a component that can be registered within the mock server and used lately.
+// Only one instance of a specific Extension should be registered, but, depending on the component,
+// it could be used many times.
 type Extension interface {
 	UniqueName() string
 }
@@ -133,7 +136,7 @@ type valueSelectorInput struct {
 	// RawRequest is the original incoming http.Request.
 	RawRequest *http.Request
 
-	// URL is full request url.URL, including scheme, host, port.
+	// URL is the full request url.URL, including scheme, host, port.
 	URL *url.URL
 
 	// ParsedBody is the parsed http.Request body.
@@ -151,7 +154,7 @@ type expectation struct {
 	// Matcher associated with this expectation.
 	Matcher matcher.Matcher
 
-	// ValueSelector will extract the http.Request or a portion of it and feed it to the associated Matcher.
+	// ValueSelector will extract the http.Request or a specific field of it and feed it to the associated Matcher.
 	ValueSelector valueSelector
 
 	// Weight of this expectation.
@@ -160,7 +163,7 @@ type expectation struct {
 
 // matchResult holds information related to a matching operation.
 type matchResult struct {
-	// Details is the list of non matches messages.
+	// Details is the list of non-matches messages.
 	Details []mismatchDetail
 
 	// Weight for the matcher. It helps determine the closest match.
@@ -170,7 +173,7 @@ type matchResult struct {
 	Pass bool
 }
 
-// mismatchDetail gives more ctx about why a matcher did not match.
+// mismatchDetail gives more context about why a matcher did not match.
 type mismatchDetail struct {
 	MatchersName string
 	Target       matchTarget
@@ -263,12 +266,12 @@ func (m *Mock) Disable() {
 	m.Enabled = false
 }
 
-// Build allow users use Mock as a Builder.
+// Build allows users to use Mock as a Builder.
 func (m *Mock) Build() (*Mock, error) {
 	return m, nil
 }
 
-// matchExpectations checks if current Mock matches against a list of expectations.
+// matchExpectations checks if the current Mock matches against a list of expectations.
 // Will iterate through all expectations even if it doesn't match early.
 func (m *Mock) matchExpectations(ri *valueSelectorInput, expectations []*expectation) *matchResult {
 	w := 0

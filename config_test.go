@@ -208,7 +208,7 @@ func TestConfigBuilder(t *testing.T) {
 		Loader(&fileLoader{}).
 		MockFileHandlers(&customMockFileHandler{}).
 		TemplateEngine(newGoTemplate()).
-		BuiltInTemplateEngineFunctions(template.FuncMap{"trim": strings.TrimSpace}).
+		TemplateEngineFunctions(template.FuncMap{"trim": strings.TrimSpace}).
 		Proxy(&ProxyConfig{}, &ProxyConfig{}))
 	conf := m.Config()
 

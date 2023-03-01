@@ -79,10 +79,10 @@ func (m *anyOfMatcher) AfterMockServed() error {
 	return runAfterMockServed(m.matchers...)
 }
 
-// Any matches when any of the given matchers returns true.
+// Any matches when any of the given matchers pass.
 // Example:
 //
-//	Any(EqualTo("test"),EqualIgnoreCase("TEST"),ToContains("tes"))
+//	Any(Equal("test"), EqualIgnoreCase("TEST"), Contain("tes"))
 func Any(matchers ...Matcher) Matcher {
 	if len(matchers) == 0 {
 		panic("[Any] requires at least 1 matcher")

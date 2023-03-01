@@ -8,7 +8,7 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 )
 
-// CORSConfig represents the possible options to configure corsMid for the mock server.
+// CORSConfig represents the possible options to configure CORS.
 type CORSConfig struct {
 	AllowedOrigin     string
 	AllowCredentials  bool
@@ -52,7 +52,7 @@ var _defaultCORSConfig = CORSConfig{
 	SuccessStatusCode: http.StatusNoContent,
 }
 
-// CORSConfigBuilder facilitates building corsMid options.
+// CORSConfigBuilder facilitates building CORS options.
 type CORSConfigBuilder struct {
 	options *CORSConfig
 	origins []string
@@ -65,20 +65,20 @@ func CORS() *CORSConfigBuilder {
 		options: &CORSConfig{SuccessStatusCode: http.StatusNoContent}}
 }
 
-// SuccessStatusCode sets a custom status code returned on corsMid Options request.
+// SuccessStatusCode sets a custom status code returned on CORS Options request.
 // If none is specified, the default status code is http.StatusNoContent.
 func (b *CORSConfigBuilder) SuccessStatusCode(code int) *CORSConfigBuilder {
 	b.options.SuccessStatusCode = code
 	return b
 }
 
-// MaxAge sets corsMid max age.
+// MaxAge sets CORS max age.
 func (b *CORSConfigBuilder) MaxAge(maxAge int) *CORSConfigBuilder {
 	b.options.MaxAge = maxAge
 	return b
 }
 
-// AllowOrigin sets allowed origins.
+// AllowOrigin sets the allowed origins.
 func (b *CORSConfigBuilder) AllowOrigin(origin ...string) *CORSConfigBuilder {
 	b.origins = append(b.origins, origin...)
 	return b
@@ -96,7 +96,7 @@ func (b *CORSConfigBuilder) ExposeHeaders(headers ...string) *CORSConfigBuilder 
 	return b
 }
 
-// AllowedHeaders sets allowed headers.
+// AllowedHeaders sets the allowed headers.
 // It will set the header "Access-Control-Allow-Header".
 func (b *CORSConfigBuilder) AllowedHeaders(headers ...string) *CORSConfigBuilder {
 	b.options.AllowedHeaders = strings.Join(headers, ",")
@@ -210,7 +210,7 @@ func configureOrigin(options *CORSConfig, r *http.Request, w http.ResponseWriter
 	}
 
 	// received a list of origins
-	// will check if request origin is within the provided array and use it as the allowed origin
+	// will check if the request origin is within the provided array and use it as the allowed origin
 	origin := r.Header.Get("origin")
 	allowed := false
 

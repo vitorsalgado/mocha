@@ -40,6 +40,8 @@ func (m *splitMatcher) AfterMockServed() error {
 	return runAfterMockServed(m.matcher)
 }
 
+// Split splits the incoming request value text using the separator parameter and
+// test each element with the provided matcher.
 func Split(separator string, matcher Matcher) Matcher {
 	return &splitMatcher{separator: separator, matcher: matcher}
 }

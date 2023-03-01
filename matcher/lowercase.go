@@ -13,6 +13,7 @@ func (m *lowerCaseMatcher) Name() string {
 }
 
 func (m *lowerCaseMatcher) Match(v any) (*Result, error) {
+	// TODO: check for cast errors
 	txt := v.(string)
 	result, err := m.matcher.Match(strings.ToLower(txt))
 	if err != nil {
@@ -33,7 +34,7 @@ func (m *lowerCaseMatcher) AfterMockServed() error {
 	return runAfterMockServed(m.matcher)
 }
 
-// ToLower lower case matcher string argument before submitting it to provided matcher.
+// ToLower lowers the incoming request value case value before submitting it to provided matcher.
 func ToLower(matcher Matcher) Matcher {
 	return &lowerCaseMatcher{matcher: matcher}
 }

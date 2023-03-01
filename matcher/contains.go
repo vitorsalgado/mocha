@@ -57,12 +57,13 @@ func (m *containsMatcher) Match(v any) (*Result, error) {
 	return &Result{Message: mfmt.Stringify(vValue)}, nil
 }
 
-// Contain returns true when the items value is contained in the matcher argument.
+// Contain passes when the expected value is contained in the incoming value from the request.
 func Contain(expected any) Matcher {
 	return &containsMatcher{expected: expected}
 }
 
-// Containf returns true when the items value is contained in the matcher argument.
+// Containf passes when the expected value is contained in the incoming value from the request.
+// This is short-hand to format the expected value.
 func Containf(format string, a ...any) Matcher {
 	return &containsMatcher{expected: fmt.Sprintf(format, a...)}
 }

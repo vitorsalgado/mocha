@@ -33,7 +33,7 @@ func (m *trimMatcher) AfterMockServed() error {
 	return runAfterMockServed(m.matcher)
 }
 
-// Trim trims' spaces of matcher argument before submitting it to the given matcher.
+// Trim trims' spaces of the incoming request value before submitting it to the provided matcher.
 func Trim(matcher Matcher) Matcher {
 	return &trimMatcher{matcher: matcher}
 }

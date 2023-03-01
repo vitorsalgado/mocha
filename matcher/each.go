@@ -70,6 +70,8 @@ func (m *eachMatcher) AfterMockServed() error {
 	return runAfterMockServed(m.matcher)
 }
 
+// Each applies the given matcher on all items of the incoming request value.
+// It works with slices and maps.
 func Each(matcher Matcher) Matcher {
 	return &eachMatcher{matcher: matcher}
 }

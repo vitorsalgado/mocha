@@ -88,6 +88,13 @@ type mockExternalBuilder struct {
 	builder  *MockBuilder
 }
 
+// FromFile builds a Mock from the given filename.
+// It accepts the same extensions from viper.Viper.
+// Every mock configuration file is treated as a Go template.
+// Check the documentation to see the available data to be used within the template.
+// Since every mock file is a Go template by default,
+// if you need to define templates for the response URL, header or body, remember to escape it.
+// Eg.: body: {{`{{ .Request.Method }}`}}
 func FromFile(filename string) Builder {
 	return &mockExternalBuilder{filename: filename, builder: Request()}
 }

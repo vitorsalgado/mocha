@@ -31,6 +31,7 @@ func (m *truthyMatcher) Match(v any) (*Result, error) {
 	return &Result{Pass: b}, nil
 }
 
+// Truthy passes if the request value is true.
 func Truthy() Matcher {
 	return &truthyMatcher{}
 }
