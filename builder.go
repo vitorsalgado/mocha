@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/vitorsalgado/mocha/v3/matcher"
+	"github.com/vitorsalgado/mocha/v3/matcher/mfeat"
 )
 
 var _ Builder = (*MockBuilder)(nil)
@@ -302,7 +303,7 @@ func (b *MockBuilder) FormFieldf(field string, value string, a ...any) *MockBuil
 func (b *MockBuilder) Times(times int) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:  _targetRequest,
-		Matcher: matcher.Repeat(times),
+		Matcher: mfeat.Repeat(times),
 		Weight:  _weightNone,
 	})
 	return b
@@ -322,7 +323,7 @@ func (b *MockBuilder) RequestMatches(m matcher.Matcher) *MockBuilder {
 // StartScenario sets that this mock will start a new scenario with the given name.
 func (b *MockBuilder) StartScenario(name string) *MockBuilder {
 	b.scenario = name
-	b.scenarioRequiredState = matcher.ScenarioStateStarted
+	b.scenarioRequiredState = mfeat.ScenarioStateStarted
 	return b
 }
 
@@ -397,7 +398,7 @@ func (b *MockBuilder) Build(app *Mocha) (*Mock, error) {
 	if b.scenario != "" {
 		b.appendExpectation(&expectation{
 			Target:  _targetRequest,
-			Matcher: matcher.Scenario(b.scenario, b.scenarioRequiredState, b.scenarioNewState),
+			Matcher: mfeat.Scenario(b.scenario, b.scenarioRequiredState, b.scenarioNewState),
 		})
 	}
 

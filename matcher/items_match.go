@@ -12,7 +12,7 @@ type itemsMatchMatcher struct {
 }
 
 func (m *itemsMatchMatcher) Name() string {
-	return "EqualElements"
+	return "ItemsMatch"
 }
 
 func (m *itemsMatchMatcher) Match(v any) (*Result, error) {

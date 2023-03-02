@@ -1,8 +1,9 @@
-package matcher
+package mfeat
 
 import (
 	"sync"
 
+	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
@@ -16,12 +17,12 @@ func (m *repeatMatcher) Name() string {
 	return "Times"
 }
 
-func (m *repeatMatcher) Match(_ any) (*Result, error) {
+func (m *repeatMatcher) Match(_ any) (*matcher.Result, error) {
 	if m.hits < m.max {
-		return &Result{Pass: true}, nil
+		return &matcher.Result{Pass: true}, nil
 	}
 
-	return &Result{
+	return &matcher.Result{
 		Ext:     []string{mfmt.Stringify(m.max)},
 		Message: mfmt.PrintReceived(m.hits),
 	}, nil
@@ -36,6 +37,6 @@ func (m *repeatMatcher) AfterMockServed() error {
 	return nil
 }
 
-func Repeat(times int) Matcher {
+func Repeat(times int) matcher.Matcher {
 	return &repeatMatcher{max: times}
 }

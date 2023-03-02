@@ -13,7 +13,7 @@ type greaterOrEqualMatcher struct {
 }
 
 func (m *greaterOrEqualMatcher) Name() string {
-	return "Less"
+	return "GreaterOrEqual"
 }
 
 func (m *greaterOrEqualMatcher) Match(v any) (*Result, error) {

@@ -6,7 +6,7 @@ type nilMatcher struct {
 }
 
 func (m *nilMatcher) Name() string {
-	return "Nil"
+	return "IsNil"
 }
 
 func (m *nilMatcher) Match(v any) (*Result, error) {
@@ -17,7 +17,7 @@ func (m *nilMatcher) Match(v any) (*Result, error) {
 	return &Result{Message: mfmt.PrintReceived(v)}, nil
 }
 
-// Nil passes if the incoming request value is nil.
-func Nil() Matcher {
+// IsNil passes if the incoming request value is nil.
+func IsNil() Matcher {
 	return &nilMatcher{}
 }

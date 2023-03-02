@@ -1,6 +1,8 @@
 package matcher
 
 import (
+	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -13,8 +15,11 @@ func (m *lowerCaseMatcher) Name() string {
 }
 
 func (m *lowerCaseMatcher) Match(v any) (*Result, error) {
-	// TODO: check for cast errors
-	txt := v.(string)
+	txt, ok := v.(string)
+	if !ok {
+		return nil, fmt.Errorf("type %s is not supported. accepted types: string", reflect.TypeOf(v))
+	}
+
 	result, err := m.matcher.Match(strings.ToLower(txt))
 	if err != nil {
 		return nil, err

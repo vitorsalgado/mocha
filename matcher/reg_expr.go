@@ -13,7 +13,7 @@ type regExpMatcher struct {
 }
 
 func (m *regExpMatcher) Name() string {
-	return "MatchRegExp"
+	return "RegExp"
 }
 
 func (m *regExpMatcher) Match(v any) (*Result, error) {

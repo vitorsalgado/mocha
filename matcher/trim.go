@@ -1,6 +1,8 @@
 package matcher
 
 import (
+	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -13,7 +15,11 @@ func (m *trimMatcher) Name() string {
 }
 
 func (m *trimMatcher) Match(v any) (*Result, error) {
-	txt := v.(string)
+	txt, ok := v.(string)
+	if !ok {
+		return nil, fmt.Errorf("type %s is not supported. accepted types: string", reflect.TypeOf(v))
+	}
+
 	result, err := m.matcher.Match(strings.TrimSpace(txt))
 	if err != nil {
 		return nil, err

@@ -1,7 +1,9 @@
-package matcher
+package mfeat
 
 import (
 	"fmt"
+
+	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
 const ScenarioStateStarted = "started"
@@ -59,21 +61,21 @@ func (m *scenarioMatcher) Name() string {
 	return "Scenario"
 }
 
-func (m *scenarioMatcher) Match(_ any) (*Result, error) {
+func (m *scenarioMatcher) Match(_ any) (*matcher.Result, error) {
 	if m.requiredState == ScenarioStateStarted {
 		m.store.createNewIfNeeded(m.nm)
 	}
 
 	scn, ok := m.store.fetchByName(m.nm)
 	if !ok {
-		return &Result{Pass: true}, nil
+		return &matcher.Result{Pass: true}, nil
 	}
 
 	if scn.state == m.requiredState {
-		return &Result{Pass: true}, nil
+		return &matcher.Result{Pass: true}, nil
 	}
 
-	return &Result{
+	return &matcher.Result{
 		Ext:     []string{m.requiredState},
 		Message: fmt.Sprintf("Scenario state: %s", scn.state),
 	}, nil
@@ -92,7 +94,7 @@ func (m *scenarioMatcher) AfterMockServed() error {
 	return nil
 }
 
-func Scenario(name, requiredState, newState string) Matcher {
+func Scenario(name, requiredState, newState string) matcher.Matcher {
 	return &scenarioMatcher{
 		store:         newScenarioStore(),
 		requiredState: requiredState,

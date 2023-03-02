@@ -9,7 +9,7 @@ type funcMatcher struct {
 }
 
 func (m *funcMatcher) Name() string {
-	return "fn"
+	return "Func"
 }
 
 func (m *funcMatcher) Match(v any) (*Result, error) {

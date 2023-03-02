@@ -1,6 +1,8 @@
 package matcher
 
 import (
+	"fmt"
+	"reflect"
 	"strings"
 )
 
@@ -9,11 +11,15 @@ type upperCaseMatcher struct {
 }
 
 func (m *upperCaseMatcher) Name() string {
-	return m.matcher.Name()
+	return "ToUpper"
 }
 
 func (m *upperCaseMatcher) Match(v any) (*Result, error) {
-	txt := v.(string)
+	txt, ok := v.(string)
+	if !ok {
+		return nil, fmt.Errorf("type %s is not supported. accepted types: string", reflect.TypeOf(v))
+	}
+
 	result, err := m.matcher.Match(strings.ToUpper(txt))
 	if err != nil {
 		return nil, err

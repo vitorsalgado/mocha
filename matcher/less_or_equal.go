@@ -13,7 +13,7 @@ type lessOrEqualMatcher struct {
 }
 
 func (m *lessOrEqualMatcher) Name() string {
-	return "LessThanOrEqual"
+	return "LessOrEqual"
 }
 
 func (m *lessOrEqualMatcher) Match(v any) (*Result, error) {

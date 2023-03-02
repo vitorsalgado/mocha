@@ -19,6 +19,8 @@ import (
 	"github.com/vitorsalgado/mocha/v3/matcher/mbuild"
 )
 
+var _ Builder = (*mockExternalBuilder)(nil)
+
 // Mock configuration fields
 const (
 	_fName     = "name"

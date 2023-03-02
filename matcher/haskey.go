@@ -31,12 +31,12 @@ func (m *hasKeyMatcher) Match(v any) (*Result, error) {
 	return &Result{Message: m.path}, nil
 }
 
-// HaveKey passes if the JSON key in the given path is present.
+// HasKey passes if the JSON key in the given path is present.
 // Example:
 //
 //	JSON: { "name": "test" }
-//	HaveKey("name") will pass
-//	HaveKey("address.street") will not pass.
-func HaveKey(path string) Matcher {
+//	HasKey("name") will pass
+//	HasKey("address.street") will not pass.
+func HasKey(path string) Matcher {
 	return &hasKeyMatcher{path: path}
 }

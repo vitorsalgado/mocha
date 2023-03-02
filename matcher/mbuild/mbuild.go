@@ -272,7 +272,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 				)
 		}
 
-		return matcher.HaveKey(str), nil
+		return matcher.HasKey(str), nil
 
 	case _mHasPrefix:
 		str, ok := args.(string)
@@ -406,7 +406,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 		return matcher.LessThanOrEqual(num), nil
 
 	case _mNil:
-		return matcher.Nil(), nil
+		return matcher.IsNil(), nil
 
 	case _mNot:
 		m, err := BuildMatcher(args)
