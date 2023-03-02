@@ -3,7 +3,6 @@ package matcher
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -26,14 +25,14 @@ func TestGreater(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := GreaterThan(tc.expected).Match(tc.value)
 
-			assert.NoError(t, err)
-			assert.Equal(t, tc.result, res.Pass)
+			require.NoError(t, err)
+			require.Equal(t, tc.result, res.Pass)
 		})
 	}
 }
 
 func TestGreaterUnhandledType(t *testing.T) {
-	res, err := GreaterThan(10).Match(true)
+	res, err := Gt(10).Match(true)
 
 	require.Error(t, err)
 	require.Nil(t, res)

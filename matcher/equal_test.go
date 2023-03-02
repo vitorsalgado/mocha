@@ -77,7 +77,7 @@ func TestEqual(t *testing.T) {
 			assert.NoError(t, err)
 			assert.Equal(t, tc.result, res.Pass)
 
-			res, err = Equal(tc.valueToCompare).Match(tc.value)
+			res, err = Eq(tc.valueToCompare).Match(tc.value)
 
 			assert.NoError(t, err)
 			assert.Equal(t, tc.result, res.Pass)

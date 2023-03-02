@@ -23,7 +23,7 @@ func (m *lenMatcher) Match(v any) (*Result, error) {
 	return &Result{Message: mfmt.Stringify(m.length)}, nil
 }
 
-// HaveLen passes when the expected value length is equal to the incoming request value.
-func HaveLen(length int) Matcher {
+// HasLen passes when the expected value length is equal to the incoming request value.
+func HasLen(length int) Matcher {
 	return &lenMatcher{length: length}
 }

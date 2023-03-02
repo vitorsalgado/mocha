@@ -36,3 +36,8 @@ func StrictEqual(expected any) Matcher {
 func StrictEqualf(format string, a ...any) Matcher {
 	return &equalStrictMatcher{expected: fmt.Sprintf(format, a...)}
 }
+
+// Eqs strictly compares the expected value with incoming request values, considering value and type.
+func Eqs(expected any) Matcher {
+	return &equalStrictMatcher{expected: expected}
+}

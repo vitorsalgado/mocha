@@ -38,3 +38,10 @@ func Equal(expected any) Matcher {
 func Equalf(format string, a ...any) Matcher {
 	return &equalMatcher{expected: fmt.Sprintf(format, a...)}
 }
+
+// Eq is an alias to Equal.
+// It asserts that the given expectation is equal to the incoming request value.
+// It considers equivalent value. Eg.: float64(10) is equal to int(10).
+func Eq(expected any) Matcher {
+	return &equalMatcher{expected: expected}
+}

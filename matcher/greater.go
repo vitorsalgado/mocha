@@ -40,3 +40,8 @@ func (m *greaterMatcher) Match(v any) (*Result, error) {
 func GreaterThan(expected float64) Matcher {
 	return &greaterMatcher{expected: expected}
 }
+
+// Gt passes if the incoming request value is greater than the given value.
+func Gt(expected float64) Matcher {
+	return &greaterMatcher{expected: expected}
+}

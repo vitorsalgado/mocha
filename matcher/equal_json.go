@@ -41,3 +41,8 @@ func (m *equalJSONMatcher) Match(v any) (*Result, error) {
 func EqualJSON(expected any) Matcher {
 	return &equalJSONMatcher{expected: expected}
 }
+
+// Eqj matches JSON values.
+func Eqj(expected any) Matcher {
+	return &equalJSONMatcher{expected: expected}
+}

@@ -40,3 +40,9 @@ func EqualIgnoreCase(expected string) Matcher {
 func EqualIgnoreCasef(format string, a ...any) Matcher {
 	return EqualIgnoreCase(fmt.Sprintf(format, a...))
 }
+
+// Eqi is an alias to EqualIgnoreCase.
+// It compares the expected value with the incoming request value ignoring the case.
+func Eqi(expected string) Matcher {
+	return &equalIgnoreCaseMatcher{expected: expected}
+}

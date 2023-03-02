@@ -40,3 +40,8 @@ func (m *lessOrEqualMatcher) Match(v any) (*Result, error) {
 func LessThanOrEqual(expected float64) Matcher {
 	return &lessOrEqualMatcher{expected: expected}
 }
+
+// Lte passes if the incoming request value is lower than or equal to the given value.
+func Lte(expected float64) Matcher {
+	return &lessOrEqualMatcher{expected: expected}
+}

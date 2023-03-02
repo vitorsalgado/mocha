@@ -32,7 +32,7 @@ func TestLess(t *testing.T) {
 }
 
 func TestLessUnhandledType(t *testing.T) {
-	res, err := LessThan(10).Match(true)
+	res, err := Lt(10).Match(true)
 
 	require.Error(t, err)
 	require.Nil(t, res)

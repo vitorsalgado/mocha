@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -50,8 +49,13 @@ func TestStrictEqual(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := StrictEqual(tc.value).Match(tc.valueToCompare)
 
-			assert.NoError(t, err)
-			assert.Equal(t, tc.result, res.Pass)
+			require.NoError(t, err)
+			require.Equal(t, tc.result, res.Pass)
+
+			res, err = Eqs(tc.valueToCompare).Match(tc.value)
+
+			require.NoError(t, err)
+			require.Equal(t, tc.result, res.Pass)
 		})
 	}
 }

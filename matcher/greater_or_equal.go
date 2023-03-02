@@ -40,3 +40,8 @@ func (m *greaterOrEqualMatcher) Match(v any) (*Result, error) {
 func GreaterThanOrEqual(expected float64) Matcher {
 	return &greaterOrEqualMatcher{expected: expected}
 }
+
+// Gte passes if the incoming request value is greater than or equal to the given value.
+func Gte(expected float64) Matcher {
+	return &greaterOrEqualMatcher{expected: expected}
+}

@@ -28,7 +28,7 @@ func TestEqualIgnoreCase(t *testing.T) {
 			if len(tc.expectedValueArgs) > 0 {
 				result, err = EqualIgnoreCasef(tc.expectedValue, tc.expectedValueArgs...).Match(tc.matchValue)
 			} else {
-				result, err = EqualIgnoreCase(tc.expectedValue).Match(tc.matchValue)
+				result, err = Eqi(tc.expectedValue).Match(tc.matchValue)
 			}
 
 			require.NoError(t, err)
