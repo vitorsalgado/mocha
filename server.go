@@ -21,25 +21,25 @@ type Server interface {
 	Setup(*Config, http.Handler) error
 
 	// Start starts a server.
-	Start() (ServerInfo, error)
+	Start() (*ServerInfo, error)
 
 	// StartTLS starts a server with TLS.
-	StartTLS() (ServerInfo, error)
+	StartTLS() (*ServerInfo, error)
 
 	// Close closes the server.
 	Close() error
 
 	// Info returns server information.
-	Info() ServerInfo
+	Info() *ServerInfo
 }
 
 type httpTestServer struct {
 	server *httptest.Server
-	info   ServerInfo
+	info   *ServerInfo
 }
 
 func newServer() Server {
-	return &httpTestServer{info: ServerInfo{}}
+	return &httpTestServer{info: &ServerInfo{}}
 }
 
 func (s *httpTestServer) Setup(config *Config, handler http.Handler) error {
@@ -68,14 +68,14 @@ func (s *httpTestServer) Setup(config *Config, handler http.Handler) error {
 	return nil
 }
 
-func (s *httpTestServer) Start() (ServerInfo, error) {
+func (s *httpTestServer) Start() (*ServerInfo, error) {
 	s.server.Start()
 	s.info.URL = s.server.URL
 
 	return s.info, nil
 }
 
-func (s *httpTestServer) StartTLS() (ServerInfo, error) {
+func (s *httpTestServer) StartTLS() (*ServerInfo, error) {
 	s.server.EnableHTTP2 = true
 	s.server.StartTLS()
 	s.info.URL = s.server.URL
@@ -88,6 +88,6 @@ func (s *httpTestServer) Close() error {
 	return nil
 }
 
-func (s *httpTestServer) Info() ServerInfo {
+func (s *httpTestServer) Info() *ServerInfo {
 	return s.info
 }

@@ -284,15 +284,15 @@ func (app *Mocha) Name() string {
 }
 
 // Start starts the mock server.
-func (app *Mocha) Start() (ServerInfo, error) {
+func (app *Mocha) Start() (*ServerInfo, error) {
 	info, err := app.server.Start()
 	if err != nil {
-		return ServerInfo{}, err
+		return nil, err
 	}
 
 	err = app.onStart()
 	if err != nil {
-		return ServerInfo{}, err
+		return nil, err
 	}
 
 	return info, nil
@@ -300,7 +300,7 @@ func (app *Mocha) Start() (ServerInfo, error) {
 
 // MustStart starts the mock server.
 // It fails immediately if any error occurs.
-func (app *Mocha) MustStart() ServerInfo {
+func (app *Mocha) MustStart() *ServerInfo {
 	info, err := app.Start()
 	if err != nil {
 		panic(fmt.Errorf("server: start failed. %w", err))
@@ -310,15 +310,15 @@ func (app *Mocha) MustStart() ServerInfo {
 }
 
 // StartTLS starts TLS on a mock server.
-func (app *Mocha) StartTLS() (ServerInfo, error) {
+func (app *Mocha) StartTLS() (*ServerInfo, error) {
 	info, err := app.server.StartTLS()
 	if err != nil {
-		return ServerInfo{}, err
+		return nil, err
 	}
 
 	err = app.onStart()
 	if err != nil {
-		return ServerInfo{}, err
+		return nil, err
 	}
 
 	return info, nil
@@ -326,7 +326,7 @@ func (app *Mocha) StartTLS() (ServerInfo, error) {
 
 // MustStartTLS starts TLS on a mock server.
 // It fails immediately if any error occurs.
-func (app *Mocha) MustStartTLS() ServerInfo {
+func (app *Mocha) MustStartTLS() *ServerInfo {
 	info, err := app.StartTLS()
 	if err != nil {
 		panic(fmt.Errorf("server: failed to start server with TLS. %w", err))

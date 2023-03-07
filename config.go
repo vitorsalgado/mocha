@@ -43,7 +43,7 @@ const (
 // Defaults
 const (
 	// ConfigMockFilePattern is the default filename glob pattern to search for local mock files.
-	ConfigMockFilePattern = "testdata/*mock.json"
+	ConfigMockFilePattern = "testdata/_mocks/*mock.(json,yaml,yml)"
 )
 
 // Configurer lets users configure the Mock API.
@@ -133,7 +133,7 @@ type Config struct {
 	LogBodyMaxSize int64
 
 	// UseDescriptiveLogger enable/disable the use of a more descriptive logger for HTTP request matching lifecycle.
-	// This is useful, specially for console mode usage, to understand the details of a HTTP request and
+	// This is useful, specially for console mode usage, to understand the details of an HTTP request and
 	// why a match did not occur.
 	// If true, The Logger options will be ignored for the HTTP request matching.
 	UseDescriptiveLogger bool
@@ -324,7 +324,7 @@ func (cb *ConfigBuilder) LogBodyMaxSize(max int64) *ConfigBuilder {
 }
 
 // UseDescriptiveLogger enable/disable the use of a more descriptive logger for HTTP request matching lifecycle.
-// This is useful, specially for console mode usage, to understand the details of a HTTP request and
+// This is useful, specially for console mode usage, to understand the details of an HTTP request and
 // why a match did not occur.
 // If true, The Logger options will be ignored for the HTTP request matching.
 func (cb *ConfigBuilder) UseDescriptiveLogger() *ConfigBuilder {

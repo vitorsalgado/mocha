@@ -35,11 +35,11 @@ func (s *customTestServer) Setup(config *Config, handler http.Handler) error {
 	return s.decorated.Setup(config, handler)
 }
 
-func (s *customTestServer) Start() (ServerInfo, error) {
+func (s *customTestServer) Start() (*ServerInfo, error) {
 	return s.decorated.Start()
 }
 
-func (s *customTestServer) StartTLS() (ServerInfo, error) {
+func (s *customTestServer) StartTLS() (*ServerInfo, error) {
 	return s.decorated.StartTLS()
 }
 
@@ -47,7 +47,7 @@ func (s *customTestServer) Close() error {
 	return s.decorated.Close()
 }
 
-func (s *customTestServer) Info() ServerInfo {
+func (s *customTestServer) Info() *ServerInfo {
 	return s.decorated.Info()
 }
 
