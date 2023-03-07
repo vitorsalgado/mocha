@@ -256,16 +256,6 @@ func (r *recorder) process(arg *recArgs) error {
 	name := fmt.Sprintf("%s-%s", arg.request.method, nm)
 	mockFile := path.Join(r.config.SaveDir, fmt.Sprintf("%s.mock.%s", name, r.config.SaveExtension))
 
-	_, err := os.Stat(mockFile)
-	exists := true
-	if err != nil {
-		exists = false
-	}
-
-	if exists {
-		return fmt.Errorf("file %s already exists", mockFile)
-	}
-
 	if hasResBody {
 		if r.config.SaveResponseBodyToFile {
 			bodyFilename := name + "--response-body"
@@ -339,12 +329,7 @@ func (r *recorder) process(arg *recArgs) error {
 	v.Set(_fResponseStatus, arg.response.status)
 	v.Set(_fResponseHeader, responseHeaders)
 
-	err = v.WriteConfigAs(mockFile)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return v.WriteConfigAs(mockFile)
 }
 
 //
