@@ -40,7 +40,7 @@ func (rep *RandomReply) Add(reply ...Reply) *RandomReply {
 func (rep *RandomReply) beforeBuild(_ *Mocha) error {
 	size := len(rep.replies)
 	if size == 0 {
-		return errors.New("[reply.random] you need to set at least one response when using random reply")
+		return errors.New("reply_random: you need to set at least one response when using random reply")
 	}
 
 	return nil

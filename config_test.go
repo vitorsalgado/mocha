@@ -8,6 +8,7 @@ import (
 	"testing"
 	"text/template"
 
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/vitorsalgado/mocha/v3/internal/header"
@@ -158,7 +159,7 @@ func TestConfigWithFunctions(t *testing.T) {
 		WithCORS(&_defaultCORSConfig),
 		WithServer(&httpTestServer{}),
 		WithHandlerDecorator(func(handler http.Handler) http.Handler { return handler }),
-		WithLogLevel(LogInfo),
+		WithLogLevel(LogBasic),
 		WithParams(newInMemoryParameters()),
 		WithDirs("test", "dev"),
 		WithLoader(&fileLoader{}),
@@ -173,12 +174,12 @@ func TestConfigWithFunctions(t *testing.T) {
 
 	assert.Equal(t, nm, conf.Name)
 	assert.Equal(t, addr, conf.Addr)
-	assert.Equal(t, http.StatusNotFound, conf.MockNotFoundStatusCode)
+	assert.Equal(t, http.StatusNotFound, conf.RequestWasNotMatchedStatusCode)
 	assert.Len(t, conf.RequestBodyParsers, 2)
 	assert.Len(t, conf.Middlewares, 0)
 	assert.Equal(t, &_defaultCORSConfig, conf.CORS)
 	assert.NotNil(t, conf.HandlerDecorator)
-	assert.Equal(t, LogInfo, conf.LogLevel)
+	assert.Equal(t, LogBasic, conf.LogVerbosity)
 	assert.Equal(t, newInMemoryParameters(), conf.Parameters)
 	assert.Equal(t, []string{ConfigMockFilePattern, "test", "dev"}, conf.Directories)
 	assert.Len(t, conf.Loaders, 1)
@@ -193,6 +194,8 @@ func TestConfigBuilder(t *testing.T) {
 	addr := ""
 	nm := "test"
 
+	customLogger := zerolog.Nop()
+
 	m := New(Configure().
 		Name(nm).
 		Addr(addr).
@@ -202,7 +205,11 @@ func TestConfigBuilder(t *testing.T) {
 		CORS(&_defaultCORSConfig).
 		Server(&httpTestServer{}).
 		HandlerDecorator(func(handler http.Handler) http.Handler { return handler }).
-		LogLevel(LogInfo).
+		LogVerbosity(LogBasic).
+		LogLevel(LogLevelInfo).
+		LogPretty(false).
+		LogBodyMaxSize(100).
+		Logger(&customLogger).
 		Parameters(newInMemoryParameters()).
 		Dirs("test", "dev").
 		Loader(&fileLoader{}).
@@ -214,12 +221,16 @@ func TestConfigBuilder(t *testing.T) {
 
 	assert.Equal(t, nm, conf.Name)
 	assert.Equal(t, addr, conf.Addr)
-	assert.Equal(t, http.StatusNotFound, conf.MockNotFoundStatusCode)
+	assert.Equal(t, http.StatusNotFound, conf.RequestWasNotMatchedStatusCode)
 	assert.Len(t, conf.RequestBodyParsers, 2)
 	assert.Len(t, conf.Middlewares, 0)
 	assert.Equal(t, &_defaultCORSConfig, conf.CORS)
 	assert.NotNil(t, conf.HandlerDecorator)
-	assert.Equal(t, LogInfo, conf.LogLevel)
+	assert.Equal(t, LogBasic, conf.LogVerbosity)
+	assert.Equal(t, LogLevelInfo, conf.LogLevel)
+	assert.False(t, conf.LogPretty)
+	assert.Equal(t, &customLogger, conf.Logger)
+	assert.Equal(t, int64(100), conf.LogBodyMaxSize)
 	assert.Equal(t, newInMemoryParameters(), conf.Parameters)
 	assert.Equal(t, []string{ConfigMockFilePattern, "test", "dev"}, conf.Directories)
 	assert.Len(t, conf.Loaders, 1)
@@ -235,13 +246,8 @@ func TestWithNewFiles(t *testing.T) {
 	assert.Equal(t, []string{"test", "dev"}, m.config.Directories)
 }
 
-func TestUseColors(t *testing.T) {
-	SetColors(false)
-	SetColors(true)
-}
-
 func TestLogLevelString(t *testing.T) {
-	assert.Equal(t, LogSilently.String(), "silent")
-	assert.Equal(t, LogInfo.String(), "info")
-	assert.Equal(t, LogVerbose.String(), "verbose")
+	assert.Equal(t, LogBasic.String(), "basic")
+	assert.Equal(t, LogHeader.String(), "header")
+	assert.Equal(t, LogBody.String(), "body")
 }

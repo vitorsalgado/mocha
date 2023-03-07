@@ -6,33 +6,29 @@ import (
 	"runtime/debug"
 )
 
-type L interface {
-	Logf(string, ...any)
-}
-
-func New(l L, status int) *Recover {
-	return &Recover{l: l, status: status}
+func New(fn func(err error), status int) *Recover {
+	return &Recover{fn: fn, status: status}
 }
 
 type Recover struct {
-	l      L
 	status int
+	fn     func(err error)
 }
 
 func (h *Recover) Recover(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if recovery := recover(); recovery != nil {
-				err := fmt.Errorf("panic=%v\n %s", recovery, debug.Stack())
-
 				w.WriteHeader(h.status)
-				w.Write([]byte(fmt.Sprintf(
-					"%d - Unexpected Error!\n %v",
-					h.status,
-					fmt.Sprintf("panic=%v", recovery),
-				)))
+				_, _ = fmt.Fprintf(w, "%d - Unexpected Error!\nPanic: %v", h.status, recovery)
 
-				h.l.Logf(err.Error())
+				h.fn(fmt.Errorf(
+					"http: panic during request matching. %s %s. %v\n%s",
+					r.Method,
+					r.URL.String(),
+					recovery,
+					debug.Stack(),
+				))
 			}
 		}()
 

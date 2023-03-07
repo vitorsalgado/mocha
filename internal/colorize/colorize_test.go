@@ -2,51 +2,36 @@ package colorize
 
 import (
 	"fmt"
-	"os"
 	"testing"
 )
 
 func TestStylize(t *testing.T) {
-	_ = os.Setenv(_noColorEnv, "1")
+	c := Colorize{}
+	c.UseColors(true)
 
-	t.Cleanup(func() {
-		_ = os.Unsetenv(_noColorEnv)
-	})
+	fmt.Println(c.Black("black"))
+	fmt.Println(c.BlackBright("black bright"))
+	fmt.Println(c.Red("red"))
+	fmt.Println(c.RedBright("red bright"))
+	fmt.Println(c.Green("green"))
+	fmt.Println(c.GreenBright("green bright"))
+	fmt.Println(c.Yellow("yellow"))
+	fmt.Println(c.YellowBright("yellow bright"))
+	fmt.Println(c.Blue("blue"))
+	fmt.Println(c.BlueBright("blue bright"))
+	fmt.Println(c.Magenta("magenta"))
+	fmt.Println(c.MagentaBright("magenta bright"))
+	fmt.Println(c.Cyan("cyan"))
+	fmt.Println(c.CyanBright("cyan bright"))
+	fmt.Println(c.Gray("gray"))
+	fmt.Println(c.White("white"))
+	fmt.Println(c.WhiteBright("white bright"))
 
-	fmt.Println(Black("black"))
-	fmt.Println(BlackBright("black bright"))
-	fmt.Println(Red("red"))
-	fmt.Println(RedBright("red bright"))
-	fmt.Println(Green("green"))
-	fmt.Println(GreenBright("green bright"))
-	fmt.Println(Yellow("yellow"))
-	fmt.Println(YellowBright("yellow bright"))
-	fmt.Println(Blue("blue"))
-	fmt.Println(BlueBright("blue bright"))
-	fmt.Println(Magenta("magenta"))
-	fmt.Println(MagentaBright("magenta bright"))
-	fmt.Println(Cyan("cyan"))
-	fmt.Println(CyanBright("cyan bright"))
-	fmt.Println(Gray("gray"))
-	fmt.Println(White("white"))
-	fmt.Println(WhiteBright("white bright"))
-
-	fmt.Println(Bold("bold"))
-	fmt.Println(Dim("dim"))
-	fmt.Println(Italic("italic"))
-	fmt.Println(Underline("underline"))
-	fmt.Println(Inverse("inverse"))
-	fmt.Println(Hidden("hidden"))
-	fmt.Println(Strikethrough("strikethrough"))
-}
-
-func TestUseColors(t *testing.T) {
-	UseColors(true)
-
-	fmt.Println(Black("black"))
-	fmt.Println(BlackBright("black bright"))
-}
-
-func TestMultipleStyles(t *testing.T) {
-	fmt.Println(Red(Bold("hello") + " world"))
+	fmt.Println(c.Bold("bold"))
+	fmt.Println(c.Dim("dim"))
+	fmt.Println(c.Italic("italic"))
+	fmt.Println(c.Underline("underline"))
+	fmt.Println(c.Inverse("inverse"))
+	fmt.Println(c.Hidden("hidden"))
+	fmt.Println(c.Strikethrough("strikethrough"))
 }

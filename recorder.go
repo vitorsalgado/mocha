@@ -81,7 +81,7 @@ func (r *RecordConfig) Apply(opts *RecordConfig) error {
 
 	if !found {
 		return fmt.Errorf(
-			"[record] recorded mock extension \"%s\" is not supported. supported values: %s",
+			"recorder: recorded mock file extension \"%s\" is not supported. supported values: %s",
 			extension,
 			strings.Join(viper.SupportedExts, ", "),
 		)
@@ -160,7 +160,7 @@ func (r *recorder) start(ctx context.Context) {
 
 				err := r.process(a)
 				if err != nil {
-					log.Println(fmt.Errorf("[record] %w", err))
+					log.Println(fmt.Errorf("recorder: %w", err))
 				}
 
 			case <-ctx.Done():

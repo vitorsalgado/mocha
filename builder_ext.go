@@ -104,7 +104,7 @@ func FromFile(filename string) Builder {
 func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 	mock, err = b.build(app)
 	if err != nil {
-		return nil, fmt.Errorf("[mock] error building mock from file %s\n %w", b.filename, err)
+		return nil, fmt.Errorf("mock: error building mock from file %s.\n%w", b.filename, err)
 	}
 
 	return mock, nil
@@ -113,7 +113,7 @@ func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("[panic] error building external mock from file %s.\n %v", b.filename, r)
+			err = fmt.Errorf("mock: error building external mock from file %s.\n %v", b.filename, r)
 		}
 	}()
 
@@ -195,7 +195,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 		default:
 			m, err := mbuild.BuildMatcher(mv)
 			if err != nil {
-				return nil, fmt.Errorf("[request.method] error building matcher %v.\n %w", mv, err)
+				return nil, fmt.Errorf("[request.method] error building matcher %v.\n%w", mv, err)
 			}
 
 			b.builder.MethodMatches(m)
@@ -213,7 +213,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 		default:
 			m, err := mbuild.BuildMatcher(scheme)
 			if err != nil {
-				return nil, fmt.Errorf("[request.scheme] error building matcher %v.\n %w", scheme, err)
+				return nil, fmt.Errorf("[request.scheme] error building matcher %v.\n%w", scheme, err)
 			}
 
 			b.builder.SchemeMatches(m)
@@ -227,7 +227,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 		case string:
 			u, err := url.Parse(e)
 			if err != nil {
-				return nil, fmt.Errorf("[request.url] error parsing url \"%s\".\n %w", e, err)
+				return nil, fmt.Errorf("[request.url] error parsing url \"%s\".\n%w", e, err)
 			}
 
 			if u.IsAbs() {
@@ -238,7 +238,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 		default:
 			m, err := mbuild.BuildMatcher(uv)
 			if err != nil {
-				return nil, fmt.Errorf("[request.url] error building url.\n %w", err)
+				return nil, fmt.Errorf("[request.url] error building url.\n%w", err)
 			}
 
 			b.builder.URL(m)
@@ -254,7 +254,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 		default:
 			m, err := mbuild.BuildMatcher(uv)
 			if err != nil {
-				return nil, fmt.Errorf("[request.url_path] error building matcher.\n %w", err)
+				return nil, fmt.Errorf("[request.url_path] error building matcher.\n%w", err)
 			}
 
 			b.builder.URLPath(m)
@@ -267,7 +267,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 		m, err := mbuild.TryBuildMatcher(v)
 		if err != nil {
 			return nil,
-				fmt.Errorf("[request.query[%s]] error building matcher.\n %w", k, err)
+				fmt.Errorf("[request.query[%s]] error building matcher.\n%w", k, err)
 		}
 
 		b.builder.Query(k, m)
@@ -277,7 +277,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 		m, err := mbuild.TryBuildMatcher(v)
 		if err != nil {
 			return nil,
-				fmt.Errorf("[request.queries[%s]] error building matcher.\n %w", k, err)
+				fmt.Errorf("[request.queries[%s]] error building matcher.\n%w", k, err)
 		}
 
 		b.builder.Queries(k, m)
@@ -287,7 +287,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 		m, err := mbuild.TryBuildMatcher(v)
 		if err != nil {
 			return nil,
-				fmt.Errorf("[request.header[%s]] error building matcher.\n %w", k, err)
+				fmt.Errorf("[request.header[%s]] error building matcher.\n%w", k, err)
 		}
 
 		b.builder.Header(k, m)
@@ -297,7 +297,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 		m, err := mbuild.TryBuildMatcher(v)
 		if err != nil {
 			return nil,
-				fmt.Errorf("[request.form[%s]] error building matcher.\n %w", k, err)
+				fmt.Errorf("[request.form[%s]] error building matcher.\n%w", k, err)
 		}
 
 		b.builder.FormField(k, m)
@@ -307,7 +307,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 		m, err := mbuild.TryBuildMatcher(vi.Get(_fRequestBody))
 		if err != nil {
 			return nil,
-				fmt.Errorf("[request.body] error building matcher.\n %w", err)
+				fmt.Errorf("[request.body] error building matcher.\n%w", err)
 		}
 
 		b.builder.Body(m)
@@ -349,13 +349,13 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 			err = sub.MergeConfigMap(r.(map[string]any))
 			if err != nil {
 				return nil,
-					fmt.Errorf("[response_random.responses[%d]] error building random response.\n %w", i, err)
+					fmt.Errorf("[response_random.responses[%d]] error building random response.\n%w", i, err)
 			}
 
 			rr, err := b.buildReply(sub)
 			if err != nil {
 				return nil,
-					fmt.Errorf("[response_random.responses[%d]] building error.\n %w", i, err)
+					fmt.Errorf("[response_random.responses[%d]] building error.\n%w", i, err)
 			}
 
 			random.Add(rr)
@@ -373,7 +373,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 			rr, err := b.buildReply(vi.Sub(_fResponseSequenceEnded))
 			if err != nil {
 				return nil,
-					fmt.Errorf("[response_response.sequence_ended] building error.\n %w", err)
+					fmt.Errorf("[response_response.sequence_ended] building error.\n%w", err)
 			}
 
 			seq.OnSequenceEnded(rr)
@@ -394,7 +394,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 			rr, err := b.buildReply(sub)
 			if err != nil {
 				return nil,
-					fmt.Errorf("[response_sequence.responses[%d]] building error.\n %w", i, err)
+					fmt.Errorf("[response_sequence.responses[%d]] building error.\n%w", i, err)
 			}
 
 			seq.Add(rr)
@@ -461,7 +461,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 		for i, handler := range app.config.MockFileHandlers {
 			err = handler.Handle(settings, b.builder)
 			if err != nil {
-				return nil, fmt.Errorf("[custom field handler] [%d] failed.\n %w", i, err)
+				return nil, fmt.Errorf("custom_field_handler: field handler at index %d failed.\n%w", i, err)
 			}
 		}
 	}

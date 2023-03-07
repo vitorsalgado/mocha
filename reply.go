@@ -15,7 +15,7 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 )
 
-// Reply defines the contract to setup an HTTP replier.
+// Reply defines the contract to set up an HTTP replier.
 type Reply interface {
 	// Build returns an HTTP response Stub to be served; after the HTTP request was matched.
 	// Return a nil Stub if the HTTP response was rendered inside the Build function.
@@ -24,27 +24,6 @@ type Reply interface {
 
 type replyOnBeforeBuild interface {
 	beforeBuild(app *Mocha) error
-}
-
-// Stub defines the HTTP response that will be served once a Mock is matched for an HTTP Request.
-type Stub struct {
-	StatusCode int
-	Header     http.Header
-	Cookies    []*http.Cookie
-	Body       []byte
-	Trailer    http.Header
-}
-
-// Gunzip decompresses Gzip body.
-func (s *Stub) Gunzip() ([]byte, error) {
-	gz, err := gzip.NewReader(bytes.NewReader(s.Body))
-	if err != nil {
-		return nil, err
-	}
-
-	defer gz.Close()
-
-	return io.ReadAll(gz)
 }
 
 var _ Reply = (*StdReply)(nil)
@@ -351,7 +330,7 @@ func (rep *StdReply) Build(_ http.ResponseWriter, r *RequestValues) (stub *Stub,
 		defer func() {
 			if recovered := recover(); recovered != nil {
 				err = fmt.Errorf(
-					"[reply] panic parsing body template.\n [panic] %v",
+					"reply: panic parsing body template. reason=%v",
 					recovered,
 				)
 			}
@@ -369,7 +348,7 @@ func (rep *StdReply) Build(_ http.ResponseWriter, r *RequestValues) (stub *Stub,
 		defer func() {
 			if recovered := recover(); recovered != nil {
 				err = fmt.Errorf(
-					"[reply] panic loading body from %s.\n [panic] %v",
+					"reply: panic loading body from %s. reason=%v",
 					rep.bodyFilename,
 					recovered,
 				)
@@ -464,6 +443,7 @@ func (rep *StdReply) encodeBody() error {
 
 		rep.response.Body = buf.Bytes()
 		rep.response.Header.Add(header.ContentEncoding, "gzip")
+		rep.response.Encoding = "gzip"
 		rep.encoded = true
 	}
 

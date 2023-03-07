@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/vitorsalgado/mocha/v3/internal/header"
-	"github.com/vitorsalgado/mocha/v3/x/event"
 )
 
 var _ ProxyConfigurer = (*ProxyConfig)(nil)
@@ -51,13 +50,11 @@ func (p *ProxyConfig) Apply(c *ProxyConfig) error {
 var _defaultProxyConfig = ProxyConfig{Timeout: 10 * time.Second, SkipSSLVerify: true}
 
 type reverseProxy struct {
-	conf     *ProxyConfig
-	listener *event.Listener
+	app  *Mocha
+	conf *ProxyConfig
 }
 
-func newProxy(conf *ProxyConfig, events *event.Listener) *reverseProxy {
-	p := &reverseProxy{listener: events}
-
+func newProxy(app *Mocha, conf *ProxyConfig) *reverseProxy {
 	if conf.Transport == nil {
 		transport := &http.Transport{}
 		if conf.ProxyVia != "" {
@@ -78,9 +75,7 @@ func newProxy(conf *ProxyConfig, events *event.Listener) *reverseProxy {
 		conf.Transport = transport
 	}
 
-	p.conf = conf
-
-	return p
+	return &reverseProxy{app, conf}
 }
 
 func (p *reverseProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -94,7 +89,7 @@ func (p *reverseProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (p *reverseProxy) handleTunneling(w http.ResponseWriter, r *http.Request) {
 	hijacker, ok := w.(http.Hijacker)
 	if !ok {
-		http.Error(w, "[proxy] hijacking is not supported", http.StatusInternalServerError)
+		http.Error(w, "proxy: hijacking is not supported", http.StatusInternalServerError)
 		return
 	}
 
@@ -126,7 +121,10 @@ func (p *reverseProxy) handleTunneling(w http.ResponseWriter, r *http.Request) {
 
 	err = <-errCh
 	if err != nil {
-		p.listener.Emit(&event.OnError{Request: event.FromRequest(r), Err: err})
+		p.app.log.Error().Err(err).
+			Str("url", r.URL.String()).
+			Str("method", r.Method).
+			Msg("proxy: error writing response")
 	}
 }
 
@@ -151,7 +149,11 @@ func (p *reverseProxy) handleHTTP(w http.ResponseWriter, r *http.Request) {
 
 	_, err = io.Copy(w, res.Body)
 	if err != nil {
-		p.listener.Emit(&event.OnError{Request: event.FromRequest(r), Err: err})
+		p.app.log.Error().Err(err).
+			Str("url", r.URL.String()).
+			Str("method", r.Method).
+			Str("status", res.Status).
+			Msg("proxy: error copying response body")
 	}
 
 	for k, vv := range res.Trailer {

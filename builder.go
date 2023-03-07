@@ -13,8 +13,8 @@ import (
 var _ Builder = (*MockBuilder)(nil)
 
 var (
-	ErrNoExpectations = errors.New("[mock] at least 1 request matcher must be set")
-	ErrNoReplies      = errors.New("[mock] no reply set. Use .Reply() or any equivalent to set the expected mock response")
+	ErrNoExpectations = errors.New("mock: at least 1 request matcher must be set")
+	ErrNoReplies      = errors.New("mock: no reply set. Use .Reply() or any equivalent to set the expected mock response")
 )
 
 // MockBuilder is a default builder for Mock.

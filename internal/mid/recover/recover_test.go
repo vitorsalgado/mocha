@@ -1,7 +1,6 @@
 package recover
 
 import (
-	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -9,23 +8,17 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/vitorsalgado/mocha/v3/x/event"
 )
 
 func TestRecover(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
 	msg := "error test"
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		panic(msg)
 	}
 
-	evt := event.New()
-	evt.StartListening(ctx)
+	ts := httptest.NewServer(New(func(_ error) {
 
-	ts := httptest.NewServer(New(t, http.StatusInternalServerError).Recover(http.HandlerFunc(fn)))
+	}, http.StatusInternalServerError).Recover(http.HandlerFunc(fn)))
 	defer ts.Close()
 
 	res, err := http.Get(ts.URL)

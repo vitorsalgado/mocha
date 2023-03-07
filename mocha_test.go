@@ -17,7 +17,6 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/x/event"
 )
 
 func TestMain(m *testing.M) {
@@ -229,35 +228,8 @@ func (h *FakeEvents) OnError(e any) {
 	h.Called(e)
 }
 
-func TestMochaSubscribe(t *testing.T) {
-	f := &FakeEvents{}
-	f.On("OnRequest", mock.Anything).Return()
-	f.On("OnRequestMatched", mock.Anything).Return()
-
-	m := New(Configure().LogLevel(LogSilently)).CloseWithT(t)
-	m.MustSubscribe(event.EventOnRequest, f.OnRequest)
-	m.MustSubscribe(event.EventOnRequestMatched, f.OnRequestMatched)
-	m.MustStart()
-
-	defer m.Close()
-
-	scoped := m.MustMock(
-		Get(URLPath("/test")).
-			Reply(OK()))
-
-	res, err := testutil.Get(m.URL() + "/test").Do()
-	assert.NoError(t, err)
-
-	time.Sleep(2 * time.Second)
-
-	assert.Equal(t, http.StatusOK, res.StatusCode)
-	assert.True(t, scoped.HasBeenCalled())
-
-	f.AssertExpectations(t)
-}
-
 func TestMochaSilently(t *testing.T) {
-	m := New(Configure().LogLevel(LogSilently))
+	m := New(Configure().LogVerbosity(LogBasic).LogLevel(LogLevelNone))
 	m.MustStart()
 
 	defer m.Close()

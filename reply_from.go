@@ -53,7 +53,7 @@ func From[T FromTypes](target T) *ProxyReply {
 
 		u, err = url.Parse(e)
 		if err != nil {
-			panic(fmt.Errorf("[reply.proxy] unable to url.Parse the value \"%s\". %w", e, err))
+			panic(fmt.Errorf("reply_proxy: unable to parse URL %s. reason=%w", e, err))
 		}
 	case *url.URL:
 		u = e
@@ -178,7 +178,7 @@ func (r *ProxyReply) Build(_ http.ResponseWriter, req *RequestValues) (*Stub, er
 
 	res, err := r.httpClient.Transport.RoundTrip(req.RawRequest.WithContext(ctx))
 	if err != nil {
-		return nil, fmt.Errorf("[reply.proxy] error calling target server %s.\n %w", r.target.String(), err)
+		return nil, fmt.Errorf("reply_proxy: error calling target server %s. reason=%w", r.target.String(), err)
 	}
 
 	defer res.Body.Close()

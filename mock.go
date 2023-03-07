@@ -59,6 +59,9 @@ type Builder interface {
 // RequestValues groups HTTP request data, including the parsed body.
 // It is used by several components during the request matching phase.
 type RequestValues struct {
+	// StartedAt indicates when the request arrived.
+	StartedAt time.Time
+
 	// RawRequest is the original incoming http.Request.
 	RawRequest *http.Request
 
@@ -68,6 +71,9 @@ type RequestValues struct {
 	// URLPathSegments stores path segments.
 	// Eg.: /test/100 -> []string{"test", "100"}
 	URLPathSegments []string
+
+	// RawBody is the HTTP request body bytes.
+	RawBody []byte
 
 	// ParsedBody is the parsed http.Request body parsed by a RequestBodyParser instance.
 	// It'll be nil if the HTTP request does not contain a body.
@@ -187,7 +193,7 @@ type mockFileData struct {
 }
 
 // weight helps to detect the closest mock match.
-type weight int
+type weight int8
 
 // Enum of weight.
 const (
@@ -198,7 +204,7 @@ const (
 	_weightHigh
 )
 
-type matchTarget int
+type matchTarget int8
 
 // matchTarget constants to help debug unmatched requests.
 const (
@@ -211,6 +217,29 @@ const (
 	_targetBody
 	_targetForm
 )
+
+func (mt matchTarget) String() string {
+	switch mt {
+	case _targetRequest:
+		return "request"
+	case _targetScheme:
+		return "scheme"
+	case _targetMethod:
+		return "method"
+	case _targetURL:
+		return "url"
+	case _targetHeader:
+		return "header"
+	case _targetQuery:
+		return "query"
+	case _targetBody:
+		return "body"
+	case _targetForm:
+		return "form"
+	default:
+		return ""
+	}
+}
 
 // newMock returns a new Mock with default values set.
 func newMock() *Mock {
@@ -315,14 +344,14 @@ func (m *Mock) matchExpectations(ri *valueSelectorInput, expectations []*expecta
 func (m *Mock) matchExpectation(e *expectation, value any) (result *matcher.Result, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("[%s] matcher panicked. reason=%v", e.Matcher.Name(), r)
+			err = fmt.Errorf("%s: panic. %v", e.Matcher.Name(), r)
 			return
 		}
 	}()
 
 	result, err = e.Matcher.Match(value)
 	if err != nil {
-		err = fmt.Errorf("[%s] %w", e.Matcher.Name(), err)
+		err = fmt.Errorf("%s: error while matching. %w", e.Matcher.Name(), err)
 	}
 
 	return

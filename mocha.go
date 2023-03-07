@@ -5,18 +5,20 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"reflect"
 	"strings"
 	"sync"
+	"time"
+
+	"github.com/rs/zerolog"
 
 	"github.com/vitorsalgado/mocha/v3/internal/colorize"
 	"github.com/vitorsalgado/mocha/v3/internal/header"
-	"github.com/vitorsalgado/mocha/v3/internal/logger"
 	"github.com/vitorsalgado/mocha/v3/internal/mid"
 	"github.com/vitorsalgado/mocha/v3/internal/mid/recover"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/x/event"
 )
 
 const (
@@ -32,7 +34,6 @@ const StatusNoMatch = http.StatusTeapot
 
 // Mocha is the base for the mock server.
 type Mocha struct {
-	log                logger.Log
 	name               string
 	config             *Config
 	server             Server
@@ -41,7 +42,6 @@ type Mocha struct {
 	cancel             context.CancelFunc
 	requestBodyParsers []RequestBodyParser
 	params             Params
-	listener           *event.Listener
 	scopes             []*Scoped
 	loaders            []Loader
 	rec                *recorder
@@ -50,6 +50,8 @@ type Mocha struct {
 	te                 TemplateEngine
 	extensions         map[string]Extension
 	data               map[string]any
+	cz                 *colorize.Colorize
+	log                *zerolog.Logger
 }
 
 // TestingT is based on testing.T and is used for assertions.
@@ -141,15 +143,14 @@ const (
 // If no configuration is provided, a default one will be used.
 // If no port is set, it will start the server on localhost using a random port.
 func New(config ...Configurer) *Mocha {
-	m := &Mocha{}
-	l := logger.NewConsole()
+	app := &Mocha{}
 
 	conf := defaultConfig()
 	for i, configurer := range config {
 		err := configurer.Apply(conf)
 		if err != nil {
 			panic(fmt.Errorf(
-				"[server] error applying configuration [%d].\n config type=%s\n reason=%w",
+				"server: error applying configuration at index %d. config type=%s, reason=%w",
 				i,
 				reflect.TypeOf(configurer),
 				err,
@@ -157,25 +158,21 @@ func New(config ...Configurer) *Mocha {
 		}
 	}
 
+	setLog(conf, app)
+
 	ctx, cancel := context.WithCancel(context.Background())
+	cz := &colorize.Colorize{Enabled: conf.UseDescriptiveLogger}
 	store := newStore()
-	events := event.New()
 
 	parsers := make([]RequestBodyParser, 0, len(conf.RequestBodyParsers)+4)
 	parsers = append(parsers, conf.RequestBodyParsers...)
 	parsers = append(parsers, &jsonBodyParser{}, &plainTextParser{}, &formURLEncodedParser{}, &noopParser{})
 
+	recovery := recover.New(func(err error) { app.log.Error().Err(err).Msg(err.Error()) },
+		conf.RequestWasNotMatchedStatusCode)
+
 	middlewares := make([]func(handler http.Handler) http.Handler, 0)
-	middlewares = append(middlewares, recover.New(l, conf.MockNotFoundStatusCode).Recover)
-
-	if conf.LogLevel > LogSilently {
-		h := event.NewInternalListener(l, conf.LogLevel == LogVerbose)
-
-		_ = events.Subscribe(event.EventOnRequest, h.OnRequest)
-		_ = events.Subscribe(event.EventOnRequestMatched, h.OnRequestMatched)
-		_ = events.Subscribe(event.EventOnRequestNotMatched, h.OnRequestNotMatched)
-		_ = events.Subscribe(event.EventOnError, h.OnError)
-	}
+	middlewares = append(middlewares, recovery.Recover)
 
 	if conf.CORS != nil {
 		middlewares = append(middlewares, corsMid(conf.CORS))
@@ -183,9 +180,11 @@ func New(config ...Configurer) *Mocha {
 
 	middlewares = append(middlewares, conf.Middlewares...)
 
-	params := newInMemoryParameters()
+	var params Params
 	if conf.Parameters != nil {
 		params = conf.Parameters
+	} else {
+		params = newInMemoryParameters()
 	}
 
 	var rec *recorder
@@ -195,12 +194,19 @@ func New(config ...Configurer) *Mocha {
 
 	var p *reverseProxy
 	if conf.Proxy != nil {
-		p = newProxy(conf.Proxy, events)
+		p = newProxy(app, conf.Proxy)
+	}
+
+	var lifecycle mockHTTPLifecycle
+	if conf.UseDescriptiveLogger {
+		lifecycle = &builtInDescriptiveMockHTTPLifecycle{app, cz}
+	} else {
+		lifecycle = &builtInMockHTTPLifecycle{app}
 	}
 
 	handler := mid.
 		Compose(middlewares...).
-		Root(&mockHandler{m})
+		Root(&mockHandler{app, lifecycle})
 
 	if conf.HandlerDecorator != nil {
 		handler = conf.HandlerDecorator(handler)
@@ -214,7 +220,7 @@ func New(config ...Configurer) *Mocha {
 
 	err := server.Setup(conf, handler)
 	if err != nil {
-		panic(fmt.Errorf("[server] setup failed\n reason=%w", err))
+		panic(fmt.Errorf("server: setup failed. %w", err))
 	}
 
 	loaders := make([]Loader, len(conf.Loaders)+1 /* number of internal loaders */)
@@ -229,39 +235,38 @@ func New(config ...Configurer) *Mocha {
 			tmpl.FuncMap(conf.TemplateFunctions)
 		}
 
-		m.te = tmpl
+		app.te = tmpl
 	}
 
-	m.config = conf
-	m.log = l
-	m.name = conf.Name
-	m.server = server
-	m.storage = store
-	m.ctx = ctx
-	m.cancel = cancel
-	m.params = params
-	m.listener = events
-	m.scopes = make([]*Scoped, 0)
-	m.loaders = loaders
-	m.rec = rec
-	m.proxy = p
-	m.requestBodyParsers = parsers
-	m.extensions = make(map[string]Extension)
+	app.config = conf
+	app.name = conf.Name
+	app.server = server
+	app.storage = store
+	app.ctx = ctx
+	app.cancel = cancel
+	app.params = params
+	app.scopes = make([]*Scoped, 0)
+	app.loaders = loaders
+	app.rec = rec
+	app.proxy = p
+	app.requestBodyParsers = parsers
+	app.extensions = make(map[string]Extension)
+	app.cz = cz
 
-	if m.config.Forward != nil {
-		m.MustMock(Request().
+	if app.config.Forward != nil {
+		app.MustMock(Request().
 			MethodMatches(matcher.Anything()).
 			Priority(10).
-			Reply(From(m.config.Forward.Target).
-				Headers(m.config.Forward.Headers).
-				ProxyHeaders(m.config.Forward.ProxyHeaders).
-				RemoveProxyHeaders(m.config.Forward.ProxyHeadersToRemove...).
-				TrimPrefix(m.config.Forward.TrimPrefix).
-				TrimSuffix(m.config.Forward.TrimSuffix).
-				SSLVerify(m.config.Forward.SSLVerify)))
+			Reply(From(app.config.Forward.Target).
+				Headers(app.config.Forward.Headers).
+				ProxyHeaders(app.config.Forward.ProxyHeaders).
+				RemoveProxyHeaders(app.config.Forward.ProxyHeadersToRemove...).
+				TrimPrefix(app.config.Forward.TrimPrefix).
+				TrimSuffix(app.config.Forward.TrimSuffix).
+				SSLVerify(app.config.Forward.SSLVerify)))
 	}
 
-	return m
+	return app
 }
 
 // NewT creates a new Mocha mock server with the given configurations and
@@ -271,6 +276,11 @@ func NewT(t TestingT, config ...Configurer) *Mocha {
 	t.Cleanup(app.Close)
 
 	return app
+}
+
+// Name returns mock server name.
+func (app *Mocha) Name() string {
+	return app.name
 }
 
 // Start starts the mock server.
@@ -293,7 +303,7 @@ func (app *Mocha) Start() (ServerInfo, error) {
 func (app *Mocha) MustStart() ServerInfo {
 	info, err := app.Start()
 	if err != nil {
-		panic(fmt.Errorf("[server] start failed. reason=%w", err))
+		panic(fmt.Errorf("server: start failed. %w", err))
 	}
 
 	return info
@@ -319,7 +329,7 @@ func (app *Mocha) StartTLS() (ServerInfo, error) {
 func (app *Mocha) MustStartTLS() ServerInfo {
 	info, err := app.StartTLS()
 	if err != nil {
-		panic(fmt.Errorf("[server] failed to start server with TLS. reason=%w", err))
+		panic(fmt.Errorf("server: failed to start server with TLS. %w", err))
 	}
 
 	return info
@@ -347,7 +357,7 @@ func (app *Mocha) Mock(builders ...Builder) (*Scoped, error) {
 	for i, b := range builders {
 		mock, err := b.Build(app)
 		if err != nil {
-			return nil, fmt.Errorf("[mock] error adding mock [%d].\n %w", i, err)
+			return nil, fmt.Errorf("server: error adding mock at index %d.\n%w", i, err)
 		}
 
 		mock.prepare()
@@ -400,8 +410,8 @@ func (app *Mocha) Context() context.Context {
 }
 
 // Config returns a copy of the mock server Config.
-func (app *Mocha) Config() Config {
-	return *app.config
+func (app *Mocha) Config() *Config {
+	return app.config
 }
 
 // TemplateEngine returns the TemplateEngine associated with this instance.
@@ -409,23 +419,9 @@ func (app *Mocha) TemplateEngine() TemplateEngine {
 	return app.te
 }
 
-// Name returns mock server name.
-func (app *Mocha) Name() string {
-	return app.name
-}
-
-// Subscribe adds a new event listener.
-func (app *Mocha) Subscribe(evt reflect.Type, fn func(payload any)) error {
-	return app.listener.Subscribe(evt, fn)
-}
-
-// MustSubscribe adds a new event listener.
-// Panics if any errors occur.
-func (app *Mocha) MustSubscribe(evt reflect.Type, fn func(payload any)) {
-	err := app.Subscribe(evt, fn)
-	if err != nil {
-		panic(err)
-	}
+// Logger returns the zerolog.Logger of this application.
+func (app *Mocha) Logger() *zerolog.Logger {
+	return app.log
 }
 
 // Reload reloads mocks from external sources, like the filesystem.
@@ -443,14 +439,14 @@ func (app *Mocha) Reload() error {
 	return nil
 }
 
-// Reload reloads mocks from external sources, like the filesystem.
+// MustReload reloads mocks from external sources, like the filesystem.
 // Coded mocks will be kept.
 // It panics if any error occurs.
 func (app *Mocha) MustReload() {
 	err := app.Reload()
 
 	if err != nil {
-		panic(fmt.Errorf("[server] error rebuilding mock definitions. reason=%w", err))
+		panic(fmt.Errorf("server: error reloading mock definitions. %w", err))
 	}
 }
 
@@ -460,7 +456,7 @@ func (app *Mocha) Close() {
 
 	err := app.server.Close()
 	if err != nil {
-		app.log.Logf(err.Error())
+		app.log.Debug().Err(err).Msg("error closing mock server")
 	}
 
 	if app.rec != nil {
@@ -530,7 +526,7 @@ func (app *Mocha) RegisterExtension(extension Extension) error {
 	_, ok := app.extensions[extension.UniqueName()]
 	if ok {
 		return fmt.Errorf(
-			"[extension] there is already an extension registered with the name \"%s\"",
+			"server: there is already an extension registered with the name \"%s\"",
 			extension.UniqueName(),
 		)
 	}
@@ -555,33 +551,33 @@ func (app *Mocha) PrintConfig(w io.Writer) error {
 	s := strings.Builder{}
 
 	if app.Name() != "" {
-		s.WriteString(colorize.Bold("Server Name: "))
+		s.WriteString("Server Name: ")
 		s.WriteString(app.Name())
 		s.WriteString("\n")
 	}
 
-	s.WriteString(colorize.Bold("Mock Search Patterns: "))
+	s.WriteString("Mock Search Patterns: ")
 	s.WriteString(strings.Join(app.config.Directories, ", "))
 	s.WriteString("\n")
 
-	s.WriteString(colorize.Bold("Log: "))
-	s.WriteString(app.config.LogLevel.String())
+	s.WriteString("Log: ")
+	s.WriteString(app.config.LogVerbosity.String())
 	s.WriteString("\n")
 
 	if app.config.Proxy != nil {
-		s.WriteString(colorize.Bold("Reverse Proxy: "))
+		s.WriteString("Reverse Proxy: ")
 		s.WriteString("enabled")
 		s.WriteString("\n")
 	}
 
 	if app.config.Record != nil {
-		s.WriteString(colorize.Bold("Recording: "))
+		s.WriteString("Recording: ")
 		s.WriteString(app.config.Record.SaveDir)
 		s.WriteString("\n")
 	}
 
 	s.WriteString("\n")
-	s.WriteString(colorize.Green("Listening: "))
+	s.WriteString("Listening: ")
 	s.WriteString(app.URL())
 	s.WriteString("\n")
 
@@ -769,11 +765,31 @@ func (app *Mocha) onStart() error {
 		return err
 	}
 
-	app.listener.StartListening(app.ctx)
-
 	if app.rec != nil {
 		app.rec.start(app.ctx)
 	}
 
 	return nil
+}
+
+func setLog(conf *Config, app *Mocha) {
+	if conf.Logger != nil {
+		app.log = conf.Logger
+		return
+	}
+
+	var output io.Writer
+	if conf.LogPretty {
+		output = zerolog.ConsoleWriter{Out: os.Stdout, TimeFormat: time.RFC3339}
+	} else {
+		output = os.Stdout
+	}
+
+	c := zerolog.New(output).Level(zerolog.Level(conf.LogLevel)).With().Timestamp()
+	if conf.Name != "" {
+		c.Str("server", conf.Name)
+	}
+
+	log := c.Logger()
+	app.log = &log
 }

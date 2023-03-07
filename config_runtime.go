@@ -105,12 +105,12 @@ func (c *localConfigurer) Apply(conf *Config) (err error) {
 	})
 
 	if err != nil {
-		return fmt.Errorf("[config] error binding configuration flags\n %w", err)
+		return fmt.Errorf("config: error binding configuration flags.\n%w", err)
 	}
 
 	err = bindEnv(v)
 	if err != nil {
-		return fmt.Errorf("[config] error binding environment variables\n %w", err)
+		return fmt.Errorf("config: error binding environment variables.\n%w", err)
 	}
 
 	// use config filename from flags, if present,
@@ -123,7 +123,7 @@ func (c *localConfigurer) Apply(conf *Config) (err error) {
 	err = bindFile(v, c.filename, c.paths)
 	if err != nil {
 		return fmt.Errorf(
-			"[config] error binding configuration from file=%s, lookup_paths=%v\n %w",
+			"config: error binding configuration from file=%s, lookup_paths=%v.\n%w",
 			c.filename,
 			c.paths,
 			err,
@@ -132,12 +132,12 @@ func (c *localConfigurer) Apply(conf *Config) (err error) {
 
 	v.SetDefault(_kName, conf.Name)
 	v.SetDefault(_kAddr, conf.Addr)
-	v.SetDefault(_kLogLevel, int(conf.LogLevel))
+	v.SetDefault(_kLogLevel, int(conf.LogVerbosity))
 	v.SetDefault(_kDirectories, conf.Directories)
 
 	conf.Name = v.GetString(_kName)
 	conf.Addr = v.GetString(_kAddr)
-	conf.LogLevel = LogLevel(v.GetInt(_kLogLevel))
+	conf.LogVerbosity = LogVerbosity(v.GetInt(_kLogLevel))
 	conf.Directories = v.GetStringSlice(_kDirectories)
 
 	if v.IsSet(_kCORS) {
@@ -173,7 +173,7 @@ func (c *localConfigurer) Apply(conf *Config) (err error) {
 				Timeout:  time.Duration(v.GetInt64(_kProxyTimeout)),
 			}
 		default:
-			return errors.New(`[config] field "proxy" has an unknown type. supported type are: object, bool`)
+			return errors.New(`config: field "proxy" has an unknown type. supported type are: object, bool`)
 		}
 	}
 
@@ -196,12 +196,12 @@ func (c *localConfigurer) Apply(conf *Config) (err error) {
 	if v.IsSet(_kForward) || v.IsSet(_kForwardTarget) {
 		target := v.GetString(_kForwardTarget)
 		if target == "" {
-			return errors.New(`[config] when specifying a "forward" configuration, the field "forward.target" is required`)
+			return errors.New(`config: when specifying a "forward" configuration, the field "forward.target" is required`)
 		}
 
 		targetURL, err := url.Parse(target)
 		if err != nil {
-			return fmt.Errorf(`[config] field "forward.target" must contain a valid URL. error=%w`, err)
+			return fmt.Errorf(`config: field "forward.target" must contain a valid URL. error=%w`, err)
 		}
 
 		h := make(http.Header, len(v.GetStringMapString(_kForwardHeaders)))
@@ -275,7 +275,7 @@ func bindFlags(v *viper.Viper) error {
 	pp.StringP(_kName, _kNameP, "", "Mock server name.")
 	pp.BoolP(_kUseHTTPS, _kUseHTTPsP, false, "Enable HTTPS.")
 	pp.StringP(_kAddr, _kAddrP, "", "Server address. Usage: <host>:<port>, :<port>, <port>. If no value is set, it will an auto generated one.")
-	pp.Int(_kLogLevel, int(LogVerbose), "Verbose logs")
+	pp.Int(_kLogLevel, int(LogBody), "Verbose logs")
 	pp.StringSliceP(_kGlob, _kGlobP, nil, "Mock search glob patterns. Example: testdata/*mock.json,testdata/*mock.yaml")
 
 	pp.BoolP(_kRecord, _kRecordP, false, "Enable mock recording.")

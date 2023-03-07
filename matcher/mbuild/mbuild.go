@@ -60,11 +60,11 @@ const (
 )
 
 // TryBuildMatcher builds a matcher.Matcher if the given parameter is a slice following the matchers convention: [\"<MATCHER_NAME>\", ARG_1, ARG_2...]
-// If it is not slice, it will return a equal matcher by default.
+// If it is not slice, it will return an equal matcher by default.
 func TryBuildMatcher(possibleMatcher any) (m matcher.Matcher, err error) {
 	val := reflect.ValueOf(possibleMatcher)
 	if possibleMatcher == nil || !val.IsValid() {
-		return nil, fmt.Errorf("[matcher] definition must be a string or an array in the format: [\"<MATCHER_NAME>\", ARG_1, ARG_2...]")
+		return nil, fmt.Errorf("matcher: definition must be a string or an array in the format: [\"<MATCHER_NAME>\", ARG_1, ARG_2...]")
 	}
 
 	switch val.Kind() {
@@ -79,7 +79,7 @@ func TryBuildMatcher(possibleMatcher any) (m matcher.Matcher, err error) {
 func BuildMatcher(possibleMatcher any) (m matcher.Matcher, err error) {
 	val := reflect.ValueOf(possibleMatcher)
 	if possibleMatcher == nil || !val.IsValid() {
-		return nil, fmt.Errorf("[matcher] definition must be a string or an array in the format: [\"<MATCHER_NAME>\", ARG_1, ARG_2...]")
+		return nil, fmt.Errorf("matcher: definition must be a string or an array in the format: [\"<MATCHER_NAME>\", ARG_1, ARG_2...]")
 	}
 
 	switch val.Kind() {
@@ -93,13 +93,13 @@ func BuildMatcher(possibleMatcher any) (m matcher.Matcher, err error) {
 func buildMatcherFromArray(possibleMatcher any) (matcher.Matcher, error) {
 	val := reflect.ValueOf(possibleMatcher)
 	if val.Len() == 0 {
-		return nil, fmt.Errorf("[matcher] definition must be a string or an array in the format: [\"<MATCHER_NAME>\", ARG_1, ARG_2...]")
+		return nil, fmt.Errorf("matcher: definition must be a string or an array in the format: [\"<MATCHER_NAME>\", ARG_1, ARG_2...]")
 	}
 
 	mk, ok := val.Index(0).Interface().(string)
 	if !ok {
 		return nil, fmt.Errorf(
-			"[matcher] first index of a matcher definition must be the matcher name. eg.: [\"<MATCHER_NAME>\", ARGUMENTS...]. got: %v",
+			"matcher: first index of a matcher definition must be the matcher name. eg.: [\"<MATCHER_NAME>\", ARGUMENTS...]. got: %v",
 			val.Index(0).Interface())
 	}
 
@@ -116,7 +116,7 @@ func extractMultipleMatchers(v any) ([]matcher.Matcher, error) {
 	a, ok := v.([]any)
 	if !ok {
 		return nil,
-			fmt.Errorf("[matcher] attempt to build multiple matchers using non-array type. got=%v", reflect.TypeOf(v))
+			fmt.Errorf("matcher: attempt to build multiple matchers using non-array type. got=%v", reflect.TypeOf(v))
 	}
 
 	matchers := make([]matcher.Matcher, len(a))
@@ -135,7 +135,7 @@ func extractMultipleMatchers(v any) ([]matcher.Matcher, error) {
 
 		if err != nil {
 			return nil,
-				fmt.Errorf("[matcher] error building multiple matchers at index [%d].\n %w", i, err)
+				fmt.Errorf("matcher: error building multiple matchers at index [%d].\n%w", i, err)
 		}
 
 		matchers[i] = mat
@@ -149,7 +149,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 		if recovery := recover(); recovery != nil {
 			m = nil
 			errTop = fmt.Errorf(
-				"[matcher] [panic] parsing matcher=%s with args=%v. reason=%v",
+				"matcher: panic parsing matcher=%s with args=%v. reason=%v",
 				key,
 				args,
 				recovery,
@@ -165,7 +165,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 		matchers, err := extractMultipleMatchers(args)
 		if err != nil {
 			return nil,
-				fmt.Errorf("[%s] error building matcher list.\n %w", _mAll, err)
+				fmt.Errorf("[%s] error building matcher list.\n%w", _mAll, err)
 		}
 
 		return matcher.All(matchers...), nil
@@ -174,7 +174,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 		matchers, err := extractMultipleMatchers(args)
 		if err != nil {
 			return nil,
-				fmt.Errorf("[%s] error building matcher list.\n %w", _mAny, err)
+				fmt.Errorf("[%s] error building matcher list.\n%w", _mAny, err)
 		}
 
 		return matcher.Any(matchers...), nil
@@ -189,7 +189,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 		matchers, err := extractMultipleMatchers(args)
 		if err != nil {
 			return nil,
-				fmt.Errorf("[%s] building error.\n %w", _mBoth, err)
+				fmt.Errorf("[%s] building error.\n%w", _mBoth, err)
 		}
 
 		if len(matchers) != 2 {
@@ -202,7 +202,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 	case _mEach:
 		m, err := BuildMatcher(args)
 		if err != nil {
-			return nil, fmt.Errorf("[%s] building error.\n %w", _mEach, err)
+			return nil, fmt.Errorf("[%s] building error.\n%w", _mEach, err)
 		}
 
 		return matcher.Each(m), nil
@@ -210,7 +210,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 	case _mEither:
 		matchers, err := extractMultipleMatchers(args)
 		if err != nil {
-			return nil, fmt.Errorf("[%s] error building parameters.\n %w", _mEither, err)
+			return nil, fmt.Errorf("[%s] error building parameters.\n%w", _mEither, err)
 		}
 
 		if len(matchers) != 2 {
@@ -325,7 +325,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 
 		m, err := BuildMatcher(a[1])
 		if err != nil {
-			return nil, fmt.Errorf("[%s] building error.\n %w", _mItem, err)
+			return nil, fmt.Errorf("[%s] building error.\n%w", _mItem, err)
 		}
 
 		return matcher.Item(int(idx), m), nil
@@ -364,7 +364,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 
 		m, err := BuildMatcher(a[1])
 		if err != nil {
-			return nil, fmt.Errorf("[%s, %s] building error.\n %w", _mJSONPath, _mField, err)
+			return nil, fmt.Errorf("[%s, %s] building error.\n%w", _mJSONPath, _mField, err)
 		}
 
 		return matcher.Field(chain, m), nil
@@ -382,7 +382,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 		m, err := BuildMatcher(args)
 		if err != nil {
 			return nil,
-				fmt.Errorf("[%s] error building.\n %w", _mLowerCase, err)
+				fmt.Errorf("[%s] error building.\n%w", _mLowerCase, err)
 		}
 
 		return matcher.ToLower(m), nil
@@ -412,7 +412,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 		m, err := BuildMatcher(args)
 		if err != nil {
 			return nil,
-				fmt.Errorf("[%s] error building.\n %w", _mNot, err)
+				fmt.Errorf("[%s] error building.\n%w", _mNot, err)
 		}
 
 		return matcher.Not(m), nil
@@ -432,7 +432,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 	case _mSome:
 		m, err := BuildMatcher(args)
 		if err != nil {
-			return nil, fmt.Errorf("[%s] error building.\n %w", _mSome, err)
+			return nil, fmt.Errorf("[%s] error building.\n%w", _mSome, err)
 		}
 
 		return matcher.Some(m), nil
@@ -457,7 +457,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 		m, err := BuildMatcher(a[1])
 		if err != nil {
 			return nil,
-				fmt.Errorf("[%s] error building.\n %w", _mSplit, err)
+				fmt.Errorf("[%s] error building.\n%w", _mSplit, err)
 		}
 
 		return matcher.Split(separator, m), nil
@@ -466,7 +466,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 		m, err := BuildMatcher(args)
 		if err != nil {
 			return nil,
-				fmt.Errorf("[%s] error building.\n %w", _mTrim, err)
+				fmt.Errorf("[%s] error building.\n%w", _mTrim, err)
 		}
 
 		return matcher.Trim(m), nil
@@ -477,7 +477,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 	case _mUpperCase:
 		m, err := BuildMatcher(args)
 		if err != nil {
-			return nil, fmt.Errorf("[%s] building error.\n %w", _mUpperCase, err)
+			return nil, fmt.Errorf("[%s] building error.\n%w", _mUpperCase, err)
 		}
 
 		return matcher.ToUpper(m), nil
@@ -494,7 +494,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 	case _mXOR:
 		matchers, err := extractMultipleMatchers(args)
 		if err != nil {
-			return nil, fmt.Errorf("[%s] building error.\n %w", _mXOR, err)
+			return nil, fmt.Errorf("[%s] building error.\n%w", _mXOR, err)
 		}
 
 		if len(matchers) != 2 {

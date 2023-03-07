@@ -4,30 +4,41 @@ import (
 	"net/http"
 	"text/template"
 
-	"github.com/vitorsalgado/mocha/v3/internal/colorize"
+	"github.com/rs/zerolog"
 )
 
-type LogLevel int
+type LogVerbosity int8
 
 const (
-	// LogSilently enable minimum log mode.
-	LogSilently LogLevel = iota
-	// LogInfo logs only informative messages, without too many details.
-	LogInfo
-	// LogVerbose logs detailed information about requests, matches and non-matches.
-	LogVerbose
+	// LogBasic logs only informative messages, without too many details.
+	LogBasic LogVerbosity = iota
+	LogHeader
+	LogBody
 )
 
-func (l LogLevel) String() string {
+func (l LogVerbosity) String() string {
 	switch l {
-	case LogSilently:
-		return "silent"
-	case LogInfo:
-		return "info"
+	case LogBasic:
+		return "basic"
+	case LogHeader:
+		return "header"
+	case LogBody:
+		return "body"
 	default:
-		return "verbose"
+		return "none"
 	}
 }
+
+type LogLevel = int8
+
+const (
+	LogLevelDebug    = LogLevel(zerolog.DebugLevel)
+	LogLevelInfo     = LogLevel(zerolog.InfoLevel)
+	LogLevelWarn     = LogLevel(zerolog.WarnLevel)
+	LogLevelError    = LogLevel(zerolog.ErrorLevel)
+	LogLevelNone     = LogLevel(zerolog.NoLevel)
+	LogLevelDisabled = LogLevel(zerolog.Disabled)
+)
 
 // Defaults
 const (
@@ -50,10 +61,10 @@ type Config struct {
 	// Addr defines a custom server address.
 	Addr string
 
-	// MockNotFoundStatusCode defines the status code that should be used when
+	// RequestWasNotMatchedStatusCode defines the status code that should be used when
 	// an HTTP request doesn't match with any mock.
 	// Defaults to 418 (I'm a teapot).
-	MockNotFoundStatusCode int
+	RequestWasNotMatchedStatusCode int
 
 	// RequestBodyParsers defines request body parsers to be executed before core parsers.
 	RequestBodyParsers []RequestBodyParser
@@ -71,9 +82,6 @@ type Config struct {
 	// HandlerDecorator provide means to configure a custom HTTP handler
 	// while leveraging the default mock handler.
 	HandlerDecorator func(handler http.Handler) http.Handler
-
-	// LogLevel defines the level of logs
-	LogLevel LogLevel
 
 	// Parameters sets a custom reply parameters store.
 	Parameters Params
@@ -94,13 +102,45 @@ type Config struct {
 	// MockFileHandlers sets custom Mock file handlers for a server instance.
 	MockFileHandlers []MockFileHandler
 
+	// TemplateEngine sets a custom template engine.
 	TemplateEngine TemplateEngine
 
+	// TemplateFunctions sets custom template functions for the built-in template engine.
 	TemplateFunctions template.FuncMap
 
 	// HTTPClientFactory builds an *http.Client that will be used by internal features, like ProxyReply.
 	// If none is set, a default one will be used.
 	HTTPClientFactory func() (*http.Client, error)
+
+	// Logger lets users define a custom logger.
+	// If none is provided, a default one will be set.
+	Logger *zerolog.Logger
+
+	// LogVerbosity defines the verbosity of the logs.
+	LogVerbosity LogVerbosity
+
+	// LogLevel sets the level of the default logger.
+	LogLevel LogLevel
+
+	// LogPretty enable/disable pretty logging.
+	// This only works with the default zerolog.Logger.
+	// If you are setting a custom logger, you need to set this by yourself.
+	// Defaults to true.
+	LogPretty bool
+
+	// LogBodyMaxSize sets the max size of the response body to be logged.
+	// By default, response bodies will be logged entirely.
+	LogBodyMaxSize int64
+
+	// UseDescriptiveLogger enable/disable the use of a more descriptive logger for HTTP request matching lifecycle.
+	// This is useful, specially for console mode usage, to understand the details of a HTTP request and
+	// why a match did not occur.
+	// If true, The Logger options will be ignored for the HTTP request matching.
+	UseDescriptiveLogger bool
+
+	// Colors enable/disable terminal colors for the descriptive logger.
+	// Defaults to true.
+	Colors bool
 
 	// CLI Only Options
 
@@ -130,13 +170,12 @@ type forwardConfig struct {
 func (c *Config) Apply(conf *Config) error {
 	conf.Name = c.Name
 	conf.Addr = c.Addr
-	conf.MockNotFoundStatusCode = c.MockNotFoundStatusCode
+	conf.RequestWasNotMatchedStatusCode = c.RequestWasNotMatchedStatusCode
 	conf.RequestBodyParsers = c.RequestBodyParsers
 	conf.Middlewares = c.Middlewares
 	conf.CORS = c.CORS
 	conf.Server = c.Server
 	conf.HandlerDecorator = c.HandlerDecorator
-	conf.LogLevel = c.LogLevel
 	conf.Parameters = c.Parameters
 	conf.Directories = c.Directories
 	conf.Loaders = c.Loaders
@@ -147,6 +186,13 @@ func (c *Config) Apply(conf *Config) error {
 	conf.MockFileHandlers = c.MockFileHandlers
 	conf.TemplateEngine = c.TemplateEngine
 	conf.TemplateFunctions = c.TemplateFunctions
+	conf.HTTPClientFactory = c.HTTPClientFactory
+	conf.UseDescriptiveLogger = c.UseDescriptiveLogger
+	conf.Logger = c.Logger
+	conf.LogPretty = c.LogPretty
+	conf.LogVerbosity = c.LogVerbosity
+	conf.LogLevel = c.LogLevel
+	conf.LogBodyMaxSize = c.LogBodyMaxSize
 
 	return nil
 }
@@ -167,13 +213,17 @@ type ConfigBuilder struct {
 
 func defaultConfig() *Config {
 	return &Config{
-		MockNotFoundStatusCode: StatusNoMatch,
-		LogLevel:               LogVerbose,
-		Directories:            []string{ConfigMockFilePattern},
-		RequestBodyParsers:     make([]RequestBodyParser, 0),
-		Middlewares:            make([]func(http.Handler) http.Handler, 0),
-		Loaders:                make([]Loader, 0),
-		MockFileHandlers:       make([]MockFileHandler, 0),
+		RequestWasNotMatchedStatusCode: StatusNoMatch,
+		Directories:                    []string{ConfigMockFilePattern},
+		RequestBodyParsers:             make([]RequestBodyParser, 0),
+		Middlewares:                    make([]func(http.Handler) http.Handler, 0),
+		Loaders:                        make([]Loader, 0),
+		MockFileHandlers:               make([]MockFileHandler, 0),
+		UseDescriptiveLogger:           false,
+		LogPretty:                      true,
+		LogLevel:                       LogLevelInfo,
+		LogVerbosity:                   LogHeader,
+		Colors:                         true,
 	}
 }
 
@@ -197,7 +247,7 @@ func (cb *ConfigBuilder) Addr(addr string) *ConfigBuilder {
 
 // MockNotFoundStatusCode defines the status code to be used when no mock matches with an HTTP request.
 func (cb *ConfigBuilder) MockNotFoundStatusCode(code int) *ConfigBuilder {
-	cb.conf.MockNotFoundStatusCode = code
+	cb.conf.RequestWasNotMatchedStatusCode = code
 	return cb
 }
 
@@ -238,10 +288,47 @@ func (cb *ConfigBuilder) HandlerDecorator(fn func(handler http.Handler) http.Han
 	return cb
 }
 
-// LogLevel sets the verbosity of informative logs.
+// Logger sets a custom zerolog.Logger.
+func (cb *ConfigBuilder) Logger(l *zerolog.Logger) *ConfigBuilder {
+	cb.conf.Logger = l
+	return cb
+}
+
+// LogVerbosity sets the verbosity of informative logs.
 // Defaults to LogVerbose.
+func (cb *ConfigBuilder) LogVerbosity(l LogVerbosity) *ConfigBuilder {
+	cb.conf.LogVerbosity = l
+	return cb
+}
+
+// LogLevel sets the level of the zerolog.Logger default implementation.
 func (cb *ConfigBuilder) LogLevel(l LogLevel) *ConfigBuilder {
 	cb.conf.LogLevel = l
+	return cb
+}
+
+// LogPretty enable/disable pretty logging.
+// This only works with the default zerolog.Logger.
+// If you are setting a custom logger, you need to set this by yourself.
+// Defaults to true.
+func (cb *ConfigBuilder) LogPretty(v bool) *ConfigBuilder {
+	cb.conf.LogPretty = v
+	return cb
+}
+
+// LogBodyMaxSize sets the max size of the response body to be logged.
+// By default, response bodies will be logged entirely.
+func (cb *ConfigBuilder) LogBodyMaxSize(max int64) *ConfigBuilder {
+	cb.conf.LogBodyMaxSize = max
+	return cb
+}
+
+// UseDescriptiveLogger enable/disable the use of a more descriptive logger for HTTP request matching lifecycle.
+// This is useful, specially for console mode usage, to understand the details of a HTTP request and
+// why a match did not occur.
+// If true, The Logger options will be ignored for the HTTP request matching.
+func (cb *ConfigBuilder) UseDescriptiveLogger() *ConfigBuilder {
+	cb.conf.UseDescriptiveLogger = true
 	return cb
 }
 
@@ -384,7 +471,7 @@ func WithAddr(addr string) Configurer {
 // WithMockNotFoundStatusCode defines the status code to be used no mock matches with an HTTP request.
 func WithMockNotFoundStatusCode(code int) Configurer {
 	return configFunc(func(c *Config) error {
-		c.MockNotFoundStatusCode = code
+		c.RequestWasNotMatchedStatusCode = code
 		return nil
 	})
 }
@@ -436,10 +523,10 @@ func WithHandlerDecorator(fn func(handler http.Handler) http.Handler) Configurer
 	})
 }
 
-// WithLogLevel sets the mock server LogLevel.
-func WithLogLevel(level LogLevel) Configurer {
+// WithLogLevel sets the mock server LogVerbosity.
+func WithLogLevel(level LogVerbosity) Configurer {
 	return configFunc(func(c *Config) error {
-		c.LogLevel = level
+		c.LogVerbosity = level
 		return nil
 	})
 }
@@ -540,13 +627,4 @@ func WithHTTPClient(f func() (*http.Client, error)) Configurer {
 		c.HTTPClientFactory = f
 		return nil
 	})
-}
-
-// --
-// Globals
-// --
-
-// SetColors enable/disable terminal colors.
-func SetColors(value bool) {
-	colorize.UseColors(value)
 }

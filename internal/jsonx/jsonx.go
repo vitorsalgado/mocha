@@ -33,7 +33,7 @@ func Reach(path string, data any) (any, error) {
 	case reflect.Map:
 		if hasBracket {
 			return nil,
-				fmt.Errorf("json path starts with an index pattern [n] when the json is actually an object")
+				fmt.Errorf("JSON path starts with an index pattern [n] when the JSON it is actually an object")
 		}
 
 		chain := strings.TrimPrefix(path, ".")
