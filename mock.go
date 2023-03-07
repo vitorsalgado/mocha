@@ -183,6 +183,7 @@ type matchResult struct {
 type mismatchDetail struct {
 	MatchersName string
 	Target       matchTarget
+	Key          string
 	Result       *matcher.Result
 	Err          error
 }
@@ -320,6 +321,7 @@ func (m *Mock) matchExpectations(ri *valueSelectorInput, expectations []*expecta
 			details = append(details, mismatchDetail{
 				MatchersName: exp.Matcher.Name(),
 				Target:       exp.Target,
+				Key:          exp.Key,
 				Err:          err,
 			})
 
@@ -333,6 +335,7 @@ func (m *Mock) matchExpectations(ri *valueSelectorInput, expectations []*expecta
 			details = append(details, mismatchDetail{
 				MatchersName: exp.Matcher.Name(),
 				Target:       exp.Target,
+				Key:          exp.Key,
 				Result:       result,
 			})
 		}
@@ -344,7 +347,7 @@ func (m *Mock) matchExpectations(ri *valueSelectorInput, expectations []*expecta
 func (m *Mock) matchExpectation(e *expectation, value any) (result *matcher.Result, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("%s: panic. %v", e.Matcher.Name(), r)
+			err = fmt.Errorf("panic: matcher=%s. %v", e.Matcher.Name(), r)
 			return
 		}
 	}()

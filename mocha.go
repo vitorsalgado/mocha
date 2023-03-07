@@ -189,7 +189,7 @@ func New(config ...Configurer) *Mocha {
 
 	var rec *recorder
 	if conf.Record != nil {
-		rec = newRecorder(conf.Record)
+		rec = newRecorder(app, conf.Record)
 	}
 
 	var p *reverseProxy

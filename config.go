@@ -61,6 +61,10 @@ type Config struct {
 	// Addr defines a custom server address.
 	Addr string
 
+	// RootDir defines the root directory where the server will start looking for configurations and mocks.
+	// Defaults to the current execution path.
+	RootDir string
+
 	// RequestWasNotMatchedStatusCode defines the status code that should be used when
 	// an HTTP request doesn't match with any mock.
 	// Defaults to 418 (I'm a teapot).
@@ -170,6 +174,7 @@ type forwardConfig struct {
 func (c *Config) Apply(conf *Config) error {
 	conf.Name = c.Name
 	conf.Addr = c.Addr
+	conf.RootDir = c.RootDir
 	conf.RequestWasNotMatchedStatusCode = c.RequestWasNotMatchedStatusCode
 	conf.RequestBodyParsers = c.RequestBodyParsers
 	conf.Middlewares = c.Middlewares
@@ -242,6 +247,13 @@ func (cb *ConfigBuilder) Name(name string) *ConfigBuilder {
 // Addr sets a custom address for the mock HTTP server.
 func (cb *ConfigBuilder) Addr(addr string) *ConfigBuilder {
 	cb.conf.Addr = addr
+	return cb
+}
+
+// RootDir defines the root directory where the server will start looking for configurations and mocks.
+// Defaults to the current execution path.
+func (cb *ConfigBuilder) RootDir(rootDir string) *ConfigBuilder {
+	cb.conf.RootDir = rootDir
 	return cb
 }
 

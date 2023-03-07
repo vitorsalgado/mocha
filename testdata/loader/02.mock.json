@@ -6,6 +6,6 @@
   },
   "response": {
     "status": 200,
-    "body_file": "02.txt"
+    "body_file": "testdata/loader/02.txt"
   }
 }

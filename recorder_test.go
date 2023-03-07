@@ -82,7 +82,7 @@ func TestRecordingWithWebProxy(t *testing.T) {
 	scope1.AssertCalled(t)
 	scope2.AssertCalled(t)
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(2 * time.Second)
 
 	entries, err := os.ReadDir(dir)
 
@@ -126,7 +126,7 @@ func TestRecordingWithWebProxy(t *testing.T) {
 
 func TestRecordSaveResponseBodyToFile(t *testing.T) {
 	dir := t.TempDir()
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	file, err := os.Open(path.Join("testdata/d/customers.json"))
@@ -245,7 +245,7 @@ func TestRecordSaveResponseBodyToFile(t *testing.T) {
 
 func TestRecordEmbeddedResponseBodiesYAML(t *testing.T) {
 	dir := t.TempDir()
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	file, err := os.Open(path.Join("testdata/d/customers.json"))
@@ -366,7 +366,7 @@ func TestRecordEmbeddedResponseBodiesYAML(t *testing.T) {
 
 func TestRecordTargetTLS(t *testing.T) {
 	dir := t.TempDir()
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	file, err := os.Open(path.Join("testdata/d/customers.json"))
@@ -486,7 +486,7 @@ func TestRecordTargetTLS(t *testing.T) {
 
 func TestRecordTLSClient(t *testing.T) {
 	dir := t.TempDir()
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	file, err := os.Open(path.Join("testdata/d/customers.json"))
@@ -608,7 +608,7 @@ func TestRecordTLSClient(t *testing.T) {
 
 func TestRecordBothTLS(t *testing.T) {
 	dir := t.TempDir()
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
 	file, err := os.Open(path.Join("testdata/d/customers.json"))

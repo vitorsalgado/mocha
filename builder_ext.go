@@ -9,7 +9,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path"
 	"strings"
 	"text/template"
 
@@ -19,7 +18,10 @@ import (
 	"github.com/vitorsalgado/mocha/v3/matcher/mbuild"
 )
 
-var _ Builder = (*mockExternalBuilder)(nil)
+var (
+	_ Builder = (*mockBuilderFromFile)(nil)
+	_ Builder = (*mockBuilderFromBytes)(nil)
+)
 
 // Mock configuration fields
 const (
@@ -85,9 +87,9 @@ const (
 	_resEncoding        = "encoding"
 )
 
-type mockExternalBuilder struct {
-	filename string
+type mockBuilderFromFile struct {
 	builder  *MockBuilder
+	filename string
 }
 
 // FromFile builds a Mock from the given filename.
@@ -98,10 +100,10 @@ type mockExternalBuilder struct {
 // if you need to define templates for the response URL, header or body, remember to escape it.
 // Eg.: body: {{`{{ .Request.Method }}`}}
 func FromFile(filename string) Builder {
-	return &mockExternalBuilder{filename: filename, builder: Request()}
+	return &mockBuilderFromFile{filename: filename, builder: Request()}
 }
 
-func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
+func (b *mockBuilderFromFile) Build(app *Mocha) (mock *Mock, err error) {
 	mock, err = b.build(app)
 	if err != nil {
 		return nil, fmt.Errorf("mock: error building mock from file %s.\n%w", b.filename, err)
@@ -110,10 +112,10 @@ func (b *mockExternalBuilder) Build(app *Mocha) (mock *Mock, err error) {
 	return mock, nil
 }
 
-func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
+func (b *mockBuilderFromFile) build(app *Mocha) (mock *Mock, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("mock: error building external mock from file %s.\n %v", b.filename, r)
+			err = fmt.Errorf("mock: error building external mock from file %s.\n%v", b.filename, r)
 		}
 	}()
 
@@ -133,6 +135,95 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 		return nil, err
 	}
 
+	parts := strings.Split(b.filename, ".")
+	ext := parts[len(parts)-1]
+
+	b.builder.SetSource(b.filename)
+
+	return buildMockFromBytes(app, b.builder, content, ext)
+}
+
+type mockBuilderFromBytes struct {
+	builder *MockBuilder
+	bytes   []byte
+	ext     string
+}
+
+func FromBytes(b []byte) Builder {
+	return &mockBuilderFromBytes{bytes: b, builder: Request(), ext: "json"}
+}
+
+func (b *mockBuilderFromBytes) Build(app *Mocha) (mock *Mock, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("mock: error building mock from byte array. panic: %v", r)
+		}
+	}()
+
+	mock, err = buildMockFromBytes(app, b.builder, b.bytes, b.ext)
+	if err != nil {
+		return nil, fmt.Errorf("mock: error building mock from byte array.\n%w", err)
+	}
+
+	return mock, nil
+}
+
+// buildReply expects a sub instance of viper.Viper, containing the response definition.
+// Fields should not be accessed using "response.", given that the argument v already contains only the
+// response.* fields.
+func buildReply(v *viper.Viper) (Reply, error) {
+	v.SetDefault(_resStatus, http.StatusOK)
+	v.SetDefault(_resTemplateEnabled, false)
+
+	res := NewReply()
+	res.Status(v.GetInt(_resStatus))
+
+	for k, v := range v.GetStringMapString(_resHeader) {
+		res.Header(k, v)
+	}
+
+	for k, v := range v.GetStringMapString(_resHeaderTemplate) {
+		res.HeaderTemplate(k, v)
+	}
+
+	switch v.GetString(_resEncoding) {
+	case "gzip":
+		res.Gzip()
+	}
+
+	teData := v.Get(_resTemplateData)
+	isTemplateEnabled := v.GetBool(_resTemplateEnabled) || teData != nil
+
+	if teData != nil {
+		res.SetTemplateData(teData)
+	}
+
+	if v.IsSet(_resBodyFile) {
+		filename := v.GetString(_resBodyFile)
+
+		if isTemplateEnabled {
+			res.BodyFileWithTemplate(filename)
+		} else {
+			res.BodyFile(filename)
+		}
+	} else {
+		body := v.Get(_resBody)
+		switch e := body.(type) {
+		case string:
+			if isTemplateEnabled {
+				res.BodyTemplate(e)
+			} else {
+				res.Body([]byte(e))
+			}
+		case []map[string]any, map[string]any, bool, float64:
+			res.BodyJSON(e)
+		}
+	}
+
+	return res, nil
+}
+
+func buildMockFromBytes(app *Mocha, builder *MockBuilder, content []byte, ext string) (*Mock, error) {
 	t, err := template.New("").Parse(string(content))
 	if err != nil {
 		return nil, err
@@ -144,9 +235,6 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 	if err != nil {
 		return nil, err
 	}
-
-	parts := strings.Split(b.filename, ".")
-	ext := parts[len(parts)-1]
 
 	vi := viper.New()
 	vi.SetConfigType(ext)
@@ -165,17 +253,15 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 	// Begin General
 	// --
 
-	b.builder.mock.Source = b.filename
-
-	b.builder.Name(vi.GetString(_fName))
-	b.builder.Priority(vi.GetInt(_fPriority))
-	b.builder.Enable(vi.GetBool(_fEnabled))
-	b.builder.ScenarioIs(vi.GetString(_fScenarioName))
-	b.builder.ScenarioStateIs(vi.GetString(_fScenarioRequiredState))
-	b.builder.ScenarioStateWillBe(vi.GetString(_fScenarioNewState))
+	builder.Name(vi.GetString(_fName))
+	builder.Priority(vi.GetInt(_fPriority))
+	builder.Enable(vi.GetBool(_fEnabled))
+	builder.ScenarioIs(vi.GetString(_fScenarioName))
+	builder.ScenarioStateIs(vi.GetString(_fScenarioRequiredState))
+	builder.ScenarioStateWillBe(vi.GetString(_fScenarioNewState))
 
 	if vi.IsSet(_fDelay) {
-		b.builder.Delay(vi.GetDuration(_fDelay))
+		builder.Delay(vi.GetDuration(_fDelay))
 	}
 
 	// --
@@ -189,16 +275,16 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 
 		switch t := mv.(type) {
 		case string:
-			b.builder.Method(t)
+			builder.Method(t)
 		case []string:
-			b.builder.MethodMatches(matcher.IsIn(t))
+			builder.MethodMatches(matcher.IsIn(t))
 		default:
 			m, err := mbuild.BuildMatcher(mv)
 			if err != nil {
 				return nil, fmt.Errorf("[request.method] error building matcher %v.\n%w", mv, err)
 			}
 
-			b.builder.MethodMatches(m)
+			builder.MethodMatches(m)
 		}
 	}
 
@@ -207,16 +293,16 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 
 		switch t := scheme.(type) {
 		case string:
-			b.builder.Scheme(t)
+			builder.Scheme(t)
 		case []string:
-			b.builder.SchemeMatches(matcher.IsIn(t))
+			builder.SchemeMatches(matcher.IsIn(t))
 		default:
 			m, err := mbuild.BuildMatcher(scheme)
 			if err != nil {
 				return nil, fmt.Errorf("[request.scheme] error building matcher %v.\n%w", scheme, err)
 			}
 
-			b.builder.SchemeMatches(m)
+			builder.SchemeMatches(m)
 		}
 	}
 
@@ -231,9 +317,9 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 			}
 
 			if u.IsAbs() {
-				b.builder.URL(matcher.EqualIgnoreCase(e))
+				builder.URL(matcher.EqualIgnoreCase(e))
 			} else {
-				b.builder.URL(matcher.URLPath(u.Path))
+				builder.URL(matcher.URLPath(u.Path))
 			}
 		default:
 			m, err := mbuild.BuildMatcher(uv)
@@ -241,26 +327,26 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 				return nil, fmt.Errorf("[request.url] error building url.\n%w", err)
 			}
 
-			b.builder.URL(m)
+			builder.URL(m)
 		}
 	} else if vi.IsSet(_fRequestURLMatch) {
-		b.builder.URL(matcher.Matches(vi.GetString(_fRequestURLMatch)))
+		builder.URL(matcher.Matches(vi.GetString(_fRequestURLMatch)))
 	} else if vi.IsSet(_fRequestURLPath) {
 		uv := vi.Get(_fRequestURLPath)
 
 		switch e := uv.(type) {
 		case string:
-			b.builder.URL(matcher.URLPath(e))
+			builder.URL(matcher.URLPath(e))
 		default:
 			m, err := mbuild.BuildMatcher(uv)
 			if err != nil {
 				return nil, fmt.Errorf("[request.url_path] error building matcher.\n%w", err)
 			}
 
-			b.builder.URLPath(m)
+			builder.URLPath(m)
 		}
 	} else if vi.IsSet(_fRequestURLPathMatch) {
-		b.builder.URLPath(matcher.Matches(vi.GetString(_fRequestURLPathMatch)))
+		builder.URLPath(matcher.Matches(vi.GetString(_fRequestURLPathMatch)))
 	}
 
 	for k, v := range vi.GetStringMap(_fRequestQuery) {
@@ -270,7 +356,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 				fmt.Errorf("[request.query[%s]] error building matcher.\n%w", k, err)
 		}
 
-		b.builder.Query(k, m)
+		builder.Query(k, m)
 	}
 
 	for k, v := range vi.GetStringMap(_fRequestQueries) {
@@ -280,7 +366,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 				fmt.Errorf("[request.queries[%s]] error building matcher.\n%w", k, err)
 		}
 
-		b.builder.Queries(k, m)
+		builder.Queries(k, m)
 	}
 
 	for k, v := range vi.GetStringMap(_fRequestHeader) {
@@ -290,7 +376,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 				fmt.Errorf("[request.header[%s]] error building matcher.\n%w", k, err)
 		}
 
-		b.builder.Header(k, m)
+		builder.Header(k, m)
 	}
 
 	for k, v := range vi.GetStringMap(_fRequestForm) {
@@ -300,7 +386,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 				fmt.Errorf("[request.form[%s]] error building matcher.\n%w", k, err)
 		}
 
-		b.builder.FormField(k, m)
+		builder.FormField(k, m)
 	}
 
 	if vi.IsSet(_fRequestBody) {
@@ -310,7 +396,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 				fmt.Errorf("[request.body] error building matcher.\n%w", err)
 		}
 
-		b.builder.Body(m)
+		builder.Body(m)
 	}
 
 	// --
@@ -322,7 +408,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 	var rep Reply
 
 	if vi.IsSet(_fResponse) {
-		rep, err = b.buildReply(vi.Sub(_fResponse))
+		rep, err = buildReply(vi.Sub(_fResponse))
 		if err != nil {
 			return nil, err
 		}
@@ -352,7 +438,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 					fmt.Errorf("[response_random.responses[%d]] error building random response.\n%w", i, err)
 			}
 
-			rr, err := b.buildReply(sub)
+			rr, err := buildReply(sub)
 			if err != nil {
 				return nil,
 					fmt.Errorf("[response_random.responses[%d]] building error.\n%w", i, err)
@@ -370,7 +456,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 		seq := Seq()
 
 		if vi.IsSet(_fResponseSequenceEnded) {
-			rr, err := b.buildReply(vi.Sub(_fResponseSequenceEnded))
+			rr, err := buildReply(vi.Sub(_fResponseSequenceEnded))
 			if err != nil {
 				return nil,
 					fmt.Errorf("[response_response.sequence_ended] building error.\n%w", err)
@@ -391,7 +477,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 				return nil, err
 			}
 
-			rr, err := b.buildReply(sub)
+			rr, err := buildReply(sub)
 			if err != nil {
 				return nil,
 					fmt.Errorf("[response_sequence.responses[%d]] building error.\n%w", i, err)
@@ -448,7 +534,7 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 		rep = OK()
 	}
 
-	b.builder.Reply(rep)
+	builder.Reply(rep)
 
 	// --
 	// End Stub
@@ -459,71 +545,12 @@ func (b *mockExternalBuilder) build(app *Mocha) (mock *Mock, err error) {
 		settings := vi.AllSettings()
 
 		for i, handler := range app.config.MockFileHandlers {
-			err = handler.Handle(settings, b.builder)
+			err = handler.Handle(settings, builder)
 			if err != nil {
 				return nil, fmt.Errorf("custom_field_handler: field handler at index %d failed.\n%w", i, err)
 			}
 		}
 	}
 
-	return b.builder.Build(app)
-}
-
-// buildReply expects a sub instance of viper.Viper, containing the response definition.
-// Fields should not be accessed using "response.", given that the argument v already contains only the
-// response.* fields.
-func (b *mockExternalBuilder) buildReply(v *viper.Viper) (Reply, error) {
-	v.SetDefault(_resStatus, http.StatusOK)
-	v.SetDefault(_resTemplateEnabled, false)
-
-	res := NewReply()
-	res.Status(v.GetInt(_resStatus))
-
-	for k, v := range v.GetStringMapString(_resHeader) {
-		res.Header(k, v)
-	}
-
-	for k, v := range v.GetStringMapString(_resHeaderTemplate) {
-		res.HeaderTemplate(k, v)
-	}
-
-	switch v.GetString(_resEncoding) {
-	case "gzip":
-		res.Gzip()
-	}
-
-	teData := v.Get(_resTemplateData)
-	isTemplateEnabled := v.GetBool(_resTemplateEnabled) || teData != nil
-
-	if teData != nil {
-		res.SetTemplateData(teData)
-	}
-
-	if v.IsSet(_resBodyFile) {
-		filename := v.GetString(_resBodyFile)
-		if !path.IsAbs(filename) {
-			dirs := strings.Split(b.filename, "/")
-			filename = path.Join(strings.Join(dirs[:len(dirs)-1], "/"), filename)
-		}
-
-		if isTemplateEnabled {
-			res.BodyFileWithTemplate(filename)
-		} else {
-			res.BodyFile(filename)
-		}
-	} else {
-		body := v.Get(_resBody)
-		switch e := body.(type) {
-		case string:
-			if isTemplateEnabled {
-				res.BodyTemplate(e)
-			} else {
-				res.Body([]byte(e))
-			}
-		case []map[string]any, map[string]any, bool, float64:
-			res.BodyJSON(e)
-		}
-	}
-
-	return res, nil
+	return builder.Build(app)
 }

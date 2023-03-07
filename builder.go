@@ -309,7 +309,7 @@ func (b *MockBuilder) Times(times int) *MockBuilder {
 	return b
 }
 
-// RequestMatches defines matcher.Matcher to be applied to an http.Request.
+// RequestMatches defines matcher.Matcher to be applied to a http.Request.
 func (b *MockBuilder) RequestMatches(m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetRequest,
@@ -374,6 +374,14 @@ func (b *MockBuilder) Reply(rep Reply) *MockBuilder {
 // All mocks are enabled by default.
 func (b *MockBuilder) Enable(enabled bool) *MockBuilder {
 	b.mock.Enabled = enabled
+	return b
+}
+
+// SetSource sets the source of the Mock.
+// This could be a filename or any relevant information about the source of the Mock.
+// This is mostly used internally.
+func (b *MockBuilder) SetSource(src string) *MockBuilder {
+	b.mock.Source = src
 	return b
 }
 

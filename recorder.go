@@ -27,6 +27,15 @@ var _ RecordConfigurer = (*RecordConfig)(nil)
 
 var _regexNoSpecialCharacters = regexp.MustCompile("[^a-z0-9]")
 
+type recorder struct {
+	app    *Mocha
+	active bool
+	config *RecordConfig
+	in     chan *recArgs
+	cancel context.CancelFunc
+	mu     sync.Mutex
+}
+
 // RecordConfig configures HTTP request and response recording.
 type RecordConfig struct {
 	// RequestHeaders define the request headers that should be recorded.
@@ -43,7 +52,7 @@ type RecordConfig struct {
 	ResponseHeaders []string
 
 	// SaveDir defines the directory to save the recorded mocks.
-	// Defaults to: testdata/mocks
+	// Defaults to: testdata/_mocks
 	SaveDir string
 
 	// SaveExtension defines the extension to save the recorded mock.
@@ -98,7 +107,7 @@ func (r *RecordConfig) Apply(opts *RecordConfig) error {
 
 func defaultRecordConfig() *RecordConfig {
 	return &RecordConfig{
-		SaveDir:                "testdata/mocks",
+		SaveDir:                "testdata/_mocks",
 		SaveExtension:          "json",
 		SaveResponseBodyToFile: false,
 		RequestHeaders:         []string{"accept", "content-type", "content-encoding", "content-length"},
@@ -107,37 +116,27 @@ func defaultRecordConfig() *RecordConfig {
 }
 
 // Recording data transfer structs.
-type (
-	recArgs struct {
-		request  recRequest
-		response recResponse
-	}
+type recArgs struct {
+	request  recRequest
+	response recResponse
+}
 
-	recRequest struct {
-		uri    string
-		method string
-		header http.Header
-		query  url.Values
-		body   []byte
-	}
+type recRequest struct {
+	uri    string
+	method string
+	header http.Header
+	query  url.Values
+	body   []byte
+}
 
-	recResponse struct {
-		status int
-		header http.Header
-		body   []byte
-	}
+type recResponse struct {
+	status int
+	header http.Header
+	body   []byte
+}
 
-	recorder struct {
-		active bool
-		config *RecordConfig
-		in     chan *recArgs
-		cancel context.CancelFunc
-		mu     sync.Mutex
-	}
-)
-
-func newRecorder(config *RecordConfig) *recorder {
-	return &recorder{config: config}
+func newRecorder(app *Mocha, config *RecordConfig) *recorder {
+	return &recorder{app: app, config: config}
 }
 
 func (r *recorder) start(ctx context.Context) {
@@ -258,16 +257,17 @@ func (r *recorder) process(arg *recArgs) error {
 
 	if hasResBody {
 		if r.config.SaveResponseBodyToFile {
-			bodyFilename := name + "--response-body"
+			bodyFile := name + "--response-body"
 			ext, _ := mime.ExtensionsByType(contentType)
 
 			if len(ext) > 0 {
-				bodyFilename += ext[0]
+				bodyFile += ext[0]
 			} else {
-				bodyFilename += ".bin"
+				bodyFile += ".bin"
 			}
 
-			b, err := os.Create(path.Join(r.config.SaveDir, bodyFilename))
+			bodyFilename := path.Join(r.app.config.RootDir, r.config.SaveDir, bodyFile)
+			b, err := os.Create(bodyFilename)
 			if err != nil {
 				return err
 			}
@@ -347,7 +347,7 @@ func RecordResponseHeaders(h ...string) RecordConfigurer {
 }
 
 // RecordDir defines the directory to save the recorded mocks.
-// Defaults to: testdata/mocks
+// Defaults to: testdata/_mocks
 func RecordDir(dir string) RecordConfigurer {
 	return recordConfigFunc(func(c *RecordConfig) { c.SaveDir = dir })
 }

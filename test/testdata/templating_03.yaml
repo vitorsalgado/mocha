@@ -3,6 +3,6 @@ request:
   method: GET
 
 response:
-  body_file: "{{`{{ index .Request.URLPathSegments 0 }}`}}"
+  body_file: "{{`testdata/{{ index .Request.URLPathSegments 0 }}`}}"
   template:
     enabled: true

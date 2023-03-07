@@ -3,4 +3,4 @@ request:
   method: GET
 
 response:
-  body_file: "{{`{{ index .Request.URLPathSegments 1 }}`}}"
+  body_file: "{{`testdata/{{ index .Request.URLPathSegments 1 }}`}}"

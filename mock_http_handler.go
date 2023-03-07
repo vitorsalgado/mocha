@@ -80,8 +80,9 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	stub, err := result.Matched.Reply.Build(w, reqValues)
 	if err != nil {
 		h.onError(w, reqValues, fmt.Errorf(
-			"http: error building reply for request %s. %w",
+			"http: error building reply for request=%s source=%s. %w",
 			reqValues.URL.Path,
+			mock.Source,
 			err,
 		))
 		return
@@ -169,45 +170,47 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *RequestValues, result *findResult) {
 	defer h.lifecycle.OnNoMatch(r, result)
 
-	buf := strings.Builder{}
-	buf.WriteString("REQUEST WAS NOT MATCHED\n")
+	builder := strings.Builder{}
+	builder.WriteString("REQUEST WAS NOT MATCHED\n")
 
 	if result.ClosestMatch != nil {
-		buf.WriteString(
+		builder.WriteString(
 			fmt.Sprintf("CLOSEST MATCH: %s %s\n", result.ClosestMatch.ID, result.ClosestMatch.Name))
 	}
 
-	buf.WriteString("MISMATCHES:\n")
+	builder.WriteString("MISMATCHES:\n")
 
 	for _, detail := range result.MismatchDetails {
-		buf.WriteString("[")
-		buf.WriteString(detail.Target.String())
-		buf.WriteString("] ")
-
-		buf.WriteString(detail.MatchersName)
+		builder.WriteString("[" + detail.Target.String())
+		if detail.Key != "" {
+			builder.WriteString("[" + detail.Key + "]")
+		}
+		builder.WriteString("] ")
+		builder.WriteString(detail.MatchersName)
 
 		if detail.Err != nil {
-			buf.WriteString(" ")
-			buf.WriteString(detail.Err.Error())
-			buf.WriteString("\n")
+			builder.WriteString(" ")
+			builder.WriteString(detail.Err.Error())
+			builder.WriteString("\n")
 			continue
 		}
 
-		buf.WriteString("(")
+		builder.WriteString("(")
 		if len(detail.Result.Ext) > 0 {
-			buf.WriteString(detail.Result.Message)
-			buf.WriteString(")")
+			builder.WriteString(detail.Result.Message)
+			builder.WriteString(")")
 		} else {
-			buf.WriteString(strings.Join(detail.Result.Ext, ", "))
-			buf.WriteString(") ")
-			buf.WriteString(detail.Result.Message)
+			builder.WriteString(strings.Join(detail.Result.Ext, ", "))
+			builder.WriteString(") ")
+			builder.WriteString(detail.Result.Message)
 		}
-		buf.WriteString("\n")
+
+		builder.WriteString("\n")
 	}
 
 	w.Header().Add(header.ContentType, mimetype.TextPlainCharsetUTF8)
 	w.WriteHeader(h.app.config.RequestWasNotMatchedStatusCode)
-	w.Write([]byte(buf.String()))
+	w.Write([]byte(builder.String()))
 }
 
 func (h *mockHandler) onError(w http.ResponseWriter, r *RequestValues, err error) {
@@ -318,33 +321,35 @@ func (h *builtInMockHTTPLifecycle) OnNoMatch(r *RequestValues, fr *findResult) {
 
 	if len(fr.MismatchDetails) > 0 {
 		mismatches := zerolog.Arr()
-		buf := strings.Builder{}
+		builder := strings.Builder{}
 
 		for _, detail := range fr.MismatchDetails {
-			buf.WriteString("[")
-			buf.WriteString(detail.Target.String())
-			buf.WriteString("] ")
+			builder.WriteString("[" + detail.Target.String())
+			if detail.Key != "" {
+				builder.WriteString("[" + detail.Key + "]")
+			}
+			builder.WriteString("] ")
 
-			buf.WriteString(detail.MatchersName)
+			builder.WriteString(detail.MatchersName)
 
 			if detail.Err != nil {
-				buf.WriteString(" ")
-				buf.WriteString(detail.Err.Error())
+				builder.WriteString(" ")
+				builder.WriteString(detail.Err.Error())
 				continue
 			}
 
-			buf.WriteString("(")
+			builder.WriteString("(")
 			if len(detail.Result.Ext) > 0 {
-				buf.WriteString(detail.Result.Message)
-				buf.WriteString(")")
+				builder.WriteString(detail.Result.Message)
+				builder.WriteString(")")
 			} else {
-				buf.WriteString(strings.Join(detail.Result.Ext, ", "))
-				buf.WriteString(") ")
-				buf.WriteString(detail.Result.Message)
+				builder.WriteString(strings.Join(detail.Result.Ext, ", "))
+				builder.WriteString(") ")
+				builder.WriteString(detail.Result.Message)
 			}
 
-			mismatches.Str(buf.String())
-			buf.Reset()
+			mismatches.Str(builder.String())
+			builder.Reset()
 		}
 
 		evt.Array("mismatches", mismatches)
@@ -475,12 +480,16 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnNoMatch(r *RequestValues, fr *fi
 	}
 
 	if len(fr.MismatchDetails) > 0 {
-		if h.app.config.LogVerbosity == LogHeader {
+		if h.app.config.LogVerbosity <= LogHeader {
 			builder.WriteString(fmt.Sprintf("%s: %d", h.cz.Bold("Mismatches"), len(fr.MismatchDetails)))
 		} else {
 			builder.WriteString(fmt.Sprintf("%s(%d):\n", h.cz.Bold("Mismatches"), len(fr.MismatchDetails)))
 			for _, detail := range fr.MismatchDetails {
-				builder.WriteString("[" + detail.Target.String() + "] ")
+				builder.WriteString("[" + detail.Target.String())
+				if detail.Key != "" {
+					builder.WriteString("[" + detail.Key + "]")
+				}
+				builder.WriteString("] ")
 				builder.WriteString(detail.MatchersName)
 				builder.WriteString("(")
 

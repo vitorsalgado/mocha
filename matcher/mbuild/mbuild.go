@@ -149,7 +149,7 @@ func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
 		if recovery := recover(); recovery != nil {
 			m = nil
 			errTop = fmt.Errorf(
-				"matcher: panic parsing matcher=%s with args=%v. reason=%v",
+				"panic: parsing matcher=%s with args=%v. reason=%v",
 				key,
 				args,
 				recovery,
