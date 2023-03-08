@@ -2,6 +2,8 @@ package mfmt
 
 import (
 	"fmt"
+	"net/http"
+	"reflect"
 	"regexp"
 )
 
@@ -35,6 +37,16 @@ func Stringify(v any) string {
 		return string(s)
 	case string:
 		return s
+	case *http.Request:
+		return "*http.Request"
+	case nil:
+		return ""
+	default:
+		t := reflect.TypeOf(s)
+		switch t.Kind() {
+		case reflect.Pointer:
+			return t.String()
+		}
 	}
 
 	return fmt.Sprintf("%v", v)

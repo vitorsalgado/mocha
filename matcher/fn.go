@@ -24,7 +24,7 @@ func (m *funcMatcher) Match(v any) (*Result, error) {
 
 	return &Result{
 		Ext:     []string{mfmt.Stringify(v)},
-		Message: mfmt.PrintReceived(v),
+		Message: "Predicate evaluated to false",
 	}, nil
 }
 

@@ -33,3 +33,20 @@ func TestRepeat(t *testing.T) {
 	res, _ = testutil.Get(m.URL() + "/test").Do()
 	require.Equal(t, mocha.StatusNoMatch, res.StatusCode)
 }
+
+func TestRepeat_Once(t *testing.T) {
+	m := mocha.New()
+	m.MustStart()
+
+	defer m.Close()
+
+	m.MustMock(mocha.Get(matcher.URLPath("/test")).
+		Once().
+		Reply(mocha.OK()))
+
+	res, _ := testutil.Get(m.URL() + "/test").Do()
+	require.Equal(t, http.StatusOK, res.StatusCode)
+
+	res, _ = testutil.Get(m.URL() + "/test").Do()
+	require.Equal(t, mocha.StatusNoMatch, res.StatusCode)
+}

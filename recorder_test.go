@@ -124,6 +124,107 @@ func TestRecordingWithWebProxy(t *testing.T) {
 	require.Equal(t, res.Header.Get(trailer), "the-trailer-value")
 }
 
+func TestRecordingWithWebProxy_CustomRootDir(t *testing.T) {
+	dir := t.TempDir()
+	actualDir := path.Join(dir, "testdata/_mocks_recorded")
+
+	err := os.MkdirAll(actualDir, os.ModePerm)
+	require.NoError(t, err)
+
+	includedReqHeader := "x-request-excluded"
+	excludedReqHeader := "x-req-excluded"
+
+	includedResHeader := "x-response-included"
+	excludedResHeader := "x-res-excluded"
+
+	trailer := "final"
+
+	p := New(Configure().
+		Name("recorder").
+		RootDir(dir).
+		Proxy().
+		Record(
+			RecordResponseBodyToFile(true),
+			RecordRequestHeaders("accept", "content-type", "content-encoding", "content-length", includedReqHeader),
+			RecordResponseHeaders("content-type", "content-encoding", "link", "content-length", includedResHeader, trailer),
+		))
+	p.MustStart()
+	scope1 := p.MustMock(Get(URLPath("/test")).Reply(Accepted()))
+
+	m := New()
+	m.MustStart()
+	scope2 := m.MustMock(Get(URLPath("/other")).
+		Reply(Created().
+			Header(includedResHeader, "included").
+			Header(excludedResHeader, "excluded").
+			Trailer(trailer, "the-trailer-value").
+			BodyText("hello world")),
+	)
+
+	u, _ := url.Parse(p.URL())
+	client := &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(u)}}
+
+	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
+	res, err := client.Do(req)
+
+	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
+	require.Equal(t, http.StatusAccepted, res.StatusCode)
+
+	req, _ = http.NewRequest(http.MethodGet, m.URL()+"/other", nil)
+	req.Header.Add(excludedReqHeader, "excluded")
+	req.Header.Add(includedReqHeader, "included")
+	res, err = client.Do(req)
+
+	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
+	require.Equal(t, http.StatusCreated, res.StatusCode)
+
+	scope1.AssertCalled(t)
+	scope2.AssertCalled(t)
+
+	time.Sleep(2 * time.Second)
+
+	entries, err := os.ReadDir(actualDir)
+
+	require.NoError(t, err)
+	require.Len(t, entries, 2)
+
+	p.Close()
+	m.Close()
+
+	// Creating a new server that will use the recorded mocks
+
+	srv := New(Configure().Dirs(actualDir + "/*mock.json"))
+	srv.MustStart()
+
+	defer srv.Close()
+
+	httpClient := &http.Client{}
+
+	req, _ = http.NewRequest(http.MethodGet, srv.URL()+"/other", nil)
+	req.Header.Add(excludedReqHeader, "excluded")
+	res, err = httpClient.Do(req)
+
+	require.NoError(t, err)
+	require.Equal(t, StatusNoMatch, res.StatusCode)
+
+	req, _ = http.NewRequest(http.MethodGet, srv.URL()+"/other", nil)
+	req.Header.Add(includedReqHeader, "included")
+	res, err = httpClient.Do(req)
+	require.NoError(t, err)
+
+	b, err := io.ReadAll(res.Body)
+	res.Body.Close()
+
+	require.NoError(t, err)
+	require.Equal(t, http.StatusCreated, res.StatusCode)
+	require.Equal(t, "hello world", string(b))
+	require.Empty(t, res.Header.Get(excludedResHeader))
+	require.Equal(t, res.Header.Get(includedResHeader), "included")
+	require.Equal(t, res.Header.Get(trailer), "the-trailer-value")
+}
+
 func TestRecordSaveResponseBodyToFile(t *testing.T) {
 	dir := t.TempDir()
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)

@@ -100,6 +100,7 @@ func Headf(path string, a ...any) *MockBuilder {
 // Useful for debugging.
 func (b *MockBuilder) Name(name string) *MockBuilder {
 	b.mock.Name = name
+
 	return b
 }
 
@@ -107,6 +108,7 @@ func (b *MockBuilder) Name(name string) *MockBuilder {
 // A higher priority will take precedence during request matching.
 func (b *MockBuilder) Priority(p int) *MockBuilder {
 	b.mock.Priority = p
+
 	return b
 }
 
@@ -299,24 +301,37 @@ func (b *MockBuilder) FormFieldf(field string, value string, a ...any) *MockBuil
 	return b.FormField(field, matcher.StrictEqual(fmt.Sprintf(value, a...)))
 }
 
-// Times defines to total times that a mock should be served if the request matches.
+// Times defines the total times that a mock should be served if the request matches.
 func (b *MockBuilder) Times(times int) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:  _targetRequest,
 		Matcher: mfeat.Repeat(times),
 		Weight:  _weightNone,
 	})
+
 	return b
 }
 
-// RequestMatches defines matcher.Matcher to be applied to a http.Request.
-func (b *MockBuilder) RequestMatches(m matcher.Matcher) *MockBuilder {
+// Once defines that a mock should be served only one time.
+func (b *MockBuilder) Once() *MockBuilder {
+	b.appendExpectation(&expectation{
+		Target:  _targetRequest,
+		Matcher: mfeat.Repeat(1),
+		Weight:  _weightNone,
+	})
+
+	return b
+}
+
+// RequestMatches applies the given predicate to the incoming http.Request.
+func (b *MockBuilder) RequestMatches(predicate func(r *http.Request) (bool, error)) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetRequest,
 		ValueSelector: selectRawRequest,
-		Matcher:       m,
+		Matcher:       matcher.Func(func(v any) (bool, error) { return predicate(v.(*http.Request)) }),
 		Weight:        _weightLow,
 	})
+
 	return b
 }
 
@@ -324,36 +339,42 @@ func (b *MockBuilder) RequestMatches(m matcher.Matcher) *MockBuilder {
 func (b *MockBuilder) StartScenario(name string) *MockBuilder {
 	b.scenario = name
 	b.scenarioRequiredState = mfeat.ScenarioStateStarted
+
 	return b
 }
 
 // ScenarioIs mark this mock to be used only within the given scenario.
 func (b *MockBuilder) ScenarioIs(scenario string) *MockBuilder {
 	b.scenario = scenario
+
 	return b
 }
 
 // ScenarioStateIs mark this mock to be served only if the scenario state is equal to the given required state.
 func (b *MockBuilder) ScenarioStateIs(requiredState string) *MockBuilder {
 	b.scenarioRequiredState = requiredState
+
 	return b
 }
 
 // ScenarioStateWillBe defines the state of the scenario after this mock is matched, making the scenario flow continue.
 func (b *MockBuilder) ScenarioStateWillBe(newState string) *MockBuilder {
 	b.scenarioNewState = newState
+
 	return b
 }
 
 // PostAction adds a post action to be executed after the mocked response is served.
 func (b *MockBuilder) PostAction(action PostAction) *MockBuilder {
 	b.mock.PostActions = append(b.mock.PostActions, action)
+
 	return b
 }
 
 // Delay sets a delay time before serving the mocked response.
 func (b *MockBuilder) Delay(duration time.Duration) *MockBuilder {
 	b.mock.Delay = duration
+
 	return b
 }
 
@@ -361,12 +382,14 @@ func (b *MockBuilder) Delay(duration time.Duration) *MockBuilder {
 // Multiple mappers can be added.
 func (b *MockBuilder) Map(mapper Mapper) *MockBuilder {
 	b.mock.Mappers = append(b.mock.Mappers, mapper)
+
 	return b
 }
 
 // Reply defines a response mock to be served if this mock matches a request.
 func (b *MockBuilder) Reply(rep Reply) *MockBuilder {
 	b.mock.Reply = rep
+
 	return b
 }
 
@@ -374,6 +397,7 @@ func (b *MockBuilder) Reply(rep Reply) *MockBuilder {
 // All mocks are enabled by default.
 func (b *MockBuilder) Enable(enabled bool) *MockBuilder {
 	b.mock.Enabled = enabled
+
 	return b
 }
 
@@ -382,6 +406,7 @@ func (b *MockBuilder) Enable(enabled bool) *MockBuilder {
 // This is mostly used internally.
 func (b *MockBuilder) SetSource(src string) *MockBuilder {
 	b.mock.Source = src
+
 	return b
 }
 

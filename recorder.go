@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"hash/fnv"
 	"io"
-	"log"
 	"mime"
 	"net/http"
 	"net/url"
@@ -52,7 +51,6 @@ type RecordConfig struct {
 	ResponseHeaders []string
 
 	// SaveDir defines the directory to save the recorded mocks.
-	// Defaults to: testdata/_mocks
 	SaveDir string
 
 	// SaveExtension defines the extension to save the recorded mock.
@@ -107,7 +105,7 @@ func (r *RecordConfig) Apply(opts *RecordConfig) error {
 
 func defaultRecordConfig() *RecordConfig {
 	return &RecordConfig{
-		SaveDir:                "testdata/_mocks",
+		SaveDir:                "testdata/_mocks_recorded",
 		SaveExtension:          "json",
 		SaveResponseBodyToFile: false,
 		RequestHeaders:         []string{"accept", "content-type", "content-encoding", "content-length"},
@@ -159,7 +157,7 @@ func (r *recorder) start(ctx context.Context) {
 
 				err := r.process(a)
 				if err != nil {
-					log.Println(fmt.Errorf("recorder: %w", err))
+					r.app.log.Error().Err(fmt.Errorf("recorder: %w", err)).Msgf(err.Error())
 				}
 
 			case <-ctx.Done():
@@ -189,7 +187,7 @@ func (r *recorder) dispatch(req *http.Request, parsedURL *url.URL, rawReqBody []
 		},
 	}
 
-	go func() { r.in <- input }()
+	r.in <- input
 }
 
 func (r *recorder) stop() {
@@ -199,9 +197,6 @@ func (r *recorder) stop() {
 
 func (r *recorder) process(arg *recArgs) error {
 	v := viper.New()
-
-	v.AddConfigPath(r.config.SaveDir)
-	v.SetConfigType(r.config.SaveExtension)
 
 	v.Set(_fRequestURLPath, arg.request.uri)
 	v.Set(_fRequestMethod, arg.request.method)
@@ -252,8 +247,13 @@ func (r *recorder) process(arg *recArgs) error {
 		nm += "--" + requestBodyHash
 	}
 
+	saveDir := r.config.SaveDir
+	if !path.IsAbs(saveDir) {
+		saveDir = path.Join(r.app.config.RootDir, saveDir)
+	}
+
 	name := fmt.Sprintf("%s-%s", arg.request.method, nm)
-	mockFile := path.Join(r.config.SaveDir, fmt.Sprintf("%s.mock.%s", name, r.config.SaveExtension))
+	mockFile := path.Join(saveDir, fmt.Sprintf("%s.mock.%s", name, r.config.SaveExtension))
 
 	if hasResBody {
 		if r.config.SaveResponseBodyToFile {
@@ -266,7 +266,7 @@ func (r *recorder) process(arg *recArgs) error {
 				bodyFile += ".bin"
 			}
 
-			bodyFilename := path.Join(r.app.config.RootDir, r.config.SaveDir, bodyFile)
+			bodyFilename := path.Join(saveDir, bodyFile)
 			b, err := os.Create(bodyFilename)
 			if err != nil {
 				return err
@@ -329,6 +329,9 @@ func (r *recorder) process(arg *recArgs) error {
 	v.Set(_fResponseStatus, arg.response.status)
 	v.Set(_fResponseHeader, responseHeaders)
 
+	v.AddConfigPath(saveDir)
+	v.SetConfigType(r.config.SaveExtension)
+
 	return v.WriteConfigAs(mockFile)
 }
 
@@ -347,7 +350,6 @@ func RecordResponseHeaders(h ...string) RecordConfigurer {
 }
 
 // RecordDir defines the directory to save the recorded mocks.
-// Defaults to: testdata/_mocks
 func RecordDir(dir string) RecordConfigurer {
 	return recordConfigFunc(func(c *RecordConfig) { c.SaveDir = dir })
 }

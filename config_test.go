@@ -193,12 +193,12 @@ func TestConfigWithFunctions(t *testing.T) {
 func TestConfigBuilder(t *testing.T) {
 	addr := ""
 	nm := "test"
-
 	customLogger := zerolog.Nop()
 
 	m := New(Configure().
 		Name(nm).
 		Addr(addr).
+		RootDir("test_root_dir").
 		MockNotFoundStatusCode(http.StatusNotFound).
 		RequestBodyParsers(&jsonBodyParser{}, &plainTextParser{}).
 		Middlewares().
@@ -210,6 +210,7 @@ func TestConfigBuilder(t *testing.T) {
 		LogPretty(false).
 		LogBodyMaxSize(100).
 		Logger(&customLogger).
+		UseDescriptiveLogger().
 		Parameters(newInMemoryParameters()).
 		Dirs("test", "dev").
 		Loader(&fileLoader{}).
@@ -221,6 +222,7 @@ func TestConfigBuilder(t *testing.T) {
 
 	assert.Equal(t, nm, conf.Name)
 	assert.Equal(t, addr, conf.Addr)
+	assert.Equal(t, "test_root_dir", conf.RootDir)
 	assert.Equal(t, http.StatusNotFound, conf.RequestWasNotMatchedStatusCode)
 	assert.Len(t, conf.RequestBodyParsers, 2)
 	assert.Len(t, conf.Middlewares, 0)
@@ -233,6 +235,7 @@ func TestConfigBuilder(t *testing.T) {
 	assert.Equal(t, int64(100), conf.LogBodyMaxSize)
 	assert.Equal(t, newInMemoryParameters(), conf.Parameters)
 	assert.Equal(t, []string{ConfigMockFilePattern, "test", "dev"}, conf.Directories)
+	assert.True(t, conf.UseDescriptiveLogger)
 	assert.Len(t, conf.Loaders, 1)
 	assert.Len(t, conf.MockFileHandlers, 1)
 	assert.IsType(t, &builtInGoTemplate{}, conf.TemplateEngine)

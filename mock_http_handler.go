@@ -197,12 +197,12 @@ func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *RequestValues, resul
 
 		builder.WriteString("(")
 		if len(detail.Result.Ext) > 0 {
-			builder.WriteString(detail.Result.Message)
-			builder.WriteString(")")
-		} else {
 			builder.WriteString(strings.Join(detail.Result.Ext, ", "))
 			builder.WriteString(") ")
 			builder.WriteString(detail.Result.Message)
+		} else {
+			builder.WriteString(detail.Result.Message)
+			builder.WriteString(")")
 		}
 
 		builder.WriteString("\n")
@@ -340,12 +340,12 @@ func (h *builtInMockHTTPLifecycle) OnNoMatch(r *RequestValues, fr *findResult) {
 
 			builder.WriteString("(")
 			if len(detail.Result.Ext) > 0 {
-				builder.WriteString(detail.Result.Message)
-				builder.WriteString(")")
-			} else {
 				builder.WriteString(strings.Join(detail.Result.Ext, ", "))
 				builder.WriteString(") ")
 				builder.WriteString(detail.Result.Message)
+			} else {
+				builder.WriteString(detail.Result.Message)
+				builder.WriteString(") ")
 			}
 
 			mismatches.Str(builder.String())

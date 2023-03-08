@@ -292,6 +292,44 @@ func TestMochaNoMatchers(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestMocha_RequestMatches(t *testing.T) {
+	m := New()
+	m.MustStart()
+
+	defer m.Close()
+
+	scoped := m.MustMock(
+		Get(URLPath("/test")).
+			RequestMatches(func(r *http.Request) (bool, error) {
+				if r.Method == http.MethodGet {
+					return true, nil
+				}
+
+				return false, nil
+			}).
+			Reply(OK()))
+
+	httpClient := &http.Client{}
+	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
+
+	res, err := httpClient.Do(req)
+	require.NoError(t, err)
+
+	defer res.Body.Close()
+
+	require.True(t, scoped.HasBeenCalled())
+	require.Equal(t, http.StatusOK, res.StatusCode)
+
+	req, _ = http.NewRequest(http.MethodPost, m.URL()+"/test", nil)
+	res, err = httpClient.Do(req)
+	require.NoError(t, err)
+
+	defer res.Body.Close()
+
+	scoped.AssertNumberOfCalls(t, 1)
+	require.Equal(t, StatusNoMatch, res.StatusCode)
+}
+
 func TestMochaConcurrency(t *testing.T) {
 	m := New()
 	jobs := 10
