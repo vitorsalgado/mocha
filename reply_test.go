@@ -1,10 +1,9 @@
 package mocha
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
-	"os"
-	"path"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -112,16 +111,14 @@ func TestStdReplyBodyJSON(t *testing.T) {
 }
 
 func TestStdReplyBodyReader(t *testing.T) {
-	wd, _ := os.Getwd()
-	f, err := os.Open(path.Join(wd, "testdata", "data.txt"))
-	require.NoError(t, err)
-
-	defer f.Close()
+	buf := new(bytes.Buffer)
+	buf.WriteString("hello\n")
+	buf.WriteString("world\n")
 
 	rv := &RequestValues{RawRequest: _req, URL: _req.URL}
 	res, err := NewReply().
 		Status(http.StatusCreated).
-		BodyReader(f).
+		BodyReader(buf).
 		Build(nil, rv)
 
 	assert.NoError(t, err)

@@ -39,7 +39,7 @@ func (m *containsMatcher) Match(v any) (*Result, error) {
 	case reflect.Map:
 		keys := vValue.MapKeys()
 		for i := 0; i < len(keys); i++ {
-			if equalValues(keys[i].Interface(), m.expected) {
+			if equalValues(keys[i].Interface(), m.expected, false) {
 				return &Result{Pass: true}, nil
 			}
 		}
@@ -48,7 +48,7 @@ func (m *containsMatcher) Match(v any) (*Result, error) {
 
 	case reflect.Slice, reflect.Array:
 		for i := 0; i < vValue.Len(); i++ {
-			if equalValues(vValue.Index(i).Interface(), eValue.Interface()) {
+			if equalValues(vValue.Index(i).Interface(), eValue.Interface(), false) {
 				return &Result{Pass: true}, nil
 			}
 		}
@@ -63,7 +63,7 @@ func Contain(expected any) Matcher {
 }
 
 // Containf passes when the expected value is contained in the incoming value from the request.
-// This is short-hand to format the expected value.
+// This is shorthand to format the expected value.
 func Containf(format string, a ...any) Matcher {
 	return &containsMatcher{expected: fmt.Sprintf(format, a...)}
 }

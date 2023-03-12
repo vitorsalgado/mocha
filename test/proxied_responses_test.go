@@ -82,7 +82,7 @@ func TestProxiedReplyMockFileWithTemplate(t *testing.T) {
 	data["target"] = target.URL()
 	m.SetData(data)
 
-	scoped := m.MustMock(mocha.FromFile("testdata/proxied_response.yaml"))
+	scoped := m.MustMock(mocha.FromFile("testdata/proxied_response/proxied_response.yaml"))
 	httpClient := &http.Client{}
 
 	req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", strings.NewReader("hello world"))

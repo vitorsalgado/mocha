@@ -5,7 +5,7 @@ request:
   query:
     term: test
     filter:
-      - equalTo
+      - equal
       - none
 response:
   status: 200

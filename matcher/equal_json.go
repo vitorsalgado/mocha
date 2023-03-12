@@ -27,13 +27,13 @@ func (m *equalJSONMatcher) Match(v any) (*Result, error) {
 		return nil, err
 	}
 
-	if equalValues(v, exp) {
+	if equalValues(v, exp, false) {
 		return &Result{Pass: true}, err
 	}
 
 	return &Result{
 		Ext:     []string{mfmt.Stringify(m.expected)},
-		Message: fmt.Sprintf("Expected: %s. Received: %s", mfmt.Stringify(m.expected), mfmt.Stringify(v)),
+		Message: fmt.Sprintf("expected: %s. received: %s", mfmt.Stringify(m.expected), mfmt.Stringify(v)),
 	}, nil
 }
 

@@ -2,6 +2,7 @@ package mfeat
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/vitorsalgado/mocha/v3/matcher"
 )
@@ -21,21 +22,21 @@ func (s *scenarioState) hasStarted() bool {
 	return s.state == ScenarioStateStarted
 }
 
-type scenarioStore struct {
+type ScenarioStore struct {
 	data map[string]*scenarioState
 }
 
-func newScenarioStore() *scenarioStore {
-	return &scenarioStore{data: make(map[string]*scenarioState)}
+func NewScenarioStore() *ScenarioStore {
+	return &ScenarioStore{data: make(map[string]*scenarioState)}
 }
 
-func (store *scenarioStore) fetchByName(name string) (*scenarioState, bool) {
-	s, ok := store.data[name]
+func (store *ScenarioStore) fetchByName(name string) (*scenarioState, bool) {
+	s, ok := store.data[strings.ToLower(strings.TrimSpace(name))]
 	return s, ok
 }
 
-func (store *scenarioStore) createNewIfNeeded(name string) *scenarioState {
-	s, ok := store.fetchByName(name)
+func (store *ScenarioStore) createNewIfNeeded(name string) *scenarioState {
+	s, ok := store.fetchByName(strings.ToLower(strings.TrimSpace(name)))
 
 	if !ok {
 		scenario := newScenarioState(name)
@@ -46,15 +47,15 @@ func (store *scenarioStore) createNewIfNeeded(name string) *scenarioState {
 	return s
 }
 
-func (store *scenarioStore) save(scenario *scenarioState) {
+func (store *ScenarioStore) save(scenario *scenarioState) {
 	store.data[scenario.name] = scenario
 }
 
 type scenarioMatcher struct {
-	store         *scenarioStore
+	store         *ScenarioStore
 	requiredState string
 	newState      string
-	nm            string
+	name          string
 }
 
 func (m *scenarioMatcher) Name() string {
@@ -63,10 +64,10 @@ func (m *scenarioMatcher) Name() string {
 
 func (m *scenarioMatcher) Match(_ any) (*matcher.Result, error) {
 	if m.requiredState == ScenarioStateStarted {
-		m.store.createNewIfNeeded(m.nm)
+		m.store.createNewIfNeeded(m.name)
 	}
 
-	scn, ok := m.store.fetchByName(m.nm)
+	scn, ok := m.store.fetchByName(m.name)
 	if !ok {
 		return &matcher.Result{Pass: true}, nil
 	}
@@ -76,13 +77,13 @@ func (m *scenarioMatcher) Match(_ any) (*matcher.Result, error) {
 	}
 
 	return &matcher.Result{
-		Ext:     []string{m.requiredState},
-		Message: fmt.Sprintf("Scenario state: %s", scn.state),
+		Ext:     []string{m.name, scn.state},
+		Message: fmt.Sprintf("required scenario state: %s", m.requiredState),
 	}, nil
 }
 
 func (m *scenarioMatcher) AfterMockServed() error {
-	scn, ok := m.store.fetchByName(m.nm)
+	scn, ok := m.store.fetchByName(m.name)
 	if !ok {
 		return nil
 	}
@@ -94,11 +95,11 @@ func (m *scenarioMatcher) AfterMockServed() error {
 	return nil
 }
 
-func Scenario(name, requiredState, newState string) matcher.Matcher {
+func Scenario(store *ScenarioStore, name, requiredState, newState string) matcher.Matcher {
 	return &scenarioMatcher{
-		store:         newScenarioStore(),
+		store:         store,
 		requiredState: requiredState,
 		newState:      newState,
-		nm:            name,
+		name:          name,
 	}
 }

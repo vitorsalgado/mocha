@@ -1,6 +1,7 @@
 package mocha
 
 import (
+	"crypto/tls"
 	"net/http"
 	"os"
 	"strconv"
@@ -31,15 +32,15 @@ type customTestServer struct {
 	decorated Server
 }
 
-func (s *customTestServer) Setup(config *Config, handler http.Handler) error {
-	return s.decorated.Setup(config, handler)
+func (s *customTestServer) Setup(app *Mocha, handler http.Handler) error {
+	return s.decorated.Setup(app, handler)
 }
 
-func (s *customTestServer) Start() (*ServerInfo, error) {
+func (s *customTestServer) Start() error {
 	return s.decorated.Start()
 }
 
-func (s *customTestServer) StartTLS() (*ServerInfo, error) {
+func (s *customTestServer) StartTLS() error {
 	return s.decorated.StartTLS()
 }
 
@@ -58,7 +59,7 @@ func TestConfig(t *testing.T) {
 			addr = "127.0.0.1:3000"
 		}
 
-		m := New(Configure().Addr(addr)).CloseWithT(t)
+		m := New(Setup().Addr(addr)).CloseWithT(t)
 		m.MustStart()
 
 		defer m.Close()
@@ -77,7 +78,7 @@ func TestConfig(t *testing.T) {
 	})
 
 	t.Run("request body parsers from config should take precedence", func(t *testing.T) {
-		m := New(Configure().RequestBodyParsers(&testBodyParser{}))
+		m := New(Setup().RequestBodyParsers(&testBodyParser{}))
 		m.MustStart()
 
 		defer m.Close()
@@ -109,7 +110,7 @@ func TestConfig(t *testing.T) {
 				})
 		}
 
-		m := New(Configure().Middlewares(middleware))
+		m := New(Setup().Middlewares(middleware))
 		m.MustStart()
 
 		defer m.Close()
@@ -128,7 +129,7 @@ func TestConfig(t *testing.T) {
 	})
 
 	t.Run("configure custom server", func(t *testing.T) {
-		m := New(Configure().Server(&customTestServer{decorated: newServer()}))
+		m := New(Setup().Server(&customTestServer{decorated: newServer()}))
 		m.MustStart()
 
 		defer m.Close()
@@ -146,56 +147,13 @@ func TestConfig(t *testing.T) {
 	})
 }
 
-func TestConfigWithFunctions(t *testing.T) {
-	addr := ""
-	nm := "test"
-
-	m := New(
-		WithName(nm),
-		WithAddr(addr),
-		WithMockNotFoundStatusCode(http.StatusNotFound),
-		WithRequestBodyParsers(&jsonBodyParser{}, &plainTextParser{}),
-		WithMiddlewares(),
-		WithCORS(&_defaultCORSConfig),
-		WithServer(&httpTestServer{}),
-		WithHandlerDecorator(func(handler http.Handler) http.Handler { return handler }),
-		WithLogLevel(LogBasic),
-		WithParams(newInMemoryParameters()),
-		WithDirs("test", "dev"),
-		WithLoader(&fileLoader{}),
-		WithProxy(&ProxyConfig{}, &ProxyConfig{}),
-		WithMockFileHandlers(&customMockFileHandler{}),
-		WithTemplateEngine(newGoTemplate()),
-		WithTemplateFunctions(template.FuncMap{"trim": strings.TrimSpace}),
-		WithHTTPClient(func() (*http.Client, error) {
-			return nil, nil
-		}))
-	conf := m.Config()
-
-	assert.Equal(t, nm, conf.Name)
-	assert.Equal(t, addr, conf.Addr)
-	assert.Equal(t, http.StatusNotFound, conf.RequestWasNotMatchedStatusCode)
-	assert.Len(t, conf.RequestBodyParsers, 2)
-	assert.Len(t, conf.Middlewares, 0)
-	assert.Equal(t, &_defaultCORSConfig, conf.CORS)
-	assert.NotNil(t, conf.HandlerDecorator)
-	assert.Equal(t, LogBasic, conf.LogVerbosity)
-	assert.Equal(t, newInMemoryParameters(), conf.Parameters)
-	assert.Equal(t, []string{ConfigMockFilePattern, "test", "dev"}, conf.Directories)
-	assert.Len(t, conf.Loaders, 1)
-	assert.Len(t, conf.MockFileHandlers, 1)
-	assert.NotNil(t, conf.Proxy)
-	assert.IsType(t, &builtInGoTemplate{}, conf.TemplateEngine)
-	assert.Len(t, conf.TemplateFunctions, 1)
-	assert.NotNil(t, conf.HTTPClientFactory)
-}
-
 func TestConfigBuilder(t *testing.T) {
 	addr := ""
 	nm := "test"
 	customLogger := zerolog.Nop()
+	tlsConfig := &tls.Config{InsecureSkipVerify: true}
 
-	m := New(Configure().
+	m := New(Setup().
 		Name(nm).
 		Addr(addr).
 		RootDir("test_root_dir").
@@ -212,12 +170,14 @@ func TestConfigBuilder(t *testing.T) {
 		Logger(&customLogger).
 		UseDescriptiveLogger().
 		Parameters(newInMemoryParameters()).
-		Dirs("test", "dev").
+		MockFilePatterns("test", "dev").
 		Loader(&fileLoader{}).
 		MockFileHandlers(&customMockFileHandler{}).
 		TemplateEngine(newGoTemplate()).
 		TemplateEngineFunctions(template.FuncMap{"trim": strings.TrimSpace}).
-		Proxy(&ProxyConfig{}, &ProxyConfig{}))
+		Proxy(&ProxyConfig{}, &ProxyConfig{}).
+		TLSConfig(tlsConfig).
+		TLSLoadX509KeyPair("cert", "key"))
 	conf := m.Config()
 
 	assert.Equal(t, nm, conf.Name)
@@ -234,19 +194,16 @@ func TestConfigBuilder(t *testing.T) {
 	assert.Equal(t, &customLogger, conf.Logger)
 	assert.Equal(t, int64(100), conf.LogBodyMaxSize)
 	assert.Equal(t, newInMemoryParameters(), conf.Parameters)
-	assert.Equal(t, []string{ConfigMockFilePattern, "test", "dev"}, conf.Directories)
+	assert.Equal(t, []string{"test", "dev"}, conf.MockFileSearchPatterns)
 	assert.True(t, conf.UseDescriptiveLogger)
 	assert.Len(t, conf.Loaders, 1)
 	assert.Len(t, conf.MockFileHandlers, 1)
 	assert.IsType(t, &builtInGoTemplate{}, conf.TemplateEngine)
 	assert.Len(t, conf.TemplateFunctions, 1)
 	assert.NotNil(t, conf.Proxy)
-}
-
-func TestWithNewFiles(t *testing.T) {
-	m := New(WithNewDirs("test", "dev"))
-
-	assert.Equal(t, []string{"test", "dev"}, m.config.Directories)
+	assert.Equal(t, tlsConfig, conf.TLSConfig)
+	assert.Equal(t, "cert", conf.TLSCertificateFs)
+	assert.Equal(t, "key", conf.TLSKeyFs)
 }
 
 func TestLogLevelString(t *testing.T) {

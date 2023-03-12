@@ -1,0 +1,19 @@
+request:
+  method: GET
+  path: /test
+
+response_sequence:
+  responses:
+    - status: 200
+      body:
+        ok: true
+        type: "test"
+        num: 10
+      header:
+        content-type: application/json
+        x-custom: success
+      encoding: gzip
+    - status: 201
+    - status: 400
+  after_ended:
+    status: 404

@@ -2,10 +2,7 @@ package mocha
 
 import (
 	"bytes"
-	"io"
 	"net/http"
-	"os"
-	"path"
 	"strings"
 	"testing"
 	"text/template"
@@ -20,12 +17,7 @@ func TestGoTemplating(t *testing.T) {
 		Value string
 	}
 
-	wd, _ := os.Getwd()
-	filename := path.Join(wd, "testdata/test.tmpl")
-
-	tpl, err := os.ReadFile(filename)
-	require.NoError(t, err)
-
+	tpl := []byte(`{{- trim .Key }} {{ .Value }}`)
 	gt := newGoTemplate()
 	tr, err := gt.FuncMap(template.FuncMap{"trim": strings.TrimSpace}).Parse(string(tpl))
 	require.NoError(t, err)
@@ -35,7 +27,7 @@ func TestGoTemplating(t *testing.T) {
 	err = tr.Render(&buf, data)
 
 	require.NoError(t, err)
-	require.Equal(t, "hello world \n", buf.String())
+	require.Equal(t, "hello world ", buf.String())
 }
 
 func TestTemplatingError(t *testing.T) {
@@ -47,16 +39,15 @@ func TestTemplatingError(t *testing.T) {
 }
 
 func TestReplyWithTemplate(t *testing.T) {
-	app := New(Configure().TemplateEngineFunctions(template.FuncMap{"trim": strings.TrimSpace}))
+	app := New(Setup().TemplateEngineFunctions(template.FuncMap{"trim": strings.TrimSpace}))
 	app.MustStart()
 	defer app.Close()
 
 	req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 	req.Header.Add("x-test", "dev")
 
-	wd, _ := os.Getwd()
-	f, _ := os.Open(path.Join(wd, "testdata/test_req.tmpl"))
-	b, _ := io.ReadAll(f)
+	b := []byte(`{{- trim .Ext.Name }}
+{{ .Request.Header.Get "x-test" }}`)
 
 	data := struct {
 		Name string
@@ -71,15 +62,16 @@ func TestReplyWithTemplate(t *testing.T) {
 		SetTemplateData(data)
 
 	require.NoError(t, reply.beforeBuild(app))
+
 	res, err := reply.Build(nil, rv)
 
 	require.NoError(t, err)
 	assert.Equal(t, http.StatusOK, res.StatusCode)
-	assert.Equal(t, "test\ndev\n", string(res.Body))
+	assert.Equal(t, "test\ndev", string(res.Body))
 }
 
 func TestReplyWithTemplateText(t *testing.T) {
-	app := New(Configure().TemplateEngineFunctions(template.FuncMap{"trim": strings.TrimSpace}))
+	app := New(Setup().TemplateEngineFunctions(template.FuncMap{"trim": strings.TrimSpace}))
 	app.MustStart()
 	defer app.Close()
 
@@ -101,7 +93,9 @@ func TestReplyWithTemplateText(t *testing.T) {
 		Status(http.StatusOK).
 		BodyTemplate(tmpl).
 		SetTemplateData(data)
+
 	require.NoError(t, reply.beforeBuild(app))
+
 	res, err := reply.Build(nil, rv)
 
 	require.NoError(t, err)

@@ -50,3 +50,21 @@ func TestRepeat_Once(t *testing.T) {
 	res, _ = testutil.Get(m.URL() + "/test").Do()
 	require.Equal(t, mocha.StatusNoMatch, res.StatusCode)
 }
+
+func TestRepeat_FileSetup(t *testing.T) {
+	m := mocha.NewT(t)
+	m.MustStart()
+	m.MustMock(mocha.FromFile("testdata/repeat/1_repeat.yaml"))
+
+	httpClient := &http.Client{}
+
+	for i := 0; i < 5; i++ {
+		res, err := httpClient.Get(m.URL("test"))
+		require.NoError(t, err)
+		require.Equal(t, http.StatusOK, res.StatusCode, i)
+	}
+
+	res, err := httpClient.Get(m.URL("/test"))
+	require.NoError(t, err)
+	require.Equal(t, mocha.StatusNoMatch, res.StatusCode)
+}

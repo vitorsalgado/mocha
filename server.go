@@ -1,6 +1,7 @@
 package mocha
 
 import (
+	"crypto/tls"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -18,13 +19,13 @@ type ServerInfo struct {
 type Server interface {
 	// Setup configures the HTTP mock.
 	// It is the first method called during initialization.
-	Setup(*Config, http.Handler) error
+	Setup(*Mocha, http.Handler) error
 
 	// Start starts a server.
-	Start() (*ServerInfo, error)
+	Start() error
 
 	// StartTLS starts a server with TLS.
-	StartTLS() (*ServerInfo, error)
+	StartTLS() error
 
 	// Close closes the server.
 	Close() error
@@ -34,19 +35,24 @@ type Server interface {
 }
 
 type httpTestServer struct {
-	server *httptest.Server
-	info   *ServerInfo
+	app       *Mocha
+	handler   http.Handler
+	server    *httptest.Server
+	info      *ServerInfo
+	needSetup bool
 }
 
 func newServer() Server {
 	return &httpTestServer{info: &ServerInfo{}}
 }
 
-func (s *httpTestServer) Setup(config *Config, handler http.Handler) error {
+func (s *httpTestServer) Setup(app *Mocha, handler http.Handler) error {
+	s.app = app
+	s.handler = handler
 	s.server = httptest.NewUnstartedServer(handler)
 
-	if config.Addr != "" {
-		addr := config.Addr
+	if app.config.Addr != "" {
+		addr := app.config.Addr
 		_, err := strconv.Atoi(addr)
 		if err == nil {
 			addr = ":" + addr
@@ -65,29 +71,64 @@ func (s *httpTestServer) Setup(config *Config, handler http.Handler) error {
 		s.server.Listener = listener
 	}
 
+	if app.config.TLSConfig != nil {
+		s.server.TLS = app.config.TLSConfig
+	} else {
+		if app.config.TLSCertificateFs == "" || app.config.TLSKeyFs == "" {
+			return nil
+		}
+
+		cert, err := tls.LoadX509KeyPair(app.config.TLSCertificateFs, app.config.TLSKeyFs)
+		if err != nil {
+			return err
+		}
+
+		s.server.TLS = &tls.Config{Certificates: []tls.Certificate{cert}}
+	}
+
 	return nil
 }
 
-func (s *httpTestServer) Start() (*ServerInfo, error) {
+func (s *httpTestServer) Start() error {
+	err := s.beforeStart()
+	if err != nil {
+		return err
+	}
+
 	s.server.Start()
 	s.info.URL = s.server.URL
 
-	return s.info, nil
+	return nil
 }
 
-func (s *httpTestServer) StartTLS() (*ServerInfo, error) {
+func (s *httpTestServer) StartTLS() error {
+	err := s.beforeStart()
+	if err != nil {
+		return err
+	}
+
 	s.server.EnableHTTP2 = true
 	s.server.StartTLS()
 	s.info.URL = s.server.URL
 
-	return s.info, nil
+	return nil
 }
 
 func (s *httpTestServer) Close() error {
 	s.server.Close()
+	s.needSetup = true
+
 	return nil
 }
 
 func (s *httpTestServer) Info() *ServerInfo {
 	return s.info
+}
+
+func (s *httpTestServer) beforeStart() error {
+	if s.needSetup {
+		return s.Setup(s.app, s.handler)
+	}
+
+	return nil
 }

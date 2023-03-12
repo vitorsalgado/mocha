@@ -1,0 +1,7 @@
+enabled: true
+
+request:
+  path: /hello
+
+response:
+  status: 200

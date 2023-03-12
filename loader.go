@@ -25,8 +25,8 @@ func (l *fileLoader) Load(app *Mocha) error {
 
 	filenames := make(map[string]struct{})
 
-	for _, pattern := range app.config.Directories {
-		m, err := filepath.Glob(pattern)
+	for _, pattern := range app.config.MockFileSearchPatterns {
+		m, err := filepath.Glob(filepath.Join(app.config.RootDir, pattern))
 		if err != nil {
 			return fmt.Errorf("loader: error searching mocks with the glob pattern %s.\n%w", pattern, err)
 		}
@@ -36,6 +36,10 @@ func (l *fileLoader) Load(app *Mocha) error {
 				filenames[s] = struct{}{}
 			}
 		}
+	}
+
+	if len(filenames) == 0 {
+		return nil
 	}
 
 	type errContainer struct {

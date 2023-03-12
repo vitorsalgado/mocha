@@ -53,9 +53,9 @@ func (rep *RandomReply) Build(w http.ResponseWriter, r *RequestValues) (*Stub, e
 
 	var index int
 	if rep.random == nil {
-		index = rand.Intn(len(rep.replies)-1) + 0
+		index = rand.Intn(len(rep.replies))
 	} else {
-		index = rep.random.Intn(len(rep.replies)-1) + 0
+		index = rep.random.Intn(len(rep.replies))
 	}
 
 	reply := rep.replies[index]

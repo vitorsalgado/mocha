@@ -25,7 +25,7 @@ func (m *isContainedInMatcher) Match(v any) (*Result, error) {
 	valueOf := reflect.ValueOf(m.items)
 
 	for i := 0; i < valueOf.Len(); i++ {
-		if equalValues(v, valueOf.Index(i).Interface()) {
+		if equalValues(v, valueOf.Index(i).Interface(), false) {
 			return &Result{Pass: true}, nil
 		}
 	}
@@ -33,7 +33,7 @@ func (m *isContainedInMatcher) Match(v any) (*Result, error) {
 	return &Result{
 		Ext: []string{mfmt.Stringify(m.items)},
 		Message: fmt.Sprintf(
-			"Value %v is not contained in the %v",
+			"value %v is not contained in the %v",
 			v,
 			m.items),
 	}, nil

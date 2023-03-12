@@ -1,0 +1,6 @@
+request:
+  path: /test
+  method: GET
+
+response:
+  status: 200

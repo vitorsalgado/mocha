@@ -15,20 +15,20 @@ var _ ProxyConfigurer = (*ProxyConfig)(nil)
 
 // ProxyConfig configures a proxy.
 type ProxyConfig struct {
-	// ProxyVia sets a URL to route the request via another proxy server.
-	// ProxyVia is only valid when Transport configuration is not set.
-	ProxyVia string
+	// Via sets a URL to route the request via another proxy server.
+	// Via is only valid when Transport configuration is not set.
+	Via string
 
 	// Timeout is the timeout used when calling the proxy client.
 	Timeout time.Duration
 
-	// SkipSSLVerify disable/enable server certificate verification.
-	SkipSSLVerify bool
+	// SSLVerify enable/disable server certificate verification.
+	SSLVerify bool
 
 	// Transport sets a custom http.RoundTripper.
 	// Target config will be ignored. Set it manually in your http.RoundTripper implementation.
 	// If none is provided, a default one will be used.
-	// You need to set a Target and a custom ProxyVia in your custom http.RoundTripper.
+	// You need to set a Target and a custom Via in your custom http.RoundTripper.
 	Transport http.RoundTripper
 }
 
@@ -41,13 +41,13 @@ type ProxyConfigurer interface {
 func (p *ProxyConfig) Apply(c *ProxyConfig) error {
 	c.Transport = p.Transport
 	c.Timeout = p.Timeout
-	c.ProxyVia = p.ProxyVia
-	c.SkipSSLVerify = p.SkipSSLVerify
+	c.Via = p.Via
+	c.SSLVerify = p.SSLVerify
 
 	return nil
 }
 
-var _defaultProxyConfig = ProxyConfig{Timeout: 10 * time.Second, SkipSSLVerify: true}
+var _defaultProxyConfig = ProxyConfig{Timeout: 10 * time.Second, SSLVerify: false}
 
 type reverseProxy struct {
 	app  *Mocha
@@ -57,8 +57,8 @@ type reverseProxy struct {
 func newProxy(app *Mocha, conf *ProxyConfig) *reverseProxy {
 	if conf.Transport == nil {
 		transport := &http.Transport{}
-		if conf.ProxyVia != "" {
-			u, err := url.Parse(conf.ProxyVia)
+		if conf.Via != "" {
+			u, err := url.Parse(conf.Via)
 			if err != nil {
 				panic(err)
 			}
@@ -70,7 +70,7 @@ func newProxy(app *Mocha, conf *ProxyConfig) *reverseProxy {
 		transport.IdleConnTimeout = 15 * time.Second
 		transport.ExpectContinueTimeout = 1 * time.Second
 		transport.ResponseHeaderTimeout = conf.Timeout
-		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: conf.SkipSSLVerify}
+		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: !conf.SSLVerify}
 
 		conf.Transport = transport
 	}

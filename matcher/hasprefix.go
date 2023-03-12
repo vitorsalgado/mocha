@@ -21,7 +21,7 @@ func (m *hasPrefixMatcher) Match(v any) (*Result, error) {
 
 	return &Result{
 		Ext:     []string{m.prefix},
-		Message: fmt.Sprintf("Expected prefix: %s. Text: %s", m.prefix, txt),
+		Message: fmt.Sprintf("expected prefix: %s. text: %s", m.prefix, txt),
 	}, nil
 }
 

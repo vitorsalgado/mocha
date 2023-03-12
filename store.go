@@ -107,11 +107,15 @@ func (repo *builtInStore) DeleteExternal() {
 	repo.mu.Lock()
 	defer repo.mu.Unlock()
 
-	for i, m := range repo.data {
-		if m.Source != "" {
-			repo.data = repo.data[:i+copy(repo.data[i:], repo.data[i+1:])]
+	data := make([]*Mock, 0)
+
+	for _, m := range repo.data {
+		if m.Source == "" {
+			data = append(data, m)
 		}
 	}
+
+	repo.data = data
 }
 
 func (repo *builtInStore) DeleteAll() {

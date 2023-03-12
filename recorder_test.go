@@ -22,9 +22,9 @@ func TestRecordConfigApply(t *testing.T) {
 	conf := &RecordConfig{}
 
 	require.Error(t, conf.Apply(&RecordConfig{}), "no extension defined")
-	require.Error(t, conf.Apply(&RecordConfig{SaveExtension: ".test"}), "unsupported extension")
-	require.NoError(t, conf.Apply(&RecordConfig{SaveExtension: ".json"}), "should accept extension with dot prefix")
-	require.NoError(t, conf.Apply(&RecordConfig{SaveExtension: "json"}), "should accept extension without dot prefix")
+	require.Error(t, conf.Apply(&RecordConfig{SaveFileType: ".test"}), "unsupported extension")
+	require.NoError(t, conf.Apply(&RecordConfig{SaveFileType: ".json"}), "should accept extension with dot prefix")
+	require.NoError(t, conf.Apply(&RecordConfig{SaveFileType: "json"}), "should accept extension without dot prefix")
 }
 
 func TestRecordingWithWebProxy(t *testing.T) {
@@ -38,7 +38,7 @@ func TestRecordingWithWebProxy(t *testing.T) {
 
 	trailer := "final"
 
-	p := New(Configure().
+	p := New(Setup().
 		Name("recorder").
 		Proxy().
 		Record(
@@ -94,7 +94,7 @@ func TestRecordingWithWebProxy(t *testing.T) {
 
 	// Creating a new server that will use the recorded mocks
 
-	srv := New(Configure().Dirs(dir + "/*mock.json"))
+	srv := New(Setup().MockFilePatterns(dir + "/*mock.json"))
 	srv.MustStart()
 
 	defer srv.Close()
@@ -139,7 +139,7 @@ func TestRecordingWithWebProxy_CustomRootDir(t *testing.T) {
 
 	trailer := "final"
 
-	p := New(Configure().
+	p := New(Setup().
 		Name("recorder").
 		RootDir(dir).
 		Proxy().
@@ -195,7 +195,7 @@ func TestRecordingWithWebProxy_CustomRootDir(t *testing.T) {
 
 	// Creating a new server that will use the recorded mocks
 
-	srv := New(Configure().Dirs(actualDir + "/*mock.json"))
+	srv := New(Setup().MockFilePatterns(actualDir + "/*mock.json"))
 	srv.MustStart()
 
 	defer srv.Close()
@@ -230,7 +230,7 @@ func TestRecordSaveResponseBodyToFile(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	file, err := os.Open(path.Join("testdata/d/customers.json"))
+	file, err := os.Open(path.Join("testdata/recorder/customers.json"))
 	require.NoError(t, err)
 
 	defer file.Close()
@@ -239,7 +239,7 @@ func TestRecordSaveResponseBodyToFile(t *testing.T) {
 	err = json.NewDecoder(file).Decode(&data)
 	require.NoError(t, err)
 
-	target := New(Configure().Name("target"))
+	target := New(Setup().Name("target"))
 	target.MustStart()
 	targetScope := target.MustMock(
 		Get(URLPath("/customers")).Reply(OK().JSON(data).Gzip()),
@@ -248,16 +248,16 @@ func TestRecordSaveResponseBodyToFile(t *testing.T) {
 		Postf("/customers").Reply(Created()),
 	)
 
-	recorder := New(Configure().Name("recorder").Record(
+	rec := New(Setup().Name("recorder").Record(
 		RecordDir(dir),
 		RecordResponseBodyToFile(true),
 	))
-	recorder.MustStart()
-	recorderScope := recorder.MustMock(AnyMethod().Reply(From(target.URL())))
+	rec.MustStart()
+	recorderScope := rec.MustMock(AnyMethod().Reply(From(target.URL())))
 
 	httpClient := &http.Client{}
 
-	res, err := httpClient.Get(recorder.URL() + "/customers")
+	res, err := httpClient.Get(rec.URL() + "/customers")
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
@@ -268,12 +268,12 @@ func TestRecordSaveResponseBodyToFile(t *testing.T) {
 
 	res.Body.Close()
 
-	res, err = httpClient.Get(recorder.URL() + "/customers/001")
+	res, err = httpClient.Get(rec.URL() + "/customers/001")
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
-	res, err = httpClient.Get(recorder.URL() + "/customers/002")
+	res, err = httpClient.Get(rec.URL() + "/customers/002")
 	require.NoError(t, err)
 
 	b2 := make(map[string]any)
@@ -285,7 +285,7 @@ func TestRecordSaveResponseBodyToFile(t *testing.T) {
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	require.Equal(t, data[1], b2)
 
-	res, err = httpClient.Post(recorder.URL()+"/customers", "application/json", nil)
+	res, err = httpClient.Post(rec.URL()+"/customers", "application/json", nil)
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusCreated, res.StatusCode)
@@ -300,12 +300,12 @@ func TestRecordSaveResponseBodyToFile(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, entries, 7)
 
-	recorder.Close()
+	rec.Close()
 	target.Close()
 
 	// Creating a new server that will use the recorded mocks
 
-	m := New(Configure().Dirs(dir + "/*mock.json"))
+	m := New(Setup().MockFilePatterns(dir + "/*mock.json"))
 	m.MustStart()
 
 	defer m.Close()
@@ -349,7 +349,7 @@ func TestRecordEmbeddedResponseBodiesYAML(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	file, err := os.Open(path.Join("testdata/d/customers.json"))
+	file, err := os.Open(path.Join("testdata/recorder/customers.json"))
 	require.NoError(t, err)
 
 	defer file.Close()
@@ -358,7 +358,7 @@ func TestRecordEmbeddedResponseBodiesYAML(t *testing.T) {
 	err = json.NewDecoder(file).Decode(&data)
 	require.NoError(t, err)
 
-	target := New(Configure().Name("target"))
+	target := New(Setup().Name("target"))
 	target.MustStart()
 	targetScope := target.MustMock(
 		Get(URLPath("/customers")).Reply(OK().JSON(data).Gzip()),
@@ -367,17 +367,17 @@ func TestRecordEmbeddedResponseBodiesYAML(t *testing.T) {
 		Postf("/customers").Reply(Created()),
 	)
 
-	recorder := New(Configure().Name("recorder").Record(
+	rec := New(Setup().Name("recorder").Record(
 		RecordDir(dir),
 		RecordResponseBodyToFile(false),
 		RecordExtension("yaml"),
 	))
-	recorder.MustStart()
-	recorderScope := recorder.MustMock(AnyMethod().Reply(From(target.URL())))
+	rec.MustStart()
+	recorderScope := rec.MustMock(AnyMethod().Reply(From(target.URL())))
 
 	httpClient := &http.Client{}
 
-	res, err := httpClient.Get(recorder.URL() + "/customers")
+	res, err := httpClient.Get(rec.URL() + "/customers")
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
@@ -388,12 +388,12 @@ func TestRecordEmbeddedResponseBodiesYAML(t *testing.T) {
 
 	res.Body.Close()
 
-	res, err = httpClient.Get(recorder.URL() + "/customers/001")
+	res, err = httpClient.Get(rec.URL() + "/customers/001")
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
-	res, err = httpClient.Get(recorder.URL() + "/customers/002")
+	res, err = httpClient.Get(rec.URL() + "/customers/002")
 	require.NoError(t, err)
 
 	defer res.Body.Close()
@@ -405,7 +405,7 @@ func TestRecordEmbeddedResponseBodiesYAML(t *testing.T) {
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.Equal(t, data[1], b2)
 
-	res, err = httpClient.Post(recorder.URL()+"/customers", "application/json", nil)
+	res, err = httpClient.Post(rec.URL()+"/customers", "application/json", nil)
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 	assert.Equal(t, http.StatusCreated, res.StatusCode)
@@ -420,12 +420,12 @@ func TestRecordEmbeddedResponseBodiesYAML(t *testing.T) {
 	require.NoError(t, err)
 	assert.Len(t, entries, 4)
 
-	recorder.Close()
+	rec.Close()
 	target.Close()
 
 	// Creating a new server that will use the recorded mocks
 
-	m := New(Configure().Dirs(dir + "/*mock.yaml"))
+	m := New(Setup().MockFilePatterns(dir + "/*mock.yaml"))
 	m.MustStart()
 
 	defer m.Close()
@@ -470,7 +470,7 @@ func TestRecordTargetTLS(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	file, err := os.Open(path.Join("testdata/d/customers.json"))
+	file, err := os.Open(path.Join("testdata/recorder/customers.json"))
 	require.NoError(t, err)
 
 	defer file.Close()
@@ -479,7 +479,7 @@ func TestRecordTargetTLS(t *testing.T) {
 	err = json.NewDecoder(file).Decode(&data)
 	require.NoError(t, err)
 
-	target := New(Configure().Name("target"))
+	target := New(Setup().Name("target"))
 	target.MustStartTLS()
 	targetScope := target.MustMock(
 		Get(URLPath("/customers")).Reply(OK().JSON(data).Gzip()),
@@ -488,7 +488,7 @@ func TestRecordTargetTLS(t *testing.T) {
 		Postf("/customers").Reply(Created()),
 	)
 
-	recorder := New(Configure().Name("recorder").Record(
+	recorder := New(Setup().Name("recorder").Record(
 		RecordDir(dir),
 		RecordResponseBodyToFile(false),
 	))
@@ -545,7 +545,7 @@ func TestRecordTargetTLS(t *testing.T) {
 
 	// Creating a new server that will use the recorded mocks
 
-	m := New(Configure().Dirs(dir + "/*mock.json"))
+	m := New(Setup().MockFilePatterns(dir + "/*mock.json"))
 	m.MustStart()
 
 	defer m.Close()
@@ -590,7 +590,7 @@ func TestRecordTLSClient(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	file, err := os.Open(path.Join("testdata/d/customers.json"))
+	file, err := os.Open(path.Join("testdata/recorder/customers.json"))
 	require.NoError(t, err)
 
 	defer file.Close()
@@ -599,7 +599,7 @@ func TestRecordTLSClient(t *testing.T) {
 	err = json.NewDecoder(file).Decode(&data)
 	require.NoError(t, err)
 
-	target := New(Configure().Name("target"))
+	target := New(Setup().Name("target"))
 	target.MustStart()
 	targetScope := target.MustMock(
 		Get(URLPath("/customers")).Reply(OK().JSON(data).Gzip()),
@@ -608,7 +608,7 @@ func TestRecordTLSClient(t *testing.T) {
 		Postf("/customers").Reply(Created()),
 	)
 
-	recorder := New(Configure().Name("recorder").Record(
+	recorder := New(Setup().Name("recorder").Record(
 		RecordDir(dir),
 		RecordResponseBodyToFile(false),
 	))
@@ -667,7 +667,7 @@ func TestRecordTLSClient(t *testing.T) {
 
 	// Creating a new server that will use the recorded mocks
 
-	m := New(Configure().Dirs(dir + "/*mock.json"))
+	m := New(Setup().MockFilePatterns(dir + "/*mock.json"))
 	m.MustStart()
 
 	defer m.Close()
@@ -712,7 +712,7 @@ func TestRecordBothTLS(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	file, err := os.Open(path.Join("testdata/d/customers.json"))
+	file, err := os.Open(path.Join("testdata/recorder/customers.json"))
 	require.NoError(t, err)
 
 	defer file.Close()
@@ -721,7 +721,7 @@ func TestRecordBothTLS(t *testing.T) {
 	err = json.NewDecoder(file).Decode(&data)
 	require.NoError(t, err)
 
-	target := New(Configure().Name("target"))
+	target := New(Setup().Name("target"))
 	target.MustStartTLS()
 	targetScope := target.MustMock(
 		Get(URLPath("/customers")).Reply(OK().JSON(data).Gzip()),
@@ -730,7 +730,7 @@ func TestRecordBothTLS(t *testing.T) {
 		Postf("/customers").Reply(Created()),
 	)
 
-	recorder := New(Configure().Name("recorder").Record(
+	recorder := New(Setup().Name("recorder").Record(
 		RecordDir(dir),
 		RecordResponseBodyToFile(false),
 	))
@@ -789,7 +789,7 @@ func TestRecordBothTLS(t *testing.T) {
 
 	// Creating a new server that will use the recorded mocks
 
-	m := New(Configure().Dirs(dir + "/*mock.json"))
+	m := New(Setup().MockFilePatterns(dir + "/*mock.json"))
 	m.MustStart()
 
 	defer m.Close()

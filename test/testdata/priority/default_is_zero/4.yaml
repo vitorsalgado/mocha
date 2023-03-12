@@ -1,0 +1,7 @@
+priority: 1
+
+request:
+  path: /test/hello
+
+response:
+  status: 201

@@ -3,12 +3,10 @@ package mocha
 import (
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"strconv"
 	"sync"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -87,32 +85,6 @@ func TestResponseMapperModifyingResponse(t *testing.T) {
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 	assert.Equal(t, "dev", res.Header.Get("x-test"))
 	assert.Equal(t, "test-ok", res.Header.Get("x-param-key"))
-}
-
-func TestResponseDelay(t *testing.T) {
-	m := New()
-	m.MustStart()
-
-	defer m.Close()
-
-	start := time.Now()
-	delay := 250 * time.Millisecond
-
-	scoped := m.MustMock(Get(URLPath("/test")).
-		Delay(delay).
-		Reply(OK()))
-
-	req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
-	res, err := req.Do()
-	if err != nil {
-		log.Panic(err)
-	}
-
-	elapsed := time.Since(start)
-
-	scoped.AssertCalled(t)
-	assert.Equal(t, http.StatusOK, res.StatusCode)
-	assert.GreaterOrEqual(t, elapsed, delay)
 }
 
 func TestErrors(t *testing.T) {
@@ -229,7 +201,7 @@ func (h *FakeEvents) OnError(e any) {
 }
 
 func TestMochaSilently(t *testing.T) {
-	m := New(Configure().LogVerbosity(LogBasic).LogLevel(LogLevelNone))
+	m := New(Setup().LogVerbosity(LogBasic).LogLevel(LogLevelNone))
 	m.MustStart()
 
 	defer m.Close()

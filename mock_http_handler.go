@@ -32,12 +32,10 @@ type mockHandler struct {
 }
 
 func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	start := time.Now()
 	w = httpx.Wrap(w)
-
 	parsedURL, urlSegments := h.parseURL(r)
-	reqValues := &RequestValues{StartedAt: start, RawRequest: r, URL: parsedURL, URLPathSegments: urlSegments, App: h.app}
 	parsedBody, rawBody, err := parseRequestBody(r, h.app.requestBodyParsers)
+	reqValues := &RequestValues{time.Now(), r, parsedURL, urlSegments, nil, nil, h.app, nil}
 	if err != nil {
 		h.lifecycle.OnWarning(reqValues, fmt.Errorf("request_body_parser: %w", err))
 	}
@@ -47,7 +45,8 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	h.lifecycle.OnRequest(reqValues)
 
-	result := findMockForRequest(h.app.storage, &valueSelectorInput{r, parsedURL, parsedBody})
+	result := findMockForRequest(h.app.storage,
+		&valueSelectorInput{r, parsedURL, r.URL.Query(), r.Form, parsedBody})
 
 	if !result.Pass {
 		if h.app.proxy != nil {
@@ -291,7 +290,7 @@ func (h *builtInMockHTTPLifecycle) OnMatch(r *RequestValues, s *Stub) {
 
 	bodyLen := int64(len(s.Body))
 	if h.app.config.LogVerbosity >= LogBody && bodyLen > 0 &&
-		h.app.config.LogBodyMaxSize == 0 || bodyLen <= h.app.config.LogBodyMaxSize {
+		(h.app.config.LogBodyMaxSize == 0 || bodyLen <= h.app.config.LogBodyMaxSize) {
 		res.Bytes("body", s.Body)
 		if s.Encoding != "" {
 			res.Str("encoding", s.Encoding)
@@ -445,7 +444,9 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnMatch(e *RequestValues, s *Stub)
 		builder.WriteString(fmt.Sprintf("%s", s.Header))
 	}
 
-	if h.app.config.LogVerbosity >= LogBody && len(s.Body) > 0 {
+	bodyLen := int64(len(s.Body))
+	if h.app.config.LogVerbosity >= LogBody && bodyLen > 0 &&
+		(h.app.config.LogBodyMaxSize == 0 || bodyLen <= h.app.config.LogBodyMaxSize) {
 		builder.WriteString("\n")
 		builder.WriteString(h.cz.Green("Body: "))
 		if s.Encoding == "" {

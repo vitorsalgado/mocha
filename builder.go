@@ -393,9 +393,9 @@ func (b *MockBuilder) Reply(rep Reply) *MockBuilder {
 	return b
 }
 
-// Enable define if the Mock will be enabled or disabled.
+// Enabled define if the Mock will be enabled or disabled.
 // All mocks are enabled by default.
-func (b *MockBuilder) Enable(enabled bool) *MockBuilder {
+func (b *MockBuilder) Enabled(enabled bool) *MockBuilder {
 	b.mock.Enabled = enabled
 
 	return b
@@ -431,7 +431,7 @@ func (b *MockBuilder) Build(app *Mocha) (*Mock, error) {
 	if b.scenario != "" {
 		b.appendExpectation(&expectation{
 			Target:  _targetRequest,
-			Matcher: mfeat.Scenario(b.scenario, b.scenarioRequiredState, b.scenarioNewState),
+			Matcher: mfeat.Scenario(app.scenarioStore, b.scenario, b.scenarioRequiredState, b.scenarioNewState),
 		})
 	}
 
@@ -454,10 +454,10 @@ func selectHeader(k string) valueSelector {
 	return func(r *valueSelectorInput) any { return r.RawRequest.Header.Get(k) }
 }
 func selectQuery(k string) valueSelector {
-	return func(r *valueSelectorInput) any { return r.RawRequest.URL.Query().Get(k) }
+	return func(r *valueSelectorInput) any { return r.Query.Get(k) }
 }
 func selectQueries(k string) valueSelector {
-	return func(r *valueSelectorInput) any { return r.RawRequest.URL.Query()[k] }
+	return func(r *valueSelectorInput) any { return r.Query[k] }
 }
 func selectBody(r *valueSelectorInput) any { return r.ParsedBody }
 func selectFormField(k string) valueSelector {

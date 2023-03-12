@@ -4,10 +4,11 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 	"strings"
 )
 
-func equalValues(expected any, actual any) bool {
+func equalValues(expected any, actual any, lenient bool) bool {
 	if reflect.DeepEqual(expected, actual) {
 		return true
 	}
@@ -33,21 +34,15 @@ func equalValues(expected any, actual any) bool {
 	expectedKind := eType.Kind()
 	actualValue := reflect.ValueOf(actual)
 
-	if actualKind != expectedKind {
-		switch actualKind {
-		case reflect.String:
-			switch expectedKind {
-			case reflect.Float64, reflect.Float32:
-				return equalValues(actualValue.String(), fmt.Sprintf("%v", expectedValue.Float()))
-			}
+	if actualKind != expectedKind && lenient {
+		pass := laxEq(actualKind, expectedKind, actualValue, expectedValue, lenient)
+		if pass {
+			return true
 		}
 
-		switch expectedKind {
-		case reflect.String:
-			switch actualKind {
-			case reflect.Float64, reflect.Float32:
-				return equalValues(expectedValue.String(), fmt.Sprintf("%v", actualValue.Float()))
-			}
+		pass = laxEq(expectedKind, actualKind, expectedValue, actualValue, lenient)
+		if pass {
+			return true
 		}
 
 		return false
@@ -66,7 +61,7 @@ func equalValues(expected any, actual any) bool {
 			a := actualValue.Index(i).Interface()
 			b := expectedValue.Index(i).Interface()
 
-			if !equalValues(b, a) {
+			if !equalValues(b, a, lenient) {
 				return false
 			}
 		}
@@ -97,12 +92,51 @@ func equalValues(expected any, actual any) bool {
 				return false
 			}
 
-			if !equalValues(expectedEntry.Interface(), actualEntry.Interface()) {
+			if !equalValues(expectedEntry.Interface(), actualEntry.Interface(), lenient) {
 				return false
 			}
 		}
 
 		return true
+	}
+
+	return false
+}
+
+func laxEq(
+	aKind reflect.Kind,
+	bKind reflect.Kind,
+	aValue reflect.Value,
+	bValue reflect.Value,
+	lenient bool,
+) bool {
+	switch aKind {
+	case reflect.String:
+		switch bKind {
+		case reflect.Float64, reflect.Float32:
+			a, err := strconv.ParseFloat(aValue.String(), 64)
+			if err != nil {
+				return false
+			}
+
+			return equalValues(a, bValue.Float(), lenient)
+
+		case reflect.Bool:
+			a, err := strconv.ParseBool(aValue.String())
+			if err != nil {
+				return false
+			}
+
+			return equalValues(a, bValue.Bool(), lenient)
+
+		case reflect.Int, reflect.Int32, reflect.Int64:
+			a, err := strconv.ParseInt(aValue.String(), 10, 64)
+			if err != nil {
+				return false
+			}
+
+			return equalValues(a, bValue.Int(), lenient)
+		}
 	}
 
 	return false

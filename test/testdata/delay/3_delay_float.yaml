@@ -1,0 +1,7 @@
+delay: 1000.50
+
+request:
+  path: /duration_float
+
+response:
+  status: 200

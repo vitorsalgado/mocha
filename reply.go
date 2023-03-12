@@ -320,7 +320,16 @@ func (rep *StdReply) beforeBuild(app *Mocha) error {
 }
 
 // Build builds a Stub based on StdReply definition.
-func (rep *StdReply) Build(_ http.ResponseWriter, r *RequestValues) (stub *Stub, err error) {
+func (rep *StdReply) Build(w http.ResponseWriter, r *RequestValues) (stub *Stub, err error) {
+	stub, err = rep.build(w, r)
+	if err != nil {
+		return nil, fmt.Errorf("reply: %w", err)
+	}
+
+	return stub, nil
+}
+
+func (rep *StdReply) build(_ http.ResponseWriter, r *RequestValues) (stub *Stub, err error) {
 	if rep.err != nil {
 		return nil, rep.err
 	}
@@ -330,7 +339,7 @@ func (rep *StdReply) Build(_ http.ResponseWriter, r *RequestValues) (stub *Stub,
 		defer func() {
 			if recovered := recover(); recovered != nil {
 				err = fmt.Errorf(
-					"reply: panic parsing body template. reason=%v",
+					"panic parsing body template. reason=%v",
 					recovered,
 				)
 			}
@@ -348,7 +357,7 @@ func (rep *StdReply) Build(_ http.ResponseWriter, r *RequestValues) (stub *Stub,
 		defer func() {
 			if recovered := recover(); recovered != nil {
 				err = fmt.Errorf(
-					"reply: panic loading body from %s. reason=%v",
+					"panic loading body from %s. reason=%v",
 					rep.bodyFilename,
 					recovered,
 				)

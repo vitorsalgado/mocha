@@ -1,0 +1,10 @@
+request:
+  method: GET
+  path: /test
+
+response_random:
+  responses:
+    - status: 200
+    - status: 201
+    - status: 400
+  seed: 1

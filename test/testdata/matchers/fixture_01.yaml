@@ -1,0 +1,181 @@
+name: 'complete matchers test'
+priority: 1
+
+request:
+  scheme: http
+  method: POST
+  path: /test
+  query:
+    q: test
+    sort:
+      - equal
+      - asc
+    page:
+      - lessEq
+      - 5
+    lang:
+      - present
+    test: "true"
+    tags:
+      - split
+      - ","
+      - - itemsMatch
+        - - link
+          - detail
+          - price
+    ctx:
+      - equal
+      - "hello world"
+    age(42): ""
+    contains(nothing): ""
+  queries:
+    nm:
+      - contains
+      - "hi"
+  header:
+    content-type: application/json
+    accept:
+      - contains
+      - json
+    x-test: "dev, qa, devops"
+  body:
+    - all
+    - - field
+      - name
+      - - equal
+        - "hello world"
+
+    - - field
+      - hobbies
+      - - any
+        - - item
+          - 1
+          - - contains
+            - trek
+        - - len
+          - 5
+
+    - - field
+      - hobbies
+      - - len
+        - 2
+
+    - - field
+      - job
+      - - not
+        - - equal
+          - unemployed
+
+    - - field
+      - active
+      - truthy
+
+    - - field
+      - plans
+      - empty
+
+    - - field
+      - acronym
+      - - equalIgnoreCase
+        - qa
+
+    - - field
+      - title
+      - - both
+        - - hasPrefix
+          - Software
+        - - hasSuffix
+          - Engineer
+
+    - - field
+      - addr.country
+      - nil
+
+    - - field
+      - addr.number
+      - - any
+        - - greater
+          - 50
+        - - less
+          - 150
+
+    - - field
+      - addr.str
+      - - either
+        - - all
+          - - uppercase
+            - - equal
+              - NOWHERE
+          - - lowercase
+            - - equal
+              - nowhere
+        - - contains
+          - boom
+
+    - - hasKey
+      - addr.str
+
+    - - field
+      - check_in
+      - falsy
+
+    - - field
+      - activities
+      - - split
+        - "+"
+        - - itemsMatch
+          - - walk
+            - run
+            - swim
+
+    - - xor
+      - - field
+        - active
+        - truthy
+      - - field
+        - active
+        - falsy
+
+    - - field
+      - department
+      - - trim
+        - - lowercase
+          - - equal
+            - "bombs"
+
+    - - field
+      - place
+      - - isIn
+        - - "Berlin"
+          - "Sao Paulo"
+          - "Santiago"
+
+    - - jsonPath
+      - numbers
+      - - each
+        - - greaterEq
+          - 10
+
+    - - field
+      - addr
+      - - equalJSON
+        - str: "Nowhere"
+          number: 100
+          country: null
+
+    - - field
+      - hobbies
+      - - some
+        - - equal
+          - trekking
+
+response:
+  status: 200
+  body:
+    ok: true
+    type: "test"
+    num: 10
+  header:
+    content-type: application/json
+    x-custom: success
+  encoding: gzip

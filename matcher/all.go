@@ -80,7 +80,7 @@ func (m *allOfMatcher) AfterMockServed() error {
 //	All(Equal("test"), EqualIgnoreCase("test"), Contain("tes"))
 func All(matchers ...Matcher) Matcher {
 	if len(matchers) == 0 {
-		panic("[All] requires at least 1 matcher")
+		panic("matcher: [All] requires at least 1 matcher")
 	}
 
 	return &allOfMatcher{matchers: matchers}

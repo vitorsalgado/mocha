@@ -1,0 +1,7 @@
+enabled: false
+
+request:
+  path: /dev
+
+response:
+  status: 200

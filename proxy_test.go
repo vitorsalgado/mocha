@@ -12,7 +12,7 @@ import (
 )
 
 func TestProxy(t *testing.T) {
-	proxySrv := New(Configure().Proxy()).CloseWithT(t)
+	proxySrv := New(Setup().Proxy()).CloseWithT(t)
 	proxySrv.MustStart()
 	proxyScope := proxySrv.MustMock(Get(URLPath("/test")).Reply(Accepted()))
 
@@ -41,7 +41,7 @@ func TestProxy(t *testing.T) {
 }
 
 func TestProxyTLS(t *testing.T) {
-	proxySrv := New(Configure().Proxy(&ProxyConfig{SkipSSLVerify: true})).CloseWithT(t)
+	proxySrv := New(Setup().Proxy(&ProxyConfig{SSLVerify: false})).CloseWithT(t)
 	proxySrv.MustStartTLS()
 	proxyScope := proxySrv.MustMock(Get(URLPath("/test")).Reply(Accepted()))
 
@@ -73,13 +73,13 @@ func TestProxyTLS(t *testing.T) {
 }
 
 func TestProxyViaAnotherProxy(t *testing.T) {
-	p := New(WithProxy()).CloseWithT(t)
+	p := New(Setup().Proxy()).CloseWithT(t)
 	p.MustStart()
 	scope1 := p.MustMock(Get(URLPath("/test")).Reply(Accepted()))
 
 	defer p.Close()
 
-	v := New(WithProxy(&ProxyConfig{ProxyVia: p.URL()})).CloseWithT(t)
+	v := New(Setup().Proxy(&ProxyConfig{Via: p.URL()})).CloseWithT(t)
 	v.MustStart()
 	scope2 := v.MustMock(Get(URLPath("/unknown")).Reply(NoContent()))
 

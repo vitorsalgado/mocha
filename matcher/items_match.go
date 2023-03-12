@@ -26,7 +26,7 @@ func (m *itemsMatchMatcher) Match(v any) (*Result, error) {
 		return &Result{
 			Ext: []string{mfmt.Stringify(m.expected)},
 			Message: fmt.Sprintf(
-				"Expected value length %d. Received length %d",
+				"expected value length to be: %d. got: %d",
 				aLen,
 				bLen)}, nil
 	}
@@ -44,7 +44,7 @@ func (m *itemsMatchMatcher) Match(v any) (*Result, error) {
 				continue
 			}
 
-			if equalValues(b.Index(j).Interface(), element) {
+			if equalValues(b.Index(j).Interface(), element, false) {
 				visited[j] = true
 				found = true
 				break

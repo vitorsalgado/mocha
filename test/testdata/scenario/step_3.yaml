@@ -1,0 +1,11 @@
+scenario:
+  name: test
+  required_state: step3
+  new_state: step4
+
+request:
+  path: /3
+
+response:
+  status: 200
+  body: step3

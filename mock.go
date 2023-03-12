@@ -145,6 +145,10 @@ type valueSelectorInput struct {
 	// URL is the full request url.URL, including scheme, host, port.
 	URL *url.URL
 
+	Query url.Values
+
+	Form url.Values
+
 	// ParsedBody is the parsed http.Request body.
 	ParsedBody any
 }
@@ -296,7 +300,7 @@ func (m *Mock) Disable() {
 	m.Enabled = false
 }
 
-// Build allows users to use Mock as a Builder.
+// Build allows users to use the Mock itself as a MockBuilder.
 func (m *Mock) Build() (*Mock, error) {
 	return m, nil
 }

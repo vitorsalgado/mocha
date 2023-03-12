@@ -13,11 +13,12 @@ func TestURLPath(t *testing.T) {
 	testCases := []struct {
 		name     string
 		path     string
+		value    any
 		expected bool
 	}{
-		{"should accept a pointer", "/test/hello", true},
-		{"should accept a string", "/test/hello", true},
-		{"should return false when it doesn't match", "/test/bye", false},
+		{"should accept a pointer", "/test/hello", u, true},
+		{"should accept a string", "/test/hello", *u, true},
+		{"should return false when it doesn't match", "/test/bye", u.String(), false},
 	}
 
 	for _, tt := range testCases {

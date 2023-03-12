@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/vitorsalgado/mocha/v3"
+	. "github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
@@ -38,16 +38,16 @@ func TestPostJSON(t *testing.T) {
 	}
 
 	t.Run("should match specific json body fields", func(t *testing.T) {
-		m := mocha.New()
+		m := New()
 		m.MustStart()
 
 		defer m.Close()
 
-		scoped := m.MustMock(mocha.Postf("/test").
+		scoped := m.MustMock(Postf("/test").
 			Header("test", StrictEqual("hello")).
 			Body(
 				JSONPath("name", StrictEqual("dev")), JSONPath("ok", StrictEqual(true))).
-			Reply(mocha.OK()))
+			Reply(OK()))
 
 		req := testutil.PostJSON(m.URL()+"/test", &jsonTestModel{Name: "dev", OK: true})
 		req.Header("test", "hello")
@@ -61,17 +61,17 @@ func TestPostJSON(t *testing.T) {
 	})
 
 	t.Run("should match entire body using a struct", func(t *testing.T) {
-		m := mocha.New()
+		m := New()
 		m.MustStart()
 
 		defer m.Close()
 
 		data := &jsonTestModel{OK: true, Name: "dev"}
 
-		scoped := m.MustMock(mocha.Post(URLPath("/test")).
+		scoped := m.MustMock(Post(URLPath("/test")).
 			Header("test", StrictEqual("hello")).
 			Body(EqualJSON(data)).
-			Reply(mocha.OK()))
+			Reply(OK()))
 
 		req := testutil.PostJSON(m.URL()+"/test", data)
 		req.Header("test", "hello")
@@ -85,7 +85,7 @@ func TestPostJSON(t *testing.T) {
 	})
 
 	t.Run("should match entire body using a map", func(t *testing.T) {
-		m := mocha.New()
+		m := New()
 		m.MustStart()
 
 		defer m.Close()
@@ -93,10 +93,10 @@ func TestPostJSON(t *testing.T) {
 		data1 := map[string]interface{}{"ok": true, "name": "dev"}
 		data2 := map[string]interface{}{"ok": true, "name": "dev"}
 
-		scoped := m.MustMock(mocha.Post(URLPath("/test")).
+		scoped := m.MustMock(Post(URLPath("/test")).
 			Header("test", StrictEqual("hello")).
 			Body(EqualJSON(data1)).
-			Reply(mocha.OK()))
+			Reply(OK()))
 
 		req := testutil.PostJSON(m.URL()+"/test", data2)
 		req.Header("test", "hello")
@@ -115,7 +115,7 @@ func TestPostJSON(t *testing.T) {
 			OK   bool   `json:"ok"`
 		}
 
-		m := mocha.New()
+		m := New()
 		m.MustStart()
 
 		defer m.Close()
@@ -123,10 +123,10 @@ func TestPostJSON(t *testing.T) {
 		toMatch := map[string]interface{}{"name": "dev", "ok": true}
 		data := model{Name: "dev", OK: true}
 
-		scoped := m.MustMock(mocha.Post(URLPath("/test")).
+		scoped := m.MustMock(Post(URLPath("/test")).
 			Header("test", StrictEqual("hello")).
 			Body(EqualJSON(toMatch)).
-			Reply(mocha.OK()))
+			Reply(OK()))
 
 		req := testutil.PostJSON(m.URL()+"/test", data)
 		req.Header("test", "hello")
@@ -140,7 +140,7 @@ func TestPostJSON(t *testing.T) {
 	})
 
 	t.Run("should not match when the given json is different than the incoming request body", func(t *testing.T) {
-		m := mocha.New()
+		m := New()
 		m.MustStart()
 
 		defer m.Close()
@@ -148,10 +148,10 @@ func TestPostJSON(t *testing.T) {
 		body := map[string]interface{}{"ok": true, "name": "dev"}
 		exp := map[string]interface{}{"ok": false, "name": "qa"}
 
-		scoped := m.MustMock(mocha.Post(URLPath("/test")).
+		scoped := m.MustMock(Post(URLPath("/test")).
 			Header("test", StrictEqual("hello")).
 			Body(EqualJSON(exp)).
-			Reply(mocha.OK()))
+			Reply(OK()))
 
 		req := testutil.PostJSON(m.URL()+"/test", body)
 		req.Header("test", "hello")
@@ -161,19 +161,19 @@ func TestPostJSON(t *testing.T) {
 		require.NoError(t, err)
 		require.NoError(t, res.Body.Close())
 		assert.False(t, scoped.HasBeenCalled())
-		assert.Equal(t, mocha.StatusNoMatch, res.StatusCode)
+		assert.Equal(t, StatusNoMatch, res.StatusCode)
 	})
 
 	t.Run("should match null fields", func(t *testing.T) {
-		m := mocha.New()
+		m := New()
 		m.MustStart()
 
 		defer m.Close()
 
-		scoped := m.MustMock(mocha.Postf("/test").
+		scoped := m.MustMock(Postf("/test").
 			Body(
 				JSONPath("name", StrictEqual(nil)), JSONPath("ok", StrictEqual(true))).
-			Reply(mocha.OK()))
+			Reply(OK()))
 
 		req := testutil.Post(m.URL()+"/test", strings.NewReader(`{"name": null, "ok": true}`))
 		req.Header("Content-Type", "application/json")
@@ -187,7 +187,7 @@ func TestPostJSON(t *testing.T) {
 	})
 
 	t.Run("array items", func(t *testing.T) {
-		m := mocha.New()
+		m := New()
 		m.MustStart()
 
 		defer m.Close()
@@ -211,7 +211,7 @@ func TestPostJSON(t *testing.T) {
 			},
 		}
 
-		scoped := m.MustMock(mocha.Postf("/test").
+		scoped := m.MustMock(Postf("/test").
 			Header("test", Equal("hello")).
 			Body(
 				Field("name", StrictEqual("dev")),
@@ -240,7 +240,7 @@ func TestPostJSON(t *testing.T) {
 				Field("level1.year", GreaterThanOrEqual(2022)),
 				Field("level1.level2.value", Equal(100.25)),
 			).
-			Reply(mocha.OK()))
+			Reply(OK()))
 
 		req := testutil.PostJSON(m.URL()+"/test", body)
 		req.Header("test", "hello")
@@ -255,10 +255,8 @@ func TestPostJSON(t *testing.T) {
 }
 
 func TestSimpleJSONValues(t *testing.T) {
-	m := mocha.New()
+	m := NewT(t)
 	m.MustStart()
-
-	defer m.Close()
 
 	testCases := []struct {
 		name   string
@@ -275,7 +273,7 @@ func TestSimpleJSONValues(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			scoped := m.MustMock(mocha.Postf("/test").Body(Equal(tc.value)).Reply(mocha.Status(tc.status)))
+			scoped := m.MustMock(Postf("/test").Body(Equal(tc.value)).Reply(Status(tc.status)))
 
 			res, err := testutil.PostJSON(m.URL()+"/test", tc.value).Do()
 
@@ -287,14 +285,14 @@ func TestSimpleJSONValues(t *testing.T) {
 }
 
 func TestMalformedJSON_ShouldMatchOtherFieldsAndContinue(t *testing.T) {
-	m := mocha.New()
+	m := New()
 	m.MustStart()
 
 	defer m.Close()
 
-	scoped := m.MustMock(mocha.Postf("/test").
+	scoped := m.MustMock(Postf("/test").
 		Header("test", StrictEqual("hello")).
-		Reply(mocha.OK()))
+		Reply(OK()))
 
 	req := testutil.Post(m.URL()+"/test", strings.NewReader(`{"test": "malformed_json", "pass`))
 	req.Header("test", "hello")
@@ -309,7 +307,7 @@ func TestMalformedJSON_ShouldMatchOtherFieldsAndContinue(t *testing.T) {
 }
 
 func TestJSONResponse(t *testing.T) {
-	m := mocha.New()
+	m := New()
 	m.MustStart()
 
 	defer m.Close()
@@ -321,7 +319,7 @@ func TestJSONResponse(t *testing.T) {
 
 	p := &payload{"go", true}
 
-	m.MustMock(mocha.Getf("/test").Reply(mocha.OK().JSON(p)))
+	m.MustMock(Getf("/test").Reply(OK().JSON(p)))
 
 	res, err := testutil.Get(m.URL() + "/test").Do()
 	require.NoError(t, err)

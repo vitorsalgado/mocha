@@ -1,0 +1,6 @@
+request:
+  path: /test/templating_02_data.txt
+  method: GET
+
+response:
+  body_file: "{{`testdata/templating/{{ index .Request.URLPathSegments 1 }}`}}"

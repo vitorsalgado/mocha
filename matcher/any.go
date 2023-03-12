@@ -85,7 +85,7 @@ func (m *anyOfMatcher) AfterMockServed() error {
 //	Any(Equal("test"), EqualIgnoreCase("TEST"), Contain("tes"))
 func Any(matchers ...Matcher) Matcher {
 	if len(matchers) == 0 {
-		panic("[Any] requires at least 1 matcher")
+		panic("matcher: [Any] requires at least 1 matcher")
 	}
 
 	return &anyOfMatcher{matchers: matchers}

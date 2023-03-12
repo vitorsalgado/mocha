@@ -1,0 +1,7 @@
+delay: 1s
+
+request:
+  path: /duration_string_format
+
+response:
+  status: 200

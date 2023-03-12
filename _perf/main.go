@@ -104,7 +104,7 @@ func main() {
 	}
 
 	m := mocha.New(
-		mocha.Configure().
+		mocha.Setup().
 			HandlerDecorator(h).
 			Server(&Srv{}).
 			Addr(":8080"))

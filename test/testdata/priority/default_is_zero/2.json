@@ -1,0 +1,9 @@
+{
+  "priority": 1,
+  "request": {
+    "path": "/test/*"
+  },
+  "response": {
+    "status": 400
+  }
+}

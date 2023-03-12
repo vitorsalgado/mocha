@@ -1,0 +1,7 @@
+delay: 1000
+
+request:
+  path: /duration_number
+
+response:
+  status: 200

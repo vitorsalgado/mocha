@@ -29,8 +29,11 @@ func TestEqual(t *testing.T) {
 		result         bool
 	}{
 		{"string with nil", "test", nil, false},
+		{"string with int", "10", 10, true},
+		{"int with string", 10, "10", true},
+		{"int int", int64(10), int64(10), true},
 		{"string with float64", "10", float64(10), true},
-		{"string with bool", "true", true, false},
+		{"string with bool", "true", true, true},
 		{"float64 with string", float64(10), "10", true},
 		{"nil", nil, nil, true},
 		{"bool (true)", true, true, true},

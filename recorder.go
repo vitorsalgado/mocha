@@ -53,10 +53,10 @@ type RecordConfig struct {
 	// SaveDir defines the directory to save the recorded mocks.
 	SaveDir string
 
-	// SaveExtension defines the extension to save the recorded mock.
+	// SaveFileType defines the content type and extension to save the recorded mock.
 	// It uses viper.Viper to save the mock files, so it will accept the same values that viper supports.
-	// Defaults to .json.
-	SaveExtension string
+	// Defaults to json.
+	SaveFileType string
 
 	// SaveResponseBodyToFile defines if the recorded body should be saved to a separate file.
 	// Defaults to false, embedding the response body into the mock definition file.
@@ -77,7 +77,7 @@ func (f recordConfigFunc) Apply(config *RecordConfig) error {
 
 // Apply allows using RecordConfig as RecordConfigurer.
 func (r *RecordConfig) Apply(opts *RecordConfig) error {
-	extension := strings.TrimPrefix(opts.SaveExtension, ".")
+	extension := strings.TrimPrefix(opts.SaveFileType, ".")
 	found := false
 	for _, ext := range viper.SupportedExts {
 		if strings.EqualFold(extension, ext) {
@@ -94,7 +94,7 @@ func (r *RecordConfig) Apply(opts *RecordConfig) error {
 		)
 	}
 
-	opts.SaveExtension = extension
+	opts.SaveFileType = extension
 	opts.SaveDir = r.SaveDir
 	opts.SaveResponseBodyToFile = r.SaveResponseBodyToFile
 	opts.ResponseHeaders = r.ResponseHeaders
@@ -106,7 +106,7 @@ func (r *RecordConfig) Apply(opts *RecordConfig) error {
 func defaultRecordConfig() *RecordConfig {
 	return &RecordConfig{
 		SaveDir:                "testdata/_mocks_recorded",
-		SaveExtension:          "json",
+		SaveFileType:           "json",
 		SaveResponseBodyToFile: false,
 		RequestHeaders:         []string{"accept", "content-type", "content-encoding", "content-length"},
 		ResponseHeaders:        []string{"content-type", "content-encoding", "link", "content-length", "cache-control", "retry-after"},
@@ -253,7 +253,7 @@ func (r *recorder) process(arg *recArgs) error {
 	}
 
 	name := fmt.Sprintf("%s-%s", arg.request.method, nm)
-	mockFile := path.Join(saveDir, fmt.Sprintf("%s.mock.%s", name, r.config.SaveExtension))
+	mockFile := path.Join(saveDir, fmt.Sprintf("%s.mock.%s", name, r.config.SaveFileType))
 
 	if hasResBody {
 		if r.config.SaveResponseBodyToFile {
@@ -330,7 +330,7 @@ func (r *recorder) process(arg *recArgs) error {
 	v.Set(_fResponseHeader, responseHeaders)
 
 	v.AddConfigPath(saveDir)
-	v.SetConfigType(r.config.SaveExtension)
+	v.SetConfigType(r.config.SaveFileType)
 
 	return v.WriteConfigAs(mockFile)
 }
@@ -358,7 +358,7 @@ func RecordDir(dir string) RecordConfigurer {
 // It uses viper.Viper to save the mock files, so it will accept the same values that viper supports.
 // Defaults to .json.
 func RecordExtension(ext string) RecordConfigurer {
-	return recordConfigFunc(func(c *RecordConfig) { c.SaveExtension = ext })
+	return recordConfigFunc(func(c *RecordConfig) { c.SaveFileType = ext })
 }
 
 // RecordResponseBodyToFile defines if the recorded body should be saved to separate file.

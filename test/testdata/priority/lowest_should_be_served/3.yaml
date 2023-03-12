@@ -1,0 +1,7 @@
+priority: 5
+
+request:
+  path: /test/*
+
+response:
+  status: 500

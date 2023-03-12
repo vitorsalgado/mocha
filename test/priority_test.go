@@ -40,3 +40,70 @@ func TestPriority(t *testing.T) {
 		assert.False(t, three.HasBeenCalled())
 	}
 }
+
+func TestPriority_DefaultIsZero(t *testing.T) {
+	httpClient := &http.Client{}
+	m := mocha.New(mocha.Setup().
+		MockFilePatterns(
+			"testdata/priority/default_is_zero/*.json",
+			"testdata/priority/default_is_zero/*.yaml"))
+	m.MustStart()
+
+	defer m.Close()
+
+	testCases := []struct {
+		status int
+		url    string
+	}{
+		{http.StatusNoContent, "/test"},
+		{http.StatusNoContent, "/test/hello"},
+		{http.StatusNoContent, "/test/hello/world"},
+		{http.StatusNotFound, "/hello"},
+		{http.StatusNotFound, "/TEST"},
+		{http.StatusNotFound, "/TEST/hello"},
+		{http.StatusNotFound, "/TEST/HELLO"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.url, func(t *testing.T) {
+			res, err := httpClient.Get(m.URL() + tc.url)
+
+			require.NoError(t, err)
+			require.Equal(t, tc.status, res.StatusCode)
+		})
+	}
+}
+
+func TestPriority_LowestShouldBeServed(t *testing.T) {
+	httpClient := &http.Client{}
+	m := mocha.New(mocha.Setup().
+		RootDir("testdata/priority").
+		MockFilePatterns(
+			"lowest_should_be_served/*.json",
+			"lowest_should_be_served/*.yaml"))
+	m.MustStart()
+
+	defer m.Close()
+
+	testCases := []struct {
+		status int
+		url    string
+	}{
+		{http.StatusNoContent, "/test"},
+		{http.StatusNoContent, "/test/hello"},
+		{http.StatusNoContent, "/test/hello/world"},
+		{http.StatusNotFound, "/hello"},
+		{http.StatusNotFound, "/TEST"},
+		{http.StatusNotFound, "/TEST/hello"},
+		{http.StatusNotFound, "/TEST/HELLO"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.url, func(t *testing.T) {
+			res, err := httpClient.Get(m.URL() + tc.url)
+
+			require.NoError(t, err)
+			require.Equal(t, tc.status, res.StatusCode)
+		})
+	}
+}

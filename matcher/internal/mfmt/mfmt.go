@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"reflect"
 	"regexp"
+	"strconv"
 )
 
 var _indentRegExp = regexp.MustCompile("(?m)^")
@@ -22,7 +23,7 @@ func Indent(str string) string {
 }
 
 func PrintReceived(val any) string {
-	return fmt.Sprintf("Received: %s", Stringify(val))
+	return fmt.Sprintf("received: %s", Stringify(val))
 }
 
 type stringer interface {
@@ -37,10 +38,14 @@ func Stringify(v any) string {
 		return string(s)
 	case string:
 		return s
+	case float64:
+		return strconv.FormatFloat(s, 'f', -1, 64)
+	case bool:
+		return strconv.FormatBool(s)
 	case *http.Request:
 		return "*http.Request"
 	case nil:
-		return ""
+		return "<nil>"
 	default:
 		t := reflect.TypeOf(s)
 		switch t.Kind() {

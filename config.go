@@ -1,6 +1,7 @@
 package mocha
 
 import (
+	"crypto/tls"
 	"net/http"
 	"text/template"
 
@@ -41,9 +42,9 @@ const (
 )
 
 // Defaults
-const (
+var (
 	// ConfigMockFilePattern is the default filename glob pattern to search for local mock files.
-	ConfigMockFilePattern = "testdata/_mocks/*mock.(json,yaml,yml)"
+	ConfigMockFilePattern = []string{"testdata/_mocks/*mock.yaml", "testdata/_mocks/*mock.yml"}
 )
 
 // Configurer lets users configure the Mock API.
@@ -64,6 +65,19 @@ type Config struct {
 	// RootDir defines the root directory where the server will start looking for configurations and mocks.
 	// Defaults to the current execution path.
 	RootDir string
+
+	// TLSConfig defines custom TLS configurations.
+	// This is only used when server is started using Mocha.StartTLS or Mocha.MustStartTLS.
+	// If TLSConfig is set, TLSCertificateFs and TLSKeyFs options will be ignored.
+	TLSConfig *tls.Config
+
+	// TLSCertificateFs sets a custom TLS cert filename.
+	// If none is provided, when starting a new server with TLS, an internal default one will be used.
+	TLSCertificateFs string
+
+	// TLSKeyFs sets a custom TLS private key filename.
+	// If none is provided, when starting a new server with TLS, an internal default one will be used.
+	TLSKeyFs string
 
 	// RequestWasNotMatchedStatusCode defines the status code that should be used when
 	// an HTTP request doesn't match with any mock.
@@ -90,8 +104,8 @@ type Config struct {
 	// Parameters sets a custom reply parameters store.
 	Parameters Params
 
-	// Directories configures glob patterns to load mock from the file system.
-	Directories []string
+	// MockFileSearchPatterns configures glob patterns to load mock from the file system.
+	MockFileSearchPatterns []string
 
 	// Loaders configures additional loaders.
 	Loaders []Loader
@@ -182,7 +196,7 @@ func (c *Config) Apply(conf *Config) error {
 	conf.Server = c.Server
 	conf.HandlerDecorator = c.HandlerDecorator
 	conf.Parameters = c.Parameters
-	conf.Directories = c.Directories
+	conf.MockFileSearchPatterns = c.MockFileSearchPatterns
 	conf.Loaders = c.Loaders
 	conf.Proxy = c.Proxy
 	conf.Record = c.Record
@@ -198,15 +212,11 @@ func (c *Config) Apply(conf *Config) error {
 	conf.LogVerbosity = c.LogVerbosity
 	conf.LogLevel = c.LogLevel
 	conf.LogBodyMaxSize = c.LogBodyMaxSize
+	conf.TLSConfig = c.TLSConfig
+	conf.TLSCertificateFs = c.TLSCertificateFs
+	conf.TLSKeyFs = c.TLSKeyFs
 
 	return nil
-}
-
-// configFunc is a helper to build Configurer instances with functions.
-type configFunc func(config *Config) error
-
-func (f configFunc) Apply(config *Config) error {
-	return f(config)
 }
 
 // ConfigBuilder lets users create a Config using a fluent API.
@@ -219,7 +229,7 @@ type ConfigBuilder struct {
 func defaultConfig() *Config {
 	return &Config{
 		RequestWasNotMatchedStatusCode: StatusNoMatch,
-		Directories:                    []string{ConfigMockFilePattern},
+		MockFileSearchPatterns:         ConfigMockFilePattern,
 		RequestBodyParsers:             make([]RequestBodyParser, 0),
 		Middlewares:                    make([]func(http.Handler) http.Handler, 0),
 		Loaders:                        make([]Loader, 0),
@@ -232,9 +242,9 @@ func defaultConfig() *Config {
 	}
 }
 
-// Configure initialize a new ConfigBuilder.
+// Setup initialize a new ConfigBuilder.
 // Entrypoint to start a new custom configuration for Mocha mock servers.
-func Configure() *ConfigBuilder {
+func Setup() *ConfigBuilder {
 	return &ConfigBuilder{conf: defaultConfig()}
 }
 
@@ -350,24 +360,11 @@ func (cb *ConfigBuilder) Parameters(params Params) *ConfigBuilder {
 	return cb
 }
 
-// Dirs sets custom Glob patterns to load mock from the file system.
+// MockFilePatterns sets custom Glob patterns to load mock from the file system.
 // Defaults to [testdata/*.mock.json, testdata/*.mock.yaml].
-func (cb *ConfigBuilder) Dirs(patterns ...string) *ConfigBuilder {
-	dirs := make([]string, 0)
-	dirs = append(dirs, ConfigMockFilePattern)
-	dirs = append(dirs, patterns...)
+func (cb *ConfigBuilder) MockFilePatterns(patterns ...string) *ConfigBuilder {
+	cb.conf.MockFileSearchPatterns = patterns
 
-	cb.conf.Directories = dirs
-
-	return cb
-}
-
-// NewDirs configures directories to search for local mocks,
-// overwriting the default internal mock filename pattern.
-// Pass a list of glob patterns supported by Go Standard Library.
-// Use Dirs to keep the default internal pattern.
-func (cb *ConfigBuilder) NewDirs(patterns ...string) *ConfigBuilder {
-	cb.conf.Directories = patterns
 	return cb
 }
 
@@ -433,6 +430,22 @@ func (cb *ConfigBuilder) HTTPClient(f func() (*http.Client, error)) *ConfigBuild
 	return cb
 }
 
+// TLSConfig defines custom TLS configurations.
+// This is only used when server is started using Mocha.StartTLS or Mocha.MustStartTLS.
+// If TLSConfig is set, TLSCertificateFs and TLSKeyFs options will be ignored.
+func (cb *ConfigBuilder) TLSConfig(c *tls.Config) *ConfigBuilder {
+	cb.conf.TLSConfig = c
+	return cb
+}
+
+// TLSLoadX509KeyPair sets a custom public/private key pair.
+// If none is provided, default values will be used when starting the server with Mocha.StartTLS or Mocha.MustStartTLS.
+func (cb *ConfigBuilder) TLSLoadX509KeyPair(cerFile string, keyFile string) *ConfigBuilder {
+	cb.conf.TLSCertificateFs = cerFile
+	cb.conf.TLSKeyFs = keyFile
+	return cb
+}
+
 // Apply builds a new Config with previously configured values.
 func (cb *ConfigBuilder) Apply(conf *Config) error {
 	if len(cb.recorderConf) > 0 {
@@ -458,185 +471,4 @@ func (cb *ConfigBuilder) Apply(conf *Config) error {
 	}
 
 	return cb.conf.Apply(conf)
-}
-
-// --
-// config Functions
-// --
-
-// WithName sets a name to the mock server.
-func WithName(name string) Configurer {
-	return configFunc(func(c *Config) error {
-		c.Name = name
-		return nil
-	})
-}
-
-// WithAddr configures the server address.
-func WithAddr(addr string) Configurer {
-	return configFunc(func(c *Config) error {
-		c.Addr = addr
-		return nil
-	})
-}
-
-// WithMockNotFoundStatusCode defines the status code to be used no mock matches with an HTTP request.
-func WithMockNotFoundStatusCode(code int) Configurer {
-	return configFunc(func(c *Config) error {
-		c.RequestWasNotMatchedStatusCode = code
-		return nil
-	})
-}
-
-// WithRequestBodyParsers configures one or more RequestBodyParser.
-func WithRequestBodyParsers(parsers ...RequestBodyParser) Configurer {
-	return configFunc(func(c *Config) error {
-		c.RequestBodyParsers = append(c.RequestBodyParsers, parsers...)
-		return nil
-	})
-}
-
-// WithMiddlewares adds one or more middlewares to be executed before the mock HTTP handler.
-func WithMiddlewares(middlewares ...func(handler http.Handler) http.Handler) Configurer {
-	return configFunc(func(c *Config) error {
-		c.Middlewares = append(c.Middlewares, middlewares...)
-		return nil
-	})
-}
-
-// WithCORS configures CORS.
-func WithCORS(opts ...CORSConfigurer) Configurer {
-	return configFunc(func(c *Config) error {
-		options := &_defaultCORSConfig
-		for _, option := range opts {
-			option.Apply(options)
-		}
-
-		c.CORS = options
-
-		return nil
-	})
-}
-
-// WithServer configures a custom mock HTTP Server.
-// If none is set, a default one will be used.
-func WithServer(srv Server) Configurer {
-	return configFunc(func(c *Config) error {
-		c.Server = srv
-		return nil
-	})
-}
-
-// WithHandlerDecorator configures a http.Handler that decorates the internal mock HTTP handler.
-func WithHandlerDecorator(fn func(handler http.Handler) http.Handler) Configurer {
-	return configFunc(func(c *Config) error {
-		c.HandlerDecorator = fn
-		return nil
-	})
-}
-
-// WithLogLevel sets the mock server LogVerbosity.
-func WithLogLevel(level LogVerbosity) Configurer {
-	return configFunc(func(c *Config) error {
-		c.LogVerbosity = level
-		return nil
-	})
-}
-
-// WithParams configures a custom reply.Params.
-func WithParams(params Params) Configurer {
-	return configFunc(func(c *Config) error {
-		c.Parameters = params
-		return nil
-	})
-}
-
-// WithDirs configures directories to search for local mocks.
-// Pass a list of glob patterns supported by Go Standard Library.
-// This method keeps the default mock filename pattern, [testdata/*mock.json].
-// to overwrite the default mock filename pattern, use WithNewDirs.
-func WithDirs(patterns ...string) Configurer {
-	return configFunc(func(c *Config) error {
-		dirs := make([]string, 0)
-		dirs = append(dirs, ConfigMockFilePattern)
-		dirs = append(dirs, patterns...)
-
-		c.Directories = dirs
-
-		return nil
-	})
-}
-
-// WithNewDirs configures directories to search for local mocks,
-// overwriting the default internal mock filename pattern.
-// Pass a list of glob patterns supported by Go Standard Library.
-// Use WithDirs to keep the default internal pattern.
-func WithNewDirs(patterns ...string) Configurer {
-	return configFunc(func(c *Config) error {
-		c.Directories = patterns
-		return nil
-	})
-}
-
-// WithLoader adds a new Loader to the configuration.
-func WithLoader(loader Loader) Configurer {
-	return configFunc(func(c *Config) error {
-		c.Loaders = append(c.Loaders, loader)
-		return nil
-	})
-}
-
-// WithProxy configures the mock server as a proxy server.
-func WithProxy(options ...ProxyConfigurer) Configurer {
-	return configFunc(func(c *Config) error {
-		opts := &ProxyConfig{}
-
-		for _, option := range options {
-			err := option.Apply(opts)
-			if err != nil {
-				return err
-			}
-		}
-
-		c.Proxy = opts
-
-		return nil
-	})
-}
-
-// WithMockFileHandlers configures MockFileHandler.
-func WithMockFileHandlers(handlers ...MockFileHandler) Configurer {
-	return configFunc(func(c *Config) error {
-		c.MockFileHandlers = append(c.MockFileHandlers, handlers...)
-		return nil
-	})
-}
-
-// WithTemplateEngine sets the TemplateEngine to be used by all components.
-// Defaults to a built-in implementation based on Go Templates.
-func WithTemplateEngine(ve TemplateEngine) Configurer {
-	return configFunc(func(c *Config) error {
-		c.TemplateEngine = ve
-		return nil
-	})
-}
-
-// WithTemplateFunctions sets custom functions to be used in templates.
-// This only works with the built-in TemplateEngine implementation.
-// Custom template engine implementations must provide their own mean to set custom functions.
-func WithTemplateFunctions(fm template.FuncMap) Configurer {
-	return configFunc(func(c *Config) error {
-		c.TemplateFunctions = fm
-		return nil
-	})
-}
-
-// WithHTTPClient sets a custom http.Client factory.
-// Internal components that require an HTTP client will use this factory,
-// instead of using the default implementation.
-func WithHTTPClient(f func() (*http.Client, error)) Configurer {
-	return configFunc(func(c *Config) error {
-		c.HTTPClientFactory = f
-		return nil
-	})
 }

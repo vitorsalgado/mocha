@@ -15,13 +15,13 @@ func (m *equalMatcher) Name() string {
 }
 
 func (m *equalMatcher) Match(v any) (*Result, error) {
-	if equalValues(m.expected, v) {
+	if equalValues(m.expected, v, true) {
 		return &Result{Pass: true}, nil
 	}
 
 	return &Result{
 			Ext:     []string{mfmt.Stringify(m.expected)},
-			Message: fmt.Sprintf("Received: %s", mfmt.Stringify(v)),
+			Message: fmt.Sprintf("received: %s", mfmt.Stringify(v)),
 		},
 		nil
 }

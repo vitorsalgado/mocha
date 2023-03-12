@@ -6,7 +6,7 @@
     "query": {
       "term": "test",
       "filter": ["contains", "all"],
-      "page": ["all", "present", ["equalTo", 10]]
+      "page": ["all", "present", ["equal", 10]]
     }
   },
   "response": {

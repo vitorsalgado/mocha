@@ -11,7 +11,7 @@ import (
 	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
-func TestScenarioMatcher(t *testing.T) {
+func TestScenarios(t *testing.T) {
 	m := mocha.New()
 	m.MustStart()
 
@@ -39,27 +39,146 @@ func TestScenarioMatcher(t *testing.T) {
 		Name("step-3").
 		Reply(mocha.OK().PlainText("step3")))
 
+	// --- step1
+
 	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/1", nil)
-	res, _ := http.DefaultClient.Do(req)
-	body, _ := io.ReadAll(res.Body)
+	res, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+
+	body, err := io.ReadAll(res.Body)
+	require.NoError(t, err)
 
 	require.True(t, s1.HasBeenCalled())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	require.Equal(t, "step1", string(body))
+	require.NoError(t, res.Body.Close())
+
+	// step1 is already in a different state, it should not match anymore.
+	req, _ = http.NewRequest(http.MethodGet, m.URL()+"/1", nil)
+	res, err = http.DefaultClient.Do(req)
+
+	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
+	require.Equal(t, mocha.StatusNoMatch, res.StatusCode)
+
+	// --- step2
 
 	req, _ = http.NewRequest(http.MethodGet, m.URL()+"/2", nil)
-	res, _ = http.DefaultClient.Do(req)
-	body, _ = io.ReadAll(res.Body)
+	res, err = http.DefaultClient.Do(req)
+	require.NoError(t, err)
+
+	body, err = io.ReadAll(res.Body)
+	require.NoError(t, err)
 
 	require.True(t, s2.HasBeenCalled())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	require.Equal(t, "step2", string(body))
+	require.NoError(t, res.Body.Close())
+
+	// step2 is already in a different state, it should not match anymore.
+	req, _ = http.NewRequest(http.MethodGet, m.URL()+"/2", nil)
+	res, err = http.DefaultClient.Do(req)
+
+	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
+	require.Equal(t, mocha.StatusNoMatch, res.StatusCode)
+
+	// --- step3
 
 	req, _ = http.NewRequest(http.MethodGet, m.URL()+"/3", nil)
-	res, _ = http.DefaultClient.Do(req)
-	body, _ = io.ReadAll(res.Body)
+	res, err = http.DefaultClient.Do(req)
+	require.NoError(t, err)
+
+	body, err = io.ReadAll(res.Body)
+	require.NoError(t, err)
 
 	require.True(t, s3.HasBeenCalled())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	require.Equal(t, "step3", string(body))
+	require.NoError(t, res.Body.Close())
+
+	// step3 is already in a different state, it should not match anymore.
+	req, _ = http.NewRequest(http.MethodGet, m.URL()+"/3", nil)
+	res, err = http.DefaultClient.Do(req)
+
+	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
+	require.Equal(t, mocha.StatusNoMatch, res.StatusCode)
+}
+
+func TestScenarios_SetupFromFile(t *testing.T) {
+	m := mocha.New()
+	m.MustStart()
+
+	defer m.Close()
+
+	s1 := m.MustMock(mocha.FromFile("testdata/scenario/step_1.yaml"))
+	s2 := m.MustMock(mocha.FromFile("testdata/scenario/step_2.yaml"))
+	s3 := m.MustMock(mocha.FromFile("testdata/scenario/step_3.yaml"))
+
+	// --- step1
+
+	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/1", nil)
+	res, err := http.DefaultClient.Do(req)
+	require.NoError(t, err)
+
+	body, err := io.ReadAll(res.Body)
+	require.NoError(t, err)
+
+	require.True(t, s1.HasBeenCalled())
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.Equal(t, "step1", string(body))
+	require.NoError(t, res.Body.Close())
+
+	// step1 is already in a different state, it should not match anymore.
+	req, _ = http.NewRequest(http.MethodGet, m.URL()+"/1", nil)
+	res, err = http.DefaultClient.Do(req)
+
+	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
+	require.Equal(t, mocha.StatusNoMatch, res.StatusCode)
+
+	// --- step2
+
+	req, _ = http.NewRequest(http.MethodGet, m.URL()+"/2", nil)
+	res, err = http.DefaultClient.Do(req)
+	require.NoError(t, err)
+
+	body, err = io.ReadAll(res.Body)
+	require.NoError(t, err)
+
+	require.True(t, s2.HasBeenCalled())
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.Equal(t, "step2", string(body))
+	require.NoError(t, res.Body.Close())
+
+	// step2 is already in a different state, it should not match anymore.
+	req, _ = http.NewRequest(http.MethodGet, m.URL()+"/2", nil)
+	res, err = http.DefaultClient.Do(req)
+
+	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
+	require.Equal(t, mocha.StatusNoMatch, res.StatusCode)
+
+	// --- step3
+
+	req, _ = http.NewRequest(http.MethodGet, m.URL()+"/3", nil)
+	res, err = http.DefaultClient.Do(req)
+	require.NoError(t, err)
+
+	body, err = io.ReadAll(res.Body)
+	require.NoError(t, err)
+
+	require.True(t, s3.HasBeenCalled())
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.Equal(t, "step3", string(body))
+	require.NoError(t, res.Body.Close())
+
+	// step3 is already in a different state, it should not match anymore.
+	req, _ = http.NewRequest(http.MethodGet, m.URL()+"/3", nil)
+	res, err = http.DefaultClient.Do(req)
+
+	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
+	require.Equal(t, mocha.StatusNoMatch, res.StatusCode)
 }

@@ -1,0 +1,7 @@
+repeat: 5
+
+request:
+  path: /test
+
+response:
+  status: 200

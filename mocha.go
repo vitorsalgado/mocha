@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"reflect"
 	"strings"
@@ -19,6 +20,7 @@ import (
 	"github.com/vitorsalgado/mocha/v3/internal/mid/recover"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 	"github.com/vitorsalgado/mocha/v3/matcher"
+	"github.com/vitorsalgado/mocha/v3/matcher/mfeat"
 )
 
 const (
@@ -38,6 +40,7 @@ type Mocha struct {
 	config             *Config
 	server             Server
 	storage            mockStore
+	scenarioStore      *mfeat.ScenarioStore
 	ctx                context.Context
 	cancel             context.CancelFunc
 	requestBodyParsers []RequestBodyParser
@@ -52,6 +55,7 @@ type Mocha struct {
 	data               map[string]any
 	cz                 *colorize.Colorize
 	log                *zerolog.Logger
+	startOnce          sync.Once
 }
 
 // TestingT is based on testing.T and is used for assertions.
@@ -150,7 +154,7 @@ func New(config ...Configurer) *Mocha {
 		err := configurer.Apply(conf)
 		if err != nil {
 			panic(fmt.Errorf(
-				"server: error applying configuration at index %d. config type=%s, reason=%w",
+				"server: error applying configuration at index %d with type %s\n%w",
 				i,
 				reflect.TypeOf(configurer),
 				err,
@@ -218,11 +222,6 @@ func New(config ...Configurer) *Mocha {
 		server = newServer()
 	}
 
-	err := server.Setup(conf, handler)
-	if err != nil {
-		panic(fmt.Errorf("server: setup failed. %w", err))
-	}
-
 	loaders := make([]Loader, len(conf.Loaders)+1 /* number of internal loaders */)
 	loaders[0] = &fileLoader{}
 	for i, loader := range conf.Loaders {
@@ -242,6 +241,7 @@ func New(config ...Configurer) *Mocha {
 	app.name = conf.Name
 	app.server = server
 	app.storage = store
+	app.scenarioStore = mfeat.NewScenarioStore()
 	app.ctx = ctx
 	app.cancel = cancel
 	app.params = params
@@ -266,6 +266,11 @@ func New(config ...Configurer) *Mocha {
 				SSLVerify(app.config.Forward.SSLVerify)))
 	}
 
+	err := server.Setup(app, handler)
+	if err != nil {
+		panic(fmt.Errorf("server: setup failed. %w", err))
+	}
+
 	return app
 }
 
@@ -284,55 +289,41 @@ func (app *Mocha) Name() string {
 }
 
 // Start starts the mock server.
-func (app *Mocha) Start() (*ServerInfo, error) {
-	info, err := app.server.Start()
+func (app *Mocha) Start() error {
+	err := app.server.Start()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	err = app.onStart()
-	if err != nil {
-		return nil, err
-	}
-
-	return info, nil
+	return app.onStart()
 }
 
 // MustStart starts the mock server.
 // It fails immediately if any error occurs.
-func (app *Mocha) MustStart() *ServerInfo {
-	info, err := app.Start()
+func (app *Mocha) MustStart() {
+	err := app.Start()
 	if err != nil {
 		panic(fmt.Errorf("server: start failed. %w", err))
 	}
-
-	return info
 }
 
 // StartTLS starts TLS on a mock server.
-func (app *Mocha) StartTLS() (*ServerInfo, error) {
-	info, err := app.server.StartTLS()
+func (app *Mocha) StartTLS() error {
+	err := app.server.StartTLS()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	err = app.onStart()
-	if err != nil {
-		return nil, err
-	}
-
-	return info, nil
+	return app.onStart()
 }
 
 // MustStartTLS starts TLS on a mock server.
 // It fails immediately if any error occurs.
-func (app *Mocha) MustStartTLS() *ServerInfo {
-	info, err := app.StartTLS()
+func (app *Mocha) MustStartTLS() {
+	err := app.StartTLS()
 	if err != nil {
 		panic(fmt.Errorf("server: failed to start server with TLS. %w", err))
 	}
-
-	return info
 }
 
 // Mock adds one or multiple request mocks.
@@ -400,8 +391,19 @@ func (app *Mocha) Parameters() Params {
 }
 
 // URL returns the base URL string for the mock server.
-func (app *Mocha) URL() string {
-	return app.server.Info().URL
+// If parameter paths is provided, it will be concatenated with the server base URL.
+func (app *Mocha) URL(paths ...string) string {
+	if len(paths) == 0 {
+		return app.server.Info().URL
+	}
+
+	u, err := url.JoinPath(app.server.Info().URL, paths...)
+	if err != nil {
+		app.log.Fatal().Err(err).
+			Msgf("server: building server url with path elements %s", paths)
+	}
+
+	return u
 }
 
 // Context returns the server internal context.Context.
@@ -428,15 +430,7 @@ func (app *Mocha) Logger() *zerolog.Logger {
 // Coded mocks will be kept.
 func (app *Mocha) Reload() error {
 	app.storage.DeleteExternal()
-
-	for _, loader := range app.loaders {
-		err := loader.Load(app)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return app.load()
 }
 
 // MustReload reloads mocks from external sources, like the filesystem.
@@ -557,7 +551,7 @@ func (app *Mocha) PrintConfig(w io.Writer) error {
 	}
 
 	s.WriteString("Mock Search Patterns: ")
-	s.WriteString(strings.Join(app.config.Directories, ", "))
+	s.WriteString(strings.Join(app.config.MockFileSearchPatterns, ", "))
 	s.WriteString("\n")
 
 	s.WriteString("Log: ")
@@ -759,14 +753,26 @@ func (app *Mocha) AssertNumberOfCalls(t TestingT, expected int) bool {
 // Internals
 // --
 
-func (app *Mocha) onStart() error {
-	err := app.Reload()
+func (app *Mocha) onStart() (err error) {
+	app.startOnce.Do(func() { err = app.load() })
+
 	if err != nil {
 		return err
 	}
 
 	if app.rec != nil {
 		app.rec.start(app.ctx)
+	}
+
+	return nil
+}
+
+func (app *Mocha) load() error {
+	for _, loader := range app.loaders {
+		err := loader.Load(app)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

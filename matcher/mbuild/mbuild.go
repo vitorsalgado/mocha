@@ -18,9 +18,9 @@ const (
 	_mEach                    = "each"
 	_mEither                  = "either"
 	_mEmpty                   = "empty"
-	_mEqualTo                 = "equalto"
+	_mEqualTo                 = "equal"
 	_mEqualToAlias            = "eq"
-	_mEqualToIgnoreCase       = "equaltoignorecase"
+	_mEqualToIgnoreCase       = "equalignorecase"
 	_mEqualToIgnoreCaseAlias  = "eqi"
 	_mEqualJSON               = "equaljson"
 	_mEqualJSONAlias          = "eqj"
@@ -144,11 +144,10 @@ func extractMultipleMatchers(v any) ([]matcher.Matcher, error) {
 	return matchers, nil
 }
 
-func discoverAndBuild(key string, args any) (m matcher.Matcher, errTop error) {
+func discoverAndBuild(key string, args any) (ma matcher.Matcher, err error) {
 	defer func() {
 		if recovery := recover(); recovery != nil {
-			m = nil
-			errTop = fmt.Errorf(
+			err = fmt.Errorf(
 				"panic: parsing matcher=%s with args=%v. reason=%v",
 				key,
 				args,
