@@ -32,8 +32,6 @@ type ProxyConfig struct {
 	// If none is provided, a default one will be used.
 	// You need to set a Target and a custom Via in your custom http.RoundTripper.
 	Transport http.RoundTripper
-
-	log *zerolog.Logger
 }
 
 // ProxyConfigurer lets users configure the proxy.

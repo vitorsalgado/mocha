@@ -40,12 +40,7 @@ func equalValues(expected any, actual any, lenient bool) bool {
 			return true
 		}
 
-		pass = laxEq(expectedKind, actualKind, expectedValue, actualValue, lenient)
-		if pass {
-			return true
-		}
-
-		return false
+		return laxEq(expectedKind, actualKind, expectedValue, actualValue, lenient)
 	}
 
 	switch actualKind {

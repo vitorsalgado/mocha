@@ -62,7 +62,7 @@ func TestResponseDelay_SetupFromFile(t *testing.T) {
 			start := time.Now()
 			scoped := m.MustMock(FromFile(tc.filename))
 
-			res, err := httpClient.Get(fmt.Sprintf(m.URL(tc.path)))
+			res, err := httpClient.Get(m.URL(tc.path))
 			require.NoError(t, err)
 
 			elapsed := time.Since(start)
