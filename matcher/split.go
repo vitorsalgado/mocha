@@ -12,7 +12,7 @@ type splitMatcher struct {
 }
 
 func (m *splitMatcher) Name() string {
-	return fmt.Sprintf("Split(%s)", m.matcher.Name())
+	return "Split"
 }
 
 func (m *splitMatcher) Match(v any) (*Result, error) {

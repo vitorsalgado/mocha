@@ -13,7 +13,7 @@ type globMatcher struct {
 }
 
 func (m *globMatcher) Name() string {
-	return "Glob(" + m.pattern + ")"
+	return "Glob"
 }
 
 func (m *globMatcher) Match(v any) (*Result, error) {
@@ -26,7 +26,7 @@ func (m *globMatcher) Match(v any) (*Result, error) {
 		return &Result{Pass: true}, nil
 	}
 
-	return &Result{Message: mfmt.PrintReceived(text) + text}, nil
+	return &Result{Message: mfmt.PrintReceived(text), Ext: []string{m.pattern}}, nil
 }
 
 func GlobMatch(pattern string) Matcher {

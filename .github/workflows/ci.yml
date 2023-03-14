@@ -33,7 +33,7 @@ jobs:
           version: latest
 
       - name: test
-        run: make cov
+        run: make test-ci
 
       - name: upload coverage
         uses: codecov/codecov-action@v3

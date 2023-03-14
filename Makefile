@@ -17,6 +17,10 @@ build: ## build binaries
 test: ## run tests
 	@go test -timeout 60000ms -race -v ./... -race
 
+.PHONY: test-ci
+test-ci: ## run tests with code coverage and generate reports
+	@go test -timeout 60000ms -race -v ./... -race -coverpkg=./... -coverprofile=coverage.out -json > test-report.out
+
 .PHONY: test-leaks
 test-leaks:
 	@go test -c -o tests

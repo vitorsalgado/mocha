@@ -7,28 +7,28 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/vitorsalgado/mocha/v3"
+	. "github.com/vitorsalgado/mocha/v3"
 	"github.com/vitorsalgado/mocha/v3/internal/testutil"
-	"github.com/vitorsalgado/mocha/v3/matcher"
+	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
 func TestPriority(t *testing.T) {
-	m := mocha.New()
+	m := New()
 	m.MustStart()
 
 	defer m.Close()
 
-	one := m.MustMock(mocha.Get(matcher.URLPath("/test")).
+	one := m.MustMock(Get(URLPath("/test")).
 		Priority(3).
-		Reply(mocha.OK()))
+		Reply(OK()))
 
-	two := m.MustMock(mocha.Get(matcher.URLPath("/test")).
+	two := m.MustMock(Get(URLPath("/test")).
 		Priority(1).
-		Reply(mocha.BadRequest()))
+		Reply(BadRequest()))
 
-	three := m.MustMock(mocha.Get(matcher.URLPath("/test")).
+	three := m.MustMock(Get(URLPath("/test")).
 		Priority(100).
-		Reply(mocha.Created()))
+		Reply(Created()))
 
 	for i := 0; i < 5; i++ {
 		res, err := testutil.Get(m.URL() + "/test").Do()
@@ -43,7 +43,7 @@ func TestPriority(t *testing.T) {
 
 func TestPriority_DefaultIsZero(t *testing.T) {
 	httpClient := &http.Client{}
-	m := mocha.New(mocha.Setup().
+	m := New(Setup().
 		MockFilePatterns(
 			"testdata/priority/default_is_zero/*.json",
 			"testdata/priority/default_is_zero/*.yaml"))
@@ -76,7 +76,7 @@ func TestPriority_DefaultIsZero(t *testing.T) {
 
 func TestPriority_LowestShouldBeServed(t *testing.T) {
 	httpClient := &http.Client{}
-	m := mocha.New(mocha.Setup().
+	m := New(Setup().
 		RootDir("testdata/priority").
 		MockFilePatterns(
 			"lowest_should_be_served/*.json",
