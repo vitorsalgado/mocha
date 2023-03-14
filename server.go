@@ -74,16 +74,23 @@ func (s *httpTestServer) Setup(app *Mocha, handler http.Handler) error {
 	if app.config.TLSConfig != nil {
 		s.server.TLS = app.config.TLSConfig
 	} else {
-		if app.config.TLSCertificateFs == "" || app.config.TLSKeyFs == "" {
+		if (app.config.TLSCertificateFs == "" || app.config.TLSKeyFs == "") && app.config.TLSRootCAs == nil {
 			return nil
 		}
 
-		cert, err := tls.LoadX509KeyPair(app.config.TLSCertificateFs, app.config.TLSKeyFs)
-		if err != nil {
-			return err
+		var certs []tls.Certificate
+
+		if app.config.TLSCertificateFs != "" && app.config.TLSKeyFs != "" {
+			cert, err := tls.LoadX509KeyPair(app.config.TLSCertificateFs, app.config.TLSKeyFs)
+			if err != nil {
+				return err
+			}
+
+			certs = make([]tls.Certificate, 1)
+			certs[0] = cert
 		}
 
-		s.server.TLS = &tls.Config{Certificates: []tls.Certificate{cert}}
+		s.server.TLS = &tls.Config{Certificates: certs, RootCAs: app.config.TLSRootCAs}
 	}
 
 	return nil

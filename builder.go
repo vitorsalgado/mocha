@@ -175,7 +175,6 @@ func (b *MockBuilder) MethodMatches(m matcher.Matcher) *MockBuilder {
 func (b *MockBuilder) URL(m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetURL,
-		Key:           "url",
 		ValueSelector: selectURL,
 		Matcher:       m,
 		Weight:        _weightRegular,
@@ -194,7 +193,6 @@ func (b *MockBuilder) URLf(format string, a ...any) *MockBuilder {
 func (b *MockBuilder) URLPath(m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
 		Target:        _targetURL,
-		Key:           "url_path",
 		ValueSelector: selectURLPath,
 		Matcher:       m,
 		Weight:        _weightRegular,

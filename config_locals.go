@@ -1,11 +1,13 @@
 package mocha
 
 import (
+	"crypto/x509"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -36,9 +38,10 @@ const (
 	_kUseHTTPS          = "https"
 	_kColors            = "colors"
 
-	_kTLS     = "tls"
-	_kTLSCert = "tls.cert"
-	_kTLSKey  = "tls.key"
+	_kTLS        = "tls"
+	_kTLSCert    = "tls.cert"
+	_kTLSKey     = "tls.key"
+	_kTLSRootCAs = "tls.ca"
 
 	_kLog               = "log"
 	_kLogLevel          = "log.level"
@@ -168,6 +171,17 @@ func (c *localConfigurer) apply(conf *Config, vi *viper.Viper) (err error) {
 	if vi.IsSet(_kTLS) {
 		conf.TLSCertificateFs = vi.GetString(_kTLSCert)
 		conf.TLSKeyFs = vi.GetString(_kTLSKey)
+
+		ca := vi.GetString(_kTLSRootCAs)
+		if len(ca) > 0 {
+			caCert, err := os.ReadFile(filepath.Clean(ca))
+			if err != nil {
+				return fmt.Errorf("failed to read ca certificate file %s. %w", ca, err)
+			}
+
+			conf.TLSRootCAs = x509.NewCertPool()
+			conf.TLSRootCAs.AppendCertsFromPEM(caCert)
+		}
 	}
 
 	if vi.IsSet(_kLog) {
@@ -321,13 +335,15 @@ func bindFlags(v *viper.Viper) error {
 	cl.StringP(_kConfig, "c", "", "Use a custom configuration file. Commandline arguments take precedence over file values.")
 	cl.StringP(_kName, "n", "", "Mock server name.")
 	cl.String(_kRootDir, "", "Root directory to start looking for configurations and mocks.")
-	cl.StringP(_kAddr, "a", "", "Server address. Usage: <host>:<port>, :<port>, <port>. If no value is set, it will an auto generated one.")
+	cl.StringP(_kAddr, "a", "",
+		"Server address. Usage: <host>:<port>, :<port>, <port>. If no value is set, it will use a localhost with a random port.")
 	cl.Bool(_kColors, true, "Enabled/disable colors for descriptive logger only.")
 	cl.StringSlice(_kMockFiles, nil, "Mock files search glob patterns. E.g. testdata/*mock.yaml.")
 	cl.Bool(_kUseHTTPS, false, "Enabled HTTPS.")
 
 	cl.String(_kTLSCert, "", "TLS certificate file.")
 	cl.String(_kTLSKey, "", "TLS private key file.")
+	cl.String(_kTLSRootCAs, "", "TLS trusted CA certificates filenames.")
 
 	cl.Int8(_kLogLevel, LogLevelInfo, "Log level.")
 	cl.Int8(_kLogVerbosity, int8(LogHeader), "Log verbosity.")

@@ -19,6 +19,10 @@ type Stub struct {
 	Encoding   string
 }
 
+func newStub() *Stub {
+	return &Stub{Cookies: make([]*http.Cookie, 0), Header: make(http.Header), Trailer: make(http.Header)}
+}
+
 // Gunzip decompresses Gzip body.
 func (s *Stub) Gunzip() ([]byte, error) {
 	gz, err := gzip.NewReader(bytes.NewReader(s.Body))
@@ -32,7 +36,7 @@ func (s *Stub) Gunzip() ([]byte, error) {
 }
 
 func makeStub(w http.ResponseWriter) (*Stub, error) {
-	rw := w.(*httpx.Rw)
+	rw := w.(*httpx.RRec)
 	result := rw.Result()
 
 	body, err := io.ReadAll(result.Body)

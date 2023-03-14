@@ -71,7 +71,7 @@ const (
 // NewReply creates a new StdReply. Prefer to use factory functions for each status code.
 func NewReply() *StdReply {
 	return &StdReply{
-		response:     &Stub{Cookies: make([]*http.Cookie, 0), Header: make(http.Header), Trailer: make(http.Header)},
+		response:     newStub(),
 		bodyType:     _bodyDefault,
 		bodyEncoding: _bodyEncodingNone,
 		teHeader:     make(http.Header)}

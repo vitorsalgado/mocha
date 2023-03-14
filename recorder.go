@@ -321,11 +321,6 @@ func (r *recorder) process(arg *recArgs) error {
 		}
 	}
 
-	if v.GetBool(_fResponseTemplateEnabled) {
-		v.Set(_fResponseTemplateEnabled, v.GetBool(_fResponseTemplateEnabled))
-		v.Set(_fResponseTemplateModel, v.Get(_fResponseTemplateModel))
-	}
-
 	v.Set(_fResponseStatus, arg.response.status)
 	v.Set(_fResponseHeader, responseHeaders)
 

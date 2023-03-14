@@ -177,7 +177,7 @@ func TestConfigBuilder(t *testing.T) {
 		TemplateEngineFunctions(template.FuncMap{"trim": strings.TrimSpace}).
 		Proxy(&ProxyConfig{}, &ProxyConfig{}).
 		TLSConfig(tlsConfig).
-		TLSLoadX509KeyPair("cert", "key"))
+		TLSCertificateAndKey("cert", "key"))
 	conf := m.Config()
 
 	assert.Equal(t, nm, conf.Name)

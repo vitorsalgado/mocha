@@ -3,13 +3,13 @@ package mocha
 import (
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"strconv"
 	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/goleak"
 
@@ -180,24 +180,6 @@ func TestMochaEnableDisable(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.Equal(t, http.StatusOK, res.StatusCode)
-}
-
-type FakeEvents struct{ mock.Mock }
-
-func (h *FakeEvents) OnRequest(e any) {
-	h.Called(e)
-}
-
-func (h *FakeEvents) OnRequestMatched(e any) {
-	h.Called(e)
-}
-
-func (h *FakeEvents) OnRequestNotMatched(e any) {
-	h.Called(e)
-}
-
-func (h *FakeEvents) OnError(e any) {
-	h.Called(e)
 }
 
 func TestMochaSilently(t *testing.T) {
@@ -405,4 +387,26 @@ func TestMochaConcurrentRequests(t *testing.T) {
 	wg.Wait()
 
 	assert.Equal(t, 54*jobs, m.Hits())
+}
+
+func TestSettingOnlyPort(t *testing.T) {
+	randomPort := func() int {
+		l, err := net.Listen("tcp", ":0")
+		require.NoError(t, err)
+		require.NoError(t, l.Close())
+
+		return l.Addr().(*net.TCPAddr).Port
+	}
+
+	port := randomPort()
+	m := NewT(t, Setup().Port(port))
+	m.MustStart()
+	m.MustMock(Getf("/test").Reply(OK()))
+
+	hc := &http.Client{}
+	res, err := hc.Get(m.URL("/test"))
+
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.Contains(t, m.URL(), strconv.FormatInt(int64(port), 10))
 }

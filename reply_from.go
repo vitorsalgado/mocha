@@ -40,7 +40,7 @@ type ProxyReply struct {
 	timeout              time.Duration
 	noFollow             bool
 	sslVerify            bool
-	httpClient           *http.Client
+	httpClient           http.Client
 }
 
 // From creates a ProxyReply with the given target.
@@ -183,7 +183,7 @@ func (r *ProxyReply) Build(_ http.ResponseWriter, req *RequestValues) (*Stub, er
 
 	defer res.Body.Close()
 
-	stub := &Stub{Header: make(http.Header)}
+	stub := newStub()
 
 	for _, h := range _forbiddenHeaders {
 		res.Header.Del(h)
@@ -221,22 +221,21 @@ func (r *ProxyReply) Build(_ http.ResponseWriter, req *RequestValues) (*Stub, er
 }
 
 func (r *ProxyReply) beforeBuild(app *Mocha) error {
+	tlsConfig := &tls.Config{InsecureSkipVerify: !r.sslVerify, RootCAs: app.config.TLSRootCAs}
+
 	if app.config.HTTPClientFactory == nil {
-		r.httpClient = &http.Client{
-			Transport: &http.Transport{
-				DisableCompression: true,
-				TLSClientConfig:    &tls.Config{InsecureSkipVerify: !r.sslVerify},
-			}}
+		r.httpClient = http.Client{Transport: &http.Transport{DisableCompression: true, TLSClientConfig: tlsConfig}}
 	} else {
 		h, err := app.config.HTTPClientFactory()
 		if err != nil {
 			return err
 		}
 
-		r.httpClient = h
-		if r.httpClient.Transport != nil {
-			r.httpClient.Transport.(*http.Transport).TLSClientConfig.InsecureSkipVerify = !r.sslVerify
-		}
+		r.httpClient = *h
+	}
+
+	if r.httpClient.Transport == nil {
+		r.httpClient.Transport = &http.Transport{TLSClientConfig: tlsConfig, DisableCompression: true}
 	}
 
 	if r.noFollow {

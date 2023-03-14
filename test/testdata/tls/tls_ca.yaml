@@ -1,0 +1,4 @@
+tls:
+  cert: testdata/tls/srv.crt
+  key: testdata/tls/srv.key
+  ca: testdata/tls/srv.crt

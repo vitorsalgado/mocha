@@ -148,6 +148,7 @@ const (
 // If no port is set, it will start the server on localhost using a random port.
 func New(config ...Configurer) *Mocha {
 	app := &Mocha{}
+	ctx, cancel := context.WithCancel(context.Background())
 
 	conf := defaultConfig()
 	for i, configurer := range config {
@@ -162,10 +163,14 @@ func New(config ...Configurer) *Mocha {
 		}
 	}
 
+	app.config = conf
+	app.name = conf.Name
+	app.ctx = ctx
+	app.cancel = cancel
+
 	setLog(conf, app)
 
-	ctx, cancel := context.WithCancel(context.Background())
-	cz := &colorize.Colorize{Enabled: conf.UseDescriptiveLogger}
+	colors := &colorize.Colorize{Enabled: conf.UseDescriptiveLogger}
 	store := newStore()
 
 	parsers := make([]RequestBodyParser, 0, len(conf.RequestBodyParsers)+4)
@@ -198,12 +203,12 @@ func New(config ...Configurer) *Mocha {
 
 	var p *reverseProxy
 	if conf.Proxy != nil {
-		p = newProxy(app, conf.Proxy)
+		p = newProxy(app.log, conf)
 	}
 
 	var lifecycle mockHTTPLifecycle
 	if conf.UseDescriptiveLogger {
-		lifecycle = &builtInDescriptiveMockHTTPLifecycle{app, cz}
+		lifecycle = &builtInDescriptiveMockHTTPLifecycle{app, colors}
 	} else {
 		lifecycle = &builtInMockHTTPLifecycle{app}
 	}
@@ -237,13 +242,10 @@ func New(config ...Configurer) *Mocha {
 		app.te = tmpl
 	}
 
-	app.config = conf
-	app.name = conf.Name
 	app.server = server
 	app.storage = store
 	app.scenarioStore = mfeat.NewScenarioStore()
-	app.ctx = ctx
-	app.cancel = cancel
+
 	app.params = params
 	app.scopes = make([]*Scoped, 0)
 	app.loaders = loaders
@@ -251,7 +253,7 @@ func New(config ...Configurer) *Mocha {
 	app.proxy = p
 	app.requestBodyParsers = parsers
 	app.extensions = make(map[string]Extension)
-	app.cz = cz
+	app.cz = colors
 
 	if app.config.Forward != nil {
 		app.MustMock(Request().

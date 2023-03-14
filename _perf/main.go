@@ -23,38 +23,38 @@ import (
 type Srv struct {
 	h    http.Handler
 	cfg  *mocha.Config
-	info mocha.ServerInfo
+	info *mocha.ServerInfo
 }
 
-func (s *Srv) Setup(config *mocha.Config, handler http.Handler) error {
+func (s *Srv) Setup(app *mocha.Mocha, handler http.Handler) error {
 	http.HandleFunc("/", handler.ServeHTTP)
 
 	s.h = handler
-	s.cfg = config
+	s.cfg = app.Config()
 
 	return nil
 }
 
-func (s *Srv) Start() (mocha.ServerInfo, error) {
+func (s *Srv) Start() error {
 	go func() {
 		if err := http.ListenAndServe(s.cfg.Addr, s.h); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalln(err)
 		}
 	}()
 
-	return s.info, nil
+	return nil
 }
 
-func (s *Srv) StartTLS() (mocha.ServerInfo, error) {
-	return s.info, nil
+func (s *Srv) StartTLS() error {
+	return nil
 }
 
 func (s *Srv) Close() error {
 	return nil
 }
 
-func (s *Srv) Info() mocha.ServerInfo {
-	return mocha.ServerInfo{URL: ""}
+func (s *Srv) Info() *mocha.ServerInfo {
+	return &mocha.ServerInfo{URL: ""}
 }
 
 func main() {

@@ -4,142 +4,79 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/internal/testutil"
-	"github.com/vitorsalgado/mocha/v3/matcher"
+	. "github.com/vitorsalgado/mocha/v3"
+	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
 func TestHTTPMethods(t *testing.T) {
-	m := mocha.New()
+	client := &http.Client{}
+
+	m := NewT(t)
 	m.MustStart()
 
-	defer m.Close()
+	path1 := "/test/1"
+	path2 := "/test/2"
+	path3 := "/test/3"
 
-	t.Run("should mock GET", func(t *testing.T) {
-		scoped := m.MustMock(
-			mocha.Get(matcher.URLPath("/test")).
-				Reply(mocha.OK()))
+	testCases := []struct {
+		method string
+		path   string
+		mock   *MockBuilder
+		status int
+	}{
+		{http.MethodGet, path1, Getf(path1), 200},
+		{http.MethodGet, path2, Get(URLPathf(path2)), 400},
+		{http.MethodGet, path3, Request().Method(http.MethodGet).URLPathf(path3), 500},
 
-		defer scoped.Clean()
+		{http.MethodPost, path1, Postf(path1), 201},
+		{http.MethodPost, path2, Post(URLPathf(path2)), 401},
+		{http.MethodPost, path3, Request().Method(http.MethodPost).URLPathf(path3), 501},
 
-		res, err := testutil.Get(m.URL() + "/test").Do()
+		{http.MethodPut, path1, Putf(path1), 202},
+		{http.MethodPut, path2, Put(URLPathf(path2)), 402},
+		{http.MethodPut, path3, Request().Method(http.MethodPut).URLPathf(path3), 502},
 
-		require.NoError(t, err)
-		assert.Equal(t, http.StatusOK, res.StatusCode)
-		assert.Equal(t, 1, scoped.Hits())
+		{http.MethodPatch, path1, Patchf(path1), 203},
+		{http.MethodPatch, path2, Patch(URLPathf(path2)), 403},
+		{http.MethodPatch, path3, Request().Method(http.MethodPatch).URLPathf(path3), 503},
 
-		other, err := testutil.Post(m.URL()+"/test", nil).Do()
+		{http.MethodDelete, path1, Deletef(path1), 204},
+		{http.MethodDelete, path2, Delete(URLPathf(path2)), 404},
+		{http.MethodDelete, path3, Request().Method(http.MethodDelete).URLPathf(path3), 504},
 
-		require.NoError(t, err)
-		assert.Equal(t, mocha.StatusNoMatch, other.StatusCode)
-		assert.Equal(t, 1, scoped.Hits())
-	})
+		{http.MethodHead, path1, Headf(path1), 205},
+		{http.MethodHead, path2, Head(URLPathf(path2)), 405},
+		{http.MethodHead, path3, Request().Method(http.MethodHead).URLPathf(path3), 505},
 
-	t.Run("should mock POST", func(t *testing.T) {
-		scoped := m.MustMock(
-			mocha.Post(matcher.URLPath("/test")).
-				Reply(mocha.OK()))
+		{http.MethodConnect, path1, Request().Method(http.MethodConnect).URLPathf(path1), 206},
+		{http.MethodOptions, path2, Request().Method(http.MethodOptions).URLPathf(path2), 406},
+		{http.MethodTrace, path3, Request().Method(http.MethodTrace).URLPathf(path3), 506},
+	}
 
-		defer scoped.Clean()
+	for _, tc := range testCases {
+		t.Run(tc.method, func(t *testing.T) {
+			m.MustMock(tc.mock.Reply(Status(tc.status)))
 
-		res, err := testutil.Get(m.URL() + "/test").Do()
+			req, _ := http.NewRequest(tc.method, m.URL(tc.path), nil)
+			res, err := client.Do(req)
 
-		require.NoError(t, err)
-		assert.Equal(t, mocha.StatusNoMatch, res.StatusCode)
-		assert.False(t, scoped.HasBeenCalled())
+			require.NoError(t, err)
+			require.Equal(t, tc.status, res.StatusCode)
 
-		other, err := testutil.Post(m.URL()+"/test", nil).Do()
+			other := http.MethodGet
+			if tc.method == http.MethodGet {
+				other = http.MethodPost
+			}
 
-		require.NoError(t, err)
-		assert.Equal(t, http.StatusOK, other.StatusCode)
-		assert.Equal(t, 1, scoped.Hits())
-		assert.True(t, scoped.HasBeenCalled())
-	})
+			req, _ = http.NewRequest(other, m.URL(tc.path), nil)
+			res, err = client.Do(req)
 
-	t.Run("should mock PUT", func(t *testing.T) {
-		scoped := m.MustMock(
-			mocha.Put(matcher.URLPath("/test")).
-				Reply(mocha.OK()))
+			require.NoError(t, err)
+			require.Equal(t, StatusNoMatch, res.StatusCode)
 
-		defer scoped.Clean()
-
-		res, err := testutil.Get(m.URL() + "/test").Do()
-
-		require.NoError(t, err)
-		assert.Equal(t, mocha.StatusNoMatch, res.StatusCode)
-		assert.False(t, scoped.HasBeenCalled())
-
-		other, err := testutil.NewRequest(http.MethodPut, m.URL()+"/test", nil).Do()
-
-		require.NoError(t, err)
-		assert.Equal(t, http.StatusOK, other.StatusCode)
-		assert.Equal(t, 1, scoped.Hits())
-		assert.True(t, scoped.HasBeenCalled())
-	})
-
-	t.Run("should mock DELETE", func(t *testing.T) {
-		scoped := m.MustMock(
-			mocha.Delete(matcher.URLPath("/test")).
-				Reply(mocha.OK()))
-
-		defer scoped.Clean()
-
-		res, err := testutil.Get(m.URL() + "/test").Do()
-
-		require.NoError(t, err)
-		assert.Equal(t, mocha.StatusNoMatch, res.StatusCode)
-		assert.False(t, scoped.HasBeenCalled())
-
-		other, err := testutil.NewRequest(http.MethodDelete, m.URL()+"/test", nil).Do()
-
-		require.NoError(t, err)
-		assert.Equal(t, http.StatusOK, other.StatusCode)
-		assert.Equal(t, 1, scoped.Hits())
-		assert.True(t, scoped.HasBeenCalled())
-	})
-
-	t.Run("should mock PATCH", func(t *testing.T) {
-		scoped := m.MustMock(
-			mocha.Patch(matcher.URLPath("/test")).
-				Reply(mocha.OK()))
-
-		defer scoped.Clean()
-
-		res, err := testutil.Get(m.URL() + "/test").Do()
-
-		require.NoError(t, err)
-		assert.Equal(t, mocha.StatusNoMatch, res.StatusCode)
-		assert.False(t, scoped.HasBeenCalled())
-
-		other, err := testutil.NewRequest(http.MethodPatch, m.URL()+"/test", nil).Do()
-
-		require.NoError(t, err)
-		assert.Equal(t, http.StatusOK, other.StatusCode)
-		assert.Equal(t, 1, scoped.Hits())
-		assert.True(t, scoped.HasBeenCalled())
-	})
-
-	t.Run("should mock HEAD", func(t *testing.T) {
-		scoped := m.MustMock(
-			mocha.Head(matcher.URLPath("/test")).
-				Reply(mocha.OK()))
-
-		defer scoped.Clean()
-
-		res, err := testutil.Get(m.URL() + "/test").Do()
-
-		require.NoError(t, err)
-		assert.Equal(t, mocha.StatusNoMatch, res.StatusCode)
-		assert.False(t, scoped.HasBeenCalled())
-
-		other, err := testutil.NewRequest(http.MethodHead, m.URL()+"/test", nil).Do()
-
-		require.NoError(t, err)
-		assert.Equal(t, http.StatusOK, other.StatusCode)
-		assert.Equal(t, 1, scoped.Hits())
-		assert.True(t, scoped.HasBeenCalled())
-	})
+			m.Clean()
+		})
+	}
 }

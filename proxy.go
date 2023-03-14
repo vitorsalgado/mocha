@@ -8,6 +8,8 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/rs/zerolog"
+
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 )
 
@@ -30,6 +32,8 @@ type ProxyConfig struct {
 	// If none is provided, a default one will be used.
 	// You need to set a Target and a custom Via in your custom http.RoundTripper.
 	Transport http.RoundTripper
+
+	log *zerolog.Logger
 }
 
 // ProxyConfigurer lets users configure the proxy.
@@ -50,15 +54,20 @@ func (p *ProxyConfig) Apply(c *ProxyConfig) error {
 var _defaultProxyConfig = ProxyConfig{Timeout: 10 * time.Second, SSLVerify: false}
 
 type reverseProxy struct {
-	app  *Mocha
-	conf *ProxyConfig
+	log          *zerolog.Logger
+	roundTripper http.RoundTripper
 }
 
-func newProxy(app *Mocha, conf *ProxyConfig) *reverseProxy {
-	if conf.Transport == nil {
-		transport := &http.Transport{}
-		if conf.Via != "" {
-			u, err := url.Parse(conf.Via)
+func newProxy(log *zerolog.Logger, config *Config) *reverseProxy {
+	var roundTripper http.RoundTripper
+
+	if config.Proxy.Transport == nil {
+		transport := &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: !config.Proxy.SSLVerify, RootCAs: config.TLSRootCAs},
+		}
+
+		if config.Proxy.Via != "" {
+			u, err := url.Parse(config.Proxy.Via)
 			if err != nil {
 				panic(err)
 			}
@@ -69,13 +78,14 @@ func newProxy(app *Mocha, conf *ProxyConfig) *reverseProxy {
 		transport.TLSHandshakeTimeout = 15 * time.Second
 		transport.IdleConnTimeout = 15 * time.Second
 		transport.ExpectContinueTimeout = 1 * time.Second
-		transport.ResponseHeaderTimeout = conf.Timeout
-		transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: !conf.SSLVerify}
+		transport.ResponseHeaderTimeout = config.Proxy.Timeout
 
-		conf.Transport = transport
+		roundTripper = transport
+	} else {
+		roundTripper = config.Proxy.Transport
 	}
 
-	return &reverseProxy{app, conf}
+	return &reverseProxy{log, roundTripper}
 }
 
 func (p *reverseProxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -112,7 +122,7 @@ func (p *reverseProxy) handleTunneling(w http.ResponseWriter, r *http.Request) {
 
 	errCh := make(chan error, 2)
 	cp := func(dst io.WriteCloser, src io.ReadCloser) {
-		_, err := io.Copy(dst, src)
+		_, err = io.Copy(dst, src)
 		errCh <- err
 	}
 
@@ -121,7 +131,7 @@ func (p *reverseProxy) handleTunneling(w http.ResponseWriter, r *http.Request) {
 
 	err = <-errCh
 	if err != nil {
-		p.app.log.Error().Err(err).
+		p.log.Error().Err(err).
 			Str("url", r.URL.String()).
 			Str("method", r.Method).
 			Msg("proxy: error writing response")
@@ -131,7 +141,7 @@ func (p *reverseProxy) handleTunneling(w http.ResponseWriter, r *http.Request) {
 func (p *reverseProxy) handleHTTP(w http.ResponseWriter, r *http.Request) {
 	r.Header.Del(header.Connection)
 
-	res, err := p.conf.Transport.RoundTrip(r)
+	res, err := p.roundTripper.RoundTrip(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusServiceUnavailable)
 		return
@@ -149,7 +159,7 @@ func (p *reverseProxy) handleHTTP(w http.ResponseWriter, r *http.Request) {
 
 	_, err = io.Copy(w, res.Body)
 	if err != nil {
-		p.app.log.Error().Err(err).
+		p.log.Error().Err(err).
 			Str("url", r.URL.String()).
 			Str("method", r.Method).
 			Str("status", res.Status).

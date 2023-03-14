@@ -2,7 +2,9 @@ package mocha
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"net/http"
+	"strconv"
 	"text/template"
 
 	"github.com/rs/zerolog"
@@ -78,6 +80,9 @@ type Config struct {
 	// TLSKeyFs sets a custom TLS private key filename.
 	// If none is provided, when starting a new server with TLS, an internal default one will be used.
 	TLSKeyFs string
+
+	// TLSRootCAs defines the set of root certificate authorities that the server will use.
+	TLSRootCAs *x509.CertPool
 
 	// RequestWasNotMatchedStatusCode defines the status code that should be used when
 	// an HTTP request doesn't match with any mock.
@@ -215,6 +220,7 @@ func (c *Config) Apply(conf *Config) error {
 	conf.TLSConfig = c.TLSConfig
 	conf.TLSCertificateFs = c.TLSCertificateFs
 	conf.TLSKeyFs = c.TLSKeyFs
+	conf.TLSRootCAs = c.TLSRootCAs
 
 	return nil
 }
@@ -257,6 +263,13 @@ func (cb *ConfigBuilder) Name(name string) *ConfigBuilder {
 // Addr sets a custom address for the mock HTTP server.
 func (cb *ConfigBuilder) Addr(addr string) *ConfigBuilder {
 	cb.conf.Addr = addr
+	return cb
+}
+
+// Port sets a custom port to the mock HTTP server.
+// If none is provided, a random port number will be used.
+func (cb *ConfigBuilder) Port(port int) *ConfigBuilder {
+	cb.conf.Addr = ":" + strconv.FormatInt(int64(port), 10)
 	return cb
 }
 
@@ -438,11 +451,19 @@ func (cb *ConfigBuilder) TLSConfig(c *tls.Config) *ConfigBuilder {
 	return cb
 }
 
-// TLSLoadX509KeyPair sets a custom public/private key pair.
+// TLSCertificateAndKey sets a custom public/private key pair.
 // If none is provided, default values will be used when starting the server with Mocha.StartTLS or Mocha.MustStartTLS.
-func (cb *ConfigBuilder) TLSLoadX509KeyPair(cerFile string, keyFile string) *ConfigBuilder {
+// If TLSConfig is set, this option will be ignored.
+func (cb *ConfigBuilder) TLSCertificateAndKey(cerFile string, keyFile string) *ConfigBuilder {
 	cb.conf.TLSCertificateFs = cerFile
 	cb.conf.TLSKeyFs = keyFile
+	return cb
+}
+
+// TLSRootCAs defines the set of root certificate authorities that the server will use.
+// If TLSConfig is set, this option will be ignored.
+func (cb *ConfigBuilder) TLSRootCAs(certPool *x509.CertPool) *ConfigBuilder {
+	cb.conf.TLSRootCAs = certPool
 	return cb
 }
 
