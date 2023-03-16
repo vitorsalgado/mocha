@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
@@ -36,8 +35,7 @@ func TestPostAction(t *testing.T) {
 			PostAction(act).
 			Reply(mocha.OK()))
 
-		req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
-		res, err := req.Do()
+		res, err := http.Get(fmt.Sprintf("%s/test", m.URL()))
 
 		require.NoError(t, err)
 		require.True(t, scope.AssertCalled(t))
@@ -58,8 +56,7 @@ func TestPostAction(t *testing.T) {
 			PostAction(act).
 			Reply(mocha.OK()))
 
-		req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
-		res, err := req.Do()
+		res, err := http.Get(fmt.Sprintf("%s/test", m.URL()))
 
 		require.NoError(t, err)
 		require.True(t, scope.AssertCalled(t))

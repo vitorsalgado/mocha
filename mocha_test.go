@@ -5,15 +5,14 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/http/httptest"
 	"strconv"
 	"sync"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/goleak"
 
-	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
@@ -42,14 +41,14 @@ func TestMocha(t *testing.T) {
 	req.Header.Add("test", "hello")
 
 	res, err := http.DefaultClient.Do(req)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	body, err := io.ReadAll(res.Body)
 
-	assert.NoError(t, err)
-	assert.True(t, scoped.HasBeenCalled())
-	assert.Equal(t, 201, res.StatusCode)
-	assert.Equal(t, string(body), "hello world")
+	require.NoError(t, err)
+	require.True(t, scoped.HasBeenCalled())
+	require.Equal(t, 201, res.StatusCode)
+	require.Equal(t, string(body), "hello world")
 }
 
 func TestResponseMapperModifyingResponse(t *testing.T) {
@@ -73,18 +72,16 @@ func TestResponseMapperModifyingResponse(t *testing.T) {
 			return nil
 		}))
 
-	req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
-	req.Header("x-param", "dev")
+	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/test", m.URL()), nil)
+	req.Header.Add("x-param", "dev")
 
-	res, err := req.Do()
-	if err != nil {
-		t.Error(err)
-	}
+	res, err := http.DefaultClient.Do(req)
 
-	scoped.AssertCalled(t)
-	assert.Equal(t, http.StatusOK, res.StatusCode)
-	assert.Equal(t, "dev", res.Header.Get("x-test"))
-	assert.Equal(t, "test-ok", res.Header.Get("x-param-key"))
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.Equal(t, "dev", res.Header.Get("x-test"))
+	require.Equal(t, "test-ok", res.Header.Get("x-param-key"))
+	require.True(t, scoped.AssertCalled(t))
 }
 
 func TestErrors(t *testing.T) {
@@ -101,11 +98,11 @@ func TestErrors(t *testing.T) {
 				})).
 			Reply(OK()))
 
-	res, err := testutil.Get(fmt.Sprintf("%s/test2", m.URL())).Do()
+	res, err := http.Get(fmt.Sprintf("%s/test2", m.URL()))
 
-	assert.NoError(t, err)
-	assert.False(t, scoped.HasBeenCalled())
-	assert.Equal(t, StatusNoMatch, res.StatusCode)
+	require.NoError(t, err)
+	require.False(t, scoped.HasBeenCalled())
+	require.Equal(t, StatusNoMatch, res.StatusCode)
 }
 
 func TestMochaAssertions(t *testing.T) {
@@ -120,21 +117,21 @@ func TestMochaAssertions(t *testing.T) {
 		Get(URLPath("/test-ok")).
 			Reply(OK()))
 
-	assert.Equal(t, 0, scoped.Hits())
-	assert.False(t, m.AssertCalled(ft))
-	assert.True(t, m.AssertNotCalled(ft))
-	assert.True(t, m.AssertNumberOfCalls(ft, 0))
-	assert.Equal(t, 0, m.Hits())
+	require.Equal(t, 0, scoped.Hits())
+	require.False(t, m.AssertCalled(ft))
+	require.True(t, m.AssertNotCalled(ft))
+	require.True(t, m.AssertNumberOfCalls(ft, 0))
+	require.Equal(t, 0, m.Hits())
 
-	res, err := testutil.Get(m.URL() + "/test-ok").Do()
+	res, err := http.Get(m.URL() + "/test-ok")
 
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, res.StatusCode)
-	assert.Equal(t, 1, scoped.Hits())
-	assert.True(t, m.AssertCalled(ft))
-	assert.False(t, m.AssertNotCalled(ft))
-	assert.True(t, m.AssertNumberOfCalls(ft, 1))
-	assert.Equal(t, 1, m.Hits())
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.Equal(t, 1, scoped.Hits())
+	require.True(t, m.AssertCalled(ft))
+	require.False(t, m.AssertNotCalled(ft))
+	require.True(t, m.AssertNumberOfCalls(ft, 1))
+	require.Equal(t, 1, m.Hits())
 }
 
 func TestMochaEnableDisable(t *testing.T) {
@@ -149,37 +146,32 @@ func TestMochaEnableDisable(t *testing.T) {
 		Get(URLPath("/test-2")).
 			Reply(OK()))
 
-	res, err := testutil.Get(m.URL() + "/test-1").Do()
-
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, res.StatusCode)
+	res, err := http.Get(m.URL() + "/test-1")
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	// disable all mocks
 	// should return tea pot for all
 	m.Disable()
 
-	res, err = testutil.Get(m.URL() + "/test-1").Do()
+	res, err = http.Get(m.URL() + "/test-1")
+	require.NoError(t, err)
+	require.Equal(t, StatusNoMatch, res.StatusCode)
 
-	assert.NoError(t, err)
-	assert.Equal(t, StatusNoMatch, res.StatusCode)
-
-	res, err = testutil.Get(m.URL() + "/test-2").Do()
-
-	assert.NoError(t, err)
-	assert.Equal(t, StatusNoMatch, res.StatusCode)
+	res, err = http.Get(m.URL() + "/test-2")
+	require.NoError(t, err)
+	require.Equal(t, StatusNoMatch, res.StatusCode)
 
 	// re-enable mocks again
 	m.Enable()
 
-	res, err = testutil.Get(m.URL() + "/test-1").Do()
-	assert.NoError(t, err)
+	res, err = http.Get(m.URL() + "/test-1")
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, res.StatusCode)
 
-	assert.Equal(t, http.StatusOK, res.StatusCode)
-
-	res, err = testutil.Get(m.URL() + "/test-2").Do()
-	assert.NoError(t, err)
-
-	assert.Equal(t, http.StatusOK, res.StatusCode)
+	res, err = http.Get(m.URL() + "/test-2")
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, res.StatusCode)
 }
 
 func TestMochaSilently(t *testing.T) {
@@ -196,16 +188,14 @@ func TestMochaSilently(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test?filter=all", nil)
 
 	res, err := http.DefaultClient.Do(req)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		t.Error(err)
-	}
 
-	assert.True(t, scoped.HasBeenCalled())
-	assert.Equal(t, 201, res.StatusCode)
-	assert.Equal(t, string(body), "hello world")
+	require.NoError(t, err)
+	require.True(t, scoped.HasBeenCalled())
+	require.Equal(t, 201, res.StatusCode)
+	require.Equal(t, string(body), "hello world")
 }
 
 func TestSchemeMatching(t *testing.T) {
@@ -226,24 +216,24 @@ func TestSchemeMatching(t *testing.T) {
 
 	defer res.Body.Close()
 
-	assert.True(t, scoped.HasBeenCalled())
-	assert.Equal(t, http.StatusOK, res.StatusCode)
+	require.True(t, scoped.HasBeenCalled())
+	require.Equal(t, http.StatusOK, res.StatusCode)
 }
 
 func TestMochaNoReply(t *testing.T) {
 	m := New()
 
 	scoped, err := m.Mock(Get(URLPath("/test")))
-	assert.Nil(t, scoped)
-	assert.Error(t, err)
+	require.Nil(t, scoped)
+	require.Error(t, err)
 }
 
 func TestMochaNoMatchers(t *testing.T) {
 	m := New()
 
 	scoped, err := m.Mock(Request())
-	assert.Nil(t, scoped)
-	assert.Error(t, err)
+	require.Nil(t, scoped)
+	require.Error(t, err)
 }
 
 func TestMocha_RequestMatches(t *testing.T) {
@@ -344,29 +334,29 @@ func TestMochaConcurrentRequests(t *testing.T) {
 			scope4 := m.MustMock(Getf("/rand--" + num).Reply(Rand(Accepted(), InternalServerError())))
 
 			res, err := httpClient.Get(m.URL() + "/test--" + num)
-			assert.NoError(t, err)
-			assert.Equal(t, http.StatusOK, res.StatusCode)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusOK, res.StatusCode)
 
 			m.MustMock(Getf("/test-after--" + num).Reply(BadRequest()))
 
 			res, err = httpClient.Get(m.URL() + "/concurrency--" + num)
-			assert.NoError(t, err)
-			assert.Equal(t, http.StatusAccepted, res.StatusCode)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusAccepted, res.StatusCode)
 
 			m.MustMock(Getf("/concurrency-after--" + num).Reply(InternalServerError()))
 
 			res, err = httpClient.Get(m.URL() + "/seq--" + num)
-			assert.NoError(t, err)
-			assert.Equal(t, http.StatusOK, res.StatusCode)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusOK, res.StatusCode)
 
 			res, err = httpClient.Get(m.URL() + "/seq--" + num)
-			assert.NoError(t, err)
-			assert.Equal(t, http.StatusBadRequest, res.StatusCode)
+			require.NoError(t, err)
+			require.Equal(t, http.StatusBadRequest, res.StatusCode)
 
 			for n := 0; n < 50; n++ {
 				res, err = httpClient.Get(m.URL() + "/rand--" + num)
-				assert.NoError(t, err)
-				assert.True(t, res.StatusCode == http.StatusAccepted || res.StatusCode == http.StatusInternalServerError)
+				require.NoError(t, err)
+				require.True(t, res.StatusCode == http.StatusAccepted || res.StatusCode == http.StatusInternalServerError)
 			}
 
 			scope1.AssertCalled(t)
@@ -386,7 +376,7 @@ func TestMochaConcurrentRequests(t *testing.T) {
 
 	wg.Wait()
 
-	assert.Equal(t, 54*jobs, m.Hits())
+	require.Equal(t, 54*jobs, m.Hits())
 }
 
 func TestSettingOnlyPort(t *testing.T) {
@@ -409,4 +399,13 @@ func TestSettingOnlyPort(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	require.Contains(t, m.URL(), strconv.FormatInt(int64(port), 10))
+}
+
+func TestMocha_Server(t *testing.T) {
+	m := New()
+	srv := m.Server()
+
+	require.NotNil(t, srv)
+	require.IsType(t, &httpTestServer{}, srv)
+	require.IsType(t, &httptest.Server{}, srv.S())
 }

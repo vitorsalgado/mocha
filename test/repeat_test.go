@@ -7,7 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
@@ -21,17 +20,21 @@ func TestRepeat(t *testing.T) {
 		Times(3).
 		Reply(mocha.OK()))
 
-	res, _ := testutil.Get(m.URL() + "/test").Do()
+	res, err := http.Get(m.URL() + "/test")
 	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.NoError(t, err)
 
-	res, _ = testutil.Get(m.URL() + "/test").Do()
+	res, err = http.Get(m.URL() + "/test")
 	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.NoError(t, err)
 
-	res, _ = testutil.Get(m.URL() + "/test").Do()
+	res, err = http.Get(m.URL() + "/test")
 	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.NoError(t, err)
 
-	res, _ = testutil.Get(m.URL() + "/test").Do()
+	res, err = http.Get(m.URL() + "/test")
 	require.Equal(t, mocha.StatusNoMatch, res.StatusCode)
+	require.NoError(t, err)
 }
 
 func TestRepeat_Once(t *testing.T) {
@@ -44,10 +47,10 @@ func TestRepeat_Once(t *testing.T) {
 		Once().
 		Reply(mocha.OK()))
 
-	res, _ := testutil.Get(m.URL() + "/test").Do()
+	res, _ := http.Get(m.URL() + "/test")
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
-	res, _ = testutil.Get(m.URL() + "/test").Do()
+	res, _ = http.Get(m.URL() + "/test")
 	require.Equal(t, mocha.StatusNoMatch, res.StatusCode)
 }
 

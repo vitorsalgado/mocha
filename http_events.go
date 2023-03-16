@@ -166,7 +166,7 @@ type builtInDescriptiveMockHTTPLifecycle struct {
 	cz  *colorize.Colorize
 }
 
-func (h *builtInDescriptiveMockHTTPLifecycle) OnRequest(e *RequestValues) {
+func (h *builtInDescriptiveMockHTTPLifecycle) OnRequest(rv *RequestValues) {
 	if h.app.config.LogLevel == LogLevelDisabled {
 		return
 	}
@@ -174,28 +174,30 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnRequest(e *RequestValues) {
 	builder := strings.Builder{}
 	builder.WriteString(fmt.Sprintf("%s %s ---> %s %s\n%s %s",
 		h.cz.BlueBright(h.cz.Bold("REQUEST RECEIVED")),
-		e.StartedAt.Format(time.RFC3339),
-		h.cz.Blue(e.RawRequest.Method),
-		h.cz.Blue(e.URL.Path),
-		e.RawRequest.Method,
-		e.URL))
+		rv.StartedAt.Format(time.RFC3339),
+		h.cz.Blue(rv.RawRequest.Method),
+		h.cz.Blue(rv.URL.Path),
+		rv.RawRequest.Method,
+		rv.URL))
 
-	if h.app.config.LogVerbosity >= LogHeader {
+	if h.app.config.LogVerbosity >= LogHeader && len(rv.RawRequest.Header) > 0 {
 		builder.WriteString("\n")
 		builder.WriteString(h.cz.Blue("Headers "))
-		builder.WriteString(fmt.Sprintf("%s", e.RawRequest.Header))
+		builder.WriteString(fmt.Sprintf("%s", rv.RawRequest.Header))
 	}
 
-	if h.app.config.LogVerbosity >= LogBody && len(e.RawBody) > 0 {
+	if h.app.config.LogVerbosity >= LogBody && len(rv.RawBody) > 0 {
 		builder.WriteString("\n")
 		builder.WriteString(h.cz.Blue("Body: "))
-		builder.WriteString(fmt.Sprintf("%v\n", string(e.RawBody)))
+		builder.WriteString(fmt.Sprintf("%v", string(rv.RawBody)))
 	}
+
+	builder.WriteString("\n")
 
 	fmt.Println(builder.String())
 }
 
-func (h *builtInDescriptiveMockHTTPLifecycle) OnMatch(e *RequestValues, s *Stub) {
+func (h *builtInDescriptiveMockHTTPLifecycle) OnMatch(rv *RequestValues, s *Stub) {
 	if h.app.config.LogLevel == LogLevelDisabled {
 		return
 	}
@@ -204,21 +206,21 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnMatch(e *RequestValues, s *Stub)
 	builder.WriteString(fmt.Sprintf("%s %s <--- %s %s\n%s ",
 		h.cz.GreenBright(h.cz.Bold("REQUEST MATCHED")),
 		time.Now().Format(time.RFC3339),
-		h.cz.Green(e.RawRequest.Method),
-		h.cz.Green(e.URL.Path),
-		e.RawRequest.Method))
-	builder.WriteString(e.URL.String())
+		h.cz.Green(rv.RawRequest.Method),
+		h.cz.Green(rv.URL.Path),
+		rv.RawRequest.Method))
+	builder.WriteString(rv.URL.String())
 	builder.WriteString("\n")
 	builder.WriteString(h.cz.Bold("Mock: "))
-	builder.WriteString(e.Mock.ID + " " + e.Mock.Name)
+	builder.WriteString(rv.Mock.ID + " " + rv.Mock.Name)
 	builder.WriteString("\n")
 	builder.WriteString(h.cz.Green("Took(ms): "))
-	builder.WriteString(strconv.FormatInt(time.Since(e.StartedAt).Milliseconds(), 10))
+	builder.WriteString(strconv.FormatInt(time.Since(rv.StartedAt).Milliseconds(), 10))
 	builder.WriteString("\n")
 	builder.WriteString(h.cz.Green("Status: "))
 	builder.WriteString(strconv.FormatInt(int64(s.StatusCode), 10))
 
-	if h.app.config.LogVerbosity >= LogHeader {
+	if h.app.config.LogVerbosity >= LogHeader && len(s.Header) > 0 {
 		builder.WriteString("\n")
 		builder.WriteString(h.cz.Green("Headers: "))
 		builder.WriteString(fmt.Sprintf("%s", s.Header))
@@ -241,22 +243,22 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnMatch(e *RequestValues, s *Stub)
 	fmt.Println(builder.String())
 }
 
-func (h *builtInDescriptiveMockHTTPLifecycle) OnNoMatch(r *RequestValues, fr *findResult) {
+func (h *builtInDescriptiveMockHTTPLifecycle) OnNoMatch(rv *RequestValues, fr *findResult) {
 	if h.app.config.LogLevel == LogLevelDisabled {
 		return
 	}
 
 	builder := strings.Builder{}
-	builder.WriteString(fmt.Sprintf("\n%s %s <--- %s %s\n%s %s\n",
+	builder.WriteString(fmt.Sprintf("%s %s <--- %s %s\n%s %s\n",
 		h.cz.YellowBright(h.cz.Bold("REQUEST WAS NOT MATCHED")),
 		time.Now().Format(time.RFC3339),
-		h.cz.Yellow(r.RawRequest.Method),
-		h.cz.Yellow(r.URL.Path),
-		r.RawRequest.Method,
-		r.URL.String()))
+		h.cz.Yellow(rv.RawRequest.Method),
+		h.cz.Yellow(rv.URL.Path),
+		rv.RawRequest.Method,
+		rv.URL.String()))
 
 	if fr.ClosestMatch != nil {
-		builder.WriteString(fmt.Sprintf("%s: %s %s\n\n",
+		builder.WriteString(fmt.Sprintf("%s: %s %s\n",
 			h.cz.Bold("Closest Match"), fr.ClosestMatch.ID, fr.ClosestMatch.Name))
 	}
 
@@ -299,6 +301,8 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnNoMatch(r *RequestValues, fr *fi
 		}
 	}
 
+	builder.WriteString("\n")
+
 	fmt.Println(builder.String())
 }
 
@@ -307,14 +311,14 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnWarning(r *RequestValues, err er
 		return
 	}
 
-	fmt.Printf("%s %s <--- %s %s\n%s %s\n%s: %v\n",
+	fmt.Printf("\n%s %s <--- %s %s\n%s %s\n%s: %v\n\n",
 		h.cz.RedBright(h.cz.Bold("WARNING")),
 		time.Now().Format(time.RFC3339),
 		h.cz.Red(r.RawRequest.Method),
 		h.cz.Red(r.URL.Path),
 		r.RawRequest.Method,
 		r.URL.String(),
-		h.cz.Red(h.cz.Bold("Error: ")),
+		h.cz.Red(h.cz.Bold("Error")),
 		err,
 	)
 }
@@ -324,14 +328,14 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnError(r *RequestValues, err erro
 		return
 	}
 
-	fmt.Printf("%s %s <--- %s %s\n%s %s\n%s: %v\n",
+	fmt.Printf("%s %s <--- %s %s\n%s %s\n%s: %v\n\n",
 		h.cz.RedBright(h.cz.Bold("ERROR")),
 		time.Now().Format(time.RFC3339),
 		h.cz.Red(r.RawRequest.Method),
 		h.cz.Red(r.URL.Path),
 		r.RawRequest.Method,
 		r.URL.String(),
-		h.cz.Red(h.cz.Bold("Error: ")),
+		h.cz.Red(h.cz.Bold("Error")),
 		err,
 	)
 }

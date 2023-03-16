@@ -1,3 +1,6 @@
 issues:
   exclude:
     - "Error return value of .((os\\.)?std(out|err)\\..*|.*Write|.*Close|.*Flush|os\\.Remove(All)?|.*printf?|os\\.(Un)?Setenv). is not checked"
+
+output:
+  sort-results: true

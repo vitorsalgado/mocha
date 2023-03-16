@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
@@ -25,8 +24,7 @@ func TestCompressedResponse_GZIP(t *testing.T) {
 			BodyText("hello world").
 			Gzip()))
 
-	req := testutil.Get(m.URL() + "/test")
-	res, err := req.Do()
+	res, err := http.Get(m.URL() + "/test")
 	require.NoError(t, err)
 
 	defer res.Body.Close()

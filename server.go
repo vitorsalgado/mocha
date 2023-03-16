@@ -32,6 +32,10 @@ type Server interface {
 
 	// Info returns server information.
 	Info() *ServerInfo
+
+	// S returns the server implementation that is being used by this component.
+	// For example, the built-in Server will return a *httptest.Server.
+	S() any
 }
 
 type httpTestServer struct {
@@ -73,24 +77,16 @@ func (s *httpTestServer) Setup(app *Mocha, handler http.Handler) error {
 
 	if app.config.TLSConfig != nil {
 		s.server.TLS = app.config.TLSConfig
-	} else {
-		if (app.config.TLSCertificateFs == "" || app.config.TLSKeyFs == "") && app.config.TLSRootCAs == nil {
-			return nil
+		s.server.EnableHTTP2 = app.config.UseHTTP2
+	} else if app.config.TLSCertificate != nil {
+		s.server.TLS = &tls.Config{Certificates: []tls.Certificate{*app.config.TLSCertificate}}
+
+		if app.config.TLSClientCAs != nil {
+			s.server.TLS.ClientCAs = app.config.TLSClientCAs
+			s.server.TLS.ClientAuth = tls.RequireAndVerifyClientCert
 		}
 
-		var certs []tls.Certificate
-
-		if app.config.TLSCertificateFs != "" && app.config.TLSKeyFs != "" {
-			cert, err := tls.LoadX509KeyPair(app.config.TLSCertificateFs, app.config.TLSKeyFs)
-			if err != nil {
-				return err
-			}
-
-			certs = make([]tls.Certificate, 1)
-			certs[0] = cert
-		}
-
-		s.server.TLS = &tls.Config{Certificates: certs, RootCAs: app.config.TLSRootCAs}
+		s.server.EnableHTTP2 = app.config.UseHTTP2
 	}
 
 	return nil
@@ -130,6 +126,10 @@ func (s *httpTestServer) Close() error {
 
 func (s *httpTestServer) Info() *ServerInfo {
 	return s.info
+}
+
+func (s *httpTestServer) S() any {
+	return s.server
 }
 
 func (s *httpTestServer) beforeStart() error {

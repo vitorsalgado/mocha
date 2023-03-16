@@ -8,7 +8,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	. "github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
@@ -31,7 +30,7 @@ func TestPriority(t *testing.T) {
 		Reply(Created()))
 
 	for i := 0; i < 5; i++ {
-		res, err := testutil.Get(m.URL() + "/test").Do()
+		res, err := http.Get(m.URL() + "/test")
 
 		require.NoError(t, err)
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)

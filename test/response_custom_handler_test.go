@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
@@ -32,9 +31,9 @@ func TestHandlerReply(t *testing.T) {
 		Reply(mocha.Handler(fn)),
 	)
 
-	req := testutil.Get(m.URL() + "/test")
-	req.Header("test", "hello")
-	res, err := req.Do()
+	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
+	req.Header.Add("test", "hello")
+	res, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
 
 	txt, err := io.ReadAll(res.Body)

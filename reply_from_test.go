@@ -14,7 +14,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3/internal/header"
-	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 )
 
 func TestForward(t *testing.T) {
@@ -235,7 +234,7 @@ func TestForward(t *testing.T) {
 		proxyScope := target.MustMock(Getf("/proxy").Reply(MovedPermanently(target.URL() + "/redirected")))
 		scoped := m.MustMock(Getf("/proxy").Reply(From(target.URL())))
 
-		res, err := testutil.Get(m.URL() + "/proxy").Do()
+		res, err := http.Get(m.URL() + "/proxy")
 
 		require.NoError(t, err)
 		require.Equal(t, http.StatusAccepted, res.StatusCode)

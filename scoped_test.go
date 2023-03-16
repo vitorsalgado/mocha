@@ -7,7 +7,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
@@ -27,7 +26,7 @@ func TestScoped(t *testing.T) {
 	assert.Equal(t, m1, scoped.Get(m1.ID))
 	assert.Nil(t, scoped.Get("unknown"))
 
-	t.Run("should not return done when there is still pending store", func(t *testing.T) {
+	t.Run("should not return done when there is still pending mocks", func(t *testing.T) {
 		ft := newFakeT()
 
 		assert.False(t, scoped.HasBeenCalled())
@@ -38,7 +37,7 @@ func TestScoped(t *testing.T) {
 		ft.AssertNumberOfCalls(t, "Errorf", 1)
 	})
 
-	t.Run("should return done when all store were called", func(t *testing.T) {
+	t.Run("should return done when all mocks were called", func(t *testing.T) {
 		ft := newFakeT()
 
 		m1.Inc()
@@ -52,6 +51,8 @@ func TestScoped(t *testing.T) {
 		ft.AssertNumberOfCalls(t, "Errorf", 1)
 		assert.True(t, scoped.AssertCalled(t))
 		assert.True(t, scoped.HasBeenCalled())
+		assert.True(t, scoped.AssertNumberOfCalls(t, 3))
+		assert.False(t, scoped.AssertNumberOfCalls(ft, 1))
 		assert.Equal(t, 0, len(scoped.GetPending()))
 		assert.False(t, scoped.IsPending())
 	})
@@ -64,6 +65,7 @@ func TestScoped(t *testing.T) {
 	t.Run("should clean all store associated with scope when calling .Clean()", func(t *testing.T) {
 		scoped.Clean()
 		assert.Equal(t, 0, len(scoped.GetPending()))
+		assert.True(t, scoped.AssertNumberOfCalls(t, 0))
 		assert.False(t, scoped.IsPending())
 	})
 
@@ -79,20 +81,17 @@ func TestScoped(t *testing.T) {
 			Get(matcher.URLPath("/test3")).Reply(OK()))
 
 		t.Run("initial state (enabled)", func(t *testing.T) {
-			req := testutil.Get(fmt.Sprintf("%s/test1", m.URL()))
-			res, err := req.Do()
+			res, err := http.Get(fmt.Sprintf("%s/test1", m.URL()))
 
 			assert.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 
-			req = testutil.Get(fmt.Sprintf("%s/test2", m.URL()))
-			res, err = req.Do()
+			res, err = http.Get(fmt.Sprintf("%s/test2", m.URL()))
 
 			assert.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 
-			req = testutil.Get(fmt.Sprintf("%s/test3", m.URL()))
-			res, err = req.Do()
+			res, err = http.Get(fmt.Sprintf("%s/test3", m.URL()))
 
 			assert.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -104,20 +103,17 @@ func TestScoped(t *testing.T) {
 		t.Run("disabled", func(t *testing.T) {
 			s1.Disable()
 
-			req := testutil.Get(fmt.Sprintf("%s/test1", m.URL()))
-			res, err := req.Do()
+			res, err := http.Get(fmt.Sprintf("%s/test1", m.URL()))
 
 			assert.NoError(t, err)
 			assert.Equal(t, StatusNoMatch, res.StatusCode)
 
-			req = testutil.Get(fmt.Sprintf("%s/test2", m.URL()))
-			res, err = req.Do()
+			res, err = http.Get(fmt.Sprintf("%s/test2", m.URL()))
 
 			assert.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
 
-			req = testutil.Get(fmt.Sprintf("%s/test3", m.URL()))
-			res, err = req.Do()
+			res, err = http.Get(fmt.Sprintf("%s/test3", m.URL()))
 
 			assert.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -129,8 +125,7 @@ func TestScoped(t *testing.T) {
 		t.Run("enabling previously disabled", func(t *testing.T) {
 			s1.Enable()
 
-			req := testutil.Get(fmt.Sprintf("%s/test1", m.URL()))
-			res, err := req.Do()
+			res, err := http.Get(fmt.Sprintf("%s/test1", m.URL()))
 
 			assert.NoError(t, err)
 			assert.Equal(t, http.StatusOK, res.StatusCode)
@@ -142,14 +137,12 @@ func TestScoped(t *testing.T) {
 		t.Run("disabling multiple", func(t *testing.T) {
 			s2.Disable()
 
-			req := testutil.Get(fmt.Sprintf("%s/test2", m.URL()))
-			res, err := req.Do()
+			res, err := http.Get(fmt.Sprintf("%s/test2", m.URL()))
 
 			assert.NoError(t, err)
 			assert.Equal(t, StatusNoMatch, res.StatusCode)
 
-			req = testutil.Get(fmt.Sprintf("%s/test3", m.URL()))
-			res, err = req.Do()
+			res, err = http.Get(fmt.Sprintf("%s/test3", m.URL()))
 
 			assert.NoError(t, err)
 			assert.Equal(t, StatusNoMatch, res.StatusCode)

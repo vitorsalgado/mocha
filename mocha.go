@@ -36,7 +36,6 @@ const StatusNoMatch = http.StatusTeapot
 
 // Mocha is the base for the mock server.
 type Mocha struct {
-	name               string
 	config             *Config
 	server             Server
 	storage            mockStore
@@ -164,7 +163,6 @@ func New(config ...Configurer) *Mocha {
 	}
 
 	app.config = conf
-	app.name = conf.Name
 	app.ctx = ctx
 	app.cancel = cancel
 
@@ -287,7 +285,7 @@ func NewT(t TestingT, config ...Configurer) *Mocha {
 
 // Name returns mock server name.
 func (app *Mocha) Name() string {
-	return app.name
+	return app.config.Name
 }
 
 // Start starts the mock server.
@@ -416,6 +414,11 @@ func (app *Mocha) Context() context.Context {
 // Config returns a copy of the mock server Config.
 func (app *Mocha) Config() *Config {
 	return app.config
+}
+
+// Server returns the Server implementation being used by this application.
+func (app *Mocha) Server() Server {
+	return app.server
 }
 
 // TemplateEngine returns the TemplateEngine associated with this instance.
@@ -586,10 +589,6 @@ func (app *Mocha) PrintConfig(w io.Writer) error {
 // Mock Builders
 // --
 
-func (app *Mocha) GET(matcher matcher.Matcher) *MockBuilder {
-	return Request().URL(matcher).Method(http.MethodGet)
-}
-
 // AnyMethod creates a new empty Builder.
 func (app *Mocha) AnyMethod() *MockBuilder {
 	b := &MockBuilder{mock: newMock()}
@@ -688,7 +687,7 @@ func (app *Mocha) AssertCalled(t TestingT) bool {
 
 	if !result {
 		t.Errorf("\nServer: %s\n  There are still %d mocks that were not called.\n  Pending:\n%s",
-			app.name,
+			app.Name(),
 			size,
 			buf.String(),
 		)
@@ -726,7 +725,7 @@ func (app *Mocha) AssertNotCalled(t TestingT) bool {
 	if !result {
 		t.Errorf(
 			"\nServer: %s\n  %d Mock(s) were called at least once when none should be.\n  Called:\n%s",
-			app.name,
+			app.Name(),
 			size,
 			buf.String(),
 		)
@@ -746,7 +745,7 @@ func (app *Mocha) AssertNumberOfCalls(t TestingT, expected int) bool {
 		return true
 	}
 
-	t.Errorf("\nServer: %s\n Expected %d matched request hits.\n Got %d", app.name, expected, hits)
+	t.Errorf("\nServer: %s\n Expected %d matched request hits.\n Got %d", app.Name(), expected, hits)
 
 	return false
 }

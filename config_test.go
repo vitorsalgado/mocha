@@ -14,7 +14,6 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
-	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
@@ -52,7 +51,13 @@ func (s *customTestServer) Info() *ServerInfo {
 	return s.decorated.Info()
 }
 
+func (s *customTestServer) S() any {
+	return s.decorated.S()
+}
+
 func TestConfig(t *testing.T) {
+	client := &http.Client{}
+
 	t.Run("should run server with the custom given address", func(t *testing.T) {
 		addr := os.Getenv("TEST_CUSTOM_ADDR")
 		if addr == "" {
@@ -68,8 +73,8 @@ func TestConfig(t *testing.T) {
 			Getf("/test").
 				Reply(OK()))
 
-		req := testutil.Get(m.URL() + "/test")
-		res, err := req.Do()
+		req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
+		res, err := client.Do(req)
 
 		assert.NoError(t, err)
 		assert.True(t, scoped.HasBeenCalled())
@@ -87,11 +92,11 @@ func TestConfig(t *testing.T) {
 			Body(matcher.StrictEqual(10)).
 			Reply(OK()))
 
-		req := testutil.Post(m.URL()+"/test", strings.NewReader("10"))
-		req.Header(header.ContentType, mimetype.TextPlain)
-		req.Header("x-test", "num")
+		req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", strings.NewReader("10"))
+		req.Header.Add(header.ContentType, mimetype.TextPlain)
+		req.Header.Add("x-test", "num")
 
-		res, err := req.Do()
+		res, err := client.Do(req)
 
 		assert.NoError(t, err)
 		assert.True(t, scoped.HasBeenCalled())
@@ -119,8 +124,8 @@ func TestConfig(t *testing.T) {
 			Get(matcher.URLPath("/test")).
 				Reply(OK()))
 
-		req := testutil.Get(m.URL() + "/test")
-		res, err := req.Do()
+		req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
+		res, err := client.Do(req)
 
 		assert.NoError(t, err)
 		assert.False(t, scoped.HasBeenCalled())
@@ -138,8 +143,8 @@ func TestConfig(t *testing.T) {
 			Get(matcher.URLPath("/test")).
 				Reply(OK()))
 
-		req := testutil.Get(m.URL() + "/test")
-		res, err := req.Do()
+		req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
+		res, err := client.Do(req)
 
 		assert.NoError(t, err)
 		assert.True(t, scoped.HasBeenCalled())
@@ -177,7 +182,8 @@ func TestConfigBuilder(t *testing.T) {
 		TemplateEngineFunctions(template.FuncMap{"trim": strings.TrimSpace}).
 		Proxy(&ProxyConfig{}, &ProxyConfig{}).
 		TLSConfig(tlsConfig).
-		TLSCertificateAndKey("cert", "key"))
+		TLSCertKeyPair("test/testdata/cert/cert.pem", "test/testdata/cert/key.pem").
+		TLSMutual("test/testdata/cert/cert.pem", "test/testdata/cert/key.pem", "test/testdata/cert/cert_client.pem"))
 	conf := m.Config()
 
 	assert.Equal(t, nm, conf.Name)
@@ -202,8 +208,8 @@ func TestConfigBuilder(t *testing.T) {
 	assert.Len(t, conf.TemplateFunctions, 1)
 	assert.NotNil(t, conf.Proxy)
 	assert.Equal(t, tlsConfig, conf.TLSConfig)
-	assert.Equal(t, "cert", conf.TLSCertificateFs)
-	assert.Equal(t, "key", conf.TLSKeyFs)
+	assert.NotNil(t, conf.TLSCertificate)
+	assert.NotNil(t, conf.TLSClientCAs)
 }
 
 func TestLogLevelString(t *testing.T) {

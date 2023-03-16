@@ -221,7 +221,10 @@ func (r *ProxyReply) Build(_ http.ResponseWriter, req *RequestValues) (*Stub, er
 }
 
 func (r *ProxyReply) beforeBuild(app *Mocha) error {
-	tlsConfig := &tls.Config{InsecureSkipVerify: !r.sslVerify, RootCAs: app.config.TLSRootCAs}
+	tlsConfig := &tls.Config{InsecureSkipVerify: !r.sslVerify, RootCAs: app.config.TLSClientCAs}
+	if app.config.TLSCertificate != nil {
+		tlsConfig.Certificates = []tls.Certificate{*app.config.TLSCertificate}
+	}
 
 	if app.config.HTTPClientFactory == nil {
 		r.httpClient = http.Client{Transport: &http.Transport{DisableCompression: true, TLSClientConfig: tlsConfig}}

@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 )
 
 func TestCLI(t *testing.T) {
@@ -35,7 +34,7 @@ func TestCLI(t *testing.T) {
 		success := false
 
 		for i := 0; i < max; i++ {
-			res, err := testutil.Get("http://localhost:" + portTxt).Do()
+			res, err := http.Get("http://localhost:" + portTxt)
 			if err != nil || res.StatusCode == sc {
 				success = true
 				break
@@ -80,7 +79,7 @@ func TestDockerCLI(t *testing.T) {
 		success := false
 
 		for i := 0; i < max; i++ {
-			res, err := testutil.Get("http://localhost:8080").Do()
+			res, err := http.Get("http://localhost:8080")
 
 			if err == nil && res.StatusCode == sc {
 				success = true

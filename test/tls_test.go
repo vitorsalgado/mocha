@@ -16,8 +16,9 @@ import (
 )
 
 const (
-	_tlsCertFile = "testdata/tls/srv.crt"
-	_tlsKeyFile  = "testdata/tls/srv.key"
+	_tlsCertFile       = "testdata/cert/cert.pem"
+	_tlsKeyFile        = "testdata/cert/key.pem"
+	_tlsClientCertFile = "testdata/cert/cert_client.pem"
 )
 
 func TestTLS(t *testing.T) {
@@ -32,9 +33,9 @@ func TestTLS(t *testing.T) {
 		name   string
 		config Configurer
 	}{
-		{"basic", Setup()},
-		{"custom key/pair", Setup().TLSCertificateAndKey(_tlsCertFile, _tlsKeyFile)},
-		{"tls config", Setup().TLSConfig(&tls.Config{Certificates: []tls.Certificate{cert}})},
+		{"default", Setup()},
+		{"custom key/pair", Setup().TLSCertKeyPair(_tlsCertFile, _tlsKeyFile)},
+		{"custom tls config", Setup().TLSConfig(&tls.Config{Certificates: []tls.Certificate{cert}})},
 	}
 
 	for _, tc := range testCases {
@@ -89,23 +90,64 @@ func TestTLS_FileSetup(t *testing.T) {
 	require.True(t, scoped.HasBeenCalled())
 }
 
-func TestTLSRootCA(t *testing.T) {
-	caCert, err := os.ReadFile(filepath.Clean(_tlsCertFile))
+func TestTLSMutual(t *testing.T) {
+	cert, err := tls.LoadX509KeyPair(_tlsCertFile, _tlsKeyFile)
 	require.NoError(t, err)
 
-	pool := x509.NewCertPool()
-	pool.AppendCertsFromPEM(caCert)
+	caCert, err := os.ReadFile(filepath.Clean(_tlsClientCertFile))
+	require.NoError(t, err)
+
+	certPool := x509.NewCertPool()
+	certPool.AppendCertsFromPEM(caCert)
 
 	client := &http.Client{
 		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{RootCAs: pool}},
+			TLSClientConfig: &tls.Config{
+				Certificates: []tls.Certificate{cert},
+				RootCAs:      certPool,
+				ClientAuth:   tls.RequireAndVerifyClientCert,
+			}},
 	}
 
-	target := NewT(t, Setup().TLSCertificateAndKey(_tlsCertFile, _tlsKeyFile))
+	target := NewT(t, Setup().TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile))
 	target.MustStartTLS()
 	target.MustMock(Getf("/test").Reply(Accepted().PlainText("accepted")))
 
-	m := NewT(t, Setup().TLSRootCAs(pool).TLSCertificateAndKey(_tlsCertFile, _tlsKeyFile))
+	req, _ := http.NewRequest(http.MethodGet, target.URL("/test"), nil)
+	res, err := client.Do(req)
+	require.NoError(t, err)
+
+	b, err := io.ReadAll(res.Body)
+
+	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
+	require.Equal(t, http.StatusAccepted, res.StatusCode)
+	require.Equal(t, "accepted", string(b))
+}
+
+func TestTLSMutualWithProxy(t *testing.T) {
+	cert, err := tls.LoadX509KeyPair(_tlsCertFile, _tlsKeyFile)
+	require.NoError(t, err)
+
+	caCert, err := os.ReadFile(filepath.Clean(_tlsClientCertFile))
+	require.NoError(t, err)
+
+	certPool := x509.NewCertPool()
+	certPool.AppendCertsFromPEM(caCert)
+
+	client := &http.Client{
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{
+				Certificates: []tls.Certificate{cert},
+				RootCAs:      certPool,
+			}},
+	}
+
+	target := NewT(t, Setup().TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile))
+	target.MustStartTLS()
+	target.MustMock(Getf("/test").Reply(Accepted().PlainText("accepted")))
+
+	m := NewT(t, Setup().TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile))
 	m.MustStartTLS()
 	m.MustMock(Get(URLPath("/test")).
 		Header("test", StrictEqual("hello")).
@@ -121,20 +163,26 @@ func TestTLSRootCA(t *testing.T) {
 
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
-	require.Equal(t, "accepted", string(b))
 	require.Equal(t, http.StatusAccepted, res.StatusCode)
+	require.Equal(t, "accepted", string(b))
 }
 
-func TestTLSRootCA_FileSetup(t *testing.T) {
-	caCert, err := os.ReadFile(filepath.Clean(_tlsCertFile))
+func TestTLSMutualWithProxy_FileSetup(t *testing.T) {
+	cert, err := tls.LoadX509KeyPair(_tlsCertFile, _tlsKeyFile)
 	require.NoError(t, err)
 
-	pool := x509.NewCertPool()
-	pool.AppendCertsFromPEM(caCert)
+	caCert, err := os.ReadFile(filepath.Clean(_tlsClientCertFile))
+	require.NoError(t, err)
+
+	certPool := x509.NewCertPool()
+	certPool.AppendCertsFromPEM(caCert)
 
 	client := &http.Client{
 		Transport: &http.Transport{
-			TLSClientConfig: &tls.Config{RootCAs: pool}},
+			TLSClientConfig: &tls.Config{
+				Certificates: []tls.Certificate{cert},
+				RootCAs:      certPool,
+			}},
 	}
 
 	target := NewT(t, UseConfig("testdata/tls/tls_ca_target.yaml"))

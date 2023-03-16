@@ -1,3 +1,4 @@
 tls:
-  cert: testdata/tls/srv.crt
-  key: testdata/tls/srv.key
+  cert: testdata/cert/cert.pem
+  key: testdata/cert/key.pem
+  ca: testdata/cert/cert_client.pem

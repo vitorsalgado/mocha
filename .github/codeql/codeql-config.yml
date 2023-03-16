@@ -1,8 +1,12 @@
-name: "codeql config"
+name: "CodeQL Config"
 
 queries:
   - uses: security-and-quality
 
 paths-ignore:
+  - _examples
+  - _perf
+  - docs
+  - tools
   - node_modules
   - test

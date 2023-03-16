@@ -1,4 +1,4 @@
-name: ci
+name: "CI"
 
 on:
   workflow_dispatch:
@@ -6,37 +6,67 @@ on:
     branches:
       - main
       - '[0-9]+.x'
-    paths-ignore:
-      - 'docs/**'
-      - '*.md'
+    paths:
+      - '**'
+      - '!docs/**'
+      - '!**.md'
   pull_request:
+    paths:
+      - '**'
+      - '!docs/**'
+      - '!**.md'
 
 jobs:
   build:
     name: build
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go-version: [ 1.18.x, latest ]
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
     steps:
-      - name: set up Go 1.x
+      - name: Setup Go
         uses: actions/setup-go@v3
         with:
-          go-version: ^1.18
+          go-version: ${{ matrix.go-version }}
 
-      - name: checkout
+      - name: Setup Go Caches
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            ~/Library/Caches/go-build
+            ~\AppData\Local\go-build
+          key: ${{ runner.os }}-go-${{ matrix.go-version }}-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ matrix.go-version }}-
+
+      - name: Checkout
         uses: actions/checkout@v3
 
-      - name: deps
-        run: make deps
-
-      - name: golangci-lint
+      - name: GolangCI-Lint
         uses: golangci/golangci-lint-action@v3
+        if: matrix.os == 'ubuntu-latest' && matrix.go-version == 'latest'
         with:
-          version: latest
+          version: 1.51.2
 
-      - name: test
+      - name: Test
         run: make test-ci
 
-      - name: upload coverage
+      - name: Code Coverage
         uses: codecov/codecov-action@v3
+        if: matrix.os == 'ubuntu-latest' && matrix.go-version == 'latest'
+        timeout-minutes: 5
+        with:
+          fail_ci_if_error: false
+
+      - name: Go Vuln
+        run: |
+          export GO111MODULE=on
+          export PATH=${PATH}:`go env GOPATH`/bin
+          go install golang.org/x/vuln/cmd/govulncheck@latest
+          `go env GOPATH`/bin/govulncheck ./...
 
   automerge:
     needs:

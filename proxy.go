@@ -2,6 +2,7 @@ package mocha
 
 import (
 	"crypto/tls"
+	"fmt"
 	"io"
 	"net"
 	"net/http"
@@ -61,13 +62,17 @@ func newProxy(log *zerolog.Logger, config *Config) *reverseProxy {
 
 	if config.Proxy.Transport == nil {
 		transport := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: !config.Proxy.SSLVerify, RootCAs: config.TLSRootCAs},
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: !config.Proxy.SSLVerify, ClientCAs: config.TLSClientCAs},
+		}
+
+		if config.TLSCertificate != nil {
+			transport.TLSClientConfig.Certificates = []tls.Certificate{*config.TLSCertificate}
 		}
 
 		if config.Proxy.Via != "" {
 			u, err := url.Parse(config.Proxy.Via)
 			if err != nil {
-				panic(err)
+				panic(fmt.Errorf("proxy: failed to parse proxy via url %s: %w", config.Proxy.Via, err))
 			}
 
 			transport.Proxy = http.ProxyURL(u)

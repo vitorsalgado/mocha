@@ -10,7 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 
 	. "github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
@@ -27,8 +26,7 @@ func TestResponseDelay(t *testing.T) {
 		Delay(delay).
 		Reply(OK()))
 
-	req := testutil.Get(fmt.Sprintf("%s/test", m.URL()))
-	res, err := req.Do()
+	res, err := http.Get(fmt.Sprintf("%s/test", m.URL()))
 	require.NoError(t, err)
 
 	elapsed := time.Since(start)

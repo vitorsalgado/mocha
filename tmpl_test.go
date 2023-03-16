@@ -19,6 +19,8 @@ func TestGoTemplating(t *testing.T) {
 
 	tpl := []byte(`{{- trim .Key }} {{ .Value }}`)
 	gt := newGoTemplate()
+	require.NoError(t, gt.Load())
+
 	tr, err := gt.FuncMap(template.FuncMap{"trim": strings.TrimSpace}).Parse(string(tpl))
 	require.NoError(t, err)
 

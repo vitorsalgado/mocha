@@ -3,7 +3,10 @@ package mocha
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"strconv"
 	"text/template"
 
@@ -64,6 +67,9 @@ type Config struct {
 	// Addr defines a custom server address.
 	Addr string
 
+	// UseHTTP2 enables HTTP/2
+	UseHTTP2 bool
+
 	// RootDir defines the root directory where the server will start looking for configurations and mocks.
 	// Defaults to the current execution path.
 	RootDir string
@@ -73,16 +79,13 @@ type Config struct {
 	// If TLSConfig is set, TLSCertificateFs and TLSKeyFs options will be ignored.
 	TLSConfig *tls.Config
 
-	// TLSCertificateFs sets a custom TLS cert filename.
-	// If none is provided, when starting a new server with TLS, an internal default one will be used.
-	TLSCertificateFs string
+	// TLSCertificate is the TLS certificate that will be used by the server
+	// All built-in HTTP clients will use this certificate too.
+	TLSCertificate *tls.Certificate
 
-	// TLSKeyFs sets a custom TLS private key filename.
-	// If none is provided, when starting a new server with TLS, an internal default one will be used.
-	TLSKeyFs string
-
-	// TLSRootCAs defines the set of root certificate authorities that the server will use.
-	TLSRootCAs *x509.CertPool
+	// TLSClientCAs is the client certificate that will be used by the server.
+	// All built-in HTTP clients will use it in the RootCAs config.
+	TLSClientCAs *x509.CertPool
 
 	// RequestWasNotMatchedStatusCode defines the status code that should be used when
 	// an HTTP request doesn't match with any mock.
@@ -218,18 +221,21 @@ func (c *Config) Apply(conf *Config) error {
 	conf.LogLevel = c.LogLevel
 	conf.LogBodyMaxSize = c.LogBodyMaxSize
 	conf.TLSConfig = c.TLSConfig
-	conf.TLSCertificateFs = c.TLSCertificateFs
-	conf.TLSKeyFs = c.TLSKeyFs
-	conf.TLSRootCAs = c.TLSRootCAs
+	conf.TLSCertificate = c.TLSCertificate
+	conf.TLSClientCAs = c.TLSClientCAs
+	conf.UseHTTP2 = c.UseHTTP2
 
 	return nil
 }
 
 // ConfigBuilder lets users create a Config using a fluent API.
 type ConfigBuilder struct {
-	conf         *Config
-	recorderConf []RecordConfigurer
-	proxyConf    []ProxyConfigurer
+	conf                   *Config
+	recorderConf           []RecordConfigurer
+	proxyConf              []ProxyConfigurer
+	tlsCertificateFs       string
+	tlsKeyFs               string
+	tlsClientCertificateFs string
 }
 
 func defaultConfig() *Config {
@@ -245,6 +251,7 @@ func defaultConfig() *Config {
 		LogLevel:                       LogLevelInfo,
 		LogVerbosity:                   LogHeader,
 		Colors:                         true,
+		UseHTTP2:                       true,
 	}
 }
 
@@ -451,19 +458,21 @@ func (cb *ConfigBuilder) TLSConfig(c *tls.Config) *ConfigBuilder {
 	return cb
 }
 
-// TLSCertificateAndKey sets a custom public/private key pair.
+// TLSCertKeyPair sets a custom public/private key pair.
 // If none is provided, default values will be used when starting the server with Mocha.StartTLS or Mocha.MustStartTLS.
 // If TLSConfig is set, this option will be ignored.
-func (cb *ConfigBuilder) TLSCertificateAndKey(cerFile string, keyFile string) *ConfigBuilder {
-	cb.conf.TLSCertificateFs = cerFile
-	cb.conf.TLSKeyFs = keyFile
+func (cb *ConfigBuilder) TLSCertKeyPair(certFile, keyFile string) *ConfigBuilder {
+	cb.tlsCertificateFs = certFile
+	cb.tlsKeyFs = keyFile
 	return cb
 }
 
-// TLSRootCAs defines the set of root certificate authorities that the server will use.
+// TLSMutual defines the set of root certificate authorities that the server will use.
 // If TLSConfig is set, this option will be ignored.
-func (cb *ConfigBuilder) TLSRootCAs(certPool *x509.CertPool) *ConfigBuilder {
-	cb.conf.TLSRootCAs = certPool
+func (cb *ConfigBuilder) TLSMutual(certFile, keyFile, clientCert string) *ConfigBuilder {
+	cb.tlsClientCertificateFs = clientCert
+	cb.tlsCertificateFs = certFile
+	cb.tlsKeyFs = keyFile
 	return cb
 }
 
@@ -477,6 +486,7 @@ func (cb *ConfigBuilder) Apply(conf *Config) error {
 				return err
 			}
 		}
+
 		cb.conf.Record = recordConfig
 	}
 
@@ -488,8 +498,43 @@ func (cb *ConfigBuilder) Apply(conf *Config) error {
 				return err
 			}
 		}
+
 		cb.conf.Proxy = &proxyConfig
 	}
 
+	if len(cb.tlsCertificateFs) == 0 && len(cb.tlsKeyFs) == 0 {
+		return cb.conf.Apply(conf)
+	}
+
+	err := applyTLS(cb.conf, cb.tlsCertificateFs, cb.tlsKeyFs, cb.tlsClientCertificateFs)
+	if err != nil {
+		return err
+	}
+
 	return cb.conf.Apply(conf)
+}
+
+func applyTLS(c *Config, certFile, keyFile, clientCertFile string) error {
+	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+	if err != nil {
+		panic(fmt.Errorf(
+			"config: failed to load certificate key pair from file=%s key=%s. %w", certFile, keyFile, err))
+	}
+
+	if len(clientCertFile) > 0 {
+		cc, err := os.ReadFile(filepath.Clean(clientCertFile))
+		if err != nil {
+			panic(fmt.Errorf(
+				"config: failed to load client certificate from %s. %w", clientCertFile, err))
+		}
+
+		cp := x509.NewCertPool()
+		cp.AppendCertsFromPEM(cc)
+
+		c.TLSClientCAs = cp
+	}
+
+	c.TLSCertificate = &cert
+
+	return nil
 }

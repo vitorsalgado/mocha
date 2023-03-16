@@ -7,11 +7,11 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/internal/testutil"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
 func TestCORS(t *testing.T) {
+	client := &http.Client{}
 	m := mocha.New(mocha.Setup().CORS())
 	m.MustStart()
 
@@ -20,14 +20,14 @@ func TestCORS(t *testing.T) {
 	m.MustMock(mocha.Get(matcher.URLPath("/test")).
 		Reply(mocha.OK()))
 
-	corsReq := testutil.NewRequest(http.MethodOptions, m.URL()+"/test", nil)
-	res, err := corsReq.Do()
+	corsReq, _ := http.NewRequest(http.MethodOptions, m.URL()+"/test", nil)
+	res, err := client.Do(corsReq)
 
 	require.NoError(t, err)
 	require.Equal(t, http.StatusNoContent, res.StatusCode)
 
-	req := testutil.NewRequest(http.MethodGet, m.URL()+"/test", nil)
-	res, err = req.Do()
+	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
+	res, err = client.Do(req)
 
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, res.StatusCode)

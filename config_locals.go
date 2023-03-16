@@ -1,13 +1,11 @@
 package mocha
 
 import (
-	"crypto/x509"
 	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -169,18 +167,17 @@ func (c *localConfigurer) apply(conf *Config, vi *viper.Viper) (err error) {
 	conf.RequestWasNotMatchedStatusCode = vi.GetInt(_kNoMatchStatusCode)
 
 	if vi.IsSet(_kTLS) {
-		conf.TLSCertificateFs = vi.GetString(_kTLSCert)
-		conf.TLSKeyFs = vi.GetString(_kTLSKey)
+		certFile := vi.GetString(_kTLSCert)
+		keyFile := vi.GetString(_kTLSKey)
+		clientCertFile := vi.GetString(_kTLSRootCAs)
 
-		ca := vi.GetString(_kTLSRootCAs)
-		if len(ca) > 0 {
-			caCert, err := os.ReadFile(filepath.Clean(ca))
-			if err != nil {
-				return fmt.Errorf("failed to read ca certificate file %s. %w", ca, err)
-			}
+		if len(certFile) == 0 || len(keyFile) == 0 {
+			return fmt.Errorf("both cert and key filename are required. got cert=%s key=%s", certFile, keyFile)
+		}
 
-			conf.TLSRootCAs = x509.NewCertPool()
-			conf.TLSRootCAs.AppendCertsFromPEM(caCert)
+		err = applyTLS(conf, certFile, keyFile, clientCertFile)
+		if err != nil {
+			return err
 		}
 	}
 
