@@ -48,8 +48,8 @@ func TestMatcherCombinations(t *testing.T) {
 	httpClient := &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}}
 	m := mocha.New()
 
-	sHTTP := m.MustMock(mocha.FromFile("testdata/matchers/fixture_01.yaml"))
-	sHTTPs := m.MustMock(mocha.FromFile("testdata/matchers/fixture_02.yaml"))
+	sHTTP := m.MustMock(mocha.FromFile("testdata/matchers/01_matchers.yaml"))
+	sHTTPs := m.MustMock(mocha.FromFile("testdata/matchers/02_matchers.yaml"))
 
 	actuateAndAssert := func(baseURL string) {
 		body := &model{
@@ -126,4 +126,90 @@ func TestMatcherCombinations(t *testing.T) {
 
 	require.True(t, sHTTP.AssertNumberOfCalls(t, 1))
 	require.True(t, sHTTPs.AssertNumberOfCalls(t, 1))
+}
+
+func TestMatchers_MultipleMethods(t *testing.T) {
+	m := mocha.NewT(t)
+	m.MustStart()
+	m.MustMock(mocha.FromFile("testdata/matchers/03_url_template.yaml"))
+
+	client := &http.Client{}
+	res, err := client.Get(m.URL("/test?q=none"))
+
+	require.NoError(t, err)
+	require.Equal(t, http.StatusNoContent, res.StatusCode)
+
+	res, err = client.Post(m.URL("/test?q=none"), mocha.MIMETextPlain, nil)
+
+	require.NoError(t, err)
+	require.Equal(t, http.StatusNoContent, res.StatusCode)
+
+	req, _ := http.NewRequest(http.MethodPut, m.URL("/test?q=none"), nil)
+	res, err = client.Do(req)
+
+	require.NoError(t, err)
+	require.Equal(t, mocha.StatusNoMatch, res.StatusCode)
+}
+
+func TestMatchers_URLMatchRegex(t *testing.T) {
+	m := mocha.NewT(t)
+	m.MustStart()
+	m.MustMock(mocha.FromFile("testdata/matchers/04_url_match.yaml"))
+
+	client := &http.Client{}
+	res, err := client.Get(m.URL("/test?q=hi"))
+
+	require.NoError(t, err)
+	require.Equal(t, http.StatusNoContent, res.StatusCode)
+
+	res, err = client.Get(m.URL("/test?q=bye"))
+
+	require.NoError(t, err)
+	require.Equal(t, mocha.StatusNoMatch, res.StatusCode)
+}
+
+func TestMatchers_URLCustomMatcher(t *testing.T) {
+	m := mocha.NewT(t)
+	m.MustStart()
+	m.MustMock(mocha.FromFile("testdata/matchers/05_url_custom_matcher.yaml"))
+
+	client := &http.Client{}
+	res, err := client.Get(m.URL("/test?q=hi"))
+
+	require.NoError(t, err)
+	require.Equal(t, http.StatusNoContent, res.StatusCode)
+
+	res, err = client.Get(m.URL("/test?q=bye"))
+
+	require.NoError(t, err)
+	require.Equal(t, mocha.StatusNoMatch, res.StatusCode)
+}
+
+func TestMatchers_PathCustomMatcher(t *testing.T) {
+	m := mocha.NewT(t)
+	m.MustStart()
+	m.MustMock(mocha.FromFile("testdata/matchers/06_path_custom_matcher.yaml"))
+
+	client := &http.Client{}
+	res, err := client.Get(m.URL("/hi"))
+
+	require.NoError(t, err)
+	require.Equal(t, http.StatusNoContent, res.StatusCode)
+
+	res, err = client.Get(m.URL("/bye"))
+
+	require.NoError(t, err)
+	require.Equal(t, mocha.StatusNoMatch, res.StatusCode)
+}
+
+func TestMatchers_NoReply_ShouldReturn200ByDefault(t *testing.T) {
+	m := mocha.NewT(t)
+	m.MustStart()
+	m.MustMock(mocha.FromFile("testdata/matchers/07_no_reply.yaml"))
+
+	client := &http.Client{}
+	res, err := client.Get(m.URL("/test"))
+
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, res.StatusCode)
 }

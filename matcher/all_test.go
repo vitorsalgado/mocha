@@ -59,3 +59,7 @@ func TestAllOf(t *testing.T) {
 		})
 	})
 }
+
+func TestAllOfMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, All(Eq("")).Name())
+}

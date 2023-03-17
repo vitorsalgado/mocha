@@ -45,3 +45,7 @@ func TestGlob(t *testing.T) {
 		})
 	}
 }
+
+func TestGlobMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, GlobMatch("").Name())
+}

@@ -109,3 +109,7 @@ func TestEqualf(t *testing.T) {
 		})
 	}
 }
+
+func TestEqualMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, Eq("").Name())
+}

@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestXor(t *testing.T) {
@@ -68,4 +69,8 @@ func TestXorError(t *testing.T) {
 		assert.Error(t, err)
 		assert.Nil(t, res)
 	})
+}
+
+func TestXorMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, XOR(Eq(""), Empty()).Name())
 }

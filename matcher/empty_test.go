@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestIsEmpty(t *testing.T) {
@@ -27,4 +28,8 @@ func TestIsEmpty(t *testing.T) {
 	assert.Nil(t, err)
 	assert.True(t, resYes.Pass)
 	assert.False(t, resNo.Pass)
+}
+
+func TestEmptyMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, Empty().Name())
 }

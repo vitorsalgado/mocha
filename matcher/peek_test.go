@@ -27,3 +27,7 @@ func TestPeek(t *testing.T) {
 		assert.Equal(t, "test", c)
 	})
 }
+
+func TestPeekMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, Peek(Empty(), nil).Name())
+}

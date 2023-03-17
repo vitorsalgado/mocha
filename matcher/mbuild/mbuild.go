@@ -375,7 +375,7 @@ func discoverAndBuild(key string, args any) (ma matcher.Matcher, err error) {
 				fmt.Errorf("[%s, %s] expects an integer argument. got=%d", _mLen, _mLength, args)
 		}
 
-		return matcher.HasLen(int(num)), nil
+		return matcher.Len(int(num)), nil
 
 	case _mLowerCase:
 		m, err := BuildMatcher(args)

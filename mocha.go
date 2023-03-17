@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
@@ -55,6 +56,7 @@ type Mocha struct {
 	cz                 *colorize.Colorize
 	log                *zerolog.Logger
 	startOnce          sync.Once
+	random             *rand.Rand
 }
 
 // TestingT is based on testing.T and is used for assertions.
@@ -147,9 +149,15 @@ const (
 // If no port is set, it will start the server on localhost using a random port.
 func New(config ...Configurer) *Mocha {
 	app := &Mocha{}
+	app.random = rand.New(rand.NewSource(time.Now().UnixNano()))
+
 	ctx, cancel := context.WithCancel(context.Background())
+	app.ctx = ctx
+	app.cancel = cancel
 
 	conf := defaultConfig()
+	app.config = conf
+
 	for i, configurer := range config {
 		err := configurer.Apply(conf)
 		if err != nil {
@@ -161,10 +169,6 @@ func New(config ...Configurer) *Mocha {
 			))
 		}
 	}
-
-	app.config = conf
-	app.ctx = ctx
-	app.cancel = cancel
 
 	setLog(conf, app)
 

@@ -37,3 +37,7 @@ func TestLessUnhandledType(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, res)
 }
+
+func TestLessMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, Lt(10).Name())
+}

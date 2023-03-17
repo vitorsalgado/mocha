@@ -1,0 +1,7 @@
+request:
+  path:
+    - contains
+    - hi
+
+response:
+  status: 204

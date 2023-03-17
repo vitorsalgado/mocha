@@ -42,3 +42,7 @@ func TestHasKey(t *testing.T) {
 		})
 	}
 }
+
+func TestHasKeyMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, HasKey(".").Name())
+}

@@ -49,3 +49,7 @@ func TestEitherRightErr(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, result)
 }
+
+func TestEitherMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, Either(Contain(""), Eq("no")).Name())
+}

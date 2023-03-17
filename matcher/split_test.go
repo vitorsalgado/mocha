@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestSplit(t *testing.T) {
@@ -12,4 +13,8 @@ func TestSplit(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.True(t, r.Pass)
+}
+
+func TestSplitMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, Split(".", Eq("")).Name())
 }

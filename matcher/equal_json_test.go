@@ -33,3 +33,7 @@ func TestToEqualJSON(t *testing.T) {
 		require.False(t, res.Pass)
 	})
 }
+
+func TestEqualJSONMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, Eqj("").Name())
+}

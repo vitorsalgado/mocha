@@ -1,0 +1,13 @@
+request:
+  url: '{{ .App.URL }}/test?q=none'
+  method:
+    - isIn
+    - - GET
+      - POST
+
+  scheme:
+    - eq
+    - http
+
+response:
+  status: 204

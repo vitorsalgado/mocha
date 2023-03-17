@@ -39,3 +39,7 @@ func TestSomeErr(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, res)
 }
+
+func TestSomeMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, Some(Eq("")).Name())
+}

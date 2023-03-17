@@ -25,7 +25,6 @@ var (
 	_ Builder = (*mockBuilderFromBytes)(nil)
 )
 
-// Mock configuration fields
 const (
 	_fName     = "name"
 	_fEnabled  = "enabled"
@@ -38,26 +37,23 @@ const (
 	_fScenarioRequiredState = "scenario.required_state"
 	_fScenarioNewState      = "scenario.new_state"
 
-	_fRequestScheme       = "request.scheme"
-	_fRequestMethod       = "request.method"
-	_fRequestURL          = "request.url"
-	_fRequestURLMatch     = "request.url_match"
-	_fRequestURLPath      = "request.path"
-	_fRequestURLPathMatch = "request.path_match"
-	_fRequestQuery        = "request.query"
-	_fRequestQueries      = "request.queries"
-	_fRequestHeader       = "request.header"
-	_fRequestForm         = "request.form"
-	_fRequestBody         = "request.body"
+	_fRequestScheme   = "request.scheme"
+	_fRequestMethod   = "request.method"
+	_fRequestURL      = "request.url"
+	_fRequestURLMatch = "request.url_match"
+	_fRequestURLPath  = "request.path"
+	_fRequestQuery    = "request.query"
+	_fRequestQueries  = "request.queries"
+	_fRequestHeader   = "request.header"
+	_fRequestForm     = "request.form"
+	_fRequestBody     = "request.body"
 
-	_fResponse                = "response"
-	_fResponseStatus          = "response.status"
-	_fResponseHeader          = "response.header"
-	_fResponseBody            = "response.body"
-	_fResponseEncoding        = "response.encoding"
-	_fResponseBodyFile        = "response.body_file"
-	_fResponseTemplateEnabled = "response.template.enabled"
-	_fResponseTemplateModel   = "response.template.data"
+	_fResponse         = "response"
+	_fResponseStatus   = "response.status"
+	_fResponseHeader   = "response.header"
+	_fResponseBody     = "response.body"
+	_fResponseEncoding = "response.encoding"
+	_fResponseBodyFile = "response.body_file"
 
 	_fResponseSequence        = "response_sequence"
 	_fResponseSequenceEntries = "response_sequence.responses"
@@ -307,8 +303,6 @@ func buildMockFromBytes(app *Mocha, builder *MockBuilder, content []byte, ext st
 		switch t := mv.(type) {
 		case string:
 			builder.Method(t)
-		case []string:
-			builder.MethodMatches(matcher.IsIn(t))
 		default:
 			m, err := mbuild.BuildMatcher(mv)
 			if err != nil {
@@ -325,8 +319,6 @@ func buildMockFromBytes(app *Mocha, builder *MockBuilder, content []byte, ext st
 		switch t := scheme.(type) {
 		case string:
 			builder.Scheme(t)
-		case []string:
-			builder.SchemeMatches(matcher.IsIn(t))
 		default:
 			m, err := mbuild.BuildMatcher(scheme)
 			if err != nil {
@@ -376,8 +368,6 @@ func buildMockFromBytes(app *Mocha, builder *MockBuilder, content []byte, ext st
 
 			builder.URLPath(m)
 		}
-	} else if vi.IsSet(_fRequestURLPathMatch) {
-		builder.URLPath(matcher.Matches(vi.GetString(_fRequestURLPathMatch)))
 	}
 
 	for k, v := range vi.GetStringMap(_fRequestQuery) {

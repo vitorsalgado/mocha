@@ -37,3 +37,7 @@ func TestGreaterOrEqualUnhandledType(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, res)
 }
+
+func TestGreaterOrEqualMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, Gte(10).Name())
+}

@@ -48,3 +48,7 @@ func TestAnyOf(t *testing.T) {
 		})
 	})
 }
+
+func TestAnyOfMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, Any(Eq("")).Name())
+}

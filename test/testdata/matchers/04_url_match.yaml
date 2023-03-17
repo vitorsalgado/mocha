@@ -1,0 +1,5 @@
+request:
+  url_match: (?mi)hi
+
+response:
+  status: 204

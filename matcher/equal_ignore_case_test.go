@@ -36,3 +36,7 @@ func TestEqualIgnoreCase(t *testing.T) {
 		})
 	}
 }
+
+func TestEqualIgnoreCaseMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, Eqi("").Name())
+}

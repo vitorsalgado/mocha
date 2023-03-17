@@ -11,3 +11,7 @@ func TestAnything(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, res.Pass)
 }
+
+func TestAnythingMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, Anything().Name())
+}

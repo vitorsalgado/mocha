@@ -20,10 +20,14 @@ func TestLen_String(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			result, err := HasLen(tc.size).Match(tc.value)
+			result, err := Len(tc.size).Match(tc.value)
 
 			require.NoError(t, err)
 			require.Equal(t, tc.expected, result.Pass)
 		})
 	}
+}
+
+func TestLenMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, Len(10).Name())
 }

@@ -65,3 +65,7 @@ func TestStrictEqualf(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, result.Pass)
 }
+
+func TestEqualStrictMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, Eqs("").Name())
+}

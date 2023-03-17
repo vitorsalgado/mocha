@@ -29,3 +29,7 @@ func TestRegExpMatches(t *testing.T) {
 		})
 	}
 }
+
+func TestRegExpMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, Matches("").Name())
+}

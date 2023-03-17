@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestEqualElementsMatcher(t *testing.T) {
@@ -29,4 +30,8 @@ func TestEqualElementsMatcher(t *testing.T) {
 			assert.Equal(t, tc.expected, res.Pass)
 		})
 	}
+}
+
+func TestItemsMatchMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, ItemsMatch("").Name())
 }

@@ -71,3 +71,7 @@ func TestContainNilValue(t *testing.T) {
 	_, err := Contain("any").Match(nil)
 	require.Error(t, err)
 }
+
+func TestContainsMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, Contain("").Name())
+}

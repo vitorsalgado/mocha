@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestURLPath(t *testing.T) {
@@ -40,4 +41,8 @@ func TestURLPath(t *testing.T) {
 			_, _ = URLPath("/test/hello").Match(10)
 		})
 	})
+}
+
+func TestUrlPathMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, URLPath("").Name())
 }

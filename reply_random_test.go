@@ -6,13 +6,12 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestRandomReplies(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
-	rv := &RequestValues{RawRequest: req, URL: req.URL}
+	rv := &RequestValues{RawRequest: req, URL: req.URL, App: New()}
 	statuses := []int{
 		http.StatusOK, http.StatusInternalServerError, http.StatusCreated, http.StatusBadRequest}
 
@@ -32,18 +31,18 @@ func TestRandomReplies(t *testing.T) {
 			}
 		}
 
-		assert.Nil(t, err)
-		assert.True(t, contains)
+		require.Nil(t, err)
+		require.True(t, contains)
 	}
 }
 
 func TestShouldReturnErrorWhenRandomDoesNotContainReplies(t *testing.T) {
-	assert.Error(t, Rand().beforeBuild(nil))
+	require.Error(t, Rand().beforeBuild(nil))
 }
 
 func TestRandWithCustom(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
-	rv := &RequestValues{RawRequest: req, URL: req.URL}
+	rv := &RequestValues{RawRequest: req, URL: req.URL, App: New()}
 	statuses := []int{
 		http.StatusOK, http.StatusInternalServerError, http.StatusCreated, http.StatusBadRequest}
 
@@ -66,8 +65,8 @@ func TestRandWithCustom(t *testing.T) {
 			}
 		}
 
-		assert.Nil(t, err)
-		assert.True(t, contains)
+		require.Nil(t, err)
+		require.True(t, contains)
 	}
 }
 

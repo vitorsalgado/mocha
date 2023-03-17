@@ -14,7 +14,7 @@ func (m *emptyMatcher) Match(v any) (*Result, error) {
 		return &Result{Pass: true}, nil
 	}
 
-	result, err := HasLen(0).Match(v)
+	result, err := Len(0).Match(v)
 	if err != nil {
 		return nil, err
 	}

@@ -1,0 +1,7 @@
+request:
+  url:
+    - contains
+    - hi
+
+response:
+  status: 204

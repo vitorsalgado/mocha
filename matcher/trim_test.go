@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestTrim(t *testing.T) {
@@ -11,4 +12,8 @@ func TestTrim(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.True(t, result.Pass)
+}
+
+func TestTrimMatcher_Name(t *testing.T) {
+	require.NotEmpty(t, Trim(Eq("")).Name())
 }
