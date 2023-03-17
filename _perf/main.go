@@ -53,6 +53,10 @@ func (s *Srv) Close() error {
 	return nil
 }
 
+func (s *Srv) S() any {
+	return nil
+}
+
 func (s *Srv) Info() *mocha.ServerInfo {
 	return &mocha.ServerInfo{URL: ""}
 }
