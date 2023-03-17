@@ -1,11 +1,11 @@
 request:
-  form:
+  form_url_encoded:
     name: "nice name"
     address: "berlin+germany"
-    active: true
+    active: "true"
     live: "false"
-    money: 2550.50
-    code: 10
+    money: "2550.50"
+    code: "10"
     job:
       - equal
       - dev

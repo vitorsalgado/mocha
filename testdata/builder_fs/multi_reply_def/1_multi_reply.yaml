@@ -1,0 +1,10 @@
+request:
+  path: /test
+  method: GET
+
+response:
+  status: 200
+
+response_sequence:
+  responses:
+    - status: 201

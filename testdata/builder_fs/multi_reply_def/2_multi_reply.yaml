@@ -1,0 +1,11 @@
+request:
+  path: /test
+  method: GET
+
+response_sequence:
+  responses:
+    - status: 201
+
+response_random:
+  responses:
+    - status: 201

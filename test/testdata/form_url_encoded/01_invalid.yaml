@@ -1,0 +1,14 @@
+request:
+  form_url_encoded:
+    name: "nice name"
+    address: "berlin+germany"
+    active: true
+    live: "false"
+    money: 2550.50
+    code: 10
+    job:
+      - equal
+      - dev
+
+response:
+  status: 204

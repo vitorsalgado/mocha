@@ -1,0 +1,11 @@
+named: "test"
+priority: "none"
+
+request:
+  path: 10
+  method: POST
+  query:
+    q: "all"
+
+response:
+  status: true

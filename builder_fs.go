@@ -2,6 +2,7 @@ package mocha
 
 import (
 	"bytes"
+	_ "embed"
 	"errors"
 	"fmt"
 	"io"
@@ -15,6 +16,7 @@ import (
 	"time"
 
 	"github.com/spf13/viper"
+	"github.com/xeipuuv/gojsonschema"
 
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/matcher/mbuild"
@@ -23,14 +25,16 @@ import (
 var (
 	_ Builder = (*mockBuilderFromFile)(nil)
 	_ Builder = (*mockBuilderFromBytes)(nil)
+	_ error   = (*jsonSchemaValidationErr)(nil)
 )
 
 const (
-	_fName     = "name"
-	_fEnabled  = "enabled"
-	_fPriority = "priority"
-	_fDelay    = "delay"
-	_fRepeat   = "repeat"
+	_fName      = "name"
+	_fEnabled   = "enabled"
+	_fPriority  = "priority"
+	_fDelay     = "delay"
+	_fRepeat    = "repeat"
+	_fExtenders = "ext"
 
 	_fScenario              = "scenario"
 	_fScenarioName          = "scenario.name"
@@ -45,7 +49,7 @@ const (
 	_fRequestQuery    = "request.query"
 	_fRequestQueries  = "request.queries"
 	_fRequestHeader   = "request.header"
-	_fRequestForm     = "request.form"
+	_fRequestForm     = "request.form_url_encoded"
 	_fRequestBody     = "request.body"
 
 	_fResponse         = "response"
@@ -87,6 +91,25 @@ const (
 	_resEncoding        = "encoding"
 )
 
+//go:embed schema.json
+var _mockJSONSchema []byte
+
+type jsonSchemaValidationErr struct {
+	results []gojsonschema.ResultError
+}
+
+func (e jsonSchemaValidationErr) Error() string {
+	buf := strings.Builder{}
+	buf.WriteString("mock definition did not pass the schema validation:\n")
+	for _, result := range e.results {
+		buf.WriteString(" ")
+		buf.WriteString(result.String())
+		buf.WriteString("\n")
+	}
+
+	return buf.String()
+}
+
 type mockBuilderFromFile struct {
 	builder  *MockBuilder
 	filename string
@@ -106,7 +129,7 @@ func FromFile(filename string) Builder {
 func (b *mockBuilderFromFile) Build(app *Mocha) (mock *Mock, err error) {
 	mock, err = b.build(app)
 	if err != nil {
-		return nil, fmt.Errorf("mock: filed to build mock from file %s.\n%w", b.filename, err)
+		return nil, fmt.Errorf("mock: failed to build mock from file %s.\n%w", b.filename, err)
 	}
 
 	return mock, nil
@@ -236,6 +259,22 @@ func buildMockFromBytes(app *Mocha, builder *MockBuilder, content []byte, ext st
 		return nil, err
 	}
 
+	loader := gojsonschema.NewBytesLoader(_mockJSONSchema)
+	validated := false
+	if ext == "json" {
+		doc := gojsonschema.NewBytesLoader(buf.Bytes())
+		result, err := gojsonschema.Validate(loader, doc)
+		if err != nil {
+			return nil, fmt.Errorf("mock definition did not pass the schema validation: %w", err)
+		}
+
+		if len(result.Errors()) > 0 {
+			return nil, &jsonSchemaValidationErr{result.Errors()}
+		}
+
+		validated = true
+	}
+
 	vi := viper.New()
 	vi.SetConfigType(ext)
 
@@ -243,6 +282,23 @@ func buildMockFromBytes(app *Mocha, builder *MockBuilder, content []byte, ext st
 	vi.SetDefault(_fEnabled, true)
 
 	err = vi.ReadConfig(buf)
+	if err != nil {
+		return nil, err
+	}
+
+	if !validated {
+		doc := gojsonschema.NewGoLoader(vi.AllSettings())
+		result, err := gojsonschema.Validate(loader, doc)
+		if err != nil {
+			return nil, fmt.Errorf("mock definition did not pass the schema validation: %w", err)
+		}
+
+		if len(result.Errors()) > 0 {
+			return nil, &jsonSchemaValidationErr{result.Errors()}
+		}
+	}
+
+	err = validateResponseDefinitions(vi)
 	if err != nil {
 		return nil, err
 	}
@@ -562,8 +618,8 @@ func buildMockFromBytes(app *Mocha, builder *MockBuilder, content []byte, ext st
 
 	// User defined handlers
 
-	if len(app.config.MockFileHandlers) > 0 {
-		settings := vi.AllSettings()
+	if len(app.config.MockFileHandlers) > 0 && vi.IsSet(_fExtenders) {
+		settings := vi.GetStringMap(_fExtenders)
 
 		for i, handler := range app.config.MockFileHandlers {
 			err = handler.Handle(settings, builder)
@@ -574,4 +630,26 @@ func buildMockFromBytes(app *Mocha, builder *MockBuilder, content []byte, ext st
 	}
 
 	return builder.Build(app)
+}
+
+func validateResponseDefinitions(vi *viper.Viper) error {
+	val := 0
+	if vi.IsSet(_fResponse) {
+		val++
+	}
+	if vi.IsSet(_fResponseProxy) {
+		val++
+	}
+	if vi.IsSet(_fResponseSequence) {
+		val++
+	}
+	if vi.IsSet(_fResponseRandom) {
+		val++
+	}
+
+	if val > 1 {
+		return fmt.Errorf("more than one response definition set")
+	}
+
+	return nil
 }

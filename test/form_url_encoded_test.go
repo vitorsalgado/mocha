@@ -38,12 +38,20 @@ func TestFormUrlEncoded(t *testing.T) {
 	require.True(t, scoped.HasBeenCalled())
 }
 
+func TestFormUrlEncoded_InvalidFieldValues(t *testing.T) {
+	m := mocha.NewT(t)
+	scoped, err := m.Mock(mocha.FromFile("testdata/form_url_encoded/01_invalid.yaml"))
+
+	require.Nil(t, scoped)
+	require.Error(t, err)
+}
+
 func TestFormUrlEncoded_FromFileMock(t *testing.T) {
 	httpClient := &http.Client{}
 	m := mocha.NewT(t)
 	m.MustStart()
 
-	scoped := m.MustMock(mocha.FromFile("testdata/form_url_encoded/01.yaml"))
+	scoped := m.MustMock(mocha.FromFile("testdata/form_url_encoded/02_valid.yaml"))
 
 	testCases := []struct {
 		name           string
@@ -107,7 +115,7 @@ func TestFormUrlEncoded_FromFileMock(t *testing.T) {
 			data.Set("address", "berlin+germany")
 			data.Set("active", "true")
 			data.Set("live", "false")
-			data.Set("money", "2550.5")
+			data.Set("money", "2550.50")
 			data.Set("code", "10")
 			data.Set("job", "dev")
 

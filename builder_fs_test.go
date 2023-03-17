@@ -83,3 +83,39 @@ func TestBuilderFs_FromBytes(t *testing.T) {
 		})
 	}
 }
+
+func TestBuilderFs_MustNotAllowMultipleReplyDefinitions(t *testing.T) {
+	m := New()
+
+	filenames := []string{
+		"testdata/builder_fs/multi_reply_def/1_multi_reply.yaml",
+		"testdata/builder_fs/multi_reply_def/2_multi_reply.yaml",
+		"testdata/builder_fs/multi_reply_def/3_multi_reply.yaml",
+	}
+
+	for _, filename := range filenames {
+		t.Run(filename, func(t *testing.T) {
+			s, err := m.Mock(FromFile(filename))
+
+			require.Nil(t, s)
+			require.Error(t, err)
+		})
+	}
+}
+
+func TestBuilderFs_InvalidSchemaValid(t *testing.T) {
+	m := New()
+	filenames := []string{
+		"testdata/builder_fs/invalid_schema/1_invalid_schema.yaml",
+		"testdata/builder_fs/invalid_schema/2_no_request.yaml",
+	}
+
+	for _, filename := range filenames {
+		t.Run(filename, func(t *testing.T) {
+			s, err := m.Mock(FromFile(filename))
+
+			require.Nil(t, s)
+			require.Error(t, err)
+		})
+	}
+}

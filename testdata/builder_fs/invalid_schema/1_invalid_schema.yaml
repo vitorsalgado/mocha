@@ -1,0 +1,8 @@
+named: "test"
+priority: "none"
+
+request:
+  path: 10
+
+response:
+  status: true

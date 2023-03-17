@@ -1,0 +1,120 @@
+{
+  "$id": "",
+  "title": "Mock Definition",
+  "description": "Describes an HTTP mock definition.",
+  "type": "object",
+  "properties": {
+    "name": { "type": "string" },
+    "priority": { "type": "integer" },
+    "enabled": { "type": "boolean" },
+    "delay": { "oneOf": [ { "type": "string" }, { "type": "number" } ] },
+    "repeat": { "type": "integer" },
+    "scenario": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "required_state": { "type": "string" },
+        "new_state": { "type": "string" }
+      },
+      "required": [ "name" ],
+      "additionalProperties": false
+    },
+    "request": {
+      "type": "object",
+      "properties": {
+        "scheme": { "$ref": "#/$defs/matcher" },
+        "method": { "$ref": "#/$defs/matcher" },
+        "path": { "$ref": "#/$defs/matcher" },
+        "url": { "$ref": "#/$defs/matcher" },
+        "url_match": { "$ref": "#/$defs/matcher" },
+        "query": { "$ref": "#/$defs/keyed_matcher" },
+        "queries": { "$ref": "#/$defs/keyed_matcher" },
+        "header": { "$ref": "#/$defs/keyed_matcher" },
+        "form_url_encoded": { "$ref": "#/$defs/keyed_matcher" },
+        "body": { "$ref": "#/$defs/matcher" }
+      },
+      "additionalProperties": false
+    },
+    "response": { "$ref": "#/$defs/reply" },
+    "response_sequence": {
+      "type": "object",
+      "properties": {
+        "responses": { "type": "array", "items": { "$ref": "#/$defs/reply" } },
+        "after_ended": { "$ref": "#/$defs/reply" }
+      },
+      "required": [ "responses" ],
+      "additionalProperties": false
+    },
+    "response_random": {
+      "type": "object",
+      "properties": {
+        "responses": { "type": "array", "items": { "$ref": "#/$defs/reply" } },
+        "seed": { "type": "integer" }
+      },
+      "required": [ "responses" ],
+      "additionalProperties": false
+    },
+    "proxy": {
+      "type": "object",
+      "properties": {
+        "target": { "type": "string" },
+        "forward_header": { "$ref": "#/$defs/string_map" },
+        "header": { "$ref": "#/$defs/string_map" },
+        "remove_headers": { "type": "array", "items": { "type": "string" } },
+        "trim_prefix": { "type": "string" },
+        "trim_suffix": { "type": "string" },
+        "timeout": { "oneOf": [ { "type": "string" }, { "type": "number" } ] },
+        "ssl_verify": { "type": "boolean" },
+        "no_follow": { "type": "boolean" }
+      },
+      "required": [ "target" ],
+      "additionalProperties": false
+    },
+    "ext": { "type": "object" }
+  },
+  "required": [ "request" ],
+  "additionalProperties": false,
+  "$defs": {
+    "matcher": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "array", "minItems": 1 }
+      ]
+    },
+    "keyed_matcher": {
+      "type": "object",
+      "patternProperties": {
+        "^.*$": { "$ref": "#/$defs/matcher" }
+      }
+    },
+    "reply": {
+      "type": "object",
+      "properties": {
+        "status": { "type": "integer" },
+        "header": { "$ref": "#/$defs/string_map" },
+        "header_template": {
+          "type": "object",
+          "patternProperties": {
+            "^.*$": { "type": "string" }
+          }
+        },
+        "body": { },
+        "body_file": { "type": "string" },
+        "template": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "data": { "oneOf": [ { "type": "object" }, { "type": "array" } ] }
+          }
+        },
+        "encoding": { "type": "string" }
+      }
+    },
+    "string_map": {
+      "type": "object",
+      "patternProperties": {
+        "^.*$": { "type": "string" }
+      }
+    }
+  }
+}
