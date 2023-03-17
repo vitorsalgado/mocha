@@ -41,12 +41,12 @@ request:
   body:
     - all
     - - field
-      - name
+      - $.name
       - - equal
         - "hello world"
 
     - - field
-      - hobbies
+      - $.hobbies
       - - any
         - - item
           - 1
@@ -56,31 +56,31 @@ request:
           - 5
 
     - - field
-      - hobbies
+      - $.hobbies
       - - len
         - 2
 
     - - field
-      - job
+      - $.job
       - - not
         - - equal
           - unemployed
 
     - - field
-      - active
+      - $.active
       - truthy
 
     - - field
-      - plans
+      - $.plans
       - empty
 
     - - field
-      - acronym
+      - $.acronym
       - - equalIgnoreCase
         - qa
 
     - - field
-      - title
+      - $.title
       - - both
         - - hasPrefix
           - Software
@@ -88,11 +88,11 @@ request:
           - Engineer
 
     - - field
-      - addr.country
+      - $.addr.country
       - nil
 
     - - field
-      - addr.number
+      - $.addr.number
       - - any
         - - greater
           - 50
@@ -100,7 +100,7 @@ request:
           - 150
 
     - - field
-      - addr.str
+      - $.addr.str
       - - either
         - - all
           - - uppercase
@@ -116,11 +116,11 @@ request:
       - addr.str
 
     - - field
-      - check_in
+      - $.check_in
       - falsy
 
     - - field
-      - activities
+      - $.activities
       - - split
         - "+"
         - - itemsMatch
@@ -130,41 +130,41 @@ request:
 
     - - xor
       - - field
-        - active
+        - $.active
         - truthy
       - - field
-        - active
+        - $.active
         - falsy
 
     - - field
-      - department
+      - $.department
       - - trim
         - - lowercase
           - - equal
             - "bombs"
 
     - - field
-      - place
+      - $.place
       - - isIn
         - - "Berlin"
           - "Sao Paulo"
           - "Santiago"
 
     - - jsonPath
-      - numbers
+      - $.numbers
       - - each
         - - greaterEq
           - 10
 
     - - field
-      - addr
+      - $.addr
       - - equalJSON
         - str: "Nowhere"
           number: 100
           country: null
 
     - - field
-      - hobbies
+      - $.hobbies
       - - some
         - - equal
           - trekking

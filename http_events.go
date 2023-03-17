@@ -111,20 +111,20 @@ func (h *builtInMockHTTPLifecycle) OnNoMatch(r *RequestValues, fr *findResult) {
 
 			builder.WriteString(detail.MatchersName)
 
-			if detail.Err != nil {
+			if detail.Err == nil {
+				builder.WriteString("(")
+
+				if len(detail.Result.Ext) > 0 {
+					builder.WriteString(strings.Join(detail.Result.Ext, ", "))
+					builder.WriteString(") ")
+					builder.WriteString(detail.Result.Message)
+				} else {
+					builder.WriteString(detail.Result.Message)
+					builder.WriteString(") ")
+				}
+			} else {
 				builder.WriteString(" ")
 				builder.WriteString(detail.Err.Error())
-				continue
-			}
-
-			builder.WriteString("(")
-			if len(detail.Result.Ext) > 0 {
-				builder.WriteString(strings.Join(detail.Result.Ext, ", "))
-				builder.WriteString(") ")
-				builder.WriteString(detail.Result.Message)
-			} else {
-				builder.WriteString(detail.Result.Message)
-				builder.WriteString(") ")
 			}
 
 			mismatches.Str(builder.String())

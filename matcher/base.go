@@ -17,7 +17,7 @@ type OnAfterMockServed interface {
 	AfterMockServed() error
 }
 
-// Result represents a Matcher result.
+// Result represents a Matcher expected.
 type Result struct {
 	// Pass defines if Matcher passed or not.
 	Pass bool

@@ -170,14 +170,14 @@ func New(config ...Configurer) *Mocha {
 		}
 	}
 
-	setLog(conf, app)
+	app.setLog(conf)
 
 	colors := &colorize.Colorize{Enabled: conf.UseDescriptiveLogger}
 	store := newStore()
 
 	parsers := make([]RequestBodyParser, 0, len(conf.RequestBodyParsers)+4)
 	parsers = append(parsers, conf.RequestBodyParsers...)
-	parsers = append(parsers, &jsonBodyParser{}, &plainTextParser{}, &formURLEncodedParser{}, &noopParser{})
+	parsers = append(parsers, &plainTextParser{}, &formURLEncodedParser{}, &noopParser{})
 
 	recovery := recover.New(func(err error) { app.log.Error().Err(err).Msg(err.Error()) },
 		conf.RequestWasNotMatchedStatusCode)
@@ -783,7 +783,7 @@ func (app *Mocha) load() error {
 	return nil
 }
 
-func setLog(conf *Config, app *Mocha) {
+func (app *Mocha) setLog(conf *Config) {
 	if conf.Logger != nil {
 		app.log = conf.Logger
 		return

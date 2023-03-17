@@ -163,7 +163,7 @@ func TestConfigBuilder(t *testing.T) {
 		Addr(addr).
 		RootDir("test_root_dir").
 		MockNotFoundStatusCode(http.StatusNotFound).
-		RequestBodyParsers(&jsonBodyParser{}, &plainTextParser{}).
+		RequestBodyParsers(&plainTextParser{}).
 		Middlewares().
 		CORS(&_defaultCORSConfig).
 		Server(&httpTestServer{}).
@@ -190,7 +190,7 @@ func TestConfigBuilder(t *testing.T) {
 	assert.Equal(t, addr, conf.Addr)
 	assert.Equal(t, "test_root_dir", conf.RootDir)
 	assert.Equal(t, http.StatusNotFound, conf.RequestWasNotMatchedStatusCode)
-	assert.Len(t, conf.RequestBodyParsers, 2)
+	assert.Len(t, conf.RequestBodyParsers, 1)
 	assert.Len(t, conf.Middlewares, 0)
 	assert.Equal(t, &_defaultCORSConfig, conf.CORS)
 	assert.NotNil(t, conf.HandlerDecorator)

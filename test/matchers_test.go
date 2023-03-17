@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/vitorsalgado/mocha/v3"
+	. "github.com/vitorsalgado/mocha/v3"
 )
 
 func TestMatcherCombinations(t *testing.T) {
@@ -46,10 +46,10 @@ func TestMatcherCombinations(t *testing.T) {
 	}
 
 	httpClient := &http.Client{Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}}}
-	m := mocha.New()
+	m := New()
 
-	sHTTP := m.MustMock(mocha.FromFile("testdata/matchers/01_matchers.yaml"))
-	sHTTPs := m.MustMock(mocha.FromFile("testdata/matchers/02_matchers.yaml"))
+	sHTTP := m.MustMock(FromFile("testdata/matchers/01_matchers.yaml"))
+	sHTTPs := m.MustMock(FromFile("testdata/matchers/02_matchers.yaml"))
 
 	actuateAndAssert := func(baseURL string) {
 		body := &model{
@@ -91,8 +91,8 @@ func TestMatcherCombinations(t *testing.T) {
 
 		u := baseURL + "/test?" + qry.Encode() + "&age(150)&contains(nothing)"
 		req, _ := http.NewRequest(http.MethodPost, u, buf)
-		req.Header.Add(mocha.HeaderContentType, mocha.MIMEApplicationJSON)
-		req.Header.Add(mocha.HeaderAccept, mocha.MIMEApplicationJSON)
+		req.Header.Add(HeaderContentType, MIMEApplicationJSON)
+		req.Header.Add(HeaderAccept, MIMEApplicationJSON)
 		req.Header.Add("x-test", "dev, qa, devops")
 
 		res, err := httpClient.Do(req)
@@ -106,7 +106,7 @@ func TestMatcherCombinations(t *testing.T) {
 		err = json.Unmarshal(b, r)
 
 		require.NoError(t, err, baseURL)
-		require.Equal(t, mocha.MIMEApplicationJSON, res.Header.Get(mocha.HeaderContentType))
+		require.Equal(t, MIMEApplicationJSON, res.Header.Get(HeaderContentType))
 		require.Equal(t, "success", res.Header.Get("x-custom"))
 		require.Equal(t, http.StatusOK, res.StatusCode)
 		require.Equal(t, true, r.Ok)
@@ -129,9 +129,9 @@ func TestMatcherCombinations(t *testing.T) {
 }
 
 func TestMatchers_MultipleMethods(t *testing.T) {
-	m := mocha.NewT(t)
+	m := NewT(t)
 	m.MustStart()
-	m.MustMock(mocha.FromFile("testdata/matchers/03_url_template.yaml"))
+	m.MustMock(FromFile("testdata/matchers/03_url_template.yaml"))
 
 	client := &http.Client{}
 	res, err := client.Get(m.URL("/test?q=none"))
@@ -139,7 +139,7 @@ func TestMatchers_MultipleMethods(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, http.StatusNoContent, res.StatusCode)
 
-	res, err = client.Post(m.URL("/test?q=none"), mocha.MIMETextPlain, nil)
+	res, err = client.Post(m.URL("/test?q=none"), MIMETextPlain, nil)
 
 	require.NoError(t, err)
 	require.Equal(t, http.StatusNoContent, res.StatusCode)
@@ -148,13 +148,13 @@ func TestMatchers_MultipleMethods(t *testing.T) {
 	res, err = client.Do(req)
 
 	require.NoError(t, err)
-	require.Equal(t, mocha.StatusNoMatch, res.StatusCode)
+	require.Equal(t, StatusNoMatch, res.StatusCode)
 }
 
 func TestMatchers_URLMatchRegex(t *testing.T) {
-	m := mocha.NewT(t)
+	m := NewT(t)
 	m.MustStart()
-	m.MustMock(mocha.FromFile("testdata/matchers/04_url_match.yaml"))
+	m.MustMock(FromFile("testdata/matchers/04_url_match.yaml"))
 
 	client := &http.Client{}
 	res, err := client.Get(m.URL("/test?q=hi"))
@@ -165,13 +165,13 @@ func TestMatchers_URLMatchRegex(t *testing.T) {
 	res, err = client.Get(m.URL("/test?q=bye"))
 
 	require.NoError(t, err)
-	require.Equal(t, mocha.StatusNoMatch, res.StatusCode)
+	require.Equal(t, StatusNoMatch, res.StatusCode)
 }
 
 func TestMatchers_URLCustomMatcher(t *testing.T) {
-	m := mocha.NewT(t)
+	m := NewT(t)
 	m.MustStart()
-	m.MustMock(mocha.FromFile("testdata/matchers/05_url_custom_matcher.yaml"))
+	m.MustMock(FromFile("testdata/matchers/05_url_custom_matcher.yaml"))
 
 	client := &http.Client{}
 	res, err := client.Get(m.URL("/test?q=hi"))
@@ -182,13 +182,13 @@ func TestMatchers_URLCustomMatcher(t *testing.T) {
 	res, err = client.Get(m.URL("/test?q=bye"))
 
 	require.NoError(t, err)
-	require.Equal(t, mocha.StatusNoMatch, res.StatusCode)
+	require.Equal(t, StatusNoMatch, res.StatusCode)
 }
 
 func TestMatchers_PathCustomMatcher(t *testing.T) {
-	m := mocha.NewT(t)
+	m := NewT(t)
 	m.MustStart()
-	m.MustMock(mocha.FromFile("testdata/matchers/06_path_custom_matcher.yaml"))
+	m.MustMock(FromFile("testdata/matchers/06_path_custom_matcher.yaml"))
 
 	client := &http.Client{}
 	res, err := client.Get(m.URL("/hi"))
@@ -199,13 +199,13 @@ func TestMatchers_PathCustomMatcher(t *testing.T) {
 	res, err = client.Get(m.URL("/bye"))
 
 	require.NoError(t, err)
-	require.Equal(t, mocha.StatusNoMatch, res.StatusCode)
+	require.Equal(t, StatusNoMatch, res.StatusCode)
 }
 
 func TestMatchers_NoReply_ShouldReturn200ByDefault(t *testing.T) {
-	m := mocha.NewT(t)
+	m := NewT(t)
 	m.MustStart()
-	m.MustMock(mocha.FromFile("testdata/matchers/07_no_reply.yaml"))
+	m.MustMock(FromFile("testdata/matchers/07_no_reply.yaml"))
 
 	client := &http.Client{}
 	res, err := client.Get(m.URL("/test"))

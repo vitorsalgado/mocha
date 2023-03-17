@@ -291,7 +291,7 @@ func TestSimpleJSONValues(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			scoped := m.MustMock(Postf("/test").Body(Equal(tc.value)).Reply(Status(tc.status)))
+			scoped := m.MustMock(Postf("/test").Body(JSONPath("$", Eq(tc.value))).Reply(Status(tc.status)))
 
 			buf := new(bytes.Buffer)
 			require.NoError(t, json.NewEncoder(buf).Encode(tc.value))

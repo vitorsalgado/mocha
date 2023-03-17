@@ -14,7 +14,6 @@ import (
 )
 
 func TestWithRequestBodyParsersCanParse(t *testing.T) {
-	jsonParser := &jsonBodyParser{}
 	formParser := &formURLEncodedParser{}
 	textParser := &plainTextParser{}
 	noop := &noopParser{}
@@ -37,17 +36,13 @@ func TestWithRequestBodyParsersCanParse(t *testing.T) {
 		req         *http.Request
 		expected    bool
 	}{
-		{"JSON: can parse application/json", mimetype.JSON, jsonParser, newReq(map[string]string{header.ContentType: mimetype.JSON}), true},
-		{"JSON: can parse application/json; charset=UTF-8", mimetype.JSONCharsetUTF8, jsonParser, newReq(map[string]string{header.ContentType: mimetype.JSONCharsetUTF8}), true},
-		{"JSON: should not parse", mimetype.TextPlain, jsonParser, newReq(map[string]string{header.ContentType: mimetype.TextPlain}), false},
-
 		{"Form: can parse application/form-url-encoded", mimetype.FormURLEncoded, formParser, newReq(map[string]string{header.ContentType: mimetype.FormURLEncoded}), true},
 		{"Form: can parse application/form-url-encoded; charset=UTF-8", mimetype.FormURLEncodedCharsetUTF8, formParser, newReq(map[string]string{header.ContentType: mimetype.FormURLEncodedCharsetUTF8}), true},
 		{"Form: should not parse", mimetype.JSON, formParser, newReq(map[string]string{header.ContentType: mimetype.JSON}), false},
 
 		{"Text: can parse text/plain", mimetype.TextPlain, textParser, newReq(map[string]string{header.ContentType: mimetype.TextPlain}), true},
 		{"Text: can parse text/plain; charset=UTF-8", mimetype.TextPlainCharsetUTF8, textParser, newReq(map[string]string{header.ContentType: mimetype.TextPlainCharsetUTF8}), true},
-		{"Text: should not parse", mimetype.JSON, textParser, newReq(map[string]string{header.ContentType: mimetype.JSON}), false},
+		{"Text: should parse JSON as text", mimetype.JSON, textParser, newReq(map[string]string{header.ContentType: mimetype.JSON}), true},
 
 		{"Noop: should always parse", mimetype.TextPlain, noop, newReq(map[string]string{header.ContentType: mimetype.TextPlain}), true},
 	}
@@ -60,7 +55,6 @@ func TestWithRequestBodyParsersCanParse(t *testing.T) {
 }
 
 func TestWithRequestBodyParsersParse(t *testing.T) {
-	jsonParser := &jsonBodyParser{}
 	formParser := &formURLEncodedParser{}
 	textParser := &plainTextParser{}
 	noop := &noopParser{}
@@ -75,7 +69,6 @@ func TestWithRequestBodyParsersParse(t *testing.T) {
 		body     []byte
 		expected any
 	}{
-		{"json", jsonParser, req, []byte(`{"test":"ok"}`), map[string]any{"test": "ok"}},
 		{"form", formParser, func(r *http.Request) *http.Request {
 			req, err := http.NewRequest(http.MethodPost, "https://localhost:8080", strings.NewReader("test=ok"))
 			req.Header.Add(header.ContentType, mimetype.FormURLEncoded)

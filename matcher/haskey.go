@@ -1,13 +1,15 @@
 package matcher
 
 import (
-	"errors"
+	"fmt"
 
-	"github.com/vitorsalgado/mocha/v3/internal/jsonx"
+	"github.com/ohler55/ojg/jp"
+	"github.com/ohler55/ojg/oj"
 )
 
 type hasKeyMatcher struct {
 	path string
+	expr jp.Expr
 }
 
 func (m *hasKeyMatcher) Name() string {
@@ -15,20 +17,29 @@ func (m *hasKeyMatcher) Name() string {
 }
 
 func (m *hasKeyMatcher) Match(v any) (*Result, error) {
-	value, err := jsonx.Reach(m.path, v)
-	if err != nil {
-		if errors.Is(err, jsonx.ErrKeyNotFound) {
-			return &Result{Pass: false}, nil
+	var results []any
+
+	switch vv := v.(type) {
+	case string:
+		data, err := oj.ParseString(vv)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing incoming json: %w", err)
 		}
 
-		return nil, err
+		results = m.expr.Get(data)
+	default:
+		results = m.expr.Get(vv)
 	}
 
-	if value != nil {
-		return &Result{Pass: true}, nil
+	size := len(results)
+	if size == 0 || (size == 1 && results[0] == nil) {
+		return &Result{
+			Ext:     []string{m.Name(), m.path},
+			Message: fmt.Sprintf("key <%s> is not present", m.path),
+		}, nil
 	}
 
-	return &Result{Message: m.path}, nil
+	return &Result{Pass: true}, nil
 }
 
 // HasKey passes if the JSON key in the given path is present.
@@ -38,5 +49,13 @@ func (m *hasKeyMatcher) Match(v any) (*Result, error) {
 //	HasKey("name") will pass
 //	HasKey("address.street") will not pass.
 func HasKey(path string) Matcher {
-	return &hasKeyMatcher{path: path}
+	x, err := jp.ParseString(path)
+	if err != nil {
+		panic(fmt.Errorf("the json path expression %s is invalid: %w", path, err))
+	}
+
+	return &hasKeyMatcher{
+		path: path,
+		expr: x,
+	}
 }

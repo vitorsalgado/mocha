@@ -1,13 +1,15 @@
 package matcher
 
 import (
-	"errors"
+	"fmt"
 
-	"github.com/vitorsalgado/mocha/v3/internal/jsonx"
+	"github.com/ohler55/ojg/jp"
+	"github.com/ohler55/ojg/oj"
 )
 
 type jsonPathMatcher struct {
 	path    string
+	expr    jp.Expr
 	matcher Matcher
 	name    string
 }
@@ -17,22 +19,34 @@ func (m *jsonPathMatcher) Name() string {
 }
 
 func (m *jsonPathMatcher) Match(v any) (*Result, error) {
-	var value any
+	var results []any
+
+	switch vv := v.(type) {
+	case string:
+		data, err := oj.ParseString(vv)
+		if err != nil {
+			return nil, fmt.Errorf("error parsing incoming json: %w", err)
+		}
+
+		results = m.expr.Get(data)
+	default:
+		results = m.expr.Get(vv)
+	}
+
+	var r *Result
 	var err error
 
-	if v == nil {
-		value = v
+	size := len(results)
+	if size == 0 {
+		r, err = m.matcher.Match(nil)
+	} else if size == 1 {
+		r, err = m.matcher.Match(results[0])
 	} else {
-		value, err = jsonx.Reach(m.path, v)
+		r, err = m.matcher.Match(results)
 	}
 
-	if err != nil && !errors.Is(err, jsonx.ErrKeyNotFound) {
-		return nil, err
-	}
-
-	r, err := m.matcher.Match(value)
 	if err != nil {
-		return &Result{}, err
+		return nil, err
 	}
 
 	if r.Pass {
@@ -54,7 +68,17 @@ func (m *jsonPathMatcher) AfterMockServed() error {
 //
 //	JSONPath("address.city", EqualTo("Santiago"))
 func JSONPath(path string, matcher Matcher) Matcher {
-	return &jsonPathMatcher{path: path, matcher: matcher, name: "JSONPath"}
+	x, err := jp.ParseString(path)
+	if err != nil {
+		panic(fmt.Errorf("the json path expression %s is invalid: %w", path, err))
+	}
+
+	return &jsonPathMatcher{
+		path:    path,
+		expr:    x,
+		matcher: matcher,
+		name:    "JSONPath",
+	}
 }
 
 // Field is an alias for JSONPath.
@@ -63,5 +87,15 @@ func JSONPath(path string, matcher Matcher) Matcher {
 //
 //	Field("address.city", EqualTo("Santiago"))
 func Field(path string, matcher Matcher) Matcher {
-	return &jsonPathMatcher{path: path, matcher: matcher, name: "Field"}
+	x, err := jp.ParseString(path)
+	if err != nil {
+		panic(fmt.Errorf("the json path expression %s is invalid: %w", path, err))
+	}
+
+	return &jsonPathMatcher{
+		path:    path,
+		expr:    x,
+		matcher: matcher,
+		name:    "Field",
+	}
 }

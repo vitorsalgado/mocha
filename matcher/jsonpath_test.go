@@ -69,7 +69,6 @@ func TestJSONPathMatcherMatchErrors(t *testing.T) {
 		path    string
 		matcher Matcher
 	}{
-		{name: "invalid path", path: "312nj.,", matcher: StrictEqual("anything")},
 		{name: "field not present", path: "life", matcher: StrictEqual("anything")},
 		{name: "deep field not present", path: "path.to.another.field", matcher: StrictEqual("any")},
 	}
@@ -83,10 +82,38 @@ func TestJSONPathMatcherMatchErrors(t *testing.T) {
 	}
 }
 
+func TestJSONPathMatcherInvalidPaths(t *testing.T) {
+	testCases := []struct {
+		name    string
+		path    string
+		matcher Matcher
+	}{
+		{name: "invalid path", path: "312nj.,", matcher: StrictEqual("anything")},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			require.Panics(t, func() {
+				_, _ = JSONPath(tc.path, tc.matcher).Match(_json)
+			})
+		})
+	}
+}
+
 func TestJsonPathMatcher_Name(t *testing.T) {
 	require.NotEmpty(t, JSONPath("", Eq("")).Name())
 }
 
 func TestFieldMatcher_Name(t *testing.T) {
 	require.NotEmpty(t, Field("", Eq("")).Name())
+}
+
+func TestJSONPathNew(t *testing.T) {
+	require.Panics(t, func() {
+		JSONPath(".", Eq(""))
+	})
+
+	require.Panics(t, func() {
+		Field(".", Eq(""))
+	})
 }

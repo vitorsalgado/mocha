@@ -2,7 +2,6 @@ package mocha
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -58,18 +57,6 @@ func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (parsedBody 
 	return nil, nil, nil
 }
 
-// jsonBodyParser parses requests with content type header containing "application/json"
-type jsonBodyParser struct{}
-
-func (parser *jsonBodyParser) CanParse(content string, _ *http.Request) bool {
-	return strings.Contains(content, mimetype.JSON)
-}
-
-func (parser *jsonBodyParser) Parse(body []byte, _ *http.Request) (data any, err error) {
-	err = json.NewDecoder(bytes.NewBuffer(body)).Decode(&data)
-	return data, err
-}
-
 // jsonBodyParser parses requests with content type header containing "application/x-www-form-urlencoded"
 type formURLEncodedParser struct{}
 
@@ -86,7 +73,7 @@ func (parser *formURLEncodedParser) Parse(_ []byte, r *http.Request) (any, error
 type plainTextParser struct{}
 
 func (parser *plainTextParser) CanParse(content string, _ *http.Request) bool {
-	return strings.Contains(content, mimetype.TextPlain)
+	return strings.Contains(content, mimetype.TextPlain) || strings.Contains(content, mimetype.JSON)
 }
 
 func (parser *plainTextParser) Parse(body []byte, _ *http.Request) (any, error) {

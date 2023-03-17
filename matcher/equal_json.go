@@ -16,19 +16,40 @@ func (m *equalJSONMatcher) Name() string {
 }
 
 func (m *equalJSONMatcher) Match(v any) (*Result, error) {
-	expectedAsJson, err := json.Marshal(m.expected)
-	if err != nil {
-		return nil, err
+	var expJSON []byte
+	var err error
+
+	switch vv := m.expected.(type) {
+	case string:
+		expJSON = []byte(vv)
+	default:
+		expJSON, err = json.Marshal(m.expected)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	var exp any
-	err = json.Unmarshal(expectedAsJson, &exp)
+	err = json.Unmarshal(expJSON, &exp)
 	if err != nil {
 		return nil, err
 	}
 
-	if equalValues(v, exp, false) {
-		return &Result{Pass: true}, err
+	switch vv := v.(type) {
+	case string:
+		b := new(any)
+		err = json.Unmarshal([]byte(vv), b)
+		if err != nil {
+			return nil, err
+		}
+
+		if equalValues(*b, exp, false) {
+			return &Result{Pass: true}, err
+		}
+	default:
+		if equalValues(v, exp, false) {
+			return &Result{Pass: true}, err
+		}
 	}
 
 	return &Result{
