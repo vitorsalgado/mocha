@@ -8,12 +8,12 @@ import (
 )
 
 var _ Reply = (*RandomReply)(nil)
+var _randomMu sync.Mutex
 
 // RandomReply configures a Reply that serves random HTTP responses.
 type RandomReply struct {
 	replies []Reply
 	random  *rand.Rand
-	mu      sync.Mutex
 }
 
 // Rand initializes a new RandomReply.
@@ -48,8 +48,8 @@ func (rep *RandomReply) beforeBuild(_ *Mocha) error {
 
 // Build builds a response stub randomly based on previously added Reply implementations.
 func (rep *RandomReply) Build(w http.ResponseWriter, r *RequestValues) (*Stub, error) {
-	rep.mu.Lock()
-	defer rep.mu.Unlock()
+	_randomMu.Lock()
+	defer _randomMu.Unlock()
 
 	var index int
 	if rep.random == nil {
