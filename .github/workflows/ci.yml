@@ -50,7 +50,7 @@ jobs:
 
       - name: GolangCI-Lint
         uses: golangci/golangci-lint-action@v3
-        if: {{ matrix.os == 'ubuntu-latest' matrix.go-version == env.GO_LATEST_VERSION }}
+        if: {{ matrix.os == 'ubuntu-latest' && matrix.go-version == env.GO_LATEST_VERSION }}
         with:
           version: 1.51.2
 
@@ -59,7 +59,7 @@ jobs:
 
       - name: Code Coverage
         uses: codecov/codecov-action@v3
-        if: {{ matrix.os == 'ubuntu-latest' matrix.go-version == env.GO_LATEST_VERSION }}
+        if: {{ matrix.os == 'ubuntu-latest' && matrix.go-version == env.GO_LATEST_VERSION }}
         timeout-minutes: 5
         with:
           fail_ci_if_error: false
