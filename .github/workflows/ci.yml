@@ -75,7 +75,6 @@ jobs:
   auto_merge:
     needs:
       - build
-      - vuln
     runs-on: ubuntu-latest
     if: >
       github.event_name == 'pull_request' &&
