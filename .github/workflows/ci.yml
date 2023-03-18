@@ -52,7 +52,7 @@ jobs:
         uses: golangci/golangci-lint-action@v3
         if: ${{ matrix.os == 'ubuntu-latest' && matrix.go-version == env.GO_LATEST_VERSION }}
         with:
-          version: 1.51.2
+          version: v1.51.2
 
       - name: Test
         run: make test-ci
