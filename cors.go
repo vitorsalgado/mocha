@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/vitorsalgado/mocha/v3/internal/header"
+	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
 // CORSConfig represents the possible options to configure CORS.
@@ -84,13 +84,13 @@ func (b *CORSConfigBuilder) AllowOrigin(origin ...string) *CORSConfigBuilder {
 	return b
 }
 
-// AllowCredentials sets "Access-Control-Allow-Credentials" header.
+// AllowCredentials sets "Access-Control-Allow-Credentials" misc.Header
 func (b *CORSConfigBuilder) AllowCredentials(allow bool) *CORSConfigBuilder {
 	b.options.AllowCredentials = allow
 	return b
 }
 
-// ExposeHeaders sets "Access-Control-Expose-Header" header.
+// ExposeHeaders sets "Access-Control-Expose-Header" misc.Header
 func (b *CORSConfigBuilder) ExposeHeaders(headers ...string) *CORSConfigBuilder {
 	b.options.ExposeHeaders = strings.Join(headers, ",")
 	return b
@@ -143,8 +143,8 @@ func corsMid(options *CORSConfig) func(http.Handler) http.Handler {
 				configureMaxAge(options, w)
 				configureHeaders(options, w, r)
 
-				w.Header().Add(header.Vary, header.AccessControlRequestHeaders)
-				w.Header().Add(header.ContentLength, "0")
+				w.Header().Add(misc.HeaderVary, misc.HeaderAccessControlRequestHeaders)
+				w.Header().Add(misc.HeaderContentLength, "0")
 
 				w.WriteHeader(options.SuccessStatusCode)
 			} else {
@@ -162,36 +162,36 @@ func corsMid(options *CORSConfig) func(http.Handler) http.Handler {
 func configureHeaders(options *CORSConfig, w http.ResponseWriter, r *http.Request) {
 	// when allowed headers aren't specified, use values from header access-control-request-headers
 	if options.AllowedHeaders != "" {
-		w.Header().Add(header.AccessControlAllowHeaders, options.AllowedHeaders)
+		w.Header().Add(misc.HeaderAccessControlAllowHeaders, options.AllowedHeaders)
 	} else {
-		hs := r.Header.Get(header.AccessControlRequestHeaders)
+		hs := r.Header.Get(misc.HeaderAccessControlRequestHeaders)
 		if strings.TrimSpace(hs) != "" {
-			w.Header().Add(header.AccessControlAllowHeaders, hs)
+			w.Header().Add(misc.HeaderAccessControlAllowHeaders, hs)
 		}
 	}
 }
 
 func configureMaxAge(options *CORSConfig, w http.ResponseWriter) {
 	if options.MaxAge > -1 {
-		w.Header().Add(header.AccessControlMaxAge, strconv.Itoa(options.MaxAge))
+		w.Header().Add(misc.HeaderAccessControlMaxAge, strconv.Itoa(options.MaxAge))
 	}
 }
 
 func configureMethods(options *CORSConfig, w http.ResponseWriter) {
 	if len(options.AllowedMethods) > 0 {
-		w.Header().Add(header.AccessControlAllowMethods, options.AllowedMethods)
+		w.Header().Add(misc.HeaderAccessControlAllowMethods, options.AllowedMethods)
 	}
 }
 
 func configureExposedHeaders(options *CORSConfig, w http.ResponseWriter) {
 	if options.ExposeHeaders != "" {
-		w.Header().Add(header.AccessControlExposeHeaders, options.ExposeHeaders)
+		w.Header().Add(misc.HeaderAccessControlExposeHeaders, options.ExposeHeaders)
 	}
 }
 
 func configureCredentials(options *CORSConfig, w http.ResponseWriter) {
 	if options.AllowCredentials {
-		w.Header().Add(header.AccessControlAllowCredentials, "true")
+		w.Header().Add(misc.HeaderAccessControlAllowCredentials, "true")
 	}
 }
 
@@ -204,8 +204,8 @@ func configureOrigin(options *CORSConfig, r *http.Request, w http.ResponseWriter
 	size := len(origins)
 
 	if size == 1 {
-		w.Header().Add(header.AccessControlAllowOrigin, options.AllowedOrigin)
-		w.Header().Add(header.Vary, header.Origin)
+		w.Header().Add(misc.HeaderAccessControlAllowOrigin, options.AllowedOrigin)
+		w.Header().Add(misc.HeaderVary, misc.HeaderOrigin)
 		return
 	}
 
@@ -222,7 +222,7 @@ func configureOrigin(options *CORSConfig, r *http.Request, w http.ResponseWriter
 	}
 
 	if allowed {
-		w.Header().Add(header.AccessControlAllowOrigin, origin)
-		w.Header().Add(header.Vary, header.Origin)
+		w.Header().Add(misc.HeaderAccessControlAllowOrigin, origin)
+		w.Header().Add(misc.HeaderVary, misc.HeaderOrigin)
 	}
 }

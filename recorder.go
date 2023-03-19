@@ -19,7 +19,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/vitorsalgado/mocha/v3/internal/header"
+	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
 var _ RecordConfigurer = (*RecordConfig)(nil)
@@ -236,7 +236,7 @@ func (r *recorder) process(arg *recArgs) error {
 		requestBodyHash = hex.EncodeToString(h.Sum(nil))
 	}
 
-	contentType := arg.request.header.Get(header.ContentType)
+	contentType := arg.request.header.Get(misc.HeaderContentType)
 	if strings.Contains(contentType, ";") {
 		contentType = strings.TrimSpace(contentType[:strings.Index(contentType, ";")])
 	}
@@ -274,7 +274,7 @@ func (r *recorder) process(arg *recArgs) error {
 
 			defer b.Close()
 
-			encoding := arg.response.header.Get(header.ContentEncoding)
+			encoding := arg.response.header.Get(misc.HeaderContentEncoding)
 			switch encoding {
 			case "gzip":
 				gz, err := gzip.NewReader(bytes.NewReader(arg.response.body))
@@ -298,7 +298,7 @@ func (r *recorder) process(arg *recArgs) error {
 			v.Set(_fResponseBodyFile, bodyFilename)
 
 		} else {
-			encoding := arg.response.header.Get(header.ContentEncoding)
+			encoding := arg.response.header.Get(misc.HeaderContentEncoding)
 			switch encoding {
 			case "gzip":
 				gz, err := gzip.NewReader(bytes.NewReader(arg.response.body))

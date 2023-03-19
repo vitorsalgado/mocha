@@ -9,8 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/vitorsalgado/mocha/v3/internal/header"
-	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
+	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
 func TestWithRequestBodyParsersCanParse(t *testing.T) {
@@ -36,15 +35,15 @@ func TestWithRequestBodyParsersCanParse(t *testing.T) {
 		req         *http.Request
 		expected    bool
 	}{
-		{"Form: can parse application/form-url-encoded", mimetype.FormURLEncoded, formParser, newReq(map[string]string{header.ContentType: mimetype.FormURLEncoded}), true},
-		{"Form: can parse application/form-url-encoded; charset=UTF-8", mimetype.FormURLEncodedCharsetUTF8, formParser, newReq(map[string]string{header.ContentType: mimetype.FormURLEncodedCharsetUTF8}), true},
-		{"Form: should not parse", mimetype.JSON, formParser, newReq(map[string]string{header.ContentType: mimetype.JSON}), false},
+		{"Form: can parse application/form-url-encoded", misc.MIMEFormURLEncoded, formParser, newReq(map[string]string{misc.HeaderContentType: misc.MIMEFormURLEncoded}), true},
+		{"Form: can parse application/form-url-encoded; charset=UTF-8", misc.MIMEFormURLEncodedCharsetUTF8, formParser, newReq(map[string]string{misc.HeaderContentType: misc.MIMEFormURLEncodedCharsetUTF8}), true},
+		{"Form: should not parse", misc.MIMEApplicationJSON, formParser, newReq(map[string]string{misc.HeaderContentType: misc.MIMEApplicationJSON}), false},
 
-		{"Text: can parse text/plain", mimetype.TextPlain, textParser, newReq(map[string]string{header.ContentType: mimetype.TextPlain}), true},
-		{"Text: can parse text/plain; charset=UTF-8", mimetype.TextPlainCharsetUTF8, textParser, newReq(map[string]string{header.ContentType: mimetype.TextPlainCharsetUTF8}), true},
-		{"Text: should parse JSON as text", mimetype.JSON, textParser, newReq(map[string]string{header.ContentType: mimetype.JSON}), true},
+		{"Text: can parse text/plain", misc.MIMETextPlain, textParser, newReq(map[string]string{misc.HeaderContentType: misc.MIMETextPlain}), true},
+		{"Text: can parse text/plain; charset=UTF-8", misc.MIMETextPlainCharsetUTF8, textParser, newReq(map[string]string{misc.HeaderContentType: misc.MIMETextPlainCharsetUTF8}), true},
+		{"Text: should parse JSON as text", misc.MIMEApplicationJSON, textParser, newReq(map[string]string{misc.HeaderContentType: misc.MIMEApplicationJSON}), true},
 
-		{"Noop: should always parse", mimetype.TextPlain, noop, newReq(map[string]string{header.ContentType: mimetype.TextPlain}), true},
+		{"Noop: should always parse", misc.MIMETextPlain, noop, newReq(map[string]string{misc.HeaderContentType: misc.MIMETextPlain}), true},
 	}
 
 	for _, tc := range testCases {
@@ -71,7 +70,7 @@ func TestWithRequestBodyParsersParse(t *testing.T) {
 	}{
 		{"form", formParser, func(r *http.Request) *http.Request {
 			req, err := http.NewRequest(http.MethodPost, "https://localhost:8080", strings.NewReader("test=ok"))
-			req.Header.Add(header.ContentType, mimetype.FormURLEncoded)
+			req.Header.Add(misc.HeaderContentType, misc.MIMEFormURLEncoded)
 			require.NoError(t, err)
 
 			return req

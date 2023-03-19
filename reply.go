@@ -11,8 +11,7 @@ import (
 	"net/textproto"
 	"os"
 
-	"github.com/vitorsalgado/mocha/v3/internal/header"
-	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
+	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
 // Reply defines the contract to set up an HTTP replier.
@@ -97,7 +96,7 @@ func PartialContent() *StdReply { return NewReply().Status(http.StatusPartialCon
 
 // MovedPermanently creates a new Reply with http.StatusMovedPermanently already.
 func MovedPermanently(location string) *StdReply {
-	return NewReply().Status(http.StatusMovedPermanently).Header(header.Location, location)
+	return NewReply().Status(http.StatusMovedPermanently).Header(misc.HeaderLocation, location)
 }
 
 // NotModified creates a new Reply with http.StatusNotModified already.
@@ -158,9 +157,9 @@ func (rep *StdReply) HeaderTemplate(key, value string) *StdReply {
 	return rep
 }
 
-// ContentType sets the response content-type header.
+// ContentType sets the response content-type misc.Header
 func (rep *StdReply) ContentType(mime string) *StdReply {
-	rep.Header(header.ContentType, mime)
+	rep.Header(misc.HeaderContentType, mime)
 	return rep
 }
 
@@ -257,13 +256,13 @@ func (rep *StdReply) SetTemplateData(data any) *StdReply {
 
 // JSON sets the response to application/json.
 func (rep *StdReply) JSON(payload any) *StdReply {
-	rep.Header(header.ContentType, mimetype.JSON)
+	rep.Header(misc.HeaderContentType, misc.MIMEApplicationJSON)
 	return rep.BodyJSON(payload)
 }
 
 // PlainText defines a text/plain response with the given text body.
 func (rep *StdReply) PlainText(text string) *StdReply {
-	rep.Header(header.ContentType, mimetype.TextPlain)
+	rep.Header(misc.HeaderContentType, misc.MIMETextPlain)
 	return rep.BodyText(text)
 }
 
@@ -451,7 +450,7 @@ func (rep *StdReply) encodeBody() error {
 		}
 
 		rep.response.Body = buf.Bytes()
-		rep.response.Header.Add(header.ContentEncoding, "gzip")
+		rep.response.Header.Add(misc.HeaderContentEncoding, "gzip")
 		rep.response.Encoding = "gzip"
 		rep.encoded = true
 	}

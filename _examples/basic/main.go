@@ -9,9 +9,8 @@ import (
 	"syscall"
 
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/internal/header"
-	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
+	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
 func main() {
@@ -23,8 +22,8 @@ func main() {
 
 	m.MustMock(mocha.
 		Get(URLPath("/test")).
-		Header(header.Accept, Contain(mimetype.TextHTML)).
-		Header(header.ContentType, StrictEqual("test")).
+		Header(misc.HeaderAccept, Contain(misc.MIMETextHTML)).
+		Header(misc.HeaderContentType, StrictEqual("test")).
 		Header("any", All(Contain("test"), EqualIgnoreCase("dev"))).
 		Reply(mocha.OK().
 			PlainText("hello world").

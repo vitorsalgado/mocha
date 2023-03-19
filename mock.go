@@ -156,7 +156,7 @@ type valueSelectorInput struct {
 // expectation holds metadata related to one http.Request Matcher.
 type expectation struct {
 	// Target is an optional metadata that describes the target of the matcher.
-	// Example: the target could have the "header", meaning that the matcher will be applied to one request header.
+	// Example: the target could have the "header", meaning that the matcher will be applied to one request misc.Header
 	Target matchTarget
 
 	Key string

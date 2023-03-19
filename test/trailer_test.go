@@ -8,9 +8,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/internal/header"
-	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 	"github.com/vitorsalgado/mocha/v3/matcher"
+	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
 func TestTrailer_WithBody(t *testing.T) {
@@ -23,7 +22,7 @@ func TestTrailer_WithBody(t *testing.T) {
 		mocha.Get(matcher.URLPath("/test")).
 			Reply(mocha.OK().
 				PlainText("hello world").
-				Header(header.ContentType, mimetype.TextPlain).
+				Header(misc.HeaderContentType, misc.MIMETextPlain).
 				Trailer("trailer-1", "trailer-1-value").
 				Trailer("trailer-2", "trailer-2-value")))
 
@@ -34,7 +33,7 @@ func TestTrailer_WithBody(t *testing.T) {
 
 	require.True(t, scoped.AssertCalled(t))
 	require.Equal(t, http.StatusOK, res.StatusCode)
-	require.Equal(t, mimetype.TextPlain, res.Header.Get(header.ContentType))
+	require.Equal(t, misc.MIMETextPlain, res.Header.Get(misc.HeaderContentType))
 	require.Len(t, res.Trailer, 2)
 
 	b, err := io.ReadAll(res.Body)
@@ -55,7 +54,7 @@ func TestTrailer_WithoutBody(t *testing.T) {
 	scoped := m.MustMock(
 		mocha.Get(matcher.URLPath("/test")).
 			Reply(mocha.OK().
-				Header(header.ContentType, mimetype.TextPlain).
+				Header(misc.HeaderContentType, misc.MIMETextPlain).
 				Trailer("trailer-1", "trailer-1-value").
 				Trailer("trailer-2", "trailer-2-value")))
 
@@ -64,7 +63,7 @@ func TestTrailer_WithoutBody(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, scoped.AssertCalled(t))
 	require.Equal(t, http.StatusOK, res.StatusCode)
-	require.Equal(t, mimetype.TextPlain, res.Header.Get(header.ContentType))
+	require.Equal(t, misc.MIMETextPlain, res.Header.Get(misc.HeaderContentType))
 	require.Len(t, res.Trailer, 2)
 
 	_, err = io.ReadAll(res.Body)

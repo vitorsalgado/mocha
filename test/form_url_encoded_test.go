@@ -9,9 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/internal/header"
-	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 	"github.com/vitorsalgado/mocha/v3/matcher"
+	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
 func TestFormUrlEncoded(t *testing.T) {
@@ -30,7 +29,7 @@ func TestFormUrlEncoded(t *testing.T) {
 
 	req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", strings.NewReader(data.Encode()))
 	req.Header.Add("test", "hello")
-	req.Header.Add(header.ContentType, mimetype.FormURLEncoded)
+	req.Header.Add(misc.HeaderContentType, misc.MIMEFormURLEncoded)
 	res, err := httpClient.Do(req)
 
 	require.NoError(t, err)
@@ -126,7 +125,7 @@ func TestFormUrlEncoded_FromFileMock(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", strings.NewReader(tc.data().Encode()))
-			req.Header.Add(header.ContentType, mimetype.FormURLEncoded)
+			req.Header.Add(misc.HeaderContentType, misc.MIMEFormURLEncoded)
 			res, err := httpClient.Do(req)
 
 			require.NoError(t, err)

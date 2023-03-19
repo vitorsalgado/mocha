@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	. "github.com/vitorsalgado/mocha/v3"
+	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
 func TestMatcherCombinations(t *testing.T) {
@@ -91,8 +92,8 @@ func TestMatcherCombinations(t *testing.T) {
 
 		u := baseURL + "/test?" + qry.Encode() + "&age(150)&contains(nothing)"
 		req, _ := http.NewRequest(http.MethodPost, u, buf)
-		req.Header.Add(HeaderContentType, MIMEApplicationJSON)
-		req.Header.Add(HeaderAccept, MIMEApplicationJSON)
+		req.Header.Add(misc.HeaderContentType, misc.MIMEApplicationJSON)
+		req.Header.Add(misc.HeaderAccept, misc.MIMEApplicationJSON)
 		req.Header.Add("x-test", "dev, qa, devops")
 
 		res, err := httpClient.Do(req)
@@ -106,7 +107,7 @@ func TestMatcherCombinations(t *testing.T) {
 		err = json.Unmarshal(b, r)
 
 		require.NoError(t, err, baseURL)
-		require.Equal(t, MIMEApplicationJSON, res.Header.Get(HeaderContentType))
+		require.Equal(t, misc.MIMEApplicationJSON, res.Header.Get(misc.HeaderContentType))
 		require.Equal(t, "success", res.Header.Get("x-custom"))
 		require.Equal(t, http.StatusOK, res.StatusCode)
 		require.Equal(t, true, r.Ok)
@@ -139,7 +140,7 @@ func TestMatchers_MultipleMethods(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, http.StatusNoContent, res.StatusCode)
 
-	res, err = client.Post(m.URL("/test?q=none"), MIMETextPlain, nil)
+	res, err = client.Post(m.URL("/test?q=none"), misc.MIMETextPlain, nil)
 
 	require.NoError(t, err)
 	require.Equal(t, http.StatusNoContent, res.StatusCode)

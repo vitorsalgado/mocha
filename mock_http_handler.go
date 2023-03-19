@@ -8,10 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vitorsalgado/mocha/v3/internal/header"
 	"github.com/vitorsalgado/mocha/v3/internal/httprec"
-	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 	"github.com/vitorsalgado/mocha/v3/matcher"
+	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
 type mockHandler struct {
@@ -93,7 +92,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		for k := range stub.Trailer {
-			w.Header().Add(header.Trailer, k)
+			w.Header().Add(misc.HeaderTrailer, k)
 		}
 
 		for _, cookie := range stub.Cookies {
@@ -191,7 +190,7 @@ func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *RequestValues, resul
 		builder.WriteString("\n")
 	}
 
-	w.Header().Add(header.ContentType, mimetype.TextPlainCharsetUTF8)
+	w.Header().Add(misc.HeaderContentType, misc.MIMETextPlainCharsetUTF8)
 	w.WriteHeader(h.app.config.RequestWasNotMatchedStatusCode)
 	w.Write([]byte(builder.String()))
 }
@@ -199,7 +198,7 @@ func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *RequestValues, resul
 func (h *mockHandler) onError(w http.ResponseWriter, r *RequestValues, err error) {
 	defer h.lifecycle.OnError(r, err)
 
-	w.Header().Add(header.ContentType, mimetype.TextPlainCharsetUTF8)
+	w.Header().Add(misc.HeaderContentType, misc.MIMETextPlainCharsetUTF8)
 	w.WriteHeader(h.app.config.RequestWasNotMatchedStatusCode)
 	w.Write([]byte(fmt.Sprintf("ERROR DURING REQUEST MATCHING\n%v", err)))
 }

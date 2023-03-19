@@ -11,16 +11,15 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/internal/header"
-	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
+	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
 func TestProxiedReplies(t *testing.T) {
 	dest := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "ok", r.Header.Get("x-test"))
 		assert.Equal(t, "", r.Header.Get("x-del"))
-		assert.Equal(t, mimetype.TextPlain, r.Header.Get(header.ContentType))
+		assert.Equal(t, misc.MIMETextPlain, r.Header.Get(misc.HeaderContentType))
 
 		b, err := io.ReadAll(r.Body)
 		if err != nil && err != io.EOF {
@@ -48,7 +47,7 @@ func TestProxiedReplies(t *testing.T) {
 	data := strings.NewReader("hello world")
 	req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", data)
 	req.Header.Add("x-del", "to-delete")
-	req.Header.Add(header.ContentType, mimetype.TextPlain)
+	req.Header.Add(misc.HeaderContentType, misc.MIMETextPlain)
 
 	res, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
@@ -86,7 +85,7 @@ func TestProxiedReplyMockFileWithTemplate(t *testing.T) {
 	httpClient := &http.Client{}
 
 	req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", strings.NewReader("hello world"))
-	req.Header.Add(header.ContentType, mimetype.TextPlain)
+	req.Header.Add(misc.HeaderContentType, misc.MIMETextPlain)
 	req.Header.Add("del", "to be deleted")
 
 	res, err := httpClient.Do(req)

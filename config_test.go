@@ -12,15 +12,14 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/v3/internal/header"
-	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 	"github.com/vitorsalgado/mocha/v3/matcher"
+	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
 type testBodyParser struct{}
 
 func (p testBodyParser) CanParse(content string, r *http.Request) bool {
-	return content == mimetype.TextPlain && r.Header.Get("x-test") == "num"
+	return content == misc.MIMETextPlain && r.Header.Get("x-test") == "num"
 }
 
 func (p testBodyParser) Parse(body []byte, _ *http.Request) (any, error) {
@@ -93,7 +92,7 @@ func TestConfig(t *testing.T) {
 			Reply(OK()))
 
 		req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", strings.NewReader("10"))
-		req.Header.Add(header.ContentType, mimetype.TextPlain)
+		req.Header.Add(misc.HeaderContentType, misc.MIMETextPlain)
 		req.Header.Add("x-test", "num")
 
 		res, err := client.Do(req)
@@ -109,7 +108,7 @@ func TestConfig(t *testing.T) {
 			return http.HandlerFunc(
 				func(w http.ResponseWriter, r *http.Request) {
 					w.Header().Add("intercepted", "true")
-					w.Header().Add(header.ContentType, mimetype.TextPlain)
+					w.Header().Add(misc.HeaderContentType, misc.MIMETextPlain)
 					w.WriteHeader(http.StatusBadRequest)
 					w.Write([]byte(msg))
 				})

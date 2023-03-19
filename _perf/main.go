@@ -15,9 +15,8 @@ import (
 	"syscall"
 
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/internal/header"
-	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
+	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
 type Srv struct {
@@ -116,7 +115,7 @@ func main() {
 
 	m.MustMock(mocha.
 		Get(URLPath("/test")).
-		Header(header.Accept, Contain(mimetype.TextPlain)).
+		Header(misc.HeaderAccept, Contain(misc.MIMETextPlain)).
 		Header("X-Scenario", StrictEqual("1")).
 		Reply(mocha.OK().
 			PlainText("ok").
@@ -124,12 +123,12 @@ func main() {
 
 	m.MustMock(mocha.
 		Post(URLPath("/test")).
-		Header(header.ContentType, Contain(mimetype.JSON)).
+		Header(misc.HeaderContentType, Contain(misc.MIMEApplicationJSON)).
 		Body(All(
 			JSONPath("active", StrictEqual(true)),
 			JSONPath("result", StrictEqual("ok")))).
 		Reply(mocha.OK().
-			ContentType(mimetype.JSON).
+			ContentType(misc.MIMEApplicationJSON).
 			BodyReader(f)),
 	)
 
