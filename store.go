@@ -42,22 +42,22 @@ func newStore() mockStore {
 	return &builtInStore{data: make([]*Mock, 0)}
 }
 
-func (repo *builtInStore) Save(mock *Mock) {
-	repo.rwMutex.Lock()
-	defer repo.rwMutex.Unlock()
+func (s *builtInStore) Save(mock *Mock) {
+	s.rwMutex.Lock()
+	defer s.rwMutex.Unlock()
 
-	repo.data = append(repo.data, mock)
+	s.data = append(s.data, mock)
 
-	sort.SliceStable(repo.data, func(a, b int) bool {
-		return repo.data[a].Priority < repo.data[b].Priority
+	sort.SliceStable(s.data, func(a, b int) bool {
+		return s.data[a].Priority < s.data[b].Priority
 	})
 }
 
-func (repo *builtInStore) Get(id string) *Mock {
-	repo.rwMutex.RLock()
-	defer repo.rwMutex.RUnlock()
+func (s *builtInStore) Get(id string) *Mock {
+	s.rwMutex.RLock()
+	defer s.rwMutex.RUnlock()
 
-	for _, datum := range repo.data {
+	for _, datum := range s.data {
 		if datum.ID == id {
 			return datum
 		}
@@ -66,13 +66,13 @@ func (repo *builtInStore) Get(id string) *Mock {
 	return nil
 }
 
-func (repo *builtInStore) GetEligible() []*Mock {
-	repo.rwMutex.RLock()
-	defer repo.rwMutex.RUnlock()
+func (s *builtInStore) GetEligible() []*Mock {
+	s.rwMutex.RLock()
+	defer s.rwMutex.RUnlock()
 
-	mocks := make([]*Mock, 0)
+	mocks := make([]*Mock, 0, len(s.data))
 
-	for _, mock := range repo.data {
+	for _, mock := range s.data {
 		if mock.Enabled {
 			mocks = append(mocks, mock)
 		}
@@ -81,47 +81,46 @@ func (repo *builtInStore) GetEligible() []*Mock {
 	return mocks
 }
 
-func (repo *builtInStore) GetAll() []*Mock {
-	repo.rwMutex.RLock()
-	defer repo.rwMutex.RUnlock()
+func (s *builtInStore) GetAll() []*Mock {
+	s.rwMutex.RLock()
+	defer s.rwMutex.RUnlock()
 
-	return repo.data
+	return s.data
 }
 
-func (repo *builtInStore) Delete(id string) {
-	repo.rwMutex.Lock()
-	defer repo.rwMutex.Unlock()
+func (s *builtInStore) Delete(id string) {
+	s.rwMutex.Lock()
+	defer s.rwMutex.Unlock()
 
 	index := -1
-	for i, m := range repo.data {
+	for i, m := range s.data {
 		if m.ID == id {
 			index = i
 			break
 		}
 	}
 
-	repo.data = repo.data[:index+copy(repo.data[index:], repo.data[index+1:])]
+	s.data = s.data[:index+copy(s.data[index:], s.data[index+1:])]
 }
 
-func (repo *builtInStore) DeleteExternal() {
-	repo.rwMutex.Lock()
-	defer repo.rwMutex.Unlock()
+func (s *builtInStore) DeleteExternal() {
+	ids := make([]string, 0, len(s.data))
 
-	data := make([]*Mock, 0)
-
-	for _, m := range repo.data {
-		if m.Source == "" {
-			data = append(data, m)
+	for _, m := range s.data {
+		if len(m.Source) > 0 {
+			ids = append(ids, m.ID)
 		}
 	}
 
-	repo.data = data
+	for _, id := range ids {
+		s.Delete(id)
+	}
 }
 
-func (repo *builtInStore) DeleteAll() {
-	repo.rwMutex.Lock()
-	defer repo.rwMutex.Unlock()
+func (s *builtInStore) DeleteAll() {
+	s.rwMutex.Lock()
+	defer s.rwMutex.Unlock()
 
-	repo.data = nil
-	repo.data = make([]*Mock, 0)
+	s.data = nil
+	s.data = make([]*Mock, 0)
 }
