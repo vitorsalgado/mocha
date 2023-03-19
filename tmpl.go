@@ -34,8 +34,20 @@ type TemplateRenderer interface {
 // templateData is the data used in templates during rendering.
 type templateData struct {
 	Request templateRequest
-	App     *Mocha
+	App     *templateAppWrapper
 	Ext     any
+}
+
+type templateAppWrapper struct {
+	app *Mocha
+}
+
+func (t *templateAppWrapper) Parameters() Params {
+	return t.app.Parameters()
+}
+
+func (t *templateAppWrapper) Data() map[string]any {
+	return t.app.Data()
 }
 
 type templateRequest struct {

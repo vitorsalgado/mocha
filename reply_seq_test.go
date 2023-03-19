@@ -88,23 +88,22 @@ func TestSeqRace(t *testing.T) {
 			require.NoError(t, err)
 			require.True(t, res.StatusCode != StatusNoMatch)
 
-			builder.curHits()
-
+			builder.totalHits()
 			wg.Done()
 		}(i)
 
-		builder.curHits()
+		builder.totalHits()
 	}
 
 	res, err := builder.Build(nil, rv)
 	require.NoError(t, err)
 	require.True(t, res.StatusCode != StatusNoMatch)
 
-	builder.curHits()
+	builder.totalHits()
 
 	require.Eventually(t, func() bool {
 		wg.Wait()
 		return true
 	}, 1*time.Second, 100*time.Millisecond)
-	require.Equal(t, 4, builder.curHits())
+	require.Equal(t, 4, builder.totalHits())
 }

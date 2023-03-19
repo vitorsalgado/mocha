@@ -468,5 +468,5 @@ func (rep *StdReply) buildTemplateData(r *RequestValues, ext any) *templateData 
 		Body:            r.ParsedBody,
 	}
 
-	return &templateData{Request: reqExtra, App: r.App, Ext: ext}
+	return &templateData{Request: reqExtra, App: &templateAppWrapper{r.App}, Ext: ext}
 }

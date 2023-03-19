@@ -98,7 +98,7 @@ func New(config ...Configurer) *Mocha {
 	colors := &colorize.Colorize{Enabled: conf.UseDescriptiveLogger}
 	store := newStore()
 
-	parsers := make([]RequestBodyParser, 0, len(conf.RequestBodyParsers)+4)
+	parsers := make([]RequestBodyParser, 0, len(conf.RequestBodyParsers)+3)
 	parsers = append(parsers, conf.RequestBodyParsers...)
 	parsers = append(parsers, &plainTextParser{}, &formURLEncodedParser{}, &noopParser{})
 
@@ -152,11 +152,9 @@ func New(config ...Configurer) *Mocha {
 		server = newServer()
 	}
 
-	loaders := make([]Loader, len(conf.Loaders)+1 /* number of internal loaders */)
-	loaders[0] = &fileLoader{}
-	for i, loader := range conf.Loaders {
-		loaders[i+1] = loader
-	}
+	loaders := make([]Loader, 0, len(conf.Loaders)+1 /* 1 is the number of internal loaders */)
+	loaders = append(loaders, &fileLoader{})
+	loaders = append(loaders, conf.Loaders...)
 
 	if conf.TemplateEngine == nil {
 		tmpl := newGoTemplate()

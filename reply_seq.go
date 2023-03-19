@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"sync/atomic"
 )
 
 var _ Reply = (*SequentialReply)(nil)
@@ -12,7 +13,7 @@ var _ Reply = (*SequentialReply)(nil)
 type SequentialReply struct {
 	replyAfterSequenceEnded Reply
 	replies                 []Reply
-	hits                    int
+	hits                    int32
 	rwMutex                 sync.RWMutex
 }
 
@@ -45,12 +46,14 @@ func (r *SequentialReply) beforeBuild(_ *Mocha) error {
 // Build builds a new response based on the current Mock call sequence.
 // When the sequence is over, it will return an error or a previously configured reply for this scenario.
 func (r *SequentialReply) Build(w http.ResponseWriter, req *RequestValues) (*Stub, error) {
-	var size = len(r.replies)
-	var reply Reply
-	var hits = r.curHits()
+	r.rwMutex.Lock()
+	defer r.rwMutex.Unlock()
 
-	if hits < size && hits >= 0 {
-		reply = r.replies[hits]
+	var size = int32(len(r.replies))
+	var reply Reply
+
+	if r.hits < size && r.hits >= 0 {
+		reply = r.replies[r.hits]
 	}
 
 	if reply == nil {
@@ -61,25 +64,18 @@ func (r *SequentialReply) Build(w http.ResponseWriter, req *RequestValues) (*Stu
 		return nil,
 			fmt.Errorf(
 				"reply_sequence: unable to obtain a response, and no default response was set. request number=%d, sequence size=%d",
-				hits,
+				r.hits,
 				size)
 	}
 
-	r.updateHits()
+	atomic.AddInt32(&r.hits, 1)
 
 	return reply.Build(w, req)
 }
 
-func (r *SequentialReply) curHits() int {
-	r.rwMutex.RLock()
-	defer r.rwMutex.RUnlock()
-
-	return r.hits
-}
-
-func (r *SequentialReply) updateHits() {
+func (r *SequentialReply) totalHits() int {
 	r.rwMutex.Lock()
 	defer r.rwMutex.Unlock()
 
-	r.hits++
+	return int(r.hits)
 }
