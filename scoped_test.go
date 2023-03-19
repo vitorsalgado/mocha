@@ -20,7 +20,7 @@ func TestScoped(t *testing.T) {
 	repo.Save(m2)
 	repo.Save(m3)
 
-	scoped := newScope(repo, repo.GetAll())
+	scoped := newScope(repo, []string{m1.ID, m2.ID, m3.ID})
 
 	assert.Equal(t, 3, len(scoped.GetAll()))
 	assert.Equal(t, m1, scoped.Get(m1.ID))
@@ -160,7 +160,7 @@ func TestScopedDelete(t *testing.T) {
 	repo.Save(m2)
 	repo.Save(m3)
 
-	scoped := newScope(repo, repo.GetAll())
+	scoped := newScope(repo, []string{m1.ID, m2.ID, m3.ID})
 
 	assert.True(t, scoped.Delete(m1.ID))
 	assert.False(t, scoped.Delete("unknown"))

@@ -269,8 +269,7 @@ func (app *Mocha) Mock(builders ...Builder) (*Scoped, error) {
 	app.rwMutex.Lock()
 	defer app.rwMutex.Unlock()
 
-	size := len(builders)
-	added := make([]*Mock, size)
+	added := make([]string, len(builders))
 
 	for i, b := range builders {
 		mock, err := b.Build(app)
@@ -281,7 +280,7 @@ func (app *Mocha) Mock(builders ...Builder) (*Scoped, error) {
 		mock.prepare()
 
 		app.storage.Save(mock)
-		added[i] = mock
+		added[i] = mock.ID
 	}
 
 	scoped := newScope(app.storage, added)

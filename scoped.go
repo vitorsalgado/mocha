@@ -8,57 +8,71 @@ import (
 // With a Scoped instance, it is possible to verify if one or a group of mocks were called,
 // how many times they were called and so on.
 type Scoped struct {
-	mockStore mockStore
-	mocks     []*Mock
+	store mockStore
+	ids   map[string]struct{}
 }
 
-func newScope(repo mockStore, mocks []*Mock) *Scoped {
-	return &Scoped{mockStore: repo, mocks: mocks}
+func newScope(store mockStore, ids []string) *Scoped {
+	datum := make(map[string]struct{}, len(ids))
+	for _, id := range ids {
+		datum[id] = struct{}{}
+	}
+
+	return &Scoped{store, datum}
 }
 
 // Get returns a Mock with the given id.
 func (s *Scoped) Get(id string) *Mock {
-	for _, mock := range s.mocks {
-		if mock.ID == id {
-			return mock
-		}
+	_, ok := s.ids[id]
+	if !ok {
+		return nil
 	}
 
-	return nil
+	return s.store.Get(id)
 }
 
 // GetAll returns all Mock instances kept in this Scoped.
 func (s *Scoped) GetAll() []*Mock {
-	return s.mocks
+	mocks := make([]*Mock, 0, len(s.ids))
+
+	for id := range s.ids {
+		if m := s.store.Get(id); m != nil {
+			mocks = append(mocks, m)
+		}
+	}
+
+	return mocks
 }
 
 // GetPending returns all Mock instances that were not called at least once.
 func (s *Scoped) GetPending() []*Mock {
-	ret := make([]*Mock, 0)
-	for _, m := range s.mocks {
+	mocks := make([]*Mock, 0, len(s.ids))
+
+	for _, m := range s.GetAll() {
 		if !m.HasBeenCalled() {
-			ret = append(ret, m)
+			mocks = append(mocks, m)
 		}
 	}
 
-	return ret
+	return mocks
 }
 
 // GetCalled returns all Mock instances that were called.
 func (s *Scoped) GetCalled() []*Mock {
-	ret := make([]*Mock, 0)
-	for _, m := range s.mocks {
+	mocks := make([]*Mock, 0, len(s.ids))
+
+	for _, m := range s.GetAll() {
 		if m.HasBeenCalled() {
-			ret = append(ret, m)
+			mocks = append(mocks, m)
 		}
 	}
 
-	return ret
+	return mocks
 }
 
 // HasBeenCalled returns true if all Scoped Mock instances were called at least once.
 func (s *Scoped) HasBeenCalled() bool {
-	for _, m := range s.mocks {
+	for _, m := range s.GetAll() {
 		if !m.HasBeenCalled() {
 			return false
 		}
@@ -69,39 +83,8 @@ func (s *Scoped) HasBeenCalled() bool {
 
 // IsPending returns true when there are one or more Mock instances that were not called at least once.
 func (s *Scoped) IsPending() bool {
-	pending := false
-	for _, m := range s.mocks {
+	for _, m := range s.GetAll() {
 		if !m.HasBeenCalled() {
-			pending = true
-			break
-		}
-	}
-
-	return pending
-}
-
-// Disable scoped store.
-// Disabled Mock will be ignored.
-func (s *Scoped) Disable() {
-	for _, m := range s.mocks {
-		m.Disable()
-	}
-}
-
-// Enable all Mock instances kept in this Scoped.
-func (s *Scoped) Enable() {
-	for _, m := range s.mocks {
-		m.Enable()
-	}
-}
-
-// Delete removes a by ID, as long as it is scoped by this instance.
-func (s *Scoped) Delete(id string) bool {
-	for i, m := range s.mocks {
-		if m.ID == id {
-			s.mockStore.Delete(id)
-			s.mocks = append(s.mocks[:i], s.mocks[i+1:]...)
-
 			return true
 		}
 	}
@@ -109,25 +92,46 @@ func (s *Scoped) Delete(id string) bool {
 	return false
 }
 
+// Disable scoped store.
+// Disabled Mock will be ignored.
+func (s *Scoped) Disable() {
+	for _, m := range s.GetAll() {
+		m.Disable()
+	}
+}
+
+// Enable all Mock instances kept in this Scoped.
+func (s *Scoped) Enable() {
+	for _, m := range s.GetAll() {
+		m.Enable()
+	}
+}
+
+// Delete removes a by ID, as long as it is scoped by this instance.
+func (s *Scoped) Delete(id string) bool {
+	_, ok := s.ids[id]
+	if !ok {
+		return false
+	}
+
+	s.store.Delete(id)
+	delete(s.ids, id)
+
+	return true
+}
+
 // Clean all scoped Mock instances.
 func (s *Scoped) Clean() {
-	ids := make([]string, len(s.mocks))
-
-	for i, m := range s.mocks {
-		ids[i] = m.ID
+	for id := range s.ids {
+		s.store.Delete(id)
+		delete(s.ids, id)
 	}
-
-	for _, id := range ids {
-		s.mockStore.Delete(id)
-	}
-
-	s.mocks = make([]*Mock, 0)
 }
 
 // Hits returns the sum of the Scoped store calls.
 func (s *Scoped) Hits() int {
 	total := 0
-	for _, m := range s.mocks {
+	for _, m := range s.GetAll() {
 		total += m.Hits()
 	}
 
