@@ -1,6 +1,9 @@
 .ONESHELL:
 .DEFAULT_GOAL := help
 
+PROJECT_NAME=moai
+DOCKER_IMAGE=$(PROJECT_NAME)
+
 # allow user specific optional overrides
 -include Makefile.overrides
 
@@ -10,8 +13,11 @@ export
 help: ## show help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
+run:
+	@go run $$(ls -1 cmd/moai/**.go | grep -v _test.go)
+
 build: ## build binaries
-	@go build -o bin/moai cmd/moai/**.go
+	@go build -o bin/$(PROJECT_NAME) cmd/moai/**.go
 
 .PHONY: test
 test: ## run tests
@@ -26,6 +32,10 @@ test-leaks:
 	@go test -c -o tests
 	@for test in $$(go test -list . | grep -E "^(Test|Example)"); do ./tests -test.run "^$$test\$$" &>/dev/null && echo -n "." || echo -e "\n$$test failed"; done
 
+.PHONY: test-docker
+test-docker: ## run tests tagged with docker
+	@go test -timeout 60000ms --tags=docker ./test/...
+
 .PHONY: bench
 bench: ## run benchmarks
 	@go test -v ./... -bench=. -count 2 -benchmem -run=^#
@@ -34,6 +44,12 @@ bench: ## run benchmarks
 cov: ## run tests and generate coverage report
 	@go test -v ./... -coverpkg=./... -race -coverprofile=coverage.out
 	@go tool cover -html=coverage.out -o coverage.html
+
+docker-build:
+	@docker build -t $(DOCKER_IMAGE) .
+
+docker-run:
+	@docker run -it --network host $(DOCKER_IMAGE)
 
 .PHONY: vet
 vet: ## check go code

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -euo pipefail
+
+DOCKER_NAME=httpm_test
+
+function clean() {
+  docker stop $DOCKER_NAME || true
+  docker rm $DOCKER_NAME || true
+}
+
+trap clean EXIT
+
+docker build -t $DOCKER_NAME .
+docker run -d --network host --name $DOCKER_NAME $DOCKER_NAME

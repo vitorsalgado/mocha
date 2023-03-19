@@ -1,0 +1,8 @@
+go run $(ls -1 cmd/moai/**.go | grep -v _test.go) \
+    --tls-cert=testdata/cert/cert.pem \
+    --tls-key=testdata/cert/key.pem \
+    --tls-ca=testdata/cert/cert_client.pem \
+    --https
+
+go run $(ls -1 cmd/moai/**.go | grep -v _test.go) \
+    --addr=3000
