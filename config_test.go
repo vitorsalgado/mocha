@@ -46,6 +46,10 @@ func (s *customTestServer) Close() error {
 	return s.decorated.Close()
 }
 
+func (s *customTestServer) CloseNow() error {
+	return s.decorated.CloseNow()
+}
+
 func (s *customTestServer) Info() *ServerInfo {
 	return s.decorated.Info()
 }
@@ -63,7 +67,7 @@ func TestConfig(t *testing.T) {
 			addr = "127.0.0.1:3000"
 		}
 
-		m := New(Setup().Addr(addr)).CloseWithT(t)
+		m := NewAPI(Setup().Addr(addr)).CloseWithT(t)
 		m.MustStart()
 
 		defer m.Close()
@@ -82,7 +86,7 @@ func TestConfig(t *testing.T) {
 	})
 
 	t.Run("request body parsers from config should take precedence", func(t *testing.T) {
-		m := New(Setup().RequestBodyParsers(&testBodyParser{}))
+		m := NewAPI(Setup().RequestBodyParsers(&testBodyParser{}))
 		m.MustStart()
 
 		defer m.Close()
@@ -114,7 +118,7 @@ func TestConfig(t *testing.T) {
 				})
 		}
 
-		m := New(Setup().Middlewares(middleware))
+		m := NewAPI(Setup().Middlewares(middleware))
 		m.MustStart()
 
 		defer m.Close()
@@ -133,7 +137,7 @@ func TestConfig(t *testing.T) {
 	})
 
 	t.Run("configure custom server", func(t *testing.T) {
-		m := New(Setup().Server(&customTestServer{decorated: newServer()}))
+		m := NewAPI(Setup().Server(&customTestServer{decorated: newServer()}))
 		m.MustStart()
 
 		defer m.Close()
@@ -157,7 +161,7 @@ func TestConfigBuilder(t *testing.T) {
 	customLogger := zerolog.Nop()
 	tlsConfig := &tls.Config{InsecureSkipVerify: true}
 
-	m := New(Setup().
+	m := NewAPI(Setup().
 		Name(nm).
 		Addr(addr).
 		RootDir("test_root_dir").
@@ -207,7 +211,7 @@ func TestConfigBuilder(t *testing.T) {
 	assert.Len(t, conf.TemplateFunctions, 1)
 	assert.NotNil(t, conf.Proxy)
 	assert.Equal(t, tlsConfig, conf.TLSConfig)
-	assert.NotNil(t, conf.TLSCertificate)
+	assert.NotNil(t, conf.TLSCertificates)
 	assert.NotNil(t, conf.TLSClientCAs)
 }
 

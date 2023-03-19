@@ -13,7 +13,7 @@ import (
 )
 
 func TestSequenceReplies(t *testing.T) {
-	m := mocha.New()
+	m := mocha.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
@@ -40,7 +40,7 @@ func TestSequenceReplies(t *testing.T) {
 }
 
 func TestSequenceRepliesOnSequenceEndsSet(t *testing.T) {
-	m := mocha.New()
+	m := mocha.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
@@ -74,7 +74,7 @@ func TestSequence_SetupFromFile(t *testing.T) {
 		Num  float64 `json:"num,omitempty"`
 	}
 
-	m := mocha.New()
+	m := mocha.NewAPI()
 	m.MustStart()
 
 	defer m.Close()

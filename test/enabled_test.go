@@ -11,7 +11,7 @@ import (
 
 func TestEnabledDisabledMocks(t *testing.T) {
 	httpClient := &http.Client{}
-	m := mocha.NewT(t, mocha.Setup().MockFilePatterns("testdata/enabled/*.yaml"))
+	m := mocha.NewAPIWithT(t, mocha.Setup().MockFilePatterns("testdata/enabled/*.yaml"))
 	m.MustStart()
 
 	testCases := []struct {

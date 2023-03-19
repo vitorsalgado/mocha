@@ -12,7 +12,7 @@ import (
 )
 
 func TestTemplating(t *testing.T) {
-	m := mocha.New()
+	m := mocha.NewAPI()
 	m.MustStart()
 	defer m.Close()
 
@@ -38,7 +38,7 @@ func TestTemplating(t *testing.T) {
 }
 
 func TestTemplating_BodyFilename(t *testing.T) {
-	m := mocha.New()
+	m := mocha.NewAPI()
 	m.MustStart()
 	defer m.Close()
 
@@ -60,7 +60,7 @@ func TestTemplating_BodyFilename(t *testing.T) {
 }
 
 func TestTemplating_BodyFilename_BodyTemplate(t *testing.T) {
-	m := mocha.New()
+	m := mocha.NewAPI()
 	m.MustStart()
 	defer m.Close()
 
@@ -83,7 +83,7 @@ func TestTemplating_BodyFilename_BodyTemplate(t *testing.T) {
 }
 
 func TestTemplating_Header(t *testing.T) {
-	m := mocha.New()
+	m := mocha.NewAPI()
 	m.MustStart()
 	defer m.Close()
 
@@ -107,7 +107,7 @@ func TestTemplating_Header(t *testing.T) {
 }
 
 func TestTemplating_All(t *testing.T) {
-	m := mocha.New()
+	m := mocha.NewAPI()
 	m.MustStart()
 	defer m.Close()
 

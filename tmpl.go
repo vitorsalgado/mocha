@@ -50,6 +50,10 @@ func (t *templateAppWrapper) Data() map[string]any {
 	return t.app.Data()
 }
 
+func (t *templateAppWrapper) URL(paths ...string) string {
+	return t.app.URL(paths...)
+}
+
 type templateRequest struct {
 	Method          string
 	URL             *url.URL

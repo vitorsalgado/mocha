@@ -79,9 +79,9 @@ type Config struct {
 	// If TLSConfig is set, TLSCertificateFs and TLSKeyFs options will be ignored.
 	TLSConfig *tls.Config
 
-	// TLSCertificate is the TLS certificate that will be used by the server
+	// TLSCertificates is the TLS certificate that will be used by the server
 	// All built-in HTTP clients will use this certificate too.
-	TLSCertificate *tls.Certificate
+	TLSCertificates []tls.Certificate
 
 	// TLSClientCAs is the client certificate that will be used by the server.
 	// All built-in HTTP clients will use it in the RootCAs config.
@@ -136,7 +136,7 @@ type Config struct {
 
 	// HTTPClientFactory builds an *http.Client that will be used by internal features, like ProxyReply.
 	// If none is set, a default one will be used.
-	HTTPClientFactory func() (*http.Client, error)
+	HTTPClientFactory func() *http.Client
 
 	// Logger lets users define a custom logger.
 	// If none is provided, a default one will be set.
@@ -167,6 +167,10 @@ type Config struct {
 	// Colors enable/disable terminal colors for the descriptive logger.
 	// Defaults to true.
 	Colors bool
+
+	// PostActions configures PostActions by name.
+	// They can later be referenced by name during mocking phase.
+	PostActions map[string]PostAction
 
 	// CLI Only Options
 
@@ -221,9 +225,10 @@ func (c *Config) Apply(conf *Config) error {
 	conf.LogLevel = c.LogLevel
 	conf.LogBodyMaxSize = c.LogBodyMaxSize
 	conf.TLSConfig = c.TLSConfig
-	conf.TLSCertificate = c.TLSCertificate
+	conf.TLSCertificates = c.TLSCertificates
 	conf.TLSClientCAs = c.TLSClientCAs
 	conf.UseHTTP2 = c.UseHTTP2
+	conf.PostActions = c.PostActions
 
 	return nil
 }
@@ -246,6 +251,7 @@ func defaultConfig() *Config {
 		Middlewares:                    make([]func(http.Handler) http.Handler, 0),
 		Loaders:                        make([]Loader, 0),
 		MockFileHandlers:               make([]MockFileHandler, 0),
+		PostActions:                    make(map[string]PostAction),
 		UseDescriptiveLogger:           false,
 		LogPretty:                      true,
 		LogLevel:                       LogLevelInfo,
@@ -445,7 +451,7 @@ func (cb *ConfigBuilder) TemplateEngineFunctions(fm template.FuncMap) *ConfigBui
 // HTTPClient sets a custom http.Client factory.
 // Internal components that require an HTTP client will use this factory,
 // instead of using the default implementation.
-func (cb *ConfigBuilder) HTTPClient(f func() (*http.Client, error)) *ConfigBuilder {
+func (cb *ConfigBuilder) HTTPClient(f func() *http.Client) *ConfigBuilder {
 	cb.conf.HTTPClientFactory = f
 	return cb
 }
@@ -473,6 +479,11 @@ func (cb *ConfigBuilder) TLSMutual(certFile, keyFile, clientCert string) *Config
 	cb.tlsClientCertificateFs = clientCert
 	cb.tlsCertificateFs = certFile
 	cb.tlsKeyFs = keyFile
+	return cb
+}
+
+func (cb *ConfigBuilder) PostAction(name string, action PostAction) *ConfigBuilder {
+	cb.conf.PostActions[name] = action
 	return cb
 }
 
@@ -534,7 +545,7 @@ func applyTLS(c *Config, certFile, keyFile, clientCertFile string) error {
 		c.TLSClientCAs = cp
 	}
 
-	c.TLSCertificate = &cert
+	c.TLSCertificates = []tls.Certificate{cert}
 
 	return nil
 }

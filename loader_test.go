@@ -10,7 +10,7 @@ import (
 )
 
 func TestFileLoader_Load(t *testing.T) {
-	app := New(Setup().MockFilePatterns("testdata/loader/load/*mock.json", "testdata/loader/load/*.json"))
+	app := NewAPI(Setup().MockFilePatterns("testdata/loader/load/*mock.json", "testdata/loader/load/*.json"))
 	loader := &fileLoader{}
 
 	err := loader.Load(app)
@@ -20,7 +20,7 @@ func TestFileLoader_Load(t *testing.T) {
 }
 
 func TestFileLoader_LoadWithError(t *testing.T) {
-	app := New(Setup().MockFilePatterns("testdata/loader/invalid/*.json"))
+	app := NewAPI(Setup().MockFilePatterns("testdata/loader/invalid/*.json"))
 	loader := &fileLoader{}
 
 	err := loader.Load(app)
@@ -29,7 +29,7 @@ func TestFileLoader_LoadWithError(t *testing.T) {
 }
 
 func TestFileLoader(t *testing.T) {
-	app := New(Setup().MockFilePatterns("testdata/loader/*.mock.*"))
+	app := NewAPI(Setup().MockFilePatterns("testdata/loader/*.mock.*"))
 	app.MustStart()
 
 	defer app.Close()

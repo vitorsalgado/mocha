@@ -29,7 +29,7 @@ func (p *customMockFileHandler) Handle(v map[string]any, b *MockBuilder) error {
 }
 
 func TestBuilderFs_CustomMockFileHandlers(t *testing.T) {
-	m := New(Setup().MockFileHandlers(&customMockFileHandler{}))
+	m := NewAPI(Setup().MockFileHandlers(&customMockFileHandler{}))
 	m.MustStart()
 
 	defer m.Close()
@@ -62,7 +62,7 @@ func TestBuilderFs_FromBytes(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.filename, func(t *testing.T) {
-			m := New()
+			m := NewAPI()
 			m.MustStart()
 
 			file, err := os.Open(tc.filename)
@@ -85,7 +85,7 @@ func TestBuilderFs_FromBytes(t *testing.T) {
 }
 
 func TestBuilderFs_MustNotAllowMultipleReplyDefinitions(t *testing.T) {
-	m := New()
+	m := NewAPI()
 
 	filenames := []string{
 		"testdata/builder_fs/multi_reply_def/1_multi_reply.yaml",
@@ -104,7 +104,7 @@ func TestBuilderFs_MustNotAllowMultipleReplyDefinitions(t *testing.T) {
 }
 
 func TestBuilderFs_InvalidSchemaValid(t *testing.T) {
-	m := New()
+	m := NewAPI()
 	filenames := []string{
 		"testdata/builder_fs/invalid_schema/1_invalid_schema.yaml",
 		"testdata/builder_fs/invalid_schema/2_no_request.yaml",

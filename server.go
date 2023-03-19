@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"sync"
 )
 
 var _ Server = (*httpTestServer)(nil)
@@ -30,6 +31,9 @@ type Server interface {
 	// Close closes the server.
 	Close() error
 
+	// CloseNow force close the server.
+	CloseNow() error
+
 	// Info returns server information.
 	Info() *ServerInfo
 
@@ -44,6 +48,7 @@ type httpTestServer struct {
 	server    *httptest.Server
 	info      *ServerInfo
 	needSetup bool
+	rwMutex   sync.RWMutex
 }
 
 func newServer() Server {
@@ -78,8 +83,8 @@ func (s *httpTestServer) Setup(app *Mocha, handler http.Handler) error {
 	if app.config.TLSConfig != nil {
 		s.server.TLS = app.config.TLSConfig
 		s.server.EnableHTTP2 = app.config.UseHTTP2
-	} else if app.config.TLSCertificate != nil {
-		s.server.TLS = &tls.Config{Certificates: []tls.Certificate{*app.config.TLSCertificate}}
+	} else {
+		s.server.TLS = &tls.Config{Certificates: app.config.TLSCertificates}
 
 		if app.config.TLSClientCAs != nil {
 			s.server.TLS.ClientCAs = app.config.TLSClientCAs
@@ -118,6 +123,20 @@ func (s *httpTestServer) StartTLS() error {
 }
 
 func (s *httpTestServer) Close() error {
+	s.rwMutex.Lock()
+	defer s.rwMutex.Unlock()
+
+	s.server.Close()
+	s.needSetup = true
+
+	return nil
+}
+
+func (s *httpTestServer) CloseNow() error {
+	s.rwMutex.Lock()
+	defer s.rwMutex.Unlock()
+
+	s.server.CloseClientConnections()
 	s.server.Close()
 	s.needSetup = true
 

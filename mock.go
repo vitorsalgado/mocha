@@ -42,7 +42,31 @@ type RequestValues struct {
 	Mock *Mock
 }
 
-// PostActionInput represents the arguments that will be passed to every PostAction implementation
+// CallbackInput represents the arguments that will be passed to every Callback implementation
+type CallbackInput struct {
+	// RawRequest is the original incoming http.Request.
+	RawRequest *http.Request
+
+	// URL is the full request url.URL, including scheme, host, port.
+	URL *url.URL
+
+	// ParsedBody is the parsed http.Request body.
+	ParsedBody any
+
+	// App exposes the application instance associated with the incoming HTTP request.
+	App *Mocha
+
+	// Mock is the matched Mock for the current HTTP request.
+	Mock *Mock
+
+	// Stub is the HTTP response Stub served.
+	Stub *Stub
+}
+
+// Callback defines the contract for an action that will be executed after serving a mocked HTTP response.
+type Callback func(input *CallbackInput) error
+
+// PostActionInput represents the arguments that will be passed to every Callback implementation
 type PostActionInput struct {
 	// RawRequest is the original incoming http.Request.
 	RawRequest *http.Request
@@ -62,14 +86,19 @@ type PostActionInput struct {
 	// Stub is the HTTP response Stub served.
 	Stub *Stub
 
-	// Args allow passing custom arguments to a PostAction.
-	Args map[string]any
+	// Args allow passing custom arguments to a Callback.
+	Args any
 }
 
 // PostAction defines the contract for an action that will be executed after serving a mocked HTTP response.
 type PostAction interface {
-	// Run runs the PostAction implementation.
+	// Run runs the Callback implementation.
 	Run(input *PostActionInput) error
+}
+
+type PostActionDef struct {
+	Name          string
+	RawParameters any
 }
 
 // Mapper is the function definition to be used to map a Mock response Stub before serving it.
@@ -150,7 +179,7 @@ type mismatchDetail struct {
 
 // mockFileData represents the data that is passed to Mock files during template parsing.
 type mockFileData struct {
-	App *Mocha
+	App *templateAppWrapper
 }
 
 // weight helps to detect the closest mock match.
@@ -227,8 +256,10 @@ type Mock struct {
 	// Only enabled mocks are considered during the request matching phase.
 	Enabled bool
 
-	// PostActions holds a PostAction list to be executed after the Mock was matched and served.
-	PostActions []PostAction
+	// Callbacks holds a Callback list to be executed after the Mock was matched and served.
+	Callbacks []Callback
+
+	PostActions []*PostActionDef
 
 	// Source describes the source of the mock. E.g.: if it was built from a file,
 	// it will contain the filename.
@@ -251,7 +282,8 @@ func newMock() *Mock {
 	return &Mock{
 		ID:           uuid.New().String(),
 		Enabled:      true,
-		PostActions:  make([]PostAction, 0),
+		Callbacks:    make([]Callback, 0),
+		PostActions:  make([]*PostActionDef, 0),
 		expectations: make([]*expectation, 0),
 	}
 }

@@ -70,7 +70,7 @@ func TestScoped(t *testing.T) {
 	})
 
 	t.Run("should only consider enabled store", func(t *testing.T) {
-		m := New()
+		m := NewAPI()
 		m.MustStart()
 
 		defer m.Close()

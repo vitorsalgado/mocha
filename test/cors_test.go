@@ -12,7 +12,7 @@ import (
 
 func TestCORS(t *testing.T) {
 	client := &http.Client{}
-	m := mocha.New(mocha.Setup().CORS())
+	m := mocha.NewAPI(mocha.Setup().CORS())
 	m.MustStart()
 
 	defer m.Close()

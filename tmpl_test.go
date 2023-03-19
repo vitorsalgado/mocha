@@ -41,7 +41,7 @@ func TestTemplatingError(t *testing.T) {
 }
 
 func TestReplyWithTemplate(t *testing.T) {
-	app := New(Setup().TemplateEngineFunctions(template.FuncMap{"trim": strings.TrimSpace}))
+	app := NewAPI(Setup().TemplateEngineFunctions(template.FuncMap{"trim": strings.TrimSpace}))
 	app.MustStart()
 	defer app.Close()
 
@@ -73,7 +73,7 @@ func TestReplyWithTemplate(t *testing.T) {
 }
 
 func TestReplyWithTemplateText(t *testing.T) {
-	app := New(Setup().TemplateEngineFunctions(template.FuncMap{"trim": strings.TrimSpace}))
+	app := NewAPI(Setup().TemplateEngineFunctions(template.FuncMap{"trim": strings.TrimSpace}))
 	app.MustStart()
 	defer app.Close()
 

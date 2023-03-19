@@ -1,0 +1,10 @@
+request:
+  path: /test
+
+response:
+  status: 202
+
+post_actions:
+  name: webhook
+  parameters:
+    method: POST

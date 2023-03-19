@@ -70,7 +70,7 @@ func run(ctx context.Context, custom ...mocha.Configurer) {
 				configurers = append(configurers, &dockerConfigurer{})
 			}
 
-			m := mocha.New(configurers...)
+			m := mocha.NewAPI(configurers...)
 			m.MustStart()
 
 			fmt.Println(_banner)

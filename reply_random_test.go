@@ -11,7 +11,7 @@ import (
 
 func TestRandomReplies(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
-	rv := &RequestValues{RawRequest: req, URL: req.URL, App: New()}
+	rv := &RequestValues{RawRequest: req, URL: req.URL, App: NewAPI()}
 	statuses := []int{
 		http.StatusOK, http.StatusInternalServerError, http.StatusCreated, http.StatusBadRequest}
 
@@ -42,7 +42,7 @@ func TestShouldReturnErrorWhenRandomDoesNotContainReplies(t *testing.T) {
 
 func TestRandWithCustom(t *testing.T) {
 	req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
-	rv := &RequestValues{RawRequest: req, URL: req.URL, App: New()}
+	rv := &RequestValues{RawRequest: req, URL: req.URL, App: NewAPI()}
 	statuses := []int{
 		http.StatusOK, http.StatusInternalServerError, http.StatusCreated, http.StatusBadRequest}
 

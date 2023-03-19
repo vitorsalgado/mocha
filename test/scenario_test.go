@@ -45,7 +45,7 @@ func TestScenarios(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			m := NewT(t)
+			m := NewAPIWithT(t)
 			m.MustStart()
 
 			s1 := m.MustMock(tc.s1)

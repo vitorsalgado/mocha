@@ -10,7 +10,7 @@ import (
 )
 
 func TestRandom_SetupFromFileWithSeed(t *testing.T) {
-	m := mocha.New()
+	m := mocha.NewAPI()
 	m.MustStart()
 
 	defer m.Close()

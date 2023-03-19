@@ -66,11 +66,11 @@ type TestingT interface {
 	Cleanup(func())
 }
 
-// New creates a new Mocha mock server with the given configurations.
+// NewAPI creates a new Mocha mock server with the given configurations.
 // Parameter config accepts a Config or a ConfigBuilder implementation.
 // If no configuration is provided, a default one will be used.
 // If no port is set, it will start the server on localhost using a random port.
-func New(config ...Configurer) *Mocha {
+func NewAPI(config ...Configurer) *Mocha {
 	app := &Mocha{}
 	app.random = rand.New(rand.NewSource(time.Now().UnixNano()))
 
@@ -199,10 +199,10 @@ func New(config ...Configurer) *Mocha {
 	return app
 }
 
-// NewT creates a new Mocha mock server with the given configurations and
+// NewAPIWithT creates a new Mocha mock server with the given configurations and
 // closes the server when the provided TestingT instance finishes.
-func NewT(t TestingT, config ...Configurer) *Mocha {
-	app := New(config...)
+func NewAPIWithT(t TestingT, config ...Configurer) *Mocha {
+	app := NewAPI(config...)
 	t.Cleanup(app.Close)
 
 	return app
@@ -379,7 +379,20 @@ func (app *Mocha) Close() {
 
 	err := app.server.Close()
 	if err != nil {
-		app.logger.Debug().Err(err).Msg("error closing mock server")
+		app.logger.Debug().Err(err).Msg("server: Close: error closing server")
+	}
+
+	if app.rec != nil {
+		app.rec.stop()
+	}
+}
+
+func (app *Mocha) CloseNow() {
+	app.cancel()
+
+	err := app.server.CloseNow()
+	if err != nil {
+		app.logger.Debug().Err(err).Msg("server: CloseNow: error force closing server")
 	}
 
 	if app.rec != nil {
@@ -510,7 +523,7 @@ func (app *Mocha) PrintConfig(w io.Writer) error {
 }
 
 // --
-// Mock Builders
+// Mock Builder Initializers
 // --
 
 // AnyMethod creates a new empty Builder.

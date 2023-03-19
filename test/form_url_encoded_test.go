@@ -15,7 +15,7 @@ import (
 
 func TestFormUrlEncoded(t *testing.T) {
 	httpClient := &http.Client{}
-	m := mocha.NewT(t)
+	m := mocha.NewAPIWithT(t)
 	m.MustStart()
 
 	scoped := m.MustMock(mocha.Post(matcher.URLPath("/test")).
@@ -38,7 +38,7 @@ func TestFormUrlEncoded(t *testing.T) {
 }
 
 func TestFormUrlEncoded_InvalidFieldValues(t *testing.T) {
-	m := mocha.NewT(t)
+	m := mocha.NewAPIWithT(t)
 	scoped, err := m.Mock(mocha.FromFile("testdata/form_url_encoded/01_invalid.yaml"))
 
 	require.Nil(t, scoped)
@@ -47,7 +47,7 @@ func TestFormUrlEncoded_InvalidFieldValues(t *testing.T) {
 
 func TestFormUrlEncoded_FromFileMock(t *testing.T) {
 	httpClient := &http.Client{}
-	m := mocha.NewT(t)
+	m := mocha.NewAPIWithT(t)
 	m.MustStart()
 
 	scoped := m.MustMock(mocha.FromFile("testdata/form_url_encoded/02_valid.yaml"))

@@ -14,7 +14,7 @@ import (
 )
 
 func TestCompressedResponse_GZIP(t *testing.T) {
-	m := mocha.New()
+	m := mocha.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
@@ -38,7 +38,7 @@ func TestCompressedResponse_GZIP(t *testing.T) {
 }
 
 func Test_GZIPProxiedResponse(t *testing.T) {
-	p := mocha.New()
+	p := mocha.NewAPI()
 	p.MustStart()
 
 	defer p.Close()
@@ -48,7 +48,7 @@ func Test_GZIPProxiedResponse(t *testing.T) {
 			BodyText("hello world").
 			Gzip()))
 
-	m := mocha.New()
+	m := mocha.NewAPI()
 	m.MustStart()
 
 	defer m.Close()

@@ -27,7 +27,7 @@ func (p testBodyParser) Parse(_ []byte, _ *http.Request) (any, error) {
 }
 
 func TestLogging(t *testing.T) {
-	m := NewT(t, Setup().
+	m := NewAPIWithT(t, Setup().
 		UseDescriptiveLogger().
 		RequestBodyParsers(
 			&testBodyParser{"PANIC", func() error { panic("BOOM") }},

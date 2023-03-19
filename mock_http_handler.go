@@ -1,6 +1,7 @@
 package mocha
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -60,7 +61,10 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	reqValues.Mock = mock
 
 	if mock.Delay > 0 {
-		time.Sleep(mock.Delay)
+		ctxTimeout, cancel := context.WithTimeout(r.Context(), mock.Delay)
+		defer cancel()
+
+		<-ctxTimeout.Done()
 	}
 
 	stub, err := result.Matched.Reply.Build(w, reqValues)
@@ -129,14 +133,29 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	input := &PostActionInput{r, parsedURL, parsedBody, h.app, mock, stub, nil}
-	for i, action := range mock.PostActions {
-		err = action.Run(input)
+	callbackInput := &CallbackInput{r, parsedURL, parsedBody, h.app, mock, stub}
+	for i, callback := range mock.Callbacks {
+		err = callback(callbackInput)
 		if err != nil {
 			h.lifecycle.OnWarning(reqValues, fmt.Errorf(
-				"http: error running post action at index %d and with type %v. post_action: %w",
+				"callback: error with callback %d %v:\n%w",
 				i,
-				reflect.TypeOf(action),
+				reflect.TypeOf(callback),
+				err,
+			))
+		}
+	}
+
+	for i, def := range mock.PostActions {
+		postAction := h.app.config.PostActions[def.Name]
+		input := &PostActionInput{r, parsedURL, parsedBody, h.app, mock, stub, def.RawParameters}
+		err = postAction.Run(input)
+		if err != nil {
+			h.lifecycle.OnWarning(reqValues, fmt.Errorf(
+				"post_action: error with post action %s(%d) %v:\n%w",
+				def.Name,
+				i,
+				reflect.TypeOf(postAction),
 				err,
 			))
 		}
@@ -144,6 +163,8 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	h.lifecycle.OnMatch(reqValues, stub)
 
+	// when proxy is enabled, recording happens some steps before
+	// so, we need to record here only if proxy is disabled.
 	if h.app.rec != nil && h.app.config.Proxy == nil {
 		h.app.rec.dispatch(r, parsedURL, rawBody, stub)
 	}

@@ -40,7 +40,7 @@ type ProxyReply struct {
 	timeout              time.Duration
 	noFollow             bool
 	sslVerify            bool
-	httpClient           http.Client
+	httpClient           *http.Client
 }
 
 // From creates a ProxyReply with the given target.
@@ -221,20 +221,16 @@ func (r *ProxyReply) Build(_ http.ResponseWriter, req *RequestValues) (*Stub, er
 }
 
 func (r *ProxyReply) beforeBuild(app *Mocha) error {
-	tlsConfig := &tls.Config{InsecureSkipVerify: !r.sslVerify, RootCAs: app.config.TLSClientCAs}
-	if app.config.TLSCertificate != nil {
-		tlsConfig.Certificates = []tls.Certificate{*app.config.TLSCertificate}
+	tlsConfig := &tls.Config{
+		InsecureSkipVerify: !r.sslVerify,
+		RootCAs:            app.config.TLSClientCAs,
+		Certificates:       app.config.TLSCertificates,
 	}
 
 	if app.config.HTTPClientFactory == nil {
-		r.httpClient = http.Client{Transport: &http.Transport{DisableCompression: true, TLSClientConfig: tlsConfig}}
+		r.httpClient = &http.Client{Transport: &http.Transport{DisableCompression: true, TLSClientConfig: tlsConfig}}
 	} else {
-		h, err := app.config.HTTPClientFactory()
-		if err != nil {
-			return err
-		}
-
-		r.httpClient = *h
+		r.httpClient = app.config.HTTPClientFactory()
 	}
 
 	if r.httpClient.Transport == nil {

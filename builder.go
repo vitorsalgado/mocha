@@ -8,6 +8,7 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/matcher/mfeat"
+	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
 var _ Builder = (*MockBuilder)(nil)
@@ -225,6 +226,11 @@ func (b *MockBuilder) Headerf(key string, value string, a ...any) *MockBuilder {
 	return b.Header(key, matcher.StrictEqual(fmt.Sprintf(value, a...)))
 }
 
+// ContentType sets a matcher that will pass if the HTTP request content type is equal to given value.
+func (b *MockBuilder) ContentType(value string, a ...any) *MockBuilder {
+	return b.Header(misc.HeaderContentType, matcher.Eqi(fmt.Sprintf(value, a...)))
+}
+
 // Query defines a matcher to a specific query.
 func (b *MockBuilder) Query(key string, m matcher.Matcher) *MockBuilder {
 	b.appendExpectation(&expectation{
@@ -362,9 +368,15 @@ func (b *MockBuilder) ScenarioStateWillBe(newState string) *MockBuilder {
 	return b
 }
 
-// PostAction adds a post action to be executed after the mocked response is served.
-func (b *MockBuilder) PostAction(action PostAction) *MockBuilder {
-	b.mock.PostActions = append(b.mock.PostActions, action)
+// Callback adds a callback that will be executed after the mocked response is served.
+func (b *MockBuilder) Callback(callback Callback) *MockBuilder {
+	b.mock.Callbacks = append(b.mock.Callbacks, callback)
+
+	return b
+}
+
+func (b *MockBuilder) PostAction(input *PostActionDef) *MockBuilder {
+	b.mock.PostActions = append(b.mock.PostActions, input)
 
 	return b
 }
@@ -431,6 +443,17 @@ func (b *MockBuilder) Build(app *Mocha) (*Mock, error) {
 			Target:  _targetRequest,
 			Matcher: mfeat.Scenario(app.scenarioStore, b.scenario, b.scenarioRequiredState, b.scenarioNewState),
 		})
+	}
+
+	for i, def := range b.mock.PostActions {
+		postAction, ok := app.config.PostActions[def.Name]
+		if !ok {
+			return nil, fmt.Errorf("mock: post action %s at index %d is not registered", def.Name, i)
+		}
+
+		if postAction == nil {
+			return nil, fmt.Errorf("mock: post action %s at index %d is nil", def.Name, i)
+		}
 	}
 
 	return b.mock, nil

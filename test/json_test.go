@@ -39,7 +39,7 @@ func TestPostJSON(t *testing.T) {
 	}
 
 	t.Run("should match specific json body fields", func(t *testing.T) {
-		m := New()
+		m := NewAPI()
 		m.MustStart()
 
 		defer m.Close()
@@ -65,7 +65,7 @@ func TestPostJSON(t *testing.T) {
 	})
 
 	t.Run("should match entire body using a struct", func(t *testing.T) {
-		m := New()
+		m := NewAPI()
 		m.MustStart()
 
 		defer m.Close()
@@ -92,7 +92,7 @@ func TestPostJSON(t *testing.T) {
 	})
 
 	t.Run("should match entire body using a map", func(t *testing.T) {
-		m := New()
+		m := NewAPI()
 		m.MustStart()
 
 		defer m.Close()
@@ -125,7 +125,7 @@ func TestPostJSON(t *testing.T) {
 			OK   bool   `json:"ok"`
 		}
 
-		m := New()
+		m := NewAPI()
 		m.MustStart()
 
 		defer m.Close()
@@ -153,7 +153,7 @@ func TestPostJSON(t *testing.T) {
 	})
 
 	t.Run("should not match when the given json is different than the incoming request body", func(t *testing.T) {
-		m := New()
+		m := NewAPI()
 		m.MustStart()
 
 		defer m.Close()
@@ -181,7 +181,7 @@ func TestPostJSON(t *testing.T) {
 	})
 
 	t.Run("should match null fields", func(t *testing.T) {
-		m := New()
+		m := NewAPI()
 		m.MustStart()
 
 		defer m.Close()
@@ -203,7 +203,7 @@ func TestPostJSON(t *testing.T) {
 	})
 
 	t.Run("array items", func(t *testing.T) {
-		m := New()
+		m := NewAPI()
 		m.MustStart()
 
 		defer m.Close()
@@ -274,7 +274,7 @@ func TestPostJSON(t *testing.T) {
 }
 
 func TestSimpleJSONValues(t *testing.T) {
-	m := NewT(t)
+	m := NewAPIWithT(t)
 	m.MustStart()
 
 	testCases := []struct {
@@ -309,7 +309,7 @@ func TestSimpleJSONValues(t *testing.T) {
 }
 
 func TestMalformedJSON_ShouldMatchOtherFieldsAndContinue(t *testing.T) {
-	m := New()
+	m := NewAPI()
 	m.MustStart()
 
 	defer m.Close()
@@ -331,7 +331,7 @@ func TestMalformedJSON_ShouldMatchOtherFieldsAndContinue(t *testing.T) {
 }
 
 func TestJSONResponse(t *testing.T) {
-	m := New()
+	m := NewAPI()
 	m.MustStart()
 
 	defer m.Close()

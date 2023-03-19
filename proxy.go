@@ -62,11 +62,11 @@ func newProxy(log *zerolog.Logger, config *Config) *reverseProxy {
 
 	if config.Proxy.Transport == nil {
 		transport := &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: !config.Proxy.SSLVerify, ClientCAs: config.TLSClientCAs},
-		}
-
-		if config.TLSCertificate != nil {
-			transport.TLSClientConfig.Certificates = []tls.Certificate{*config.TLSCertificate}
+			TLSClientConfig: &tls.Config{
+				InsecureSkipVerify: !config.Proxy.SSLVerify,
+				RootCAs:            config.TLSClientCAs,
+				Certificates:       config.TLSCertificates,
+			},
 		}
 
 		if config.Proxy.Via != "" {

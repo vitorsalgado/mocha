@@ -29,12 +29,15 @@ var (
 )
 
 const (
-	_fName      = "name"
-	_fEnabled   = "enabled"
-	_fPriority  = "priority"
-	_fDelay     = "delay"
-	_fRepeat    = "repeat"
-	_fExtenders = "ext"
+	_fName                 = "name"
+	_fEnabled              = "enabled"
+	_fPriority             = "priority"
+	_fDelay                = "delay"
+	_fRepeat               = "repeat"
+	_fExtenders            = "ext"
+	_fPostActions          = "post_actions"
+	_fPostActionName       = "name"
+	_fPostActionParameters = "parameters"
 
 	_fScenario              = "scenario"
 	_fScenarioName          = "scenario.name"
@@ -252,7 +255,7 @@ func buildMockFromBytes(app *Mocha, builder *MockBuilder, content []byte, ext st
 		return nil, err
 	}
 
-	d := &mockFileData{App: app}
+	d := &mockFileData{App: &templateAppWrapper{app}}
 	buf := &bytes.Buffer{}
 	err = tmpl.Execute(buf, d)
 	if err != nil {
@@ -345,6 +348,24 @@ func buildMockFromBytes(app *Mocha, builder *MockBuilder, content []byte, ext st
 		}
 
 		builder.Delay(duration)
+	}
+
+	if vi.IsSet(_fPostActions) {
+		rawPa := vi.Get(_fPostActions)
+		postActions, ok := rawPa.([]any)
+		if !ok {
+			return nil, fmt.Errorf("[post_actions] expected an array of objects. got: %v", reflect.TypeOf(rawPa))
+		}
+
+		for i, item := range postActions {
+			pa, ok := item.(map[string]any)
+			if !ok {
+				return nil, fmt.Errorf("[post_actions][%d] expected an object. got: %v", i, reflect.TypeOf(item))
+			}
+
+			builder.PostAction(
+				&PostActionDef{Name: pa[_fPostActionName].(string), RawParameters: pa[_fPostActionParameters]})
+		}
 	}
 
 	// --

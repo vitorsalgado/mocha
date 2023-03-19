@@ -30,7 +30,7 @@ func TestHTTP2(t *testing.T) {
 		}},
 	}
 
-	m := NewT(t, Setup().TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile))
+	m := NewAPIWithT(t, Setup().TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile))
 	m.MustStartTLS()
 	m.MustMock(Getf("/test").Reply(OK().PlainText("hello world")))
 

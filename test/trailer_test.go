@@ -13,7 +13,7 @@ import (
 )
 
 func TestTrailer_WithBody(t *testing.T) {
-	m := mocha.New()
+	m := mocha.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
@@ -46,7 +46,7 @@ func TestTrailer_WithBody(t *testing.T) {
 }
 
 func TestTrailer_WithoutBody(t *testing.T) {
-	m := mocha.New()
+	m := mocha.NewAPI()
 	m.MustStart()
 
 	defer m.Close()

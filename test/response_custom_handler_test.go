@@ -22,7 +22,7 @@ func TestHandlerReply(t *testing.T) {
 		w.Write([]byte(msg))
 	}
 
-	m := mocha.New()
+	m := mocha.NewAPI()
 	m.MustStart()
 
 	defer m.Close()

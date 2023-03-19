@@ -11,7 +11,7 @@ import (
 )
 
 func TestRepeat(t *testing.T) {
-	m := mocha.New()
+	m := mocha.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
@@ -38,7 +38,7 @@ func TestRepeat(t *testing.T) {
 }
 
 func TestRepeat_Once(t *testing.T) {
-	m := mocha.New()
+	m := mocha.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
@@ -55,7 +55,7 @@ func TestRepeat_Once(t *testing.T) {
 }
 
 func TestRepeat_FileSetup(t *testing.T) {
-	m := mocha.NewT(t)
+	m := mocha.NewAPIWithT(t)
 	m.MustStart()
 	m.MustMock(mocha.FromFile("testdata/repeat/1_repeat.yaml"))
 

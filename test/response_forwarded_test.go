@@ -32,7 +32,7 @@ func TestProxiedReplies(t *testing.T) {
 
 	defer dest.Close()
 
-	m := mocha.New()
+	m := mocha.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
@@ -63,7 +63,7 @@ func TestProxiedReplies(t *testing.T) {
 }
 
 func TestProxiedReplyMockFileWithTemplate(t *testing.T) {
-	target := mocha.New()
+	target := mocha.NewAPI()
 	target.MustStart()
 	defer target.Close()
 
@@ -73,7 +73,7 @@ func TestProxiedReplyMockFileWithTemplate(t *testing.T) {
 			Header("del", Not(Present())).
 			Reply(mocha.OK().PlainText("done")))
 
-	m := mocha.New()
+	m := mocha.NewAPI()
 	m.MustStart()
 	defer m.Close()
 

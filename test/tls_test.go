@@ -40,7 +40,7 @@ func TestTLS(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			m := NewT(t, tc.config)
+			m := NewAPIWithT(t, tc.config)
 			m.MustStartTLS()
 
 			scoped := m.MustMock(
@@ -68,7 +68,7 @@ func TestTLS_FileSetup(t *testing.T) {
 	client := &http.Client{
 		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
 	}
-	m := NewT(t, UseConfig("testdata/tls/tls_app.yaml"))
+	m := NewAPIWithT(t, UseConfig("testdata/tls/tls_app.yaml"))
 	m.MustStartTLS()
 
 	scoped := m.MustMock(
@@ -109,7 +109,7 @@ func TestTLSMutual(t *testing.T) {
 			}},
 	}
 
-	target := NewT(t, Setup().TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile))
+	target := NewAPIWithT(t, Setup().TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile))
 	target.MustStartTLS()
 	target.MustMock(Getf("/test").Reply(Accepted().PlainText("accepted")))
 
@@ -143,11 +143,11 @@ func TestTLSMutualWithProxy(t *testing.T) {
 			}},
 	}
 
-	target := NewT(t, Setup().TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile))
+	target := NewAPIWithT(t, Setup().TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile))
 	target.MustStartTLS()
 	target.MustMock(Getf("/test").Reply(Accepted().PlainText("accepted")))
 
-	m := NewT(t, Setup().TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile))
+	m := NewAPIWithT(t, Setup().TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile))
 	m.MustStartTLS()
 	m.MustMock(Get(URLPath("/test")).
 		Header("test", StrictEqual("hello")).
@@ -185,11 +185,11 @@ func TestTLSMutualWithProxy_FileSetup(t *testing.T) {
 			}},
 	}
 
-	target := NewT(t, UseConfig("testdata/tls/tls_ca_target.yaml"))
+	target := NewAPIWithT(t, UseConfig("testdata/tls/tls_ca_target.yaml"))
 	target.MustStartTLS()
 	target.MustMock(Getf("/test").Reply(Accepted().PlainText("accepted")))
 
-	m := NewT(t, UseConfig("testdata/tls/tls_ca.yaml"))
+	m := NewAPIWithT(t, UseConfig("testdata/tls/tls_ca.yaml"))
 	m.MustStartTLS()
 	m.MustMock(Get(URLPath("/test")).
 		Header("test", StrictEqual("hello")).
