@@ -28,8 +28,8 @@ type Params interface {
 }
 
 type paramsStore struct {
-	data map[string]any
-	mu   sync.RWMutex
+	data    map[string]any
+	rwMutex sync.RWMutex
 }
 
 func newInMemoryParameters() Params {
@@ -37,8 +37,8 @@ func newInMemoryParameters() Params {
 }
 
 func (p *paramsStore) Get(key string) (datum any, err error) {
-	p.mu.RLock()
-	defer p.mu.RUnlock()
+	p.rwMutex.RLock()
+	defer p.rwMutex.RUnlock()
 
 	datum = p.data[key]
 
@@ -46,15 +46,15 @@ func (p *paramsStore) Get(key string) (datum any, err error) {
 }
 
 func (p *paramsStore) GetAll() (map[string]any, error) {
-	p.mu.RLock()
-	defer p.mu.RUnlock()
+	p.rwMutex.RLock()
+	defer p.rwMutex.RUnlock()
 
 	return p.data, nil
 }
 
 func (p *paramsStore) Set(key string, dep any) error {
-	p.mu.Lock()
-	defer p.mu.Unlock()
+	p.rwMutex.Lock()
+	defer p.rwMutex.Unlock()
 
 	p.data[key] = dep
 
@@ -62,15 +62,15 @@ func (p *paramsStore) Set(key string, dep any) error {
 }
 
 func (p *paramsStore) MustSet(key string, dep any) {
-	p.mu.Lock()
-	defer p.mu.Unlock()
+	p.rwMutex.Lock()
+	defer p.rwMutex.Unlock()
 
 	p.data[key] = dep
 }
 
 func (p *paramsStore) Remove(key string) error {
-	p.mu.Lock()
-	defer p.mu.Unlock()
+	p.rwMutex.Lock()
+	defer p.rwMutex.Unlock()
 
 	delete(p.data, key)
 
@@ -78,8 +78,8 @@ func (p *paramsStore) Remove(key string) error {
 }
 
 func (p *paramsStore) Has(key string) (bool, error) {
-	p.mu.RLock()
-	defer p.mu.RUnlock()
+	p.rwMutex.RLock()
+	defer p.rwMutex.RUnlock()
 
 	_, ok := p.data[key]
 

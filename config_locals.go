@@ -41,12 +41,12 @@ const (
 	_kTLSKey     = "tls.key"
 	_kTLSRootCAs = "tls.ca"
 
-	_kLog               = "log"
-	_kLogLevel          = "log.level"
-	_kLogVerbosity      = "log.verbosity"
-	_kLogMaxBodySize    = "log.max_body_size"
-	_kLogPretty         = "log.pretty"
-	_kLogUseDescriptive = "log.descriptive"
+	_kLog               = "logger"
+	_kLogLevel          = "logger.level"
+	_kLogVerbosity      = "logger.verbosity"
+	_kLogMaxBodySize    = "logger.max_body_size"
+	_kLogPretty         = "logger.pretty"
+	_kLogUseDescriptive = "logger.descriptive"
 
 	_kCORS                  = "cors"
 	_kCORSAllowedOrigin     = "cors.allowed_origin"

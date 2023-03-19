@@ -19,7 +19,7 @@ func (m *lessMatcher) Name() string {
 func (m *lessMatcher) Match(v any) (*Result, error) {
 	vv, err := mconv.ConvToFloat64(v)
 	if err != nil {
-		return nil, fmt.Errorf("type %s is not supported. value must be compatible with float64. %w", reflect.TypeOf(v), err)
+		return nil, fmt.Errorf("type %v is not supported. value must be compatible with float64. %w", reflect.TypeOf(v), err)
 	}
 
 	if vv < m.expected {

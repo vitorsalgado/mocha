@@ -278,7 +278,7 @@ func (rep *StdReply) beforeBuild(app *Mocha) error {
 	}
 
 	if rep.teType&_teBodyFilename == _teBodyFilename {
-		r, err := app.te.Parse(rep.bodyFilename)
+		r, err := app.templateEngine.Parse(rep.bodyFilename)
 		if err != nil {
 			return err
 		}
@@ -287,7 +287,7 @@ func (rep *StdReply) beforeBuild(app *Mocha) error {
 	}
 
 	if rep.teType&_teBody == _teBody {
-		r, err := app.te.Parse(rep.bodyTemplateContent)
+		r, err := app.templateEngine.Parse(rep.bodyTemplateContent)
 		if err != nil {
 			return err
 		}
@@ -302,7 +302,7 @@ func (rep *StdReply) beforeBuild(app *Mocha) error {
 			return err
 		}
 
-		r, err := app.te.Parse(buf.String() + "\r\n")
+		r, err := app.templateEngine.Parse(buf.String() + "\r\n")
 		if err != nil {
 			return err
 		}

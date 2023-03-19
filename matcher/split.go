@@ -18,7 +18,7 @@ func (m *splitMatcher) Name() string {
 func (m *splitMatcher) Match(v any) (*Result, error) {
 	txt, ok := v.(string)
 	if !ok {
-		return nil, fmt.Errorf("type %s is not supported. accepted types: string", reflect.TypeOf(v))
+		return nil, fmt.Errorf("type %v is not supported. accepted types: string", reflect.TypeOf(v))
 	}
 
 	result, err := m.matcher.Match(strings.Split(txt, m.separator))

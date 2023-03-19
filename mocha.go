@@ -46,13 +46,13 @@ type Mocha struct {
 	scopes             []*Scoped
 	loaders            []Loader
 	rec                *recorder
-	rmu                sync.RWMutex
+	rwMutex            sync.RWMutex
 	proxy              *reverseProxy
-	te                 TemplateEngine
+	templateEngine     TemplateEngine
 	extensions         map[string]Extension
 	data               map[string]any
-	cz                 *colorize.Colorize
-	log                *zerolog.Logger
+	colorizer          *colorize.Colorize
+	logger             *zerolog.Logger
 	startOnce          sync.Once
 	random             *rand.Rand
 }
@@ -85,7 +85,7 @@ func New(config ...Configurer) *Mocha {
 		err := configurer.Apply(conf)
 		if err != nil {
 			panic(fmt.Errorf(
-				"server: error applying configuration at index %d with type %s\n%w",
+				"server: error applying configuration at index %d with type %v\n%w",
 				i,
 				reflect.TypeOf(configurer),
 				err,
@@ -102,7 +102,7 @@ func New(config ...Configurer) *Mocha {
 	parsers = append(parsers, conf.RequestBodyParsers...)
 	parsers = append(parsers, &plainTextParser{}, &formURLEncodedParser{}, &noopParser{})
 
-	recovery := recover.New(func(err error) { app.log.Error().Err(err).Msg(err.Error()) },
+	recovery := recover.New(func(err error) { app.logger.Error().Err(err).Msg(err.Error()) },
 		conf.RequestWasNotMatchedStatusCode)
 
 	middlewares := make([]func(handler http.Handler) http.Handler, 0)
@@ -128,7 +128,7 @@ func New(config ...Configurer) *Mocha {
 
 	var p *reverseProxy
 	if conf.Proxy != nil {
-		p = newProxy(app.log, conf)
+		p = newProxy(app.logger, conf)
 	}
 
 	var lifecycle mockHTTPLifecycle
@@ -164,7 +164,7 @@ func New(config ...Configurer) *Mocha {
 			tmpl.FuncMap(conf.TemplateFunctions)
 		}
 
-		app.te = tmpl
+		app.templateEngine = tmpl
 	}
 
 	app.server = server
@@ -178,7 +178,7 @@ func New(config ...Configurer) *Mocha {
 	app.proxy = p
 	app.requestBodyParsers = parsers
 	app.extensions = make(map[string]Extension)
-	app.cz = colors
+	app.colorizer = colors
 
 	if app.config.Forward != nil {
 		app.MustMock(Request().
@@ -266,8 +266,8 @@ func (app *Mocha) MustStartTLS() {
 //
 //	assert.True(txtTemplate, scoped.HasBeenCalled())
 func (app *Mocha) Mock(builders ...Builder) (*Scoped, error) {
-	app.rmu.Lock()
-	defer app.rmu.Unlock()
+	app.rwMutex.Lock()
+	defer app.rwMutex.Unlock()
 
 	size := len(builders)
 	added := make([]*Mock, size)
@@ -284,7 +284,7 @@ func (app *Mocha) Mock(builders ...Builder) (*Scoped, error) {
 		added[i] = mock
 	}
 
-	scoped := scope(app.storage, added)
+	scoped := newScope(app.storage, added)
 	app.scopes = append(app.scopes, scoped)
 
 	return scoped, nil
@@ -326,7 +326,7 @@ func (app *Mocha) URL(paths ...string) string {
 
 	u, err := url.JoinPath(app.server.Info().URL, paths...)
 	if err != nil {
-		app.log.Fatal().Err(err).
+		app.logger.Fatal().Err(err).
 			Msgf("server: building server url with path elements %s", paths)
 	}
 
@@ -350,12 +350,12 @@ func (app *Mocha) Server() Server {
 
 // TemplateEngine returns the TemplateEngine associated with this instance.
 func (app *Mocha) TemplateEngine() TemplateEngine {
-	return app.te
+	return app.templateEngine
 }
 
 // Logger returns the zerolog.Logger of this application.
 func (app *Mocha) Logger() *zerolog.Logger {
-	return app.log
+	return app.logger
 }
 
 // Reload reloads mocks from external sources, like the filesystem.
@@ -382,7 +382,7 @@ func (app *Mocha) Close() {
 
 	err := app.server.Close()
 	if err != nil {
-		app.log.Debug().Err(err).Msg("error closing mock server")
+		app.logger.Debug().Err(err).Msg("error closing mock server")
 	}
 
 	if app.rec != nil {
@@ -399,8 +399,8 @@ func (app *Mocha) CloseWithT(t TestingT) *Mocha {
 
 // Hits returns the total matched request hits.
 func (app *Mocha) Hits() int {
-	app.rmu.RLock()
-	defer app.rmu.RUnlock()
+	app.rwMutex.RLock()
+	defer app.rwMutex.RUnlock()
 
 	hits := 0
 
@@ -413,8 +413,8 @@ func (app *Mocha) Hits() int {
 
 // Enable enables all mocks.
 func (app *Mocha) Enable() {
-	app.rmu.Lock()
-	defer app.rmu.Unlock()
+	app.rwMutex.Lock()
+	defer app.rwMutex.Unlock()
 
 	for _, scoped := range app.scopes {
 		scoped.Enable()
@@ -423,8 +423,8 @@ func (app *Mocha) Enable() {
 
 // Disable disables all mocks.
 func (app *Mocha) Disable() {
-	app.rmu.Lock()
-	defer app.rmu.Unlock()
+	app.rwMutex.Lock()
+	defer app.rwMutex.Unlock()
 
 	for _, scoped := range app.scopes {
 		scoped.Disable()
@@ -433,8 +433,8 @@ func (app *Mocha) Disable() {
 
 // Clean removes all scoped mocks.
 func (app *Mocha) Clean() {
-	app.rmu.Lock()
-	defer app.rmu.Unlock()
+	app.rwMutex.Lock()
+	defer app.rwMutex.Unlock()
 
 	for _, s := range app.scopes {
 		s.Clean()
@@ -446,8 +446,8 @@ func (app *Mocha) StopRecording() {
 }
 
 func (app *Mocha) RegisterExtension(extension Extension) error {
-	app.rmu.Lock()
-	defer app.rmu.Unlock()
+	app.rwMutex.Lock()
+	defer app.rwMutex.Unlock()
 
 	_, ok := app.extensions[extension.UniqueName()]
 	if ok {
@@ -708,7 +708,7 @@ func (app *Mocha) load() error {
 
 func (app *Mocha) setLog(conf *Config) {
 	if conf.Logger != nil {
-		app.log = conf.Logger
+		app.logger = conf.Logger
 		return
 	}
 
@@ -725,5 +725,5 @@ func (app *Mocha) setLog(conf *Config) {
 	}
 
 	log := c.Logger()
-	app.log = &log
+	app.logger = &log
 }

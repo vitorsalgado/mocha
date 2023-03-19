@@ -1,7 +1,6 @@
 package matcher
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
@@ -21,9 +20,10 @@ func (m *itemMatcher) Match(v any) (*Result, error) {
 		return nil, fmt.Errorf("index must greater or equal to 0. got %d", m.index)
 	}
 
-	kind := reflect.TypeOf(v).Kind()
+	typeOfV := reflect.TypeOf(v)
+	kind := typeOfV.Kind()
 	if kind != reflect.Slice && kind != reflect.Array {
-		return nil, errors.New("matcher only works with arrays/slices")
+		return nil, fmt.Errorf("matcher only works with slices. got: %v", typeOfV)
 	}
 
 	vv := reflect.ValueOf(v)

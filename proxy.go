@@ -53,7 +53,7 @@ func (p *ProxyConfig) Apply(c *ProxyConfig) error {
 var _defaultProxyConfig = ProxyConfig{Timeout: 10 * time.Second, SSLVerify: false}
 
 type reverseProxy struct {
-	log          *zerolog.Logger
+	logger       *zerolog.Logger
 	roundTripper http.RoundTripper
 }
 
@@ -134,7 +134,7 @@ func (p *reverseProxy) handleTunneling(w http.ResponseWriter, r *http.Request) {
 
 	err = <-errCh
 	if err != nil {
-		p.log.Error().Err(err).
+		p.logger.Error().Err(err).
 			Str("url", r.URL.String()).
 			Str("method", r.Method).
 			Msg("proxy: error writing response")
@@ -162,7 +162,7 @@ func (p *reverseProxy) handleHTTP(w http.ResponseWriter, r *http.Request) {
 
 	_, err = io.Copy(w, res.Body)
 	if err != nil {
-		p.log.Error().Err(err).
+		p.logger.Error().Err(err).
 			Str("url", r.URL.String()).
 			Str("method", r.Method).
 			Str("status", res.Status).

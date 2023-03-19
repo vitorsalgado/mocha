@@ -157,7 +157,7 @@ func (r *recorder) start(ctx context.Context) {
 
 				err := r.process(a)
 				if err != nil {
-					r.app.log.Error().Err(fmt.Errorf("recorder: %w", err)).Msgf(err.Error())
+					r.app.logger.Error().Err(fmt.Errorf("recorder: %w", err)).Msgf(err.Error())
 				}
 
 			case <-ctx.Done():

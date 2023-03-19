@@ -1,7 +1,6 @@
 package matcher
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -18,9 +17,10 @@ func (m *someMatcher) Name() string {
 }
 
 func (m *someMatcher) Match(v any) (*Result, error) {
-	kind := reflect.TypeOf(v).Kind()
+	typeOfV := reflect.TypeOf(v)
+	kind := typeOfV.Kind()
 	if kind != reflect.Slice && kind != reflect.Array {
-		return nil, errors.New("matcher only works with arrays/slices")
+		return nil, fmt.Errorf("matcher only works with slices. got: %v", typeOfV)
 	}
 
 	vv := reflect.ValueOf(v)

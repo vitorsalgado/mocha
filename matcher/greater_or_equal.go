@@ -20,7 +20,7 @@ func (m *greaterOrEqualMatcher) Match(v any) (*Result, error) {
 	vv, err := mconv.ConvToFloat64(v)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"type %s is not supported. the value must be compatible with float64. %w",
+			"type %v is not supported. the value must be compatible with float64. %w",
 			reflect.TypeOf(v),
 			err,
 		)

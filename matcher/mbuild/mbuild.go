@@ -116,7 +116,7 @@ func extractMultipleMatchers(v any) ([]matcher.Matcher, error) {
 	a, ok := v.([]any)
 	if !ok {
 		return nil,
-			fmt.Errorf("matcher: attempt to build multiple matchers using non-array type. got=%v", reflect.TypeOf(v))
+			fmt.Errorf("matcher: attempt to build multiple matchers using non-array type. got: %v", reflect.TypeOf(v))
 	}
 
 	matchers := make([]matcher.Matcher, len(a))
@@ -135,7 +135,7 @@ func extractMultipleMatchers(v any) ([]matcher.Matcher, error) {
 
 		if err != nil {
 			return nil,
-				fmt.Errorf("matcher: error building multiple matchers at index [%d].\n%w", i, err)
+				fmt.Errorf("matcher: error building multiple matchers at index %d.\n%w", i, err)
 		}
 
 		matchers[i] = mat

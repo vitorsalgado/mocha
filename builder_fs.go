@@ -339,7 +339,7 @@ func buildMockFromBytes(app *Mocha, builder *MockBuilder, content []byte, ext st
 			duration = time.Duration(float64(v) * float64(time.Millisecond))
 		default:
 			return nil, fmt.Errorf(
-				"[delay] type %s is not supported. supported types: string, number",
+				"[delay] type %v is not supported. supported types: string, number",
 				reflect.TypeOf(v),
 			)
 		}

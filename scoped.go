@@ -8,12 +8,12 @@ import (
 // With a Scoped instance, it is possible to verify if one or a group of mocks were called,
 // how many times they were called and so on.
 type Scoped struct {
-	storage mockStore
-	mocks   []*Mock
+	mockStore mockStore
+	mocks     []*Mock
 }
 
-func scope(repo mockStore, mocks []*Mock) *Scoped {
-	return &Scoped{storage: repo, mocks: mocks}
+func newScope(repo mockStore, mocks []*Mock) *Scoped {
+	return &Scoped{mockStore: repo, mocks: mocks}
 }
 
 // Get returns a Mock with the given id.
@@ -99,7 +99,7 @@ func (s *Scoped) Enable() {
 func (s *Scoped) Delete(id string) bool {
 	for i, m := range s.mocks {
 		if m.ID == id {
-			s.storage.Delete(id)
+			s.mockStore.Delete(id)
 			s.mocks = append(s.mocks[:i], s.mocks[i+1:]...)
 
 			return true
@@ -118,7 +118,7 @@ func (s *Scoped) Clean() {
 	}
 
 	for _, id := range ids {
-		s.storage.Delete(id)
+		s.mockStore.Delete(id)
 	}
 
 	s.mocks = make([]*Mock, 0)

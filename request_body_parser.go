@@ -25,31 +25,37 @@ type RequestBodyParser interface {
 // parseRequestBody tests given parsers until it finds one that can parse the request body.
 // The user provided RequestBodyParser takes precedence.
 func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (parsedBody any, rawBody []byte, err error) {
-	if r.Body != nil && r.Method != http.MethodGet && r.Method != http.MethodHead {
-		rawBody, err = io.ReadAll(r.Body)
-		if err != nil {
-			return nil, nil, err
-		}
+	if r.Body == nil {
+		return
+	}
 
-		if len(rawBody) == 0 {
-			return nil, nil, nil
-		}
+	if r.Method == http.MethodGet || r.Method == http.MethodHead {
+		return
+	}
 
-		r.Body.Close()
-		r.Body = io.NopCloser(bytes.NewBuffer(rawBody))
+	rawBody, err = io.ReadAll(r.Body)
+	if err != nil {
+		return nil, nil, err
+	}
 
-		contentType := r.Header.Get(misc.HeaderContentType)
+	if len(rawBody) == 0 {
+		return nil, nil, nil
+	}
 
-		for _, parser := range parsers {
-			if parser.CanParse(contentType, r) {
-				parsedBody, err = parser.Parse(rawBody, r)
-				if err != nil {
-					return nil, rawBody,
-						fmt.Errorf("parser %s failed. reason=%w", reflect.TypeOf(parser), err)
-				}
+	r.Body.Close()
+	r.Body = io.NopCloser(bytes.NewBuffer(rawBody))
 
-				return parsedBody, rawBody, nil
+	contentType := r.Header.Get(misc.HeaderContentType)
+
+	for _, parser := range parsers {
+		if parser.CanParse(contentType, r) {
+			parsedBody, err = parser.Parse(rawBody, r)
+			if err != nil {
+				return nil, rawBody,
+					fmt.Errorf("%v failed: %w", reflect.TypeOf(parser), err)
 			}
+
+			return parsedBody, rawBody, nil
 		}
 	}
 

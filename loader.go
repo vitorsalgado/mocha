@@ -16,12 +16,12 @@ type Loader interface {
 var _ Loader = (*fileLoader)(nil)
 
 type fileLoader struct {
-	mu sync.Mutex
+	rwMutex sync.RWMutex
 }
 
 func (l *fileLoader) Load(app *Mocha) error {
-	l.mu.Lock()
-	defer l.mu.Unlock()
+	l.rwMutex.Lock()
+	defer l.rwMutex.Unlock()
 
 	filenames := make(map[string]struct{})
 

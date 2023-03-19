@@ -20,7 +20,7 @@ func TestScoped(t *testing.T) {
 	repo.Save(m2)
 	repo.Save(m3)
 
-	scoped := scope(repo, repo.GetAll())
+	scoped := newScope(repo, repo.GetAll())
 
 	assert.Equal(t, 3, len(scoped.GetAll()))
 	assert.Equal(t, m1, scoped.Get(m1.ID))
@@ -62,7 +62,7 @@ func TestScoped(t *testing.T) {
 		scoped.AssertNumberOfCalls(t, 3)
 	})
 
-	t.Run("should clean all store associated with scope when calling .Clean()", func(t *testing.T) {
+	t.Run("should clean all store associated with newScope when calling .Clean()", func(t *testing.T) {
 		scoped.Clean()
 		assert.Equal(t, 0, len(scoped.GetPending()))
 		assert.True(t, scoped.AssertNumberOfCalls(t, 0))
@@ -160,7 +160,7 @@ func TestScopedDelete(t *testing.T) {
 	repo.Save(m2)
 	repo.Save(m3)
 
-	scoped := scope(repo, repo.GetAll())
+	scoped := newScope(repo, repo.GetAll())
 
 	assert.True(t, scoped.Delete(m1.ID))
 	assert.False(t, scoped.Delete("unknown"))

@@ -30,7 +30,7 @@ func (h *builtInMockHTTPLifecycle) OnRequest(r *RequestValues) {
 		return
 	}
 
-	evt := h.app.log.Info().Str("url", r.URL.String())
+	evt := h.app.logger.Info().Str("url", r.URL.String())
 	req := zerolog.Dict()
 
 	if h.app.config.LogVerbosity >= LogHeader {
@@ -50,7 +50,7 @@ func (h *builtInMockHTTPLifecycle) OnMatch(r *RequestValues, s *Stub) {
 		return
 	}
 
-	evt := h.app.log.Info().
+	evt := h.app.logger.Info().
 		Str("url", r.URL.String()).
 		Dur("elapsed", time.Since(r.StartedAt))
 
@@ -88,7 +88,7 @@ func (h *builtInMockHTTPLifecycle) OnNoMatch(r *RequestValues, fr *findResult) {
 		return
 	}
 
-	evt := h.app.log.Warn().Str("url", r.URL.String())
+	evt := h.app.logger.Warn().Str("url", r.URL.String())
 	if fr.ClosestMatch != nil {
 		md := zerolog.Dict().Str("id", fr.ClosestMatch.ID)
 		if fr.ClosestMatch.Name != "" {
@@ -142,7 +142,7 @@ func (h *builtInMockHTTPLifecycle) OnWarning(r *RequestValues, err error) {
 		return
 	}
 
-	h.app.log.Warn().
+	h.app.logger.Warn().
 		Err(err).
 		Str("url", r.URL.String()).
 		Msgf("<--- WARNING %s %s", r.RawRequest.Method, r.URL.Path)
@@ -153,7 +153,7 @@ func (h *builtInMockHTTPLifecycle) OnError(r *RequestValues, err error) {
 		return
 	}
 
-	h.app.log.Error().
+	h.app.logger.Error().
 		Err(err).
 		Str("url", r.URL.String()).
 		Msgf("<--- ERROR %s %s", r.RawRequest.Method, r.URL.Path)

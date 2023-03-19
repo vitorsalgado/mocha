@@ -10,10 +10,10 @@ var _ Reply = (*SequentialReply)(nil)
 
 // SequentialReply configures a sequence of replies to be used after a Mock is matched to a http.Request.
 type SequentialReply struct {
-	replyAfterSeqEnded Reply
-	replies            []Reply
-	hits               int
-	mu                 sync.RWMutex
+	replyAfterSequenceEnded Reply
+	replies                 []Reply
+	hits                    int
+	rwMutex                 sync.RWMutex
 }
 
 // Seq creates a new SequentialReply.
@@ -23,7 +23,7 @@ func Seq(reply ...Reply) *SequentialReply {
 
 // OnSequenceEnded sets a response to be used once the sequence is over.
 func (r *SequentialReply) OnSequenceEnded(reply Reply) *SequentialReply {
-	r.replyAfterSeqEnded = reply
+	r.replyAfterSequenceEnded = reply
 	return r
 }
 
@@ -54,8 +54,8 @@ func (r *SequentialReply) Build(w http.ResponseWriter, req *RequestValues) (*Stu
 	}
 
 	if reply == nil {
-		if r.replyAfterSeqEnded != nil {
-			return r.replyAfterSeqEnded.Build(w, req)
+		if r.replyAfterSequenceEnded != nil {
+			return r.replyAfterSequenceEnded.Build(w, req)
 		}
 
 		return nil,
@@ -71,15 +71,15 @@ func (r *SequentialReply) Build(w http.ResponseWriter, req *RequestValues) (*Stu
 }
 
 func (r *SequentialReply) curHits() int {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
+	r.rwMutex.RLock()
+	defer r.rwMutex.RUnlock()
 
 	return r.hits
 }
 
 func (r *SequentialReply) updateHits() {
-	r.mu.Lock()
-	defer r.mu.Unlock()
+	r.rwMutex.Lock()
+	defer r.rwMutex.Unlock()
 
 	r.hits++
 }
