@@ -1,26 +1,26 @@
-package httpx
+package httprec
 
 import (
 	"net/http"
 	"net/http/httptest"
 )
 
-var _ http.ResponseWriter = (*RRec)(nil)
+var _ http.ResponseWriter = (*HTTPRec)(nil)
 
-type RRec struct {
+type HTTPRec struct {
 	Wrapped  http.ResponseWriter
 	recorder *httptest.ResponseRecorder
 }
 
-func Wrap(w http.ResponseWriter) *RRec {
-	return &RRec{Wrapped: w, recorder: httptest.NewRecorder()}
+func Wrap(w http.ResponseWriter) *HTTPRec {
+	return &HTTPRec{Wrapped: w, recorder: httptest.NewRecorder()}
 }
 
-func (r *RRec) Header() http.Header {
+func (r *HTTPRec) Header() http.Header {
 	return r.Wrapped.Header()
 }
 
-func (r *RRec) Write(buf []byte) (int, error) {
+func (r *HTTPRec) Write(buf []byte) (int, error) {
 	_, err := r.recorder.Write(buf)
 	if err != nil {
 		return 0, err
@@ -29,7 +29,7 @@ func (r *RRec) Write(buf []byte) (int, error) {
 	return r.Wrapped.Write(buf)
 }
 
-func (r *RRec) WriteHeader(statusCode int) {
+func (r *HTTPRec) WriteHeader(statusCode int) {
 	for k, v := range r.Wrapped.Header() {
 		for _, vv := range v {
 			r.recorder.Header().Add(k, vv)
@@ -40,6 +40,6 @@ func (r *RRec) WriteHeader(statusCode int) {
 	r.Wrapped.WriteHeader(statusCode)
 }
 
-func (r *RRec) Result() *http.Response {
+func (r *HTTPRec) Result() *http.Response {
 	return r.recorder.Result()
 }

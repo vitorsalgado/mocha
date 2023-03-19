@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/vitorsalgado/mocha/v3/internal/httpx"
+	"github.com/vitorsalgado/mocha/v3/internal/httprec"
 )
 
 // Stub defines the HTTP response that will be served once a Mock is matched for an HTTP Request.
@@ -36,7 +36,7 @@ func (s *Stub) Gunzip() ([]byte, error) {
 }
 
 func makeStub(w http.ResponseWriter) (*Stub, error) {
-	rw := w.(*httpx.RRec)
+	rw := w.(*httprec.HTTPRec)
 	result := rw.Result()
 
 	body, err := io.ReadAll(result.Body)

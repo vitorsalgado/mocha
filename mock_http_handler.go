@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/vitorsalgado/mocha/v3/internal/header"
-	"github.com/vitorsalgado/mocha/v3/internal/httpx"
+	"github.com/vitorsalgado/mocha/v3/internal/httprec"
 	"github.com/vitorsalgado/mocha/v3/internal/mimetype"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 )
@@ -20,7 +20,7 @@ type mockHandler struct {
 }
 
 func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w = httpx.Wrap(w)
+	w = httprec.Wrap(w)
 	parsedURL, urlSegments := h.parseURL(r)
 	parsedBody, rawBody, err := parseRequestBody(r, h.app.requestBodyParsers)
 	reqValues := &RequestValues{time.Now(), r, parsedURL, urlSegments, nil, nil, h.app, nil}
