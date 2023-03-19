@@ -12,50 +12,6 @@ import (
 	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
-// Mock holds metadata and expectations to be matched against HTTP requests in order to serve mocked responses.
-// This is the core entity of this project, and most features work based on it.
-type Mock struct {
-	// ID is the unique identifier of a Mock
-	ID string
-
-	// Name describes the mock. Useful for debugging.
-	Name string
-
-	// Priority sets the priority of a Mock.
-	Priority int
-
-	// Reply is the responder that will be used to serve the HTTP response stub, once matched against an
-	// HTTP request.
-	Reply Reply
-
-	// Enabled indicates if the Mock is enabled or disabled.
-	// Only enabled mocks are considered during the request matching phase.
-	Enabled bool
-
-	// PostActions holds a PostAction list to be executed after the Mock was matched and served.
-	PostActions []PostAction
-
-	// Source describes the source of the mock. E.g.: if it was built from a file,
-	// it will contain the filename.
-	Source string
-
-	// Delay sets the duration to delay serving the mocked response.
-	Delay time.Duration
-
-	// Mappers stores response mappers associated with this Mock.
-	Mappers []Mapper
-
-	after        []matcher.OnAfterMockServed
-	expectations []*expectation
-	mu           sync.RWMutex
-	hits         int
-}
-
-// Builder describes a Mock builder.
-type Builder interface {
-	Build(app *Mocha) (*Mock, error)
-}
-
 // RequestValues groups HTTP request data, including the parsed body.
 // It is used by several components during the request matching phase.
 type RequestValues struct {
@@ -244,6 +200,50 @@ func (mt matchTarget) String() string {
 	default:
 		return ""
 	}
+}
+
+// Builder describes a Mock builder.
+type Builder interface {
+	Build(app *Mocha) (*Mock, error)
+}
+
+// Mock holds metadata and expectations to be matched against HTTP requests in order to serve mocked responses.
+// This is the core entity of this project, and most features work based on it.
+type Mock struct {
+	// ID is the unique identifier of a Mock
+	ID string
+
+	// Name describes the mock. Useful for debugging.
+	Name string
+
+	// Priority sets the priority of a Mock.
+	Priority int
+
+	// Reply is the responder that will be used to serve the HTTP response stub, once matched against an
+	// HTTP request.
+	Reply Reply
+
+	// Enabled indicates if the Mock is enabled or disabled.
+	// Only enabled mocks are considered during the request matching phase.
+	Enabled bool
+
+	// PostActions holds a PostAction list to be executed after the Mock was matched and served.
+	PostActions []PostAction
+
+	// Source describes the source of the mock. E.g.: if it was built from a file,
+	// it will contain the filename.
+	Source string
+
+	// Delay sets the duration to delay serving the mocked response.
+	Delay time.Duration
+
+	// Mappers stores response mappers associated with this Mock.
+	Mappers []Mapper
+
+	after        []matcher.OnAfterMockServed
+	expectations []*expectation
+	mu           sync.RWMutex
+	hits         int
 }
 
 // newMock returns a new Mock with default values set.
