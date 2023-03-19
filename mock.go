@@ -63,7 +63,7 @@ type PostActionInput struct {
 	Stub *Stub
 
 	// Args allow passing custom arguments to a PostAction.
-	Args any
+	Args map[string]any
 }
 
 // PostAction defines the contract for an action that will be executed after serving a mocked HTTP response.
