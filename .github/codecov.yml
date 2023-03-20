@@ -1,2 +1,9 @@
 comment: false
 github_checks: false
+
+coverage:
+  status:
+    project:
+      default:
+        target: 75%
+        threshold: 2%
