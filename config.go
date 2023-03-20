@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"text/template"
 
 	"github.com/rs/zerolog"
@@ -172,6 +173,10 @@ type Config struct {
 	// They can later be referenced by name during mocking phase.
 	PostActions map[string]PostAction
 
+	// HeaderNamesToRedact configures HTTP header names to be redacted in logs.
+	// Useful to avoid logging sensitive information.
+	HeaderNamesToRedact map[string]struct{}
+
 	// CLI Only Options
 
 	// UseHTTPS defines that the mock server should use HTTPS.
@@ -224,6 +229,7 @@ func (c *Config) Apply(conf *Config) error {
 	conf.LogVerbosity = c.LogVerbosity
 	conf.LogLevel = c.LogLevel
 	conf.LogBodyMaxSize = c.LogBodyMaxSize
+	conf.HeaderNamesToRedact = c.HeaderNamesToRedact
 	conf.TLSConfig = c.TLSConfig
 	conf.TLSCertificates = c.TLSCertificates
 	conf.TLSClientCAs = c.TLSClientCAs
@@ -252,6 +258,7 @@ func defaultConfig() *Config {
 		Loaders:                        make([]Loader, 0),
 		MockFileHandlers:               make([]MockFileHandler, 0),
 		PostActions:                    make(map[string]PostAction),
+		HeaderNamesToRedact:            make(map[string]struct{}),
 		UseDescriptiveLogger:           false,
 		LogPretty:                      true,
 		LogLevel:                       LogLevelInfo,
@@ -377,6 +384,15 @@ func (cb *ConfigBuilder) LogBodyMaxSize(max int64) *ConfigBuilder {
 // If true, The Logger options will be ignored for the HTTP request matching.
 func (cb *ConfigBuilder) UseDescriptiveLogger() *ConfigBuilder {
 	cb.conf.UseDescriptiveLogger = true
+	return cb
+}
+
+// RedactHeader redacts the given HTTP header names in logs.
+func (cb *ConfigBuilder) RedactHeader(names ...string) *ConfigBuilder {
+	for _, name := range names {
+		cb.conf.HeaderNamesToRedact[strings.ToLower(name)] = struct{}{}
+	}
+
 	return cb
 }
 

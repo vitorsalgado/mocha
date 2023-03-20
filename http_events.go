@@ -2,6 +2,7 @@ package mocha
 
 import (
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -34,7 +35,8 @@ func (h *builtInMockHTTPLifecycle) OnRequest(r *RequestValues) {
 	req := zerolog.Dict()
 
 	if h.app.config.LogVerbosity >= LogHeader {
-		req.Any("header", r.RawRequest.Header)
+		redactedHeader := redactHeader(r.RawRequest.Header, h.app.config.HeaderNamesToRedact)
+		req.Any("header", redactedHeader)
 	}
 
 	if h.app.config.LogVerbosity >= LogBody && len(r.RawBody) > 0 {
@@ -62,9 +64,12 @@ func (h *builtInMockHTTPLifecycle) OnMatch(r *RequestValues, s *Stub) {
 	res := zerolog.Dict().Int("status", s.StatusCode)
 
 	if h.app.config.LogVerbosity >= LogHeader {
-		res.Any("header", s.Header)
+		redactedHeader := redactHeader(s.Header, h.app.config.HeaderNamesToRedact)
+		res.Any("header", redactedHeader)
+
 		if len(s.Trailer) > 0 {
-			res.Any("trailer", s.Trailer)
+			redactedTrailer := redactHeader(s.Trailer, h.app.config.HeaderNamesToRedact)
+			res.Any("trailer", redactedTrailer)
 		}
 	}
 
@@ -181,9 +186,11 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnRequest(rv *RequestValues) {
 		rv.URL))
 
 	if h.app.config.LogVerbosity >= LogHeader && len(rv.RawRequest.Header) > 0 {
+		redactedHeader := redactHeader(rv.RawRequest.Header, h.app.config.HeaderNamesToRedact)
+
 		builder.WriteString("\n")
 		builder.WriteString(h.cz.Blue("Headers "))
-		builder.WriteString(fmt.Sprintf("%s", rv.RawRequest.Header))
+		builder.WriteString(fmt.Sprintf("%s", redactedHeader))
 	}
 
 	if h.app.config.LogVerbosity >= LogBody && len(rv.RawBody) > 0 {
@@ -223,7 +230,13 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnMatch(rv *RequestValues, s *Stub
 	if h.app.config.LogVerbosity >= LogHeader && len(s.Header) > 0 {
 		builder.WriteString("\n")
 		builder.WriteString(h.cz.Green("Headers: "))
-		builder.WriteString(fmt.Sprintf("%s", s.Header))
+		builder.WriteString(fmt.Sprintf("%s", redactHeader(s.Header, h.app.config.HeaderNamesToRedact)))
+
+		if len(s.Trailer) > 0 {
+			builder.WriteString("\n")
+			builder.WriteString(h.cz.Green("Trailers: "))
+			builder.WriteString(fmt.Sprintf("%s", redactHeader(s.Trailer, h.app.config.HeaderNamesToRedact)))
+		}
 	}
 
 	bodyLen := int64(len(s.Body))
@@ -338,4 +351,20 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnError(r *RequestValues, err erro
 		h.cz.Red(h.cz.Bold("Error")),
 		err,
 	)
+}
+
+func redactHeader(h http.Header, toRedact map[string]struct{}) http.Header {
+	redactedHeader := make(http.Header, len(h))
+
+	for k, v := range h {
+		if _, ok := toRedact[strings.ToLower(k)]; ok {
+			redactedHeader.Add(k, "<redacted>")
+		} else {
+			for _, vv := range v {
+				redactedHeader.Add(k, vv)
+			}
+		}
+	}
+
+	return redactedHeader
 }

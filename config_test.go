@@ -177,6 +177,7 @@ func TestConfigBuilder(t *testing.T) {
 		LogBodyMaxSize(100).
 		Logger(&customLogger).
 		UseDescriptiveLogger().
+		RedactHeader("header-1", "HEADER-2", "hEaDeR-3").
 		Parameters(newInMemoryParameters()).
 		MockFilePatterns("test", "dev").
 		Loader(&fileLoader{}).
@@ -205,6 +206,10 @@ func TestConfigBuilder(t *testing.T) {
 	assert.Equal(t, newInMemoryParameters(), conf.Parameters)
 	assert.Equal(t, []string{"test", "dev"}, conf.MockFileSearchPatterns)
 	assert.True(t, conf.UseDescriptiveLogger)
+	assert.Len(t, conf.HeaderNamesToRedact, 3)
+	assert.Equal(t, conf.HeaderNamesToRedact["header-1"], struct{}{})
+	assert.Equal(t, conf.HeaderNamesToRedact["header-2"], struct{}{})
+	assert.Equal(t, conf.HeaderNamesToRedact["header-3"], struct{}{})
 	assert.Len(t, conf.Loaders, 1)
 	assert.Len(t, conf.MockFileHandlers, 1)
 	assert.IsType(t, &builtInGoTemplate{}, conf.TemplateEngine)
