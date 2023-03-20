@@ -261,9 +261,12 @@ func TestWebHook_FaultTarget(t *testing.T) {
 }
 
 func TestWebHook_InvalidArgs(t *testing.T) {
+	client := &http.Client{}
 	testCases := []any{make(chan struct{}), nil}
 
-	target := mocha.NewAPIWithT(t)
+	target := mocha.NewAPIWithT(t, mocha.Setup().HTTPClient(func() *http.Client {
+		return client
+	}))
 	target.MustStart()
 	target.MustMock(mocha.Getf("/hook").Reply(mocha.OK()))
 
@@ -271,16 +274,18 @@ func TestWebHook_InvalidArgs(t *testing.T) {
 	m.MustStart()
 
 	for i, tc := range testCases {
+		tc := tc
 		t.Run(strconv.FormatInt(int64(i), 10), func(t *testing.T) {
 			m.MustMock(mocha.Getf("/test").
 				PostAction(&mocha.PostActionDef{Name: Name, RawParameters: tc}).
 				Reply(mocha.NoContent()))
 
-			client := &http.Client{}
 			res, err := client.Get(m.URL("/test"))
 
 			require.NoError(t, err)
 			require.Equal(t, http.StatusNoContent, res.StatusCode)
+
+			m.Clean()
 		})
 	}
 }
