@@ -12,6 +12,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/vitorsalgado/mocha/v3/coretype"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/misc"
 )
@@ -30,7 +31,7 @@ type customTestServer struct {
 	decorated Server
 }
 
-func (s *customTestServer) Setup(app *Mocha, handler http.Handler) error {
+func (s *customTestServer) Setup(app *HTTPMockApp, handler http.Handler) error {
 	return s.decorated.Setup(app, handler)
 }
 
@@ -178,7 +179,7 @@ func TestConfigBuilder(t *testing.T) {
 		Logger(&customLogger).
 		UseDescriptiveLogger().
 		RedactHeader("header-1", "HEADER-2", "hEaDeR-3").
-		Parameters(newInMemoryParameters()).
+		Parameters(coretype.NewInMemoryParameters()).
 		MockFilePatterns("test", "dev").
 		Loader(&fileLoader{}).
 		MockFileHandlers(&customMockFileHandler{}).
@@ -203,7 +204,7 @@ func TestConfigBuilder(t *testing.T) {
 	assert.False(t, conf.LogPretty)
 	assert.Equal(t, &customLogger, conf.Logger)
 	assert.Equal(t, int64(100), conf.LogBodyMaxSize)
-	assert.Equal(t, newInMemoryParameters(), conf.Parameters)
+	assert.Equal(t, coretype.NewInMemoryParameters(), conf.Parameters)
 	assert.Equal(t, []string{"test", "dev"}, conf.MockFileSearchPatterns)
 	assert.True(t, conf.UseDescriptiveLogger)
 	assert.Len(t, conf.HeaderNamesToRedact, 3)

@@ -13,7 +13,7 @@ import (
 type customMockFileHandler struct {
 }
 
-func (p *customMockFileHandler) Handle(v map[string]any, b *MockBuilder) error {
+func (p *customMockFileHandler) Handle(v map[string]any, b *HTTPMockBuilder) error {
 	custom := v["custom"]
 	query := custom.(map[string]any)["query"]
 	key := query.(map[string]any)["key"]

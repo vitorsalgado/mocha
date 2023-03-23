@@ -9,13 +9,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/vitorsalgado/mocha/v3/coretype"
 	"github.com/vitorsalgado/mocha/v3/internal/httprec"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
 type mockHandler struct {
-	app       *Mocha
+	app       *HTTPMockApp
 	lifecycle mockHTTPLifecycle
 }
 
@@ -33,8 +34,8 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	h.lifecycle.OnRequest(reqValues)
 
-	result := findMockForRequest(h.app.storage,
-		&valueSelectorInput{r, parsedURL, r.URL.Query(), r.Form, parsedBody})
+	result := coretype.FindMockForRequest(h.app.storage,
+		&HTTPValueSelectorInput{r, parsedURL, r.URL.Query(), r.Form, parsedBody})
 
 	if !result.Pass {
 		if h.app.proxy != nil {
@@ -170,7 +171,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *RequestValues, result *findResult) {
+func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *RequestValues, result *coretype.FindResult[*HTTPMock]) {
 	defer h.lifecycle.OnNoMatch(r, result)
 
 	builder := strings.Builder{}
@@ -178,7 +179,7 @@ func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *RequestValues, resul
 
 	if result.ClosestMatch != nil {
 		builder.WriteString(
-			fmt.Sprintf("CLOSEST MATCH: %s %s\n", result.ClosestMatch.ID, result.ClosestMatch.Name))
+			fmt.Sprintf("CLOSEST MATCH: %s %s\n", result.ClosestMatch.GetID(), result.ClosestMatch.GetName()))
 	}
 
 	builder.WriteString("MISMATCHES:\n")

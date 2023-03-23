@@ -10,7 +10,7 @@ import (
 // Loader is the interface that defines custom Mock loaders.
 // Usually, it is used to load external mocks, like from the file system.
 type Loader interface {
-	Load(app *Mocha) error
+	Load(app *HTTPMockApp) error
 }
 
 var _ Loader = (*fileLoader)(nil)
@@ -19,7 +19,7 @@ type fileLoader struct {
 	rwMutex sync.RWMutex
 }
 
-func (l *fileLoader) Load(app *Mocha) error {
+func (l *fileLoader) Load(app *HTTPMockApp) error {
 	l.rwMutex.Lock()
 	defer l.rwMutex.Unlock()
 

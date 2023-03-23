@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/vitorsalgado/mocha/v3/coretype"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
@@ -32,7 +33,7 @@ func TestRace(t *testing.T) {
 
 	wg.Wait()
 
-	assert.Equal(t, (jobs*2)+2, m.hits)
+	assert.Equal(t, (jobs*2)+2, m.Hits())
 }
 
 func TestMock(t *testing.T) {
@@ -61,8 +62,7 @@ func TestMock(t *testing.T) {
 }
 
 func TestMockMatches(t *testing.T) {
-	m := newMock()
-	params := &valueSelectorInput{}
+	params := &HTTPValueSelectorInput{}
 
 	testCases := []struct {
 		name     string
@@ -80,9 +80,9 @@ func TestMockMatches(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			res := m.matchExpectations(params, []*expectation{{
+			res := coretype.Match(params, []*coretype.Expectation[*HTTPValueSelectorInput]{{
 				Matcher: StrictEqual(tc.value),
-				ValueSelector: func(r *valueSelectorInput) any {
+				ValueSelector: func(r *HTTPValueSelectorInput) any {
 					return tc.selector
 				},
 			}})
@@ -92,11 +92,11 @@ func TestMockMatches(t *testing.T) {
 
 	t.Run("should return not matched and error when one of expectations returns error", func(t *testing.T) {
 		// string
-		res := m.matchExpectations(params, []*expectation{{
+		res := coretype.Match(params, []*coretype.Expectation[*HTTPValueSelectorInput]{{
 			Matcher: Func(func(_ any) (bool, error) {
 				return false, fmt.Errorf("fail")
 			}),
-			ValueSelector: func(r *valueSelectorInput) any {
+			ValueSelector: func(r *HTTPValueSelectorInput) any {
 				return "dev"
 			},
 		}})
@@ -105,37 +105,37 @@ func TestMockMatches(t *testing.T) {
 
 	t.Run("should not pass when it panics", func(t *testing.T) {
 		// string
-		res := m.matchExpectations(params, []*expectation{{
+		res := coretype.Match(params, []*coretype.Expectation[*HTTPValueSelectorInput]{{
 			Matcher: Func(func(_ any) (bool, error) {
 				panic("boom!")
 			}),
-			ValueSelector: func(r *valueSelectorInput) any {
+			ValueSelector: func(r *HTTPValueSelectorInput) any {
 				return "dev"
 			},
 		}})
 		assert.False(t, res.Pass)
 	})
 
-	t.Run("should return the sum of the matchers weight when it matches", func(t *testing.T) {
+	t.Run("should return the sum of the matchers Weight when it matches", func(t *testing.T) {
 		// any
-		res := m.matchExpectations(params, []*expectation{
+		res := coretype.Match(params, []*coretype.Expectation[*HTTPValueSelectorInput]{
 			{
 				Matcher: StrictEqual("test"),
-				ValueSelector: func(r *valueSelectorInput) any {
+				ValueSelector: func(r *HTTPValueSelectorInput) any {
 					return "test"
 				},
 				Weight: 2,
 			},
 			{
 				Matcher: StrictEqual("test"),
-				ValueSelector: func(r *valueSelectorInput) any {
+				ValueSelector: func(r *HTTPValueSelectorInput) any {
 					return "test"
 				},
 				Weight: 1,
 			},
 			{
 				Matcher: StrictEqual(10.0),
-				ValueSelector: func(r *valueSelectorInput) any {
+				ValueSelector: func(r *HTTPValueSelectorInput) any {
 					return 10.0
 				},
 				Weight: 2,
@@ -145,26 +145,26 @@ func TestMockMatches(t *testing.T) {
 		assert.Equal(t, 5, res.Weight)
 	})
 
-	t.Run("should return the sum of the matchers weight when one of then doesn't match", func(t *testing.T) {
+	t.Run("should return the sum of the matchers Weight when one of then doesn't match", func(t *testing.T) {
 		// any
-		res := m.matchExpectations(params, []*expectation{
+		res := coretype.Match(params, []*coretype.Expectation[*HTTPValueSelectorInput]{
 			{
 				Matcher: StrictEqual("test"),
-				ValueSelector: func(r *valueSelectorInput) any {
+				ValueSelector: func(r *HTTPValueSelectorInput) any {
 					return "test"
 				},
 				Weight: 2,
 			},
 			{
 				Matcher: StrictEqual("test"),
-				ValueSelector: func(r *valueSelectorInput) any {
+				ValueSelector: func(r *HTTPValueSelectorInput) any {
 					return "dev"
 				},
 				Weight: 1,
 			},
 			{
 				Matcher: StrictEqual(10.0),
-				ValueSelector: func(r *valueSelectorInput) any {
+				ValueSelector: func(r *HTTPValueSelectorInput) any {
 					return 10.0
 				},
 				Weight: 2,

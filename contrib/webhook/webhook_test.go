@@ -35,7 +35,7 @@ func TestWebHook_Run(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		targetMock    *mocha.MockBuilder
+		targetMock    *mocha.HTTPMockBuilder
 		webhookDef    *mocha.PostActionDef
 		expectedCalls int
 	}{

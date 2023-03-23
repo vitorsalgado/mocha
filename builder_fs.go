@@ -18,14 +18,15 @@ import (
 	"github.com/spf13/viper"
 	"github.com/xeipuuv/gojsonschema"
 
+	"github.com/vitorsalgado/mocha/v3/coretype"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/matcher/mbuild"
 )
 
 var (
-	_ Builder = (*mockBuilderFromFile)(nil)
-	_ Builder = (*mockBuilderFromBytes)(nil)
-	_ error   = (*jsonSchemaValidationErr)(nil)
+	_ coretype.Builder[*HTTPMock, *HTTPMockApp] = (*mockBuilderFromFile)(nil)
+	_ coretype.Builder[*HTTPMock, *HTTPMockApp] = (*mockBuilderFromBytes)(nil)
+	_ error                                     = (*jsonSchemaValidationErr)(nil)
 )
 
 const (
@@ -114,7 +115,7 @@ func (e jsonSchemaValidationErr) Error() string {
 }
 
 type mockBuilderFromFile struct {
-	builder  *MockBuilder
+	builder  *HTTPMockBuilder
 	filename string
 }
 
@@ -125,11 +126,11 @@ type mockBuilderFromFile struct {
 // Since every mock file is a Go template by default,
 // if you need to define templates for the response URL, header or body, remember to escape it.
 // Eg.: body: {{`{{ .Request.Method }}`}}
-func FromFile(filename string) Builder {
+func FromFile(filename string) coretype.Builder[*HTTPMock, *HTTPMockApp] {
 	return &mockBuilderFromFile{filename: filename, builder: Request()}
 }
 
-func (b *mockBuilderFromFile) Build(app *Mocha) (mock *Mock, err error) {
+func (b *mockBuilderFromFile) Build(app *HTTPMockApp) (mock *HTTPMock, err error) {
 	mock, err = b.build(app)
 	if err != nil {
 		return nil, fmt.Errorf("mock: failed to build mock from file %s.\n%w", b.filename, err)
@@ -138,7 +139,7 @@ func (b *mockBuilderFromFile) Build(app *Mocha) (mock *Mock, err error) {
 	return mock, nil
 }
 
-func (b *mockBuilderFromFile) build(app *Mocha) (mock *Mock, err error) {
+func (b *mockBuilderFromFile) build(app *HTTPMockApp) (mock *HTTPMock, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("failed to build mock from file %s.\n%v", b.filename, r)
@@ -170,16 +171,16 @@ func (b *mockBuilderFromFile) build(app *Mocha) (mock *Mock, err error) {
 }
 
 type mockBuilderFromBytes struct {
-	builder *MockBuilder
+	builder *HTTPMockBuilder
 	bytes   []byte
 	ext     string
 }
 
-func FromBytes(b []byte, extension string) Builder {
+func FromBytes(b []byte, extension string) coretype.Builder[*HTTPMock, *HTTPMockApp] {
 	return &mockBuilderFromBytes{bytes: b, builder: Request(), ext: extension}
 }
 
-func (b *mockBuilderFromBytes) Build(app *Mocha) (mock *Mock, err error) {
+func (b *mockBuilderFromBytes) Build(app *HTTPMockApp) (mock *HTTPMock, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("mock: error building mock from byte array. panic: %v", r)
@@ -249,7 +250,7 @@ func buildReply(vi *viper.Viper) (Reply, error) {
 	return res, nil
 }
 
-func buildMockFromBytes(app *Mocha, builder *MockBuilder, content []byte, ext string) (*Mock, error) {
+func buildMockFromBytes(app *HTTPMockApp, builder *HTTPMockBuilder, content []byte, ext string) (*HTTPMock, error) {
 	tmpl, err := template.New("").Parse(string(content))
 	if err != nil {
 		return nil, err

@@ -220,7 +220,7 @@ func (r *ProxyReply) Build(_ http.ResponseWriter, req *RequestValues) (*Stub, er
 	return stub, nil
 }
 
-func (r *ProxyReply) beforeBuild(app *Mocha) error {
+func (r *ProxyReply) beforeBuild(app *HTTPMockApp) error {
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: !r.sslVerify,
 		RootCAs:            app.config.TLSClientCAs,

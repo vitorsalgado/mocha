@@ -1,4 +1,4 @@
-package mocha
+package coretype
 
 import (
 	"testing"
@@ -7,11 +7,11 @@ import (
 )
 
 func TestInMemoryStorage(t *testing.T) {
-	st := newStore()
+	st := NewStore[*BaseMock[any]]()
 
-	mock1 := &Mock{ID: "1", Name: "mock_1", Enabled: true, Priority: 0}
-	mock2 := &Mock{ID: "2", Name: "mock_2", Enabled: true, Priority: 1}
-	mock3 := &Mock{ID: "3", Name: "mock_3", Enabled: true, Priority: 2}
+	mock1 := &BaseMock[any]{ID: "1", Name: "mock_1", Enabled: true, Priority: 0}
+	mock2 := &BaseMock[any]{ID: "2", Name: "mock_2", Enabled: true, Priority: 1}
+	mock3 := &BaseMock[any]{ID: "3", Name: "mock_3", Enabled: true, Priority: 2}
 
 	st.Save(mock1)
 	st.Save(mock2)
@@ -45,8 +45,8 @@ func TestInMemoryStorage(t *testing.T) {
 
 	require.Len(t, mocks, 0)
 
-	st.Save(&Mock{ID: "10", Name: "mock_ext_1", Enabled: true, Priority: 0, Source: "ext"})
-	st.Save(&Mock{ID: "11", Name: "mock_11", Enabled: true, Priority: 0})
+	st.Save(&BaseMock[any]{ID: "10", Name: "mock_ext_1", Enabled: true, Priority: 0, Source: "ext"})
+	st.Save(&BaseMock[any]{ID: "11", Name: "mock_11", Enabled: true, Priority: 0})
 
 	require.Len(t, st.GetAll(), 2)
 
@@ -65,9 +65,9 @@ func TestInMemoryStorage(t *testing.T) {
 }
 
 func TestDeleteExt(t *testing.T) {
-	st := newStore()
-	st.Save(&Mock{ID: "10", Name: "mock_ext_1", Enabled: true, Priority: 0, Source: "ext"})
-	st.Save(&Mock{ID: "10", Name: "mock_ext_2", Enabled: true, Priority: 0, Source: "ext"})
+	st := NewStore[*BaseMock[any]]()
+	st.Save(&BaseMock[any]{ID: "10", Name: "mock_ext_1", Enabled: true, Priority: 0, Source: "ext"})
+	st.Save(&BaseMock[any]{ID: "10", Name: "mock_ext_2", Enabled: true, Priority: 0, Source: "ext"})
 
 	st.DeleteExternal()
 

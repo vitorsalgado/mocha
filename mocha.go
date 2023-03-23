@@ -15,11 +15,16 @@ import (
 
 	"github.com/rs/zerolog"
 
+	"github.com/vitorsalgado/mocha/v3/coretype"
 	"github.com/vitorsalgado/mocha/v3/internal/colorize"
 	"github.com/vitorsalgado/mocha/v3/internal/mid"
 	"github.com/vitorsalgado/mocha/v3/internal/mid/recover"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/matcher/mfeat"
+)
+
+var (
+	_ coretype.MockApp[*HTTPMock] = (*HTTPMockApp)(nil)
 )
 
 const (
@@ -33,22 +38,23 @@ const (
 // Basically, every request that doesn't match against a Mock, will have a response with http.StatusTeapot.
 const StatusNoMatch = http.StatusTeapot
 
-// Mocha is the base for the mock server.
-type Mocha struct {
+// HTTPMockApp is the base for the mock server.
+type HTTPMockApp struct {
+	*coretype.BaseApp[*HTTPMock, *HTTPMockApp]
+
 	config             *Config
 	server             Server
-	storage            mockStore
+	storage            *coretype.MockStore[*HTTPMock]
 	scenarioStore      *mfeat.ScenarioStore
 	ctx                context.Context
 	cancel             context.CancelFunc
 	requestBodyParsers []RequestBodyParser
-	params             Params
-	scopes             []*Scoped
+	params             coretype.Params
 	loaders            []Loader
 	rec                *recorder
 	rwMutex            sync.RWMutex
 	proxy              *reverseProxy
-	templateEngine     TemplateEngine
+	templateEngine     coretype.TemplateEngine
 	extensions         map[string]Extension
 	data               map[string]any
 	colorizer          *colorize.Colorize
@@ -57,21 +63,12 @@ type Mocha struct {
 	random             *rand.Rand
 }
 
-// TestingT is based on testing.T and is used for assertions.
-// See Assert* methods on the application instance.
-type TestingT interface {
-	Helper()
-	Logf(format string, a ...any)
-	Errorf(format string, a ...any)
-	Cleanup(func())
-}
-
-// NewAPI creates a new Mocha mock server with the given configurations.
+// NewAPI creates a new HTTPMockApp mock server with the given configurations.
 // Parameter config accepts a Config or a ConfigBuilder implementation.
 // If no configuration is provided, a default one will be used.
 // If no port is set, it will start the server on localhost using a random port.
-func NewAPI(config ...Configurer) *Mocha {
-	app := &Mocha{}
+func NewAPI(config ...Configurer) *HTTPMockApp {
+	app := &HTTPMockApp{}
 	app.random = rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -93,10 +90,10 @@ func NewAPI(config ...Configurer) *Mocha {
 		}
 	}
 
-	app.setLog(conf)
+	app.logger = app.getLog(conf)
 
 	colors := &colorize.Colorize{Enabled: conf.UseDescriptiveLogger}
-	store := newStore()
+	store := coretype.NewStore[*HTTPMock]()
 
 	parsers := make([]RequestBodyParser, 0, len(conf.RequestBodyParsers)+3)
 	parsers = append(parsers, conf.RequestBodyParsers...)
@@ -114,11 +111,11 @@ func NewAPI(config ...Configurer) *Mocha {
 
 	middlewares = append(middlewares, conf.Middlewares...)
 
-	var params Params
+	var params coretype.Params
 	if conf.Parameters != nil {
 		params = conf.Parameters
 	} else {
-		params = newInMemoryParameters()
+		params = coretype.NewInMemoryParameters()
 	}
 
 	var rec *recorder
@@ -128,7 +125,7 @@ func NewAPI(config ...Configurer) *Mocha {
 
 	var p *reverseProxy
 	if conf.Proxy != nil {
-		p = newProxy(app.logger, conf)
+		p = newProxy(app.Logger(), conf)
 	}
 
 	var lifecycle mockHTTPLifecycle
@@ -165,12 +162,11 @@ func NewAPI(config ...Configurer) *Mocha {
 		app.templateEngine = tmpl
 	}
 
+	app.BaseApp = coretype.NewBaseApp[*HTTPMock, *HTTPMockApp](app, store)
 	app.server = server
 	app.storage = store
 	app.scenarioStore = mfeat.NewScenarioStore()
-
 	app.params = params
-	app.scopes = make([]*Scoped, 0)
 	app.loaders = loaders
 	app.rec = rec
 	app.proxy = p
@@ -199,9 +195,9 @@ func NewAPI(config ...Configurer) *Mocha {
 	return app
 }
 
-// NewAPIWithT creates a new Mocha mock server with the given configurations and
+// NewAPIWithT creates a new HTTPMockApp mock server with the given configurations and
 // closes the server when the provided TestingT instance finishes.
-func NewAPIWithT(t TestingT, config ...Configurer) *Mocha {
+func NewAPIWithT(t coretype.TestingT, config ...Configurer) *HTTPMockApp {
 	app := NewAPI(config...)
 	t.Cleanup(app.Close)
 
@@ -209,12 +205,12 @@ func NewAPIWithT(t TestingT, config ...Configurer) *Mocha {
 }
 
 // Name returns mock server name.
-func (app *Mocha) Name() string {
+func (app *HTTPMockApp) Name() string {
 	return app.config.Name
 }
 
 // Start starts the mock server.
-func (app *Mocha) Start() error {
+func (app *HTTPMockApp) Start() error {
 	err := app.server.Start()
 	if err != nil {
 		return err
@@ -225,7 +221,7 @@ func (app *Mocha) Start() error {
 
 // MustStart starts the mock server.
 // It fails immediately if any error occurs.
-func (app *Mocha) MustStart() {
+func (app *HTTPMockApp) MustStart() {
 	err := app.Start()
 	if err != nil {
 		panic(fmt.Errorf("server: start failed. %w", err))
@@ -233,7 +229,7 @@ func (app *Mocha) MustStart() {
 }
 
 // StartTLS starts TLS on a mock server.
-func (app *Mocha) StartTLS() error {
+func (app *HTTPMockApp) StartTLS() error {
 	err := app.server.StartTLS()
 	if err != nil {
 		return err
@@ -244,79 +240,16 @@ func (app *Mocha) StartTLS() error {
 
 // MustStartTLS starts TLS on a mock server.
 // It fails immediately if any error occurs.
-func (app *Mocha) MustStartTLS() {
+func (app *HTTPMockApp) MustStartTLS() {
 	err := app.StartTLS()
 	if err != nil {
 		panic(fmt.Errorf("server: failed to start server with TLS. %w", err))
 	}
 }
 
-// Mock adds one or multiple request mocks.
-// It returns a Scoped instance that allows control of the added mocks and also checks if they were called or not.
-//
-// Usage:
-//
-//	scoped := m.MustMock(
-//		Get(matcher.URLPath("/test")).
-//			Header("test", matcher.StrictEqual("hello")).
-//			Query("filter", matcher.StrictEqual("all")).
-//			Reply(reply.Created().PlainText("hello world")))
-//
-//	assert.True(txtTemplate, scoped.HasBeenCalled())
-func (app *Mocha) Mock(builders ...Builder) (*Scoped, error) {
-	app.rwMutex.Lock()
-	defer app.rwMutex.Unlock()
-
-	added := make([]string, len(builders))
-
-	for i, b := range builders {
-		mock, err := b.Build(app)
-		if err != nil {
-			return nil, fmt.Errorf("server: error adding mock at index %d.\n%w", i, err)
-		}
-
-		mock.prepare()
-
-		app.storage.Save(mock)
-		added[i] = mock.ID
-	}
-
-	scoped := newScope(app.storage, added)
-	app.scopes = append(app.scopes, scoped)
-
-	return scoped, nil
-}
-
-// MustMock adds one or multiple request mocks.
-// It returns a Scoped instance that allows control of the added mocks and also checks if they were called or not.
-// It fails immediately if any error occurs.
-//
-// Usage:
-//
-//	scoped := m.MustMock(
-//		Get(matcher.URLPath("/test")).
-//			Header("test", matcher.StrictEqual("hello")).
-//			Query("filter", matcher.StrictEqual("all")).
-//			Reply(reply.Created().PlainText("hello world")))
-//
-//	assert.True(txtTemplate, scoped.HasBeenCalled())
-func (app *Mocha) MustMock(builders ...Builder) *Scoped {
-	scoped, err := app.Mock(builders...)
-	if err != nil {
-		panic(err)
-	}
-
-	return scoped
-}
-
-// Parameters returns Params instance associated with this application.
-func (app *Mocha) Parameters() Params {
-	return app.params
-}
-
 // URL returns the base URL string for the mock server.
 // If parameter paths is provided, it will be concatenated with the server base URL.
-func (app *Mocha) URL(paths ...string) string {
+func (app *HTTPMockApp) URL(paths ...string) string {
 	if len(paths) == 0 {
 		return app.server.Info().URL
 	}
@@ -331,41 +264,46 @@ func (app *Mocha) URL(paths ...string) string {
 }
 
 // Context returns the server internal context.Context.
-func (app *Mocha) Context() context.Context {
+func (app *HTTPMockApp) Context() context.Context {
 	return app.ctx
 }
 
+// Parameters returns Params instance associated with this application.
+func (app *HTTPMockApp) Parameters() coretype.Params {
+	return app.params
+}
+
 // Config returns a copy of the mock server Config.
-func (app *Mocha) Config() *Config {
+func (app *HTTPMockApp) Config() *Config {
 	return app.config
 }
 
 // Server returns the Server implementation being used by this application.
-func (app *Mocha) Server() Server {
+func (app *HTTPMockApp) Server() Server {
 	return app.server
 }
 
 // TemplateEngine returns the TemplateEngine associated with this instance.
-func (app *Mocha) TemplateEngine() TemplateEngine {
+func (app *HTTPMockApp) TemplateEngine() coretype.TemplateEngine {
 	return app.templateEngine
 }
 
 // Logger returns the zerolog.Logger of this application.
-func (app *Mocha) Logger() *zerolog.Logger {
+func (app *HTTPMockApp) Logger() *zerolog.Logger {
 	return app.logger
 }
 
 // Reload reloads mocks from external sources, like the filesystem.
 // Coded mocks will be kept.
-func (app *Mocha) Reload() error {
-	app.storage.DeleteExternal()
+func (app *HTTPMockApp) Reload() error {
+	// app.storage.DeleteExternal()
 	return app.load()
 }
 
 // MustReload reloads mocks from external sources, like the filesystem.
 // Coded mocks will be kept.
 // It panics if any error occurs.
-func (app *Mocha) MustReload() {
+func (app *HTTPMockApp) MustReload() {
 	err := app.Reload()
 
 	if err != nil {
@@ -374,7 +312,7 @@ func (app *Mocha) MustReload() {
 }
 
 // Close closes the mock server.
-func (app *Mocha) Close() {
+func (app *HTTPMockApp) Close() {
 	app.cancel()
 
 	err := app.server.Close()
@@ -387,7 +325,7 @@ func (app *Mocha) Close() {
 	}
 }
 
-func (app *Mocha) CloseNow() {
+func (app *HTTPMockApp) CloseNow() {
 	app.cancel()
 
 	err := app.server.CloseNow()
@@ -402,60 +340,16 @@ func (app *Mocha) CloseNow() {
 
 // CloseWithT register Server Close function on TestingT Cleanup().
 // Useful to close the server when tests finish.
-func (app *Mocha) CloseWithT(t TestingT) *Mocha {
+func (app *HTTPMockApp) CloseWithT(t coretype.TestingT) *HTTPMockApp {
 	t.Cleanup(func() { app.Close() })
 	return app
 }
 
-// Hits returns the total matched request hits.
-func (app *Mocha) Hits() int {
-	app.rwMutex.RLock()
-	defer app.rwMutex.RUnlock()
-
-	hits := 0
-
-	for _, s := range app.scopes {
-		hits += s.Hits()
-	}
-
-	return hits
-}
-
-// Enable enables all mocks.
-func (app *Mocha) Enable() {
-	app.rwMutex.Lock()
-	defer app.rwMutex.Unlock()
-
-	for _, scoped := range app.scopes {
-		scoped.Enable()
-	}
-}
-
-// Disable disables all mocks.
-func (app *Mocha) Disable() {
-	app.rwMutex.Lock()
-	defer app.rwMutex.Unlock()
-
-	for _, scoped := range app.scopes {
-		scoped.Disable()
-	}
-}
-
-// Clean removes all scoped mocks.
-func (app *Mocha) Clean() {
-	app.rwMutex.Lock()
-	defer app.rwMutex.Unlock()
-
-	for _, s := range app.scopes {
-		s.Clean()
-	}
-}
-
-func (app *Mocha) StopRecording() {
+func (app *HTTPMockApp) StopRecording() {
 	app.rec.stop()
 }
 
-func (app *Mocha) RegisterExtension(extension Extension) error {
+func (app *HTTPMockApp) RegisterExtension(extension Extension) error {
 	app.rwMutex.Lock()
 	defer app.rwMutex.Unlock()
 
@@ -473,17 +367,17 @@ func (app *Mocha) RegisterExtension(extension Extension) error {
 }
 
 // SetData sets the data to be used as template data during mock configurations parsing.
-func (app *Mocha) SetData(data map[string]any) {
+func (app *HTTPMockApp) SetData(data map[string]any) {
 	app.data = data
 }
 
 // Data returns the template data associated to this instance.
-func (app *Mocha) Data() map[string]any {
+func (app *HTTPMockApp) Data() map[string]any {
 	return app.data
 }
 
 // PrintConfig prints key configurations using the given io.Writer.
-func (app *Mocha) PrintConfig(w io.Writer) error {
+func (app *HTTPMockApp) PrintConfig(w io.Writer) error {
 	s := strings.Builder{}
 
 	if app.Name() != "" {
@@ -527,171 +421,76 @@ func (app *Mocha) PrintConfig(w io.Writer) error {
 // --
 
 // AnyMethod creates a new empty Builder.
-func (app *Mocha) AnyMethod() *MockBuilder {
-	b := &MockBuilder{mock: newMock()}
+func (app *HTTPMockApp) AnyMethod() *HTTPMockBuilder {
+	b := &HTTPMockBuilder{mock: newMock()}
 	return b.MethodMatches(matcher.Anything())
 }
 
 // Get initializes a mock for GET method.
-func (app *Mocha) Get(m matcher.Matcher) *MockBuilder {
+func (app *HTTPMockApp) Get(m matcher.Matcher) *HTTPMockBuilder {
 	return Request().URL(m).Method(http.MethodGet)
 }
 
 // Getf initializes a mock for GET method.
-func (app *Mocha) Getf(path string, a ...any) *MockBuilder {
+func (app *HTTPMockApp) Getf(path string, a ...any) *HTTPMockBuilder {
 	return Request().URLPathf(path, a...).Method(http.MethodGet)
 }
 
 // Post initializes a mock for Post method.
-func (app *Mocha) Post(m matcher.Matcher) *MockBuilder {
+func (app *HTTPMockApp) Post(m matcher.Matcher) *HTTPMockBuilder {
 	return Request().URL(m).Method(http.MethodPost)
 }
 
 // Postf initializes a mock for Post method.
-func (app *Mocha) Postf(path string, a ...any) *MockBuilder {
+func (app *HTTPMockApp) Postf(path string, a ...any) *HTTPMockBuilder {
 	return Request().URLPathf(path, a...).Method(http.MethodPost)
 }
 
 // Put inits a mock for Put method.
-func (app *Mocha) Put(m matcher.Matcher) *MockBuilder {
+func (app *HTTPMockApp) Put(m matcher.Matcher) *HTTPMockBuilder {
 	return Request().URL(m).Method(http.MethodPut)
 }
 
 // Putf initializes a mock for Put method.
-func (app *Mocha) Putf(path string, a ...any) *MockBuilder {
+func (app *HTTPMockApp) Putf(path string, a ...any) *HTTPMockBuilder {
 	return Request().URLPathf(path, a...).Method(http.MethodPut)
 }
 
 // Patch initializes a mock for Patch method.
-func (app *Mocha) Patch(u matcher.Matcher) *MockBuilder {
+func (app *HTTPMockApp) Patch(u matcher.Matcher) *HTTPMockBuilder {
 	return Request().URL(u).Method(http.MethodPatch)
 }
 
 // Patchf initializes a mock for Patch method.
-func (app *Mocha) Patchf(path string, a ...any) *MockBuilder {
+func (app *HTTPMockApp) Patchf(path string, a ...any) *HTTPMockBuilder {
 	return Request().URLPathf(path, a...).Method(http.MethodPatch)
 }
 
 // Delete initializes a mock for Delete method.
-func (app *Mocha) Delete(m matcher.Matcher) *MockBuilder {
+func (app *HTTPMockApp) Delete(m matcher.Matcher) *HTTPMockBuilder {
 	return Request().URL(m).Method(http.MethodDelete)
 }
 
 // Deletef initializes a mock for Delete method.
-func (app *Mocha) Deletef(path string, a ...any) *MockBuilder {
+func (app *HTTPMockApp) Deletef(path string, a ...any) *HTTPMockBuilder {
 	return Request().URLPathf(path, a...).Method(http.MethodDelete)
 }
 
 // Head initializes a mock for Head method.
-func (app *Mocha) Head(m matcher.Matcher) *MockBuilder {
+func (app *HTTPMockApp) Head(m matcher.Matcher) *HTTPMockBuilder {
 	return Request().URL(m).Method(http.MethodHead)
 }
 
 // Headf initializes a mock for Head method.
-func (app *Mocha) Headf(path string, a ...any) *MockBuilder {
+func (app *HTTPMockApp) Headf(path string, a ...any) *HTTPMockBuilder {
 	return Request().URLPathf(path, a...).Method(http.MethodHead)
-}
-
-// --
-// Assertions
-// --
-
-// AssertCalled asserts that all mocks associated with this instance were called at least once.
-func (app *Mocha) AssertCalled(t TestingT) bool {
-	t.Helper()
-
-	result := true
-	size := 0
-	buf := strings.Builder{}
-
-	for i, s := range app.scopes {
-		if s.IsPending() {
-			buf.WriteString(fmt.Sprintf("   Scope %d\n", i))
-			pending := s.GetPending()
-			size += len(pending)
-
-			for _, p := range pending {
-				buf.WriteString("    Mock [")
-				buf.WriteString(p.ID)
-				buf.WriteString("] ")
-				buf.WriteString(p.Name)
-				buf.WriteString("\n")
-			}
-
-			result = false
-		}
-	}
-
-	if !result {
-		t.Errorf("\nServer: %s\n  There are still %d mocks that were not called.\n  Pending:\n%s",
-			app.Name(),
-			size,
-			buf.String(),
-		)
-	}
-
-	return result
-}
-
-// AssertNotCalled asserts that all mocks associated with this instance were called at least once.
-func (app *Mocha) AssertNotCalled(t TestingT) bool {
-	t.Helper()
-
-	result := true
-	size := 0
-	buf := strings.Builder{}
-
-	for i, s := range app.scopes {
-		if !s.IsPending() {
-			buf.WriteString(fmt.Sprintf("   Scope %d\n", i))
-			called := s.GetCalled()
-			size += len(called)
-
-			for _, p := range called {
-				buf.WriteString("    Mock [")
-				buf.WriteString(p.ID)
-				buf.WriteString("] ")
-				buf.WriteString(p.Name)
-				buf.WriteString("\n")
-			}
-
-			result = false
-		}
-	}
-
-	if !result {
-		t.Errorf(
-			"\nServer: %s\n  %d Mock(s) were called at least once when none should be.\n  Called:\n%s",
-			app.Name(),
-			size,
-			buf.String(),
-		)
-	}
-
-	return result
-}
-
-// AssertNumberOfCalls asserts that the sum of matched request hits
-// is equal to the given expected value.
-func (app *Mocha) AssertNumberOfCalls(t TestingT, expected int) bool {
-	t.Helper()
-
-	hits := app.Hits()
-
-	if hits == expected {
-		return true
-	}
-
-	t.Errorf("\nServer: %s\n Expected %d matched request hits.\n Got %d", app.Name(), expected, hits)
-
-	return false
 }
 
 // --
 // Internals
 // --
 
-func (app *Mocha) onStart() (err error) {
+func (app *HTTPMockApp) onStart() (err error) {
 	app.startOnce.Do(func() { err = app.load() })
 
 	if err != nil {
@@ -705,7 +504,7 @@ func (app *Mocha) onStart() (err error) {
 	return nil
 }
 
-func (app *Mocha) load() error {
+func (app *HTTPMockApp) load() error {
 	for _, loader := range app.loaders {
 		err := loader.Load(app)
 		if err != nil {
@@ -716,10 +515,9 @@ func (app *Mocha) load() error {
 	return nil
 }
 
-func (app *Mocha) setLog(conf *Config) {
+func (app *HTTPMockApp) getLog(conf *Config) *zerolog.Logger {
 	if conf.Logger != nil {
-		app.logger = conf.Logger
-		return
+		return conf.Logger
 	}
 
 	var output io.Writer
@@ -735,5 +533,5 @@ func (app *Mocha) setLog(conf *Config) {
 	}
 
 	log := c.Logger()
-	app.logger = &log
+	return &log
 }

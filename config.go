@@ -12,6 +12,8 @@ import (
 	"text/template"
 
 	"github.com/rs/zerolog"
+
+	"github.com/vitorsalgado/mocha/v3/coretype"
 )
 
 type LogVerbosity int8
@@ -59,7 +61,7 @@ type Configurer interface {
 	Apply(conf *Config) error
 }
 
-// Config holds Mocha mock server configurations.
+// Config holds HTTPMockApp mock server configurations.
 type Config struct {
 	// Name sets a name to the mock server.
 	// Adds more context for when you have more mocks APIs configured.
@@ -76,7 +78,7 @@ type Config struct {
 	RootDir string
 
 	// TLSConfig defines custom TLS configurations.
-	// This is only used when server is started using Mocha.StartTLS or Mocha.MustStartTLS.
+	// This is only used when server is started using HTTPMockApp.StartTLS or HTTPMockApp.MustStartTLS.
 	// If TLSConfig is set, TLSCertificateFs and TLSKeyFs options will be ignored.
 	TLSConfig *tls.Config
 
@@ -111,7 +113,7 @@ type Config struct {
 	HandlerDecorator func(handler http.Handler) http.Handler
 
 	// Parameters sets a custom reply parameters store.
-	Parameters Params
+	Parameters coretype.Params
 
 	// MockFileSearchPatterns configures glob patterns to load mock from the file system.
 	MockFileSearchPatterns []string
@@ -130,7 +132,7 @@ type Config struct {
 	MockFileHandlers []MockFileHandler
 
 	// TemplateEngine sets a custom template engine.
-	TemplateEngine TemplateEngine
+	TemplateEngine coretype.TemplateEngine
 
 	// TemplateFunctions sets custom template functions for the built-in template engine.
 	TemplateFunctions template.FuncMap
@@ -269,7 +271,7 @@ func defaultConfig() *Config {
 }
 
 // Setup initialize a new ConfigBuilder.
-// Entrypoint to start a new custom configuration for Mocha mock servers.
+// Entrypoint to start a new custom configuration for HTTPMockApp mock servers.
 func Setup() *ConfigBuilder {
 	return &ConfigBuilder{conf: defaultConfig()}
 }
@@ -397,7 +399,7 @@ func (cb *ConfigBuilder) RedactHeader(names ...string) *ConfigBuilder {
 }
 
 // Parameters sets a custom reply parameters store.
-func (cb *ConfigBuilder) Parameters(params Params) *ConfigBuilder {
+func (cb *ConfigBuilder) Parameters(params coretype.Params) *ConfigBuilder {
 	cb.conf.Parameters = params
 	return cb
 }
@@ -451,7 +453,7 @@ func (cb *ConfigBuilder) MockFileHandlers(handlers ...MockFileHandler) *ConfigBu
 
 // TemplateEngine sets the TemplateEngine to be used by all components.
 // Defaults to a built-in implementation based on Go Templates.
-func (cb *ConfigBuilder) TemplateEngine(te TemplateEngine) *ConfigBuilder {
+func (cb *ConfigBuilder) TemplateEngine(te coretype.TemplateEngine) *ConfigBuilder {
 	cb.conf.TemplateEngine = te
 	return cb
 }
@@ -473,7 +475,7 @@ func (cb *ConfigBuilder) HTTPClient(f func() *http.Client) *ConfigBuilder {
 }
 
 // TLSConfig defines custom TLS configurations.
-// This is only used when server is started using Mocha.StartTLS or Mocha.MustStartTLS.
+// This is only used when server is started using HTTPMockApp.StartTLS or Mocha.MustStartTLS.
 // If TLSConfig is set, TLSCertificateFs and TLSKeyFs options will be ignored.
 func (cb *ConfigBuilder) TLSConfig(c *tls.Config) *ConfigBuilder {
 	cb.conf.TLSConfig = c
@@ -481,7 +483,7 @@ func (cb *ConfigBuilder) TLSConfig(c *tls.Config) *ConfigBuilder {
 }
 
 // TLSCertKeyPair sets a custom public/private key pair.
-// If none is provided, default values will be used when starting the server with Mocha.StartTLS or Mocha.MustStartTLS.
+// If none is provided, default values will be used when starting the server with HTTPMockApp.StartTLS or HTTPMockApp.MustStartTLS.
 // If TLSConfig is set, this option will be ignored.
 func (cb *ConfigBuilder) TLSCertKeyPair(certFile, keyFile string) *ConfigBuilder {
 	cb.tlsCertificateFs = certFile

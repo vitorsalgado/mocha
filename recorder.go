@@ -27,7 +27,7 @@ var _ RecordConfigurer = (*RecordConfig)(nil)
 var _regexNoSpecialCharacters = regexp.MustCompile("[^a-z0-9]")
 
 type recorder struct {
-	app    *Mocha
+	app    *HTTPMockApp
 	active bool
 	config *RecordConfig
 	in     chan *recArgs
@@ -133,7 +133,7 @@ type recResponse struct {
 	body   []byte
 }
 
-func newRecorder(app *Mocha, config *RecordConfig) *recorder {
+func newRecorder(app *HTTPMockApp, config *RecordConfig) *recorder {
 	return &recorder{app: app, config: config}
 }
 

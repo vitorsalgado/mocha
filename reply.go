@@ -11,6 +11,7 @@ import (
 	"net/textproto"
 	"os"
 
+	"github.com/vitorsalgado/mocha/v3/coretype"
 	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
@@ -22,7 +23,7 @@ type Reply interface {
 }
 
 type replyOnBeforeBuild interface {
-	beforeBuild(app *Mocha) error
+	beforeBuild(app *HTTPMockApp) error
 }
 
 var _ Reply = (*StdReply)(nil)
@@ -33,9 +34,9 @@ type StdReply struct {
 	bodyType            bodyType
 	bodyEncoding        bodyEncoding
 	bodyFilename        string
-	bodyTeRender        TemplateRenderer
-	bodyFnTeRender      TemplateRenderer
-	headerTeRender      TemplateRenderer
+	bodyTeRender        coretype.TemplateRenderer
+	bodyFnTeRender      coretype.TemplateRenderer
+	headerTeRender      coretype.TemplateRenderer
 	teType              teType
 	teHeader            http.Header
 	bodyTemplateContent string
@@ -272,7 +273,7 @@ func (rep *StdReply) Gzip() *StdReply {
 	return rep
 }
 
-func (rep *StdReply) beforeBuild(app *Mocha) error {
+func (rep *StdReply) beforeBuild(app *HTTPMockApp) error {
 	if rep.err != nil {
 		return rep.err
 	}

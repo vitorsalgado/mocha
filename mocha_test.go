@@ -14,6 +14,7 @@ import (
 	"go.uber.org/goleak"
 
 	. "github.com/vitorsalgado/mocha/v3/matcher"
+	"github.com/vitorsalgado/mocha/v3/test/testmock"
 )
 
 func TestMain(m *testing.M) {
@@ -111,7 +112,7 @@ func TestMochaAssertions(t *testing.T) {
 
 	defer m.Close()
 
-	ft := newFakeT()
+	ft := testmock.NewFakeT()
 
 	scoped := m.MustMock(
 		Get(URLPath("/test-ok")).

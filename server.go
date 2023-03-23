@@ -20,7 +20,7 @@ type ServerInfo struct {
 type Server interface {
 	// Setup configures the HTTP mock.
 	// It is the first method called during initialization.
-	Setup(*Mocha, http.Handler) error
+	Setup(*HTTPMockApp, http.Handler) error
 
 	// Start starts a server.
 	Start() error
@@ -43,7 +43,7 @@ type Server interface {
 }
 
 type httpTestServer struct {
-	app       *Mocha
+	app       *HTTPMockApp
 	handler   http.Handler
 	server    *httptest.Server
 	info      *ServerInfo
@@ -55,7 +55,7 @@ func newServer() Server {
 	return &httpTestServer{info: &ServerInfo{}}
 }
 
-func (s *httpTestServer) Setup(app *Mocha, handler http.Handler) error {
+func (s *httpTestServer) Setup(app *HTTPMockApp, handler http.Handler) error {
 	s.app = app
 	s.handler = handler
 	s.server = httptest.NewUnstartedServer(handler)

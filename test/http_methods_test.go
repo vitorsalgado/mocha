@@ -23,7 +23,7 @@ func TestHTTPMethods(t *testing.T) {
 	testCases := []struct {
 		method string
 		path   string
-		mock   *MockBuilder
+		mock   *HTTPMockBuilder
 		status int
 	}{
 		{http.MethodGet, path1, Getf(path1), 200},

@@ -37,7 +37,7 @@ func (rep *RandomReply) Add(reply ...Reply) *RandomReply {
 	return rep
 }
 
-func (rep *RandomReply) beforeBuild(_ *Mocha) error {
+func (rep *RandomReply) beforeBuild(_ *HTTPMockApp) error {
 	size := len(rep.replies)
 	if size == 0 {
 		return errors.New("reply_random: you need to set at least one response when using random reply")

@@ -1,4 +1,4 @@
-package mocha
+package coretype_test
 
 import (
 	"fmt"
@@ -7,27 +7,30 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/vitorsalgado/mocha/v3"
+	"github.com/vitorsalgado/mocha/v3/coretype"
 	"github.com/vitorsalgado/mocha/v3/matcher"
+	"github.com/vitorsalgado/mocha/v3/test/testmock"
 )
 
 func TestScoped(t *testing.T) {
-	m1 := newMock()
-	m2 := newMock()
-	m3 := newMock()
+	m1 := coretype.NewMock[any]()
+	m2 := coretype.NewMock[any]()
+	m3 := coretype.NewMock[any]()
 
-	repo := newStore()
+	repo := coretype.NewStore[coretype.Mock]()
 	repo.Save(m1)
 	repo.Save(m2)
 	repo.Save(m3)
 
-	scoped := newScope(repo, []string{m1.ID, m2.ID, m3.ID})
+	scoped := coretype.NewScope(repo, []string{m1.GetID(), m2.GetID(), m3.GetID()})
 
 	assert.Equal(t, 3, len(scoped.GetAll()))
-	assert.Equal(t, m1, scoped.Get(m1.ID))
+	assert.Equal(t, m1, scoped.Get(m1.GetID()))
 	assert.Nil(t, scoped.Get("unknown"))
 
 	t.Run("should not return done when there is still pending mocks", func(t *testing.T) {
-		ft := newFakeT()
+		ft := testmock.NewFakeT()
 
 		assert.False(t, scoped.HasBeenCalled())
 		assert.Equal(t, 3, len(scoped.GetPending()))
@@ -38,7 +41,7 @@ func TestScoped(t *testing.T) {
 	})
 
 	t.Run("should return done when all mocks were called", func(t *testing.T) {
-		ft := newFakeT()
+		ft := testmock.NewFakeT()
 
 		m1.Inc()
 
@@ -62,7 +65,7 @@ func TestScoped(t *testing.T) {
 		scoped.AssertNumberOfCalls(t, 3)
 	})
 
-	t.Run("should clean all store associated with newScope when calling .Clean()", func(t *testing.T) {
+	t.Run("should clean all store associated with NewScope when calling .Clean()", func(t *testing.T) {
 		scoped.Clean()
 		assert.Equal(t, 0, len(scoped.GetPending()))
 		assert.True(t, scoped.AssertNumberOfCalls(t, 0))
@@ -70,15 +73,15 @@ func TestScoped(t *testing.T) {
 	})
 
 	t.Run("should only consider enabled store", func(t *testing.T) {
-		m := NewAPI()
+		m := mocha.NewAPI()
 		m.MustStart()
 
 		defer m.Close()
 
-		s1 := m.MustMock(Get(matcher.URLPath("/test1")).Reply(OK()))
+		s1 := m.MustMock(mocha.Get(matcher.URLPath("/test1")).Reply(mocha.OK()))
 		s2 := m.MustMock(
-			Get(matcher.URLPath("/test2")).Reply(OK()),
-			Get(matcher.URLPath("/test3")).Reply(OK()))
+			mocha.Get(matcher.URLPath("/test2")).Reply(mocha.OK()),
+			mocha.Get(matcher.URLPath("/test3")).Reply(mocha.OK()))
 
 		t.Run("initial state (enabled)", func(t *testing.T) {
 			res, err := http.Get(fmt.Sprintf("%s/test1", m.URL()))
@@ -106,7 +109,7 @@ func TestScoped(t *testing.T) {
 			res, err := http.Get(fmt.Sprintf("%s/test1", m.URL()))
 
 			assert.NoError(t, err)
-			assert.Equal(t, StatusNoMatch, res.StatusCode)
+			assert.Equal(t, mocha.StatusNoMatch, res.StatusCode)
 
 			res, err = http.Get(fmt.Sprintf("%s/test2", m.URL()))
 
@@ -140,31 +143,31 @@ func TestScoped(t *testing.T) {
 			res, err := http.Get(fmt.Sprintf("%s/test2", m.URL()))
 
 			assert.NoError(t, err)
-			assert.Equal(t, StatusNoMatch, res.StatusCode)
+			assert.Equal(t, mocha.StatusNoMatch, res.StatusCode)
 
 			res, err = http.Get(fmt.Sprintf("%s/test3", m.URL()))
 
 			assert.NoError(t, err)
-			assert.Equal(t, StatusNoMatch, res.StatusCode)
+			assert.Equal(t, mocha.StatusNoMatch, res.StatusCode)
 		})
 	})
 }
 
 func TestScopedDelete(t *testing.T) {
-	m1 := newMock()
-	m2 := newMock()
-	m3 := newMock()
+	m1 := coretype.NewMock[any]()
+	m2 := coretype.NewMock[any]()
+	m3 := coretype.NewMock[any]()
 
-	repo := newStore()
+	repo := coretype.NewStore[coretype.Mock]()
 	repo.Save(m1)
 	repo.Save(m2)
 	repo.Save(m3)
 
-	scoped := newScope(repo, []string{m1.ID, m2.ID, m3.ID})
+	scoped := coretype.NewScope(repo, []string{m1.GetID(), m2.GetID(), m3.GetID()})
 
-	assert.True(t, scoped.Delete(m1.ID))
+	assert.True(t, scoped.Delete(m1.GetID()))
 	assert.False(t, scoped.Delete("unknown"))
 
-	assert.Nil(t, scoped.Get(m1.ID))
-	assert.Nil(t, repo.Get(m1.ID))
+	assert.Nil(t, scoped.Get(m1.GetID()))
+	assert.Nil(t, repo.Get(m1.GetID()))
 }

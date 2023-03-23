@@ -6,30 +6,14 @@ import (
 	"net/http"
 	"net/url"
 	"text/template"
+
+	"github.com/vitorsalgado/mocha/v3/coretype"
 )
 
 var (
-	_ TemplateEngine   = (*builtInGoTemplate)(nil)
-	_ TemplateRenderer = (*builtInGoTemplateRender)(nil)
+	_ coretype.TemplateEngine   = (*builtInGoTemplate)(nil)
+	_ coretype.TemplateRenderer = (*builtInGoTemplateRender)(nil)
 )
-
-// TemplateEngine initializes templates and creates TemplateRenderer instances.
-type TemplateEngine interface {
-	// Load is executed on server initialization.
-	Load() error
-
-	// Parse pre-compiles the source template and returns a renderer for it.
-	// It is usually run once during mock setup.
-	Parse(string) (TemplateRenderer, error)
-}
-
-// TemplateRenderer defines a renderer for templates.
-// Each template will have a renderer associated to it.
-type TemplateRenderer interface {
-	// Render renders the previously parsed template to the given io.Writer.
-	// The second parameter is template data and can be nil.
-	Render(io.Writer, any) error
-}
 
 // templateData is the data used in templates during rendering.
 type templateData struct {
@@ -39,10 +23,10 @@ type templateData struct {
 }
 
 type templateAppWrapper struct {
-	app *Mocha
+	app *HTTPMockApp
 }
 
-func (t *templateAppWrapper) Parameters() Params {
+func (t *templateAppWrapper) Parameters() coretype.Params {
 	return t.app.Parameters()
 }
 
@@ -93,7 +77,7 @@ func (gt *builtInGoTemplate) FuncMap(fn template.FuncMap) *builtInGoTemplate {
 	return gt
 }
 
-func (gt *builtInGoTemplate) Parse(s string) (TemplateRenderer, error) {
+func (gt *builtInGoTemplate) Parse(s string) (coretype.TemplateRenderer, error) {
 	t, err := template.New("").Funcs(gt.funcMap).Parse(s)
 	if err != nil {
 		return nil, err
@@ -106,7 +90,7 @@ type builtInGoTemplateRender struct {
 	template *template.Template
 }
 
-func newGoTemplateRender(template *template.Template) TemplateRenderer {
+func newGoTemplateRender(template *template.Template) coretype.TemplateRenderer {
 	return &builtInGoTemplateRender{template: template}
 }
 

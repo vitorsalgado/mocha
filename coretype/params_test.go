@@ -1,4 +1,4 @@
-package mocha
+package coretype
 
 import (
 	"strconv"
@@ -10,7 +10,7 @@ import (
 )
 
 func TestParameters(t *testing.T) {
-	params := newInMemoryParameters()
+	params := NewInMemoryParameters()
 	key1 := "k1"
 	val1 := "test"
 	key2 := "k2"
@@ -55,7 +55,7 @@ func TestParameters(t *testing.T) {
 }
 
 func TestParametersConcurrency(t *testing.T) {
-	params := newInMemoryParameters()
+	params := NewInMemoryParameters()
 	jobs := 10
 	wg := sync.WaitGroup{}
 

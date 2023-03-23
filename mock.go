@@ -1,16 +1,15 @@
 package mocha
 
 import (
-	"fmt"
 	"net/http"
 	"net/url"
-	"sync"
 	"time"
 
-	"github.com/google/uuid"
-
+	"github.com/vitorsalgado/mocha/v3/coretype"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 )
+
+var _ coretype.Mock = (*HTTPMock)(nil)
 
 // RequestValues groups HTTP request data, including the parsed body.
 // It is used by several components during the request matching phase.
@@ -36,10 +35,10 @@ type RequestValues struct {
 	ParsedBody any
 
 	// App exposes application instance associated with the incoming HTTP request.
-	App *Mocha
+	App *HTTPMockApp
 
 	// Mock is the matched Mock for the current HTTP request.
-	Mock *Mock
+	Mock *HTTPMock
 }
 
 // CallbackInput represents the arguments that will be passed to every Callback implementation
@@ -54,10 +53,10 @@ type CallbackInput struct {
 	ParsedBody any
 
 	// App exposes the application instance associated with the incoming HTTP request.
-	App *Mocha
+	App *HTTPMockApp
 
 	// Mock is the matched Mock for the current HTTP request.
-	Mock *Mock
+	Mock *HTTPMock
 
 	// Stub is the HTTP response Stub served.
 	Stub *Stub
@@ -78,10 +77,10 @@ type PostActionInput struct {
 	ParsedBody any
 
 	// App exposes the application instance associated with the incoming HTTP request.
-	App *Mocha
+	App *HTTPMockApp
 
 	// Mock is the matched Mock for the current HTTP request.
-	Mock *Mock
+	Mock *HTTPMock
 
 	// Stub is the HTTP response Stub served.
 	Stub *Stub
@@ -110,7 +109,7 @@ type Mapper func(requestValues *RequestValues, res *Stub) error
 type MockFileHandler interface {
 	// Handle handles a Mock configuration file.
 	//  Parameter fields
-	Handle(fields map[string]any, b *MockBuilder) error
+	Handle(fields map[string]any, b *HTTPMockBuilder) error
 }
 
 // Extension describes a component that can be registered within the mock server and used lately.
@@ -120,10 +119,10 @@ type Extension interface {
 	UniqueName() string
 }
 
-// valueSelector defines a function that will be used to extract the value that will be passed to the associated matcher.
-type valueSelector func(r *valueSelectorInput) any
+// HTTPValueSelector defines a function that will be used to extract the value that will be passed to the associated matcher.
+type HTTPValueSelector func(r *HTTPValueSelectorInput) any
 
-type valueSelectorInput struct {
+type HTTPValueSelectorInput struct {
 	// RawRequest is the original incoming http.Request.
 	RawRequest *http.Request
 
@@ -138,123 +137,17 @@ type valueSelectorInput struct {
 	ParsedBody any
 }
 
-// expectation holds metadata related to one http.Request Matcher.
-type expectation struct {
-	// Target is an optional metadata that describes the target of the matcher.
-	// Example: the target could have the "header", meaning that the matcher will be applied to one request misc.Header
-	Target matchTarget
-
-	Key string
-
-	// Matcher associated with this expectation.
-	Matcher matcher.Matcher
-
-	// ValueSelector will extract the http.Request or a specific field of it and feed it to the associated Matcher.
-	ValueSelector valueSelector
-
-	// Weight of this expectation.
-	Weight weight
-}
-
-// matchResult holds information related to a matching operation.
-type matchResult struct {
-	// Details is the list of non-matches messages.
-	Details []mismatchDetail
-
-	// Weight for the matcher. It helps determine the closest match.
-	Weight int
-
-	// Pass indicates whether it matched or not.
-	Pass bool
-}
-
-// mismatchDetail gives more context about why a matcher did not match.
-type mismatchDetail struct {
-	MatchersName string
-	Target       matchTarget
-	Key          string
-	Result       *matcher.Result
-	Err          error
-}
+type HTTPExpectation = coretype.Expectation[*HTTPValueSelectorInput]
 
 // mockFileData represents the data that is passed to Mock files during template parsing.
 type mockFileData struct {
 	App *templateAppWrapper
 }
 
-// weight helps to detect the closest mock match.
-type weight int8
-
-// Enum of weight.
-const (
-	_weightNone weight = iota
-	_weightLow  weight = iota * 2
-	_weightVeryLow
-	_weightRegular
-	_weightHigh
-)
-
-type matchTarget int8
-
-// matchTarget constants to help debug unmatched requests.
-const (
-	_targetRequest matchTarget = iota
-	_targetScheme
-	_targetMethod
-	_targetURL
-	_targetHeader
-	_targetQuery
-	_targetBody
-	_targetForm
-)
-
-func (mt matchTarget) String() string {
-	switch mt {
-	case _targetRequest:
-		return "request"
-	case _targetScheme:
-		return "scheme"
-	case _targetMethod:
-		return "method"
-	case _targetURL:
-		return "url"
-	case _targetHeader:
-		return "header"
-	case _targetQuery:
-		return "query"
-	case _targetBody:
-		return "body"
-	case _targetForm:
-		return "form"
-	default:
-		return ""
-	}
-}
-
-// Builder describes a Mock builder.
-type Builder interface {
-	Build(app *Mocha) (*Mock, error)
-}
-
-// Mock holds metadata and expectations to be matched against HTTP requests in order to serve mocked responses.
+// HTTPMock holds metadata and expectations to be matched against HTTP requests in order to serve mocked responses.
 // This is the core entity of this project, and most features work based on it.
-type Mock struct {
-	// ID is the unique identifier of a Mock
-	ID string
-
-	// Name describes the mock. Useful for debugging.
-	Name string
-
-	// Priority sets the priority of a Mock.
-	Priority int
-
-	// Reply is the responder that will be used to serve the HTTP response stub, once matched against an
-	// HTTP request.
-	Reply Reply
-
-	// Enabled indicates if the Mock is enabled or disabled.
-	// Only enabled mocks are considered during the request matching phase.
-	Enabled bool
+type HTTPMock struct {
+	*coretype.BaseMock[Reply]
 
 	// Callbacks holds a Callback list to be executed after the Mock was matched and served.
 	Callbacks []Callback
@@ -265,138 +158,34 @@ type Mock struct {
 	// it will contain the filename.
 	Source string
 
-	// Delay sets the duration to delay serving the mocked response.
-	Delay time.Duration
-
 	// Mappers stores response mappers associated with this Mock.
 	Mappers []Mapper
 
 	after        []matcher.OnAfterMockServed
-	expectations []*expectation
-	mu           sync.RWMutex
-	hits         int
+	expectations []*coretype.Expectation[*HTTPValueSelectorInput]
 }
 
 // newMock returns a new Mock with default values set.
-func newMock() *Mock {
-	return &Mock{
-		ID:           uuid.New().String(),
-		Enabled:      true,
+func newMock() *HTTPMock {
+	return &HTTPMock{
+		BaseMock:     coretype.NewMock[Reply](),
 		Callbacks:    make([]Callback, 0),
 		PostActions:  make([]*PostActionDef, 0),
-		expectations: make([]*expectation, 0),
+		Mappers:      make([]Mapper, 0),
+		expectations: make([]*coretype.Expectation[*HTTPValueSelectorInput], 0),
 	}
 }
 
-// Inc increment one Mock call.
-func (m *Mock) Inc() {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.hits++
+func (m *HTTPMock) GetExpectations() []*coretype.Expectation[*HTTPValueSelectorInput] {
+	return m.expectations
 }
 
-// Dec reduce one Mock call.
-func (m *Mock) Dec() {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.hits--
-}
-
-// Hits returns the amount of time this Mock was matched to a request and served.
-func (m *Mock) Hits() int {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	return m.hits
-}
-
-// HasBeenCalled checks if the Mock was called at least once.
-func (m *Mock) HasBeenCalled() bool {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	return m.hits > 0
-}
-
-// Enable enables the Mock.
-// The Mock will be eligible to be matched.
-func (m *Mock) Enable() {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.Enabled = true
-}
-
-// Disable disables the Mock.
-// The Mock will not be eligible to be matched.
-func (m *Mock) Disable() {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.Enabled = false
-}
-
-// Build allows users to use the Mock itself as a MockBuilder.
-func (m *Mock) Build() (*Mock, error) {
+// Build allows users to use the Mock itself as a HTTPMockBuilder.
+func (m *HTTPMock) Build() (*HTTPMock, error) {
 	return m, nil
 }
 
-// matchExpectations checks if the current Mock matches against a list of expectations.
-// Will iterate through all expectations even if it doesn't match early.
-func (m *Mock) matchExpectations(ri *valueSelectorInput, expectations []*expectation) *matchResult {
-	w := 0
-	ok := true
-	details := make([]mismatchDetail, 0)
-
-	for _, exp := range expectations {
-		var val any
-		if exp.ValueSelector != nil {
-			val = exp.ValueSelector(ri)
-		}
-
-		result, err := m.matchExpectation(exp, val)
-
-		if err != nil {
-			ok = false
-			details = append(details, mismatchDetail{
-				MatchersName: exp.Matcher.Name(),
-				Target:       exp.Target,
-				Key:          exp.Key,
-				Err:          err,
-			})
-
-			continue
-		}
-
-		if result.Pass {
-			w += int(exp.Weight)
-		} else {
-			ok = false
-			details = append(details, mismatchDetail{
-				MatchersName: exp.Matcher.Name(),
-				Target:       exp.Target,
-				Key:          exp.Key,
-				Result:       result,
-			})
-		}
-	}
-
-	return &matchResult{Pass: ok, Weight: w, Details: details}
-}
-
-func (m *Mock) matchExpectation(e *expectation, value any) (result *matcher.Result, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("panic: matcher=%s. %v", e.Matcher.Name(), r)
-			return
-		}
-	}()
-
-	result, err = e.Matcher.Match(value)
-	if err != nil {
-		err = fmt.Errorf("%s: error while matching. %w", e.Matcher.Name(), err)
-	}
-
-	return
-}
-
-func (m *Mock) prepare() {
+func (m *HTTPMock) Prepare() {
 	for _, e := range m.expectations {
 		ee, ok := e.Matcher.(matcher.OnAfterMockServed)
 		if ok {

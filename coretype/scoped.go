@@ -1,42 +1,44 @@
-package mocha
+package coretype
 
 import (
+	"reflect"
 	"strings"
 )
 
-// Scoped holds keeps a reference to a group of mocks.
-// With a Scoped instance, it is possible to verify if one or a group of mocks were called,
+// Scope holds keeps a reference to a group of mocks.
+// With a Scope instance, it is possible to verify if one or a group of mocks were called,
 // how many times they were called and so on.
-type Scoped struct {
-	store mockStore
+type Scope[TMock Mock] struct {
+	store *MockStore[TMock]
 	ids   map[string]struct{}
 }
 
-func newScope(store mockStore, ids []string) *Scoped {
+func NewScope[TMock Mock](store *MockStore[TMock], ids []string) *Scope[TMock] {
 	datum := make(map[string]struct{}, len(ids))
 	for _, id := range ids {
 		datum[id] = struct{}{}
 	}
 
-	return &Scoped{store, datum}
+	return &Scope[TMock]{store, datum}
 }
 
-// Get returns a Mock with the given id.
-func (s *Scoped) Get(id string) *Mock {
+// Get returns a Mock with the given ID.
+func (s *Scope[TMock]) Get(id string) TMock {
 	_, ok := s.ids[id]
 	if !ok {
-		return nil
+		var result TMock
+		return result
 	}
 
 	return s.store.Get(id)
 }
 
-// GetAll returns all Mock instances kept in this Scoped.
-func (s *Scoped) GetAll() []*Mock {
-	mocks := make([]*Mock, 0, len(s.ids))
+// GetAll returns all Mock instances kept in this Scope.
+func (s *Scope[TMock]) GetAll() []TMock {
+	mocks := make([]TMock, 0, len(s.ids))
 
 	for id := range s.ids {
-		if m := s.store.Get(id); m != nil {
+		if m := s.store.Get(id); !reflect.ValueOf(m).IsZero() {
 			mocks = append(mocks, m)
 		}
 	}
@@ -45,8 +47,8 @@ func (s *Scoped) GetAll() []*Mock {
 }
 
 // GetPending returns all Mock instances that were not called at least once.
-func (s *Scoped) GetPending() []*Mock {
-	mocks := make([]*Mock, 0, len(s.ids))
+func (s *Scope[TMock]) GetPending() []TMock {
+	mocks := make([]TMock, 0, len(s.ids))
 
 	for _, m := range s.GetAll() {
 		if !m.HasBeenCalled() {
@@ -58,8 +60,8 @@ func (s *Scoped) GetPending() []*Mock {
 }
 
 // GetCalled returns all Mock instances that were called.
-func (s *Scoped) GetCalled() []*Mock {
-	mocks := make([]*Mock, 0, len(s.ids))
+func (s *Scope[TMock]) GetCalled() []TMock {
+	mocks := make([]TMock, 0, len(s.ids))
 
 	for _, m := range s.GetAll() {
 		if m.HasBeenCalled() {
@@ -70,8 +72,8 @@ func (s *Scoped) GetCalled() []*Mock {
 	return mocks
 }
 
-// HasBeenCalled returns true if all Scoped Mock instances were called at least once.
-func (s *Scoped) HasBeenCalled() bool {
+// HasBeenCalled returns true if all Scope Mock instances were called at least once.
+func (s *Scope[TMock]) HasBeenCalled() bool {
 	for _, m := range s.GetAll() {
 		if !m.HasBeenCalled() {
 			return false
@@ -82,7 +84,7 @@ func (s *Scoped) HasBeenCalled() bool {
 }
 
 // IsPending returns true when there are one or more Mock instances that were not called at least once.
-func (s *Scoped) IsPending() bool {
+func (s *Scope[TMock]) IsPending() bool {
 	for _, m := range s.GetAll() {
 		if !m.HasBeenCalled() {
 			return true
@@ -94,21 +96,21 @@ func (s *Scoped) IsPending() bool {
 
 // Disable scoped store.
 // Disabled Mock will be ignored.
-func (s *Scoped) Disable() {
+func (s *Scope[TMock]) Disable() {
 	for _, m := range s.GetAll() {
 		m.Disable()
 	}
 }
 
-// Enable all Mock instances kept in this Scoped.
-func (s *Scoped) Enable() {
+// Enable all Mock instances kept in this Scope.
+func (s *Scope[TMock]) Enable() {
 	for _, m := range s.GetAll() {
 		m.Enable()
 	}
 }
 
 // Delete removes a by ID, as long as it is scoped by this instance.
-func (s *Scoped) Delete(id string) bool {
+func (s *Scope[TMock]) Delete(id string) bool {
 	_, ok := s.ids[id]
 	if !ok {
 		return false
@@ -121,15 +123,15 @@ func (s *Scoped) Delete(id string) bool {
 }
 
 // Clean all scoped Mock instances.
-func (s *Scoped) Clean() {
+func (s *Scope[TMock]) Clean() {
 	for id := range s.ids {
 		s.store.Delete(id)
 		delete(s.ids, id)
 	}
 }
 
-// Hits returns the sum of the Scoped store calls.
-func (s *Scoped) Hits() int {
+// Hits returns the sum of the Scope store calls.
+func (s *Scope[TMock]) Hits() int {
 	total := 0
 	for _, m := range s.GetAll() {
 		total += m.Hits()
@@ -139,7 +141,7 @@ func (s *Scoped) Hits() int {
 }
 
 // AssertCalled reports an error if there are still pending Mock instances.
-func (s *Scoped) AssertCalled(t TestingT) bool {
+func (s *Scope[TMock]) AssertCalled(t TestingT) bool {
 	t.Helper()
 
 	if !s.IsPending() {
@@ -152,9 +154,9 @@ func (s *Scoped) AssertCalled(t TestingT) bool {
 
 	for _, p := range pending {
 		b.WriteString("   Mock [")
-		b.WriteString(p.ID)
+		b.WriteString(p.GetID())
 		b.WriteString("] ")
-		b.WriteString(p.Name)
+		b.WriteString(p.GetName())
 		b.WriteString("\n")
 	}
 
@@ -164,7 +166,7 @@ func (s *Scoped) AssertCalled(t TestingT) bool {
 }
 
 // AssertNotCalled reports an error if any mock was called.
-func (s *Scoped) AssertNotCalled(t TestingT) bool {
+func (s *Scope[TMock]) AssertNotCalled(t TestingT) bool {
 	t.Helper()
 
 	if s.IsPending() {
@@ -177,9 +179,9 @@ func (s *Scoped) AssertNotCalled(t TestingT) bool {
 
 	for _, p := range called {
 		b.WriteString("  Mock [")
-		b.WriteString(p.ID)
+		b.WriteString(p.GetID())
 		b.WriteString("] ")
-		b.WriteString(p.Name)
+		b.WriteString(p.GetName())
 		b.WriteString("\n")
 	}
 
@@ -190,7 +192,7 @@ func (s *Scoped) AssertNotCalled(t TestingT) bool {
 
 // AssertNumberOfCalls asserts that the sum of matched request hits
 // is equal to the given expected value.
-func (s *Scoped) AssertNumberOfCalls(t TestingT, expected int) bool {
+func (s *Scope[TMock]) AssertNumberOfCalls(t TestingT, expected int) bool {
 	t.Helper()
 
 	hits := s.Hits()

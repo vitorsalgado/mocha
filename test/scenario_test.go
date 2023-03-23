@@ -8,15 +8,16 @@ import (
 	"github.com/stretchr/testify/require"
 
 	. "github.com/vitorsalgado/mocha/v3"
+	"github.com/vitorsalgado/mocha/v3/coretype"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
 func TestScenarios(t *testing.T) {
 	testCases := []struct {
 		name string
-		s1   Builder
-		s2   Builder
-		s3   Builder
+		s1   coretype.Builder[*HTTPMock, *HTTPMockApp]
+		s2   coretype.Builder[*HTTPMock, *HTTPMockApp]
+		s3   coretype.Builder[*HTTPMock, *HTTPMockApp]
 	}{
 		{"code",
 			Get(URLPath("/1")).

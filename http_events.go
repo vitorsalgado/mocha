@@ -9,13 +9,14 @@ import (
 
 	"github.com/rs/zerolog"
 
+	"github.com/vitorsalgado/mocha/v3/coretype"
 	"github.com/vitorsalgado/mocha/v3/internal/colorize"
 )
 
 type mockHTTPLifecycle interface {
 	OnRequest(*RequestValues)
 	OnMatch(*RequestValues, *Stub)
-	OnNoMatch(*RequestValues, *findResult)
+	OnNoMatch(*RequestValues, *coretype.FindResult[*HTTPMock])
 	OnWarning(*RequestValues, error)
 	OnError(*RequestValues, error)
 }
@@ -23,7 +24,7 @@ type mockHTTPLifecycle interface {
 // Standard HTTP Lifecycle
 
 type builtInMockHTTPLifecycle struct {
-	app *Mocha
+	app *HTTPMockApp
 }
 
 func (h *builtInMockHTTPLifecycle) OnRequest(r *RequestValues) {
@@ -56,9 +57,9 @@ func (h *builtInMockHTTPLifecycle) OnMatch(r *RequestValues, s *Stub) {
 		Str("url", r.URL.String()).
 		Dur("elapsed", time.Since(r.StartedAt))
 
-	dict := zerolog.Dict().Str("id", r.Mock.ID)
-	if r.Mock.Name != "" {
-		dict.Str("name", r.Mock.Name)
+	dict := zerolog.Dict().Str("id", r.Mock.GetID())
+	if r.Mock.GetName() != "" {
+		dict.Str("name", r.Mock.GetName())
 	}
 
 	res := zerolog.Dict().Int("status", s.StatusCode)
@@ -88,16 +89,16 @@ func (h *builtInMockHTTPLifecycle) OnMatch(r *RequestValues, s *Stub) {
 	evt.Msgf("<--- REQUEST MATCHED %s %s", r.RawRequest.Method, r.URL.Path)
 }
 
-func (h *builtInMockHTTPLifecycle) OnNoMatch(r *RequestValues, fr *findResult) {
+func (h *builtInMockHTTPLifecycle) OnNoMatch(r *RequestValues, fr *coretype.FindResult[*HTTPMock]) {
 	if h.app.config.LogLevel == LogLevelDisabled {
 		return
 	}
 
 	evt := h.app.logger.Warn().Str("url", r.URL.String())
 	if fr.ClosestMatch != nil {
-		md := zerolog.Dict().Str("id", fr.ClosestMatch.ID)
-		if fr.ClosestMatch.Name != "" {
-			md.Str("name", fr.ClosestMatch.Name)
+		md := zerolog.Dict().Str("id", fr.ClosestMatch.GetID())
+		if fr.ClosestMatch.GetName() != "" {
+			md.Str("name", fr.ClosestMatch.GetName())
 		}
 
 		evt.Dict("closest_match", md)
@@ -167,7 +168,7 @@ func (h *builtInMockHTTPLifecycle) OnError(r *RequestValues, err error) {
 // Descriptive Logger
 
 type builtInDescriptiveMockHTTPLifecycle struct {
-	app *Mocha
+	app *HTTPMockApp
 	cz  *colorize.Colorize
 }
 
@@ -219,7 +220,7 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnMatch(rv *RequestValues, s *Stub
 	builder.WriteString(rv.URL.String())
 	builder.WriteString("\n")
 	builder.WriteString(h.cz.Bold("Mock: "))
-	builder.WriteString(rv.Mock.ID + " " + rv.Mock.Name)
+	builder.WriteString(rv.Mock.GetID() + " " + rv.Mock.GetName())
 	builder.WriteString("\n")
 	builder.WriteString(h.cz.Green("Took(ms): "))
 	builder.WriteString(strconv.FormatInt(time.Since(rv.StartedAt).Milliseconds(), 10))
@@ -256,7 +257,7 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnMatch(rv *RequestValues, s *Stub
 	fmt.Println(builder.String())
 }
 
-func (h *builtInDescriptiveMockHTTPLifecycle) OnNoMatch(rv *RequestValues, fr *findResult) {
+func (h *builtInDescriptiveMockHTTPLifecycle) OnNoMatch(rv *RequestValues, fr *coretype.FindResult[*HTTPMock]) {
 	if h.app.config.LogLevel == LogLevelDisabled {
 		return
 	}
@@ -272,7 +273,7 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnNoMatch(rv *RequestValues, fr *f
 
 	if fr.ClosestMatch != nil {
 		builder.WriteString(fmt.Sprintf("%s: %s %s\n",
-			h.cz.Bold("Closest Match"), fr.ClosestMatch.ID, fr.ClosestMatch.Name))
+			h.cz.Bold("Closest Match"), fr.ClosestMatch.GetID(), fr.ClosestMatch.GetName()))
 	}
 
 	if len(fr.MismatchDetails) > 0 {

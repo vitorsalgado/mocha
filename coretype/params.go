@@ -1,4 +1,4 @@
-package mocha
+package coretype
 
 import (
 	"sync"
@@ -32,7 +32,7 @@ type paramsStore struct {
 	rwMutex sync.RWMutex
 }
 
-func newInMemoryParameters() Params {
+func NewInMemoryParameters() Params {
 	return &paramsStore{data: make(map[string]any)}
 }
 
