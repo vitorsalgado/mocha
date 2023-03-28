@@ -5,8 +5,8 @@ _examples/
 _perf/
 bin/
 node_modules/
-test/
-testdata/
+mhttp/test/
+mhttp/testdata/
 tools/
 
 .editorconfig
