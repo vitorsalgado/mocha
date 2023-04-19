@@ -382,6 +382,12 @@ func (b *HTTPMockBuilder) PostAction(input *PostActionDef) *HTTPMockBuilder {
 	return b
 }
 
+func (b *HTTPMockBuilder) Pipe(pipe foundation.Piping) *HTTPMockBuilder {
+	b.mock.Pipes = append(b.mock.Pipes, pipe)
+
+	return b
+}
+
 // Delay sets a delay time before serving the mocked response.
 func (b *HTTPMockBuilder) Delay(duration time.Duration) *HTTPMockBuilder {
 	b.mock.Delay = duration

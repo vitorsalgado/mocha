@@ -4,6 +4,8 @@
 package tools
 
 import (
-	_ "honnef.co/go/tools/cmd/staticcheck"
-	_ "golang.org/x/vuln"
+	_ "github.com/gogo/protobuf/protoc-gen-gofast"
+	_ "golang.org/x/vuln/cmd/govulncheck"
+	_ "google.golang.org/grpc/cmd/protoc-gen-go-grpc"
+	_ "google.golang.org/protobuf/cmd/protoc-gen-go"
 )

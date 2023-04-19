@@ -34,7 +34,8 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	h.lifecycle.OnRequest(reqValues)
 
-	result := foundation.FindMockForRequest(h.app.storage,
+	mocks := h.app.storage.GetEligible()
+	result := foundation.FindMockForRequest(mocks,
 		&HTTPValueSelectorInput{r, parsedURL, r.URL.Query(), r.Form, parsedBody})
 
 	if !result.Pass {
@@ -107,7 +108,12 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(stub.StatusCode)
 
 		if stub.Body != nil {
-			w.Write(stub.Body)
+			if len(mock.Pipes) > 0 {
+				connector := foundation.NewConnector(mock.Pipes)
+				connector.Connect(stub.Body, w)
+			} else {
+				w.Write(stub.Body)
+			}
 		}
 
 		for k, v := range stub.Trailer {

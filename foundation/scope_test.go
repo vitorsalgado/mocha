@@ -9,14 +9,14 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3/foundation"
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	mhttp2 "github.com/vitorsalgado/mocha/v3/mhttp"
+	"github.com/vitorsalgado/mocha/v3/mhttp"
 	"github.com/vitorsalgado/mocha/v3/mhttp/test/testmock"
 )
 
 func TestScoped(t *testing.T) {
-	m1 := foundation.NewMock[any]()
-	m2 := foundation.NewMock[any]()
-	m3 := foundation.NewMock[any]()
+	m1 := newTestMock()
+	m2 := newTestMock()
+	m3 := newTestMock()
 
 	repo := foundation.NewStore[foundation.Mock]()
 	repo.Save(m1)
@@ -73,15 +73,15 @@ func TestScoped(t *testing.T) {
 	})
 
 	t.Run("should only consider enabled store", func(t *testing.T) {
-		m := mhttp2.NewAPI()
+		m := mhttp.NewAPI()
 		m.MustStart()
 
 		defer m.Close()
 
-		s1 := m.MustMock(mhttp2.Get(matcher.URLPath("/test1")).Reply(mhttp2.OK()))
+		s1 := m.MustMock(mhttp.Get(matcher.URLPath("/test1")).Reply(mhttp.OK()))
 		s2 := m.MustMock(
-			mhttp2.Get(matcher.URLPath("/test2")).Reply(mhttp2.OK()),
-			mhttp2.Get(matcher.URLPath("/test3")).Reply(mhttp2.OK()))
+			mhttp.Get(matcher.URLPath("/test2")).Reply(mhttp.OK()),
+			mhttp.Get(matcher.URLPath("/test3")).Reply(mhttp.OK()))
 
 		t.Run("initial state (enabled)", func(t *testing.T) {
 			res, err := http.Get(fmt.Sprintf("%s/test1", m.URL()))
@@ -109,7 +109,7 @@ func TestScoped(t *testing.T) {
 			res, err := http.Get(fmt.Sprintf("%s/test1", m.URL()))
 
 			assert.NoError(t, err)
-			assert.Equal(t, mhttp2.StatusNoMatch, res.StatusCode)
+			assert.Equal(t, mhttp.StatusNoMatch, res.StatusCode)
 
 			res, err = http.Get(fmt.Sprintf("%s/test2", m.URL()))
 
@@ -143,20 +143,20 @@ func TestScoped(t *testing.T) {
 			res, err := http.Get(fmt.Sprintf("%s/test2", m.URL()))
 
 			assert.NoError(t, err)
-			assert.Equal(t, mhttp2.StatusNoMatch, res.StatusCode)
+			assert.Equal(t, mhttp.StatusNoMatch, res.StatusCode)
 
 			res, err = http.Get(fmt.Sprintf("%s/test3", m.URL()))
 
 			assert.NoError(t, err)
-			assert.Equal(t, mhttp2.StatusNoMatch, res.StatusCode)
+			assert.Equal(t, mhttp.StatusNoMatch, res.StatusCode)
 		})
 	})
 }
 
 func TestScopedDelete(t *testing.T) {
-	m1 := foundation.NewMock[any]()
-	m2 := foundation.NewMock[any]()
-	m3 := foundation.NewMock[any]()
+	m1 := newTestMock()
+	m2 := newTestMock()
+	m3 := newTestMock()
 
 	repo := foundation.NewStore[foundation.Mock]()
 	repo.Save(m1)

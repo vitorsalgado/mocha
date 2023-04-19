@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	_ Mock = (*BaseMock[any])(nil)
+	_ Mock = (*BaseMock)(nil)
 )
 
 type Mock interface {
@@ -41,7 +41,7 @@ type RequestMatcher[TValueIn any] interface {
 
 // BaseMock holds metadata and expectations to be matched against HTTP requests in order to serve mocked responses.
 // This is the core entity of this project, and most features work based on it.
-type BaseMock[TReply any] struct {
+type BaseMock struct {
 	// ID is the unique identifier of a Mock
 	ID string
 
@@ -50,10 +50,6 @@ type BaseMock[TReply any] struct {
 
 	// Priority sets the priority of a Mock.
 	Priority int
-
-	// Reply is the responder that will be used to serve the HTTP response stub, once matched against an
-	// HTTP request.
-	Reply TReply
 
 	// Enabled indicates if the Mock is enabled or disabled.
 	// Only enabled mocks are considered during the request matching phase.
@@ -72,56 +68,56 @@ type BaseMock[TReply any] struct {
 }
 
 // NewMock returns a new Mock with default values set.
-func NewMock[TReply any]() *BaseMock[TReply] {
-	return &BaseMock[TReply]{
+func NewMock() *BaseMock {
+	return &BaseMock{
 		ID:      uuid.New().String(),
 		Enabled: true,
 	}
 }
 
-func (m *BaseMock[TReply]) GetID() string {
+func (m *BaseMock) GetID() string {
 	return m.ID
 }
 
-func (m *BaseMock[TReply]) GetName() string {
+func (m *BaseMock) GetName() string {
 	return m.Name
 }
 
-func (m *BaseMock[TReply]) GetPriority() int {
+func (m *BaseMock) GetPriority() int {
 	return m.Priority
 }
 
-func (m *BaseMock[TReply]) GetSource() string {
+func (m *BaseMock) GetSource() string {
 	return m.Source
 }
 
-func (m *BaseMock[TReply]) IsEnabled() bool {
+func (m *BaseMock) IsEnabled() bool {
 	return m.Enabled
 }
 
 // Inc increment one Mock call.
-func (m *BaseMock[TReply]) Inc() {
+func (m *BaseMock) Inc() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.hits++
 }
 
 // Dec reduce one Mock call.
-func (m *BaseMock[TReply]) Dec() {
+func (m *BaseMock) Dec() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.hits--
 }
 
 // Hits returns the amount of time this Mock was matched to a request and served.
-func (m *BaseMock[TReply]) Hits() int {
+func (m *BaseMock) Hits() int {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return m.hits
 }
 
 // HasBeenCalled checks if the Mock was called at least once.
-func (m *BaseMock[TReply]) HasBeenCalled() bool {
+func (m *BaseMock) HasBeenCalled() bool {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
 	return m.hits > 0
@@ -129,7 +125,7 @@ func (m *BaseMock[TReply]) HasBeenCalled() bool {
 
 // Enable enables the Mock.
 // The Mock will be eligible to be matched.
-func (m *BaseMock[TReply]) Enable() {
+func (m *BaseMock) Enable() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.Enabled = true
@@ -137,17 +133,17 @@ func (m *BaseMock[TReply]) Enable() {
 
 // Disable disables the Mock.
 // The Mock will not be eligible to be matched.
-func (m *BaseMock[TReply]) Disable() {
+func (m *BaseMock) Disable() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.Enabled = false
 }
 
-func (m *BaseMock[TReply]) Prepare() {
+func (m *BaseMock) Prepare() {
 }
 
 // Build allows users to use the Mock itself as a HTTPMockBuilder.
-func (m *BaseMock[TReply]) Build() (*BaseMock[TReply], error) {
+func (m *BaseMock) Build() (*BaseMock, error) {
 	return m, nil
 }
 
@@ -294,49 +290,6 @@ type MismatchDetail struct {
 	Key          string
 	Result       *matcher.Result
 	Err          error
-}
-
-// Match checks if the current Mock matches against a list of expectations.
-// Will iterate through all expectations even if it doesn't match early.
-func Match[VS any](ri VS, expectations []*Expectation[VS]) *MatchResult {
-	w := 0
-	ok := true
-	details := make([]MismatchDetail, 0)
-
-	for _, exp := range expectations {
-		var val any
-		if exp.ValueSelector != nil {
-			val = exp.ValueSelector(ri)
-		}
-
-		result, err := matchExpectation(exp, val)
-
-		if err != nil {
-			ok = false
-			details = append(details, MismatchDetail{
-				MatchersName: exp.Matcher.Name(),
-				Target:       exp.Target,
-				Key:          exp.Key,
-				Err:          err,
-			})
-
-			continue
-		}
-
-		if result.Pass {
-			w += int(exp.Weight)
-		} else {
-			ok = false
-			details = append(details, MismatchDetail{
-				MatchersName: exp.Matcher.Name(),
-				Target:       exp.Target,
-				Key:          exp.Key,
-				Result:       result,
-			})
-		}
-	}
-
-	return &MatchResult{Pass: ok, Weight: w, Details: details}
 }
 
 func matchExpectation[VS any](e *Expectation[VS], value any) (result *matcher.Result, err error) {

@@ -21,10 +21,9 @@ type TMockMatcher[TValueIn any] interface {
 // It runs all matchers of all eligible mocks on request until it finds one that matches every one of them.
 // It returns a FindResult with the find result, along with a possible closest match.
 func FindMockForRequest[TValueIn any, MOCK TMockMatcher[TValueIn]](
-	storage *MockStore[MOCK],
+	mocks []MOCK,
 	requestValues TValueIn,
 ) *FindResult[MOCK] {
-	var mocks = storage.GetEligible()
 	var matched MOCK
 	var weights = 0
 	var details = make([]MismatchDetail, 0)
@@ -49,4 +48,47 @@ func FindMockForRequest[TValueIn any, MOCK TMockMatcher[TValueIn]](
 	}
 
 	return &FindResult[MOCK]{Pass: false, ClosestMatch: matched, MismatchDetails: details}
+}
+
+// Match checks if the current Mock matches against a list of expectations.
+// Will iterate through all expectations even if it doesn't match early.
+func Match[VS any](ri VS, expectations []*Expectation[VS]) *MatchResult {
+	w := 0
+	ok := true
+	details := make([]MismatchDetail, 0)
+
+	for _, exp := range expectations {
+		var val any
+		if exp.ValueSelector != nil {
+			val = exp.ValueSelector(ri)
+		}
+
+		result, err := matchExpectation(exp, val)
+
+		if err != nil {
+			ok = false
+			details = append(details, MismatchDetail{
+				MatchersName: exp.Matcher.Name(),
+				Target:       exp.Target,
+				Key:          exp.Key,
+				Err:          err,
+			})
+
+			continue
+		}
+
+		if result.Pass {
+			w += int(exp.Weight)
+		} else {
+			ok = false
+			details = append(details, MismatchDetail{
+				MatchersName: exp.Matcher.Name(),
+				Target:       exp.Target,
+				Key:          exp.Key,
+				Result:       result,
+			})
+		}
+	}
+
+	return &MatchResult{Pass: ok, Weight: w, Details: details}
 }

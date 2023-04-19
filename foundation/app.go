@@ -6,6 +6,12 @@ import (
 	"sync"
 )
 
+// Configurer lets users configure the Mock API.
+type Configurer[TConfig any] interface {
+	// Apply applies a configuration.
+	Apply(conf TConfig) error
+}
+
 // TestingT is based on testing.T and is used for assertions.
 // See Assert* methods on the application instance.
 type TestingT interface {
@@ -198,7 +204,7 @@ func (app *BaseApp[TMock, TMockApp]) AssertCalled(t TestingT) bool {
 	}
 
 	if !result {
-		t.Errorf("\nThere are still %d mocks that were not called.\n  Pending:\n%s",
+		t.Errorf("\nThere are still %d mock(s) that were not called.\n  Pending:\n%s",
 			size,
 			buf.String(),
 		)
@@ -255,7 +261,7 @@ func (app *BaseApp[TMock, TMockApp]) AssertNumberOfCalls(t TestingT, expected in
 		return true
 	}
 
-	t.Errorf("\nExpected %d matched request hits.\n Got %d", expected, hits)
+	t.Errorf("\nExpected %d matched request hit(s).\n Got %d", expected, hits)
 
 	return false
 }
