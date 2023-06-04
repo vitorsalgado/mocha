@@ -23,7 +23,10 @@ func TestServerStreaming(t *testing.T) {
 
 	ctx := context.Background()
 	list := []proto.Message{&pb.ListItem{Key: "a"}, &pb.ListItem{Key: "b"}}
-	scope := m.MustMock(ForMethod("List").Stream(ServerStream().Messages(list)))
+	scope := m.MustMock(
+		ServerStreamMethod("List").Reply(
+			ServerStream().
+				Messages(list)))
 
 	conn, err := grpc.Dial(m.Addr(), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	require.NoError(t, err)
@@ -81,8 +84,9 @@ func TestServerStream_MessageReader(t *testing.T) {
 	buf.WriteString(string(m2b))
 
 	ctx := context.Background()
-	scope := m.MustMock(ForMethod("List").Stream(ServerStream().
-		StreamText(strings.NewReader(buf.String()), &pb.ListItem{})))
+	scope := m.MustMock(ServerStreamMethod("List").Reply(
+		ServerStream().
+			StreamText(strings.NewReader(buf.String()), &pb.ListItem{})))
 
 	conn, err := grpc.Dial(m.Addr(), grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	require.NoError(t, err)

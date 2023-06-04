@@ -21,8 +21,7 @@ func TestUnary(t *testing.T) {
 	m := NewGRPCWithT(t)
 	pb.RegisterTestServiceServer(m.Server(), &srv{})
 	m.MustStart()
-	m.MustMock(ForMethod("Greetings").
-		Method("Greetings").
+	m.MustMock(UnaryMethod("Greetings").
 		Header("h1", Eq("v1")).
 		Field("message", Eq("hi")).
 		Reply(Unary().

@@ -9,6 +9,10 @@ type Interceptors struct {
 	app *GRPCMockApp
 }
 
+type GRPCMockBuilder interface {
+	Build(*GRPCMockApp) (*GRPCMock, error)
+}
+
 type GRPCMock struct {
 	*foundation.BaseMock
 

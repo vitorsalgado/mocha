@@ -1,34 +1,29 @@
 package mgrpc
 
 import (
-	"google.golang.org/grpc/metadata"
-
 	"github.com/vitorsalgado/mocha/v3/foundation"
 	"github.com/vitorsalgado/mocha/v3/matcher"
+	"google.golang.org/grpc/metadata"
 )
 
-var _ foundation.Builder[*GRPCMock, *GRPCMockApp] = (*GRPCMockBuilder)(nil)
+var (
+	_ foundation.Builder[*GRPCMock, *GRPCMockApp] = (*UnaryMockBuilder)(nil)
+	_ GRPCMockBuilder                             = (*UnaryMockBuilder)(nil)
+)
 
-type GRPCMockBuilder struct {
+type UnaryMockBuilder struct {
 	m *GRPCMock
 }
 
-type baseGRPCMockBuilder[T any] struct {
-}
-
-func ForMethod(method string) *GRPCMockBuilder {
-	b := &GRPCMockBuilder{m: newMock()}
-	return b.Method(method)
-}
-
-func (b *GRPCMockBuilder) Method(method string) *GRPCMockBuilder {
+func UnaryMethod(method string) *UnaryMockBuilder {
+	b := &UnaryMockBuilder{m: newMock()}
 	b.m.unaryExpectations = append(
 		b.m.unaryExpectations,
 		&foundation.Expectation[*UnaryValueSelectorIn]{
 			Target:        0,
 			Key:           method,
 			Matcher:       matcher.Contain(method),
-			ValueSelector: selectMethod,
+			ValueSelector: unarySelectMethod,
 			Weight:        10,
 		},
 	)
@@ -36,14 +31,14 @@ func (b *GRPCMockBuilder) Method(method string) *GRPCMockBuilder {
 	return b
 }
 
-func (b *GRPCMockBuilder) Header(key string, m matcher.Matcher) *GRPCMockBuilder {
+func (b *UnaryMockBuilder) Header(key string, m matcher.Matcher) *UnaryMockBuilder {
 	b.m.unaryExpectations = append(
 		b.m.unaryExpectations,
 		&foundation.Expectation[*UnaryValueSelectorIn]{
 			Target:        0,
 			Key:           key,
 			Matcher:       m,
-			ValueSelector: selectHeader(key),
+			ValueSelector: unarySelectHeader(key),
 			Weight:        3,
 		},
 	)
@@ -51,39 +46,34 @@ func (b *GRPCMockBuilder) Header(key string, m matcher.Matcher) *GRPCMockBuilder
 	return b
 }
 
-func (b *GRPCMockBuilder) Field(path string, m matcher.Matcher) *GRPCMockBuilder {
+func (b *UnaryMockBuilder) Field(path string, m matcher.Matcher) *UnaryMockBuilder {
 	b.m.unaryExpectations = append(
 		b.m.unaryExpectations,
 		&foundation.Expectation[*UnaryValueSelectorIn]{
 			Target:        0,
 			Key:           path,
 			Matcher:       matcher.Field(path, m),
-			ValueSelector: selectBody,
+			ValueSelector: unarySelectBody,
 			Weight:        3,
 		},
 	)
 	return b
 }
 
-func (b *GRPCMockBuilder) Reply(r UnaryReply) *GRPCMockBuilder {
+func (b *UnaryMockBuilder) Reply(r UnaryReply) *UnaryMockBuilder {
 	b.m.Reply = r
 	return b
 }
 
-func (b *GRPCMockBuilder) Stream(r ServerStreamReply) *GRPCMockBuilder {
-	b.m.Reply = r
-	return b
-}
-
-func (b *GRPCMockBuilder) Build(_ *GRPCMockApp) (*GRPCMock, error) {
+func (b *UnaryMockBuilder) Build(_ *GRPCMockApp) (*GRPCMock, error) {
 	return b.m, nil
 }
 
-func selectMethod(r *UnaryValueSelectorIn) any {
+func unarySelectMethod(r *UnaryValueSelectorIn) any {
 	return r.Info.FullMethod
 }
 
-func selectHeader(k string) UnaryValueSelector {
+func unarySelectHeader(k string) UnaryValueSelector {
 	return func(r *UnaryValueSelectorIn) any {
 		md, ok := metadata.FromIncomingContext(r.Context)
 		if !ok {
@@ -99,6 +89,6 @@ func selectHeader(k string) UnaryValueSelector {
 	}
 }
 
-func selectBody(r *UnaryValueSelectorIn) any {
+func unarySelectBody(r *UnaryValueSelectorIn) any {
 	return r.RequestMessage
 }
