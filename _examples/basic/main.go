@@ -10,6 +10,7 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
+	mhttp2 "github.com/vitorsalgado/mocha/v3/mhttp"
 	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
@@ -17,15 +18,14 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	m := mocha.New(mocha.Setup().Addr(":8080"))
+	m := mocha.New(mhttp2.Setup().Addr(":8080"))
 	m.MustStart()
 
-	m.MustMock(mocha.
-		Get(URLPath("/test")).
+	m.MustMock(mhttp2.Get(URLPath("/test")).
 		Header(misc.HeaderAccept, Contain(misc.MIMETextHTML)).
 		Header(misc.HeaderContentType, StrictEqual("test")).
 		Header("any", All(Contain("test"), EqualIgnoreCase("dev"))).
-		Reply(mocha.OK().
+		Reply(mhttp2.OK().
 			PlainText("hello world").
 			Header("x-basic", "true")))
 

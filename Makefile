@@ -3,6 +3,7 @@
 
 PROJECT_NAME=moai
 DOCKER_IMAGE=$(PROJECT_NAME)
+PROTO_MESSAGES = mgrpc/internal/protobuf
 
 # allow user specific optional overrides
 -include Makefile.overrides
@@ -13,9 +14,11 @@ export
 help: ## show help
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
+.PHONY: run
 run:
 	@go run $$(ls -1 cmd/moai/**.go | grep -v _test.go)
 
+.PHONY: build
 build: ## build binaries
 	@go build -o bin/$(PROJECT_NAME) cmd/moai/**.go
 
@@ -50,6 +53,16 @@ docker-build:
 
 docker-run:
 	@docker run -it --network host $(DOCKER_IMAGE)
+
+.PHONY: proto
+proto:
+	@for f in $${PROTO_MESSAGES}/*pb.go; do \
+		rm -rf $${f}; \
+	done
+
+	@for f in $${PROTO_MESSAGES}/*proto; do \
+		protoc --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative "$${f}"; \
+	done
 
 .PHONY: vet
 vet: ## check go code

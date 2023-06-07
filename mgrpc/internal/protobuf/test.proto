@@ -1,0 +1,25 @@
+syntax = "proto3";
+package protobuf;
+
+option go_package = "github.com/vitorsalgado/mocha/v3/mgrpc/internal/protobuf";
+
+message HiReq {
+  string message = 1;
+}
+
+message HiRes {
+  string message = 1;
+}
+
+message ListReq {
+  string message = 1;
+}
+
+message ListItem {
+  string key = 1;
+}
+
+service TestService {
+  rpc Greetings (HiReq) returns (HiRes) {}
+  rpc List(ListReq) returns (stream ListItem) {}
+}
