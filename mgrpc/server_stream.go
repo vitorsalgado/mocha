@@ -50,10 +50,10 @@ const (
 	StreamTypeText
 )
 
-type StreamResponse struct {
+type StreamResponse[T any] struct {
 	Header     metadata.MD
 	Trailer    metadata.MD
-	MsgType    proto.Message
+	MsgType    T
 	Stream     any
 	StreamType StreamType
 }
@@ -62,33 +62,33 @@ type ServerStreamReply interface {
 	Build(values *StreamRequestValues) error
 }
 
-type BuiltInServerStreamReply struct {
-	response *StreamResponse
+type BuiltInServerStreamReply[T any] struct {
+	response *StreamResponse[T]
 }
 
-func (r *BuiltInServerStreamReply) Messages(arr []proto.Message) *BuiltInServerStreamReply {
+func (r *BuiltInServerStreamReply[T]) Messages(arr []proto.Message) *BuiltInServerStreamReply[T] {
 	r.response.Stream = arr
 	return r
 }
 
-func (r *BuiltInServerStreamReply) AnyMessages(arr []any) *BuiltInServerStreamReply {
+func (r *BuiltInServerStreamReply[T]) AnyMessages(arr []any) *BuiltInServerStreamReply[T] {
 	r.response.Stream = arr
 	return r
 }
 
-func (r *BuiltInServerStreamReply) Text(reader io.Reader) *BuiltInServerStreamReply {
+func (r *BuiltInServerStreamReply[T]) Text(reader io.Reader) *BuiltInServerStreamReply[T] {
 	r.response.Stream = reader
 	r.response.StreamType = StreamTypeText
 	return r
 }
 
-func (r *BuiltInServerStreamReply) JSON(reader io.Reader) *BuiltInServerStreamReply {
+func (r *BuiltInServerStreamReply[T]) JSON(reader io.Reader) *BuiltInServerStreamReply[T] {
 	r.response.Stream = reader
 	r.response.StreamType = StreamTypeJSON
 	return r
 }
 
-func (r *BuiltInServerStreamReply) Build(values *StreamRequestValues) error {
+func (r *BuiltInServerStreamReply[T]) Build(values *StreamRequestValues) error {
 	err := grpc.SendHeader(values.Context, r.response.Header)
 	if err != nil {
 		return err
@@ -141,7 +141,7 @@ func (r *BuiltInServerStreamReply) Build(values *StreamRequestValues) error {
 	return nil
 }
 
-func (r *BuiltInServerStreamReply) decode(b []byte, m proto.Message) error {
+func (r *BuiltInServerStreamReply[T]) decode(b []byte, m proto.Message) error {
 	switch r.response.StreamType {
 	case StreamTypeText:
 		return prototext.Unmarshal(b, m)
@@ -152,21 +152,10 @@ func (r *BuiltInServerStreamReply) decode(b []byte, m proto.Message) error {
 	return fmt.Errorf("stream: unexpected stream type %d", r.response.StreamType)
 }
 
-func ServerStreamT[T proto.Message]() *BuiltInServerStreamReply {
-	var msgType T
-
-	return &BuiltInServerStreamReply{response: &StreamResponse{
+func ServerStream[T proto.Message]() *BuiltInServerStreamReply[T] {
+	return &BuiltInServerStreamReply[T]{response: &StreamResponse[T]{
 		Header:  make(metadata.MD),
 		Trailer: make(metadata.MD),
-		MsgType: msgType,
-	}}
-}
-
-func ServerStream(messageType proto.Message) *BuiltInServerStreamReply {
-	return &BuiltInServerStreamReply{response: &StreamResponse{
-		Header:  make(metadata.MD),
-		Trailer: make(metadata.MD),
-		MsgType: messageType,
 	}}
 }
 
