@@ -10,17 +10,17 @@ import (
 	"github.com/stretchr/testify/require"
 
 	. "github.com/vitorsalgado/mocha/v3/matcher"
-	mhttp2 "github.com/vitorsalgado/mocha/v3/mhttp"
+	"github.com/vitorsalgado/mocha/v3/mhttp"
 )
 
 func TestCompressedResponse_GZIP(t *testing.T) {
-	m := mhttp2.NewAPI()
+	m := mhttp.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
 
-	m.MustMock(mhttp2.Get(URLPath("/test")).
-		Reply(mhttp2.OK().
+	m.MustMock(mhttp.Get(URLPath("/test")).
+		Reply(mhttp.OK().
 			BodyText("hello world").
 			Gzip()))
 
@@ -38,23 +38,23 @@ func TestCompressedResponse_GZIP(t *testing.T) {
 }
 
 func Test_GZIPProxiedResponse(t *testing.T) {
-	p := mhttp2.NewAPI()
+	p := mhttp.NewAPI()
 	p.MustStart()
 
 	defer p.Close()
 
-	ps := p.MustMock(mhttp2.Get(URLPath("/test")).
-		Reply(mhttp2.OK().
+	ps := p.MustMock(mhttp.Get(URLPath("/test")).
+		Reply(mhttp.OK().
 			BodyText("hello world").
 			Gzip()))
 
-	m := mhttp2.NewAPI()
+	m := mhttp.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
 
-	ms := m.MustMock(mhttp2.Get(URLPath("/test")).
-		Reply(mhttp2.From(p.URL())))
+	ms := m.MustMock(mhttp.Get(URLPath("/test")).
+		Reply(mhttp.From(p.URL())))
 
 	httpClient := &http.Client{Transport: &http.Transport{DisableCompression: true}}
 

@@ -9,19 +9,19 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	mhttp2 "github.com/vitorsalgado/mocha/v3/mhttp"
+	"github.com/vitorsalgado/mocha/v3/mhttp"
 	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
 func TestFormUrlEncoded(t *testing.T) {
 	httpClient := &http.Client{}
-	m := mhttp2.NewAPIWithT(t)
+	m := mhttp.NewAPIWithT(t)
 	m.MustStart()
 
-	scoped := m.MustMock(mhttp2.Post(matcher.URLPath("/test")).
+	scoped := m.MustMock(mhttp.Post(matcher.URLPath("/test")).
 		FormField("var1", matcher.StrictEqual("dev")).
 		FormField("var2", matcher.Contain("q")).
-		Reply(mhttp2.OK()))
+		Reply(mhttp.OK()))
 
 	data := url.Values{}
 	data.Set("var1", "dev")
@@ -38,8 +38,8 @@ func TestFormUrlEncoded(t *testing.T) {
 }
 
 func TestFormUrlEncoded_InvalidFieldValues(t *testing.T) {
-	m := mhttp2.NewAPIWithT(t)
-	scoped, err := m.Mock(mhttp2.FromFile("testdata/form_url_encoded/01_invalid.yaml"))
+	m := mhttp.NewAPIWithT(t)
+	scoped, err := m.Mock(mhttp.FromFile("testdata/form_url_encoded/01_invalid.yaml"))
 
 	require.Nil(t, scoped)
 	require.Error(t, err)
@@ -47,10 +47,10 @@ func TestFormUrlEncoded_InvalidFieldValues(t *testing.T) {
 
 func TestFormUrlEncoded_FromFileMock(t *testing.T) {
 	httpClient := &http.Client{}
-	m := mhttp2.NewAPIWithT(t)
+	m := mhttp.NewAPIWithT(t)
 	m.MustStart()
 
-	scoped := m.MustMock(mhttp2.FromFile("testdata/form_url_encoded/02_valid.yaml"))
+	scoped := m.MustMock(mhttp.FromFile("testdata/form_url_encoded/02_valid.yaml"))
 
 	testCases := []struct {
 		name           string
@@ -81,7 +81,7 @@ func TestFormUrlEncoded_FromFileMock(t *testing.T) {
 			data.Set("job", "qa")
 
 			return data
-		}, mhttp2.StatusNoMatch},
+		}, mhttp.StatusNoMatch},
 
 		{"no match (missing +)", func() url.Values {
 			data := url.Values{}
@@ -94,7 +94,7 @@ func TestFormUrlEncoded_FromFileMock(t *testing.T) {
 			data.Set("job", "dev")
 
 			return data
-		}, mhttp2.StatusNoMatch},
+		}, mhttp.StatusNoMatch},
 
 		{"no match (missing field)", func() url.Values {
 			data := url.Values{}
@@ -106,7 +106,7 @@ func TestFormUrlEncoded_FromFileMock(t *testing.T) {
 			data.Set("job", "dev")
 
 			return data
-		}, mhttp2.StatusNoMatch},
+		}, mhttp.StatusNoMatch},
 
 		{"match (float)", func() url.Values {
 			data := url.Values{}

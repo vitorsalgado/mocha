@@ -16,17 +16,17 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
-	mhttp2 "github.com/vitorsalgado/mocha/v3/mhttp"
+	"github.com/vitorsalgado/mocha/v3/mhttp"
 	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
 type Srv struct {
 	h    http.Handler
-	cfg  *mhttp2.Config
-	info *mhttp2.ServerInfo
+	cfg  *mhttp.Config
+	info *mhttp.ServerInfo
 }
 
-func (s *Srv) Setup(app *mhttp2.HTTPMockApp, handler http.Handler) error {
+func (s *Srv) Setup(app *mhttp.HTTPMockApp, handler http.Handler) error {
 	http.HandleFunc("/", handler.ServeHTTP)
 
 	s.h = handler
@@ -57,8 +57,8 @@ func (s *Srv) S() any {
 	return nil
 }
 
-func (s *Srv) Info() *mhttp2.ServerInfo {
-	return &mhttp2.ServerInfo{URL: ""}
+func (s *Srv) Info() *mhttp.ServerInfo {
+	return &mhttp.ServerInfo{URL: ""}
 }
 
 func main() {
@@ -108,25 +108,25 @@ func main() {
 	}
 
 	m := mocha.New(
-		mhttp2.Setup().
+		mhttp.Setup().
 			HandlerDecorator(h).
 			Server(&Srv{}).
 			Addr(":8080"))
 	m.MustStart()
 
-	m.MustMock(mhttp2.Get(URLPath("/test")).
+	m.MustMock(mhttp.Get(URLPath("/test")).
 		Header(misc.HeaderAccept, Contain(misc.MIMETextPlain)).
 		Header("X-Scenario", StrictEqual("1")).
-		Reply(mhttp2.OK().
+		Reply(mhttp.OK().
 			PlainText("ok").
 			Header("X-Scenario-Result", "true")))
 
-	m.MustMock(mhttp2.Post(URLPath("/test")).
+	m.MustMock(mhttp.Post(URLPath("/test")).
 		Header(misc.HeaderContentType, Contain(misc.MIMEApplicationJSON)).
 		Body(All(
 			JSONPath("active", StrictEqual(true)),
 			JSONPath("result", StrictEqual("ok")))).
-		Reply(mhttp2.OK().
+		Reply(mhttp.OK().
 			ContentType(misc.MIMEApplicationJSON).
 			BodyReader(f)),
 	)

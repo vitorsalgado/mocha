@@ -10,20 +10,20 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	mhttp2 "github.com/vitorsalgado/mocha/v3/mhttp"
+	"github.com/vitorsalgado/mocha/v3/mhttp"
 	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
 func TestCallbacks(t *testing.T) {
 	t.Run("should call registered post action", func(t *testing.T) {
 		spy := false
-		m := mhttp2.NewAPI()
+		m := mhttp.NewAPI()
 		m.MustStart()
 
 		defer m.Close()
 
-		scope := m.MustMock(mhttp2.Post(matcher.URLPath("/test")).
-			Callback(func(input *mhttp2.CallbackInput) error {
+		scope := m.MustMock(mhttp.Post(matcher.URLPath("/test")).
+			Callback(func(input *mhttp.CallbackInput) error {
 				require.NotNil(t, input)
 				require.NotNil(t, input.App)
 				require.NotNil(t, input.URL)
@@ -39,7 +39,7 @@ func TestCallbacks(t *testing.T) {
 
 				return nil
 			}).
-			Reply(mhttp2.OK()))
+			Reply(mhttp.OK()))
 
 		res, err := http.Post(fmt.Sprintf("%s/test", m.URL()), misc.MIMETextPlain, strings.NewReader("hi"))
 
@@ -53,18 +53,18 @@ func TestCallbacks(t *testing.T) {
 		var callbackErrReceiver error
 
 		callbackErr := errors.New("failed to run post action")
-		m := mhttp2.NewAPI()
+		m := mhttp.NewAPI()
 		m.MustStart()
 
 		defer m.Close()
 
-		scope := m.MustMock(mhttp2.Get(matcher.URLPath("/test")).
-			Callback(func(input *mhttp2.CallbackInput) error {
+		scope := m.MustMock(mhttp.Get(matcher.URLPath("/test")).
+			Callback(func(input *mhttp.CallbackInput) error {
 				require.NotNil(t, input)
 				callbackErrReceiver = callbackErr
 				return callbackErr
 			}).
-			Reply(mhttp2.OK()))
+			Reply(mhttp.OK()))
 
 		res, err := http.Get(fmt.Sprintf("%s/test", m.URL()))
 

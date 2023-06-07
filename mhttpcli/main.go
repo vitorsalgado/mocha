@@ -13,7 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	mhttp2 "github.com/vitorsalgado/mocha/v3/mhttp"
+	"github.com/vitorsalgado/mocha/v3/mhttp"
 )
 
 const (
@@ -50,7 +50,7 @@ func main() {
 	run(ctx) // should block
 }
 
-func run(ctx context.Context, custom ...mhttp2.Configurer) {
+func run(ctx context.Context, custom ...mhttp.Configurer) {
 	rootCmd := &cobra.Command{
 		Use:     _usage,
 		Short:   _shortDescription,
@@ -58,19 +58,19 @@ func run(ctx context.Context, custom ...mhttp2.Configurer) {
 		Args:    cobra.MinimumNArgs(0),
 		Example: _example,
 		Run: func(cmd *cobra.Command, args []string) {
-			configurers := make([]mhttp2.Configurer, 0)
+			configurers := make([]mhttp.Configurer, 0)
 			if len(custom) > 0 {
 				configurers = append(configurers, custom...)
 			}
 
-			configurers = append(configurers, mhttp2.UseLocals())
+			configurers = append(configurers, mhttp.UseLocals())
 
 			_, exists := os.LookupEnv(_dockerHostEnv)
 			if exists {
 				configurers = append(configurers, &dockerConfigurer{})
 			}
 
-			m := mhttp2.NewAPI(configurers...)
+			m := mhttp.NewAPI(configurers...)
 			m.MustStart()
 
 			fmt.Println(_banner)

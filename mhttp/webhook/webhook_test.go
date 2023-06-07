@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	. "github.com/vitorsalgado/mocha/v3/matcher"
-	mhttp2 "github.com/vitorsalgado/mocha/v3/mhttp"
+	"github.com/vitorsalgado/mocha/v3/mhttp"
 	. "github.com/vitorsalgado/mocha/v3/misc"
 )
 
@@ -27,32 +27,32 @@ const (
 
 func TestWebHook_Run(t *testing.T) {
 	key := "test_key"
-	target := mhttp2.NewAPIWithT(t)
+	target := mhttp.NewAPIWithT(t)
 	target.MustStart()
 
-	m := mhttp2.NewAPIWithT(t, mhttp2.Setup().PostAction(Name, New()))
+	m := mhttp.NewAPIWithT(t, mhttp.Setup().PostAction(Name, New()))
 	m.MustStart()
 
 	testCases := []struct {
 		name          string
-		targetMock    *mhttp2.HTTPMockBuilder
-		webhookDef    *mhttp2.PostActionDef
+		targetMock    *mhttp.HTTPMockBuilder
+		webhookDef    *mhttp.PostActionDef
 		expectedCalls int
 	}{
 		{"basic with default method",
-			mhttp2.Getf("/third_party/hook").
-				Reply(mhttp2.OK()),
+			mhttp.Getf("/third_party/hook").
+				Reply(mhttp.OK()),
 			Setup().
 				URL(target.URL("/third_party/hook")).
 				Build(),
 			1,
 		},
 		{"complex",
-			mhttp2.Postf("/third_party/hook").
+			mhttp.Postf("/third_party/hook").
 				Headerf("X-Key", key).
 				Headerf(HeaderContentType, MIMETextPlain).
 				Body(Eq("hi")).
-				Reply(mhttp2.OK().PlainText("bye")),
+				Reply(mhttp.OK().PlainText("bye")),
 			Setup().
 				URL(target.URL("/third_party/hook")).
 				Method(http.MethodPost).
@@ -64,10 +64,10 @@ func TestWebHook_Run(t *testing.T) {
 		},
 		{
 			"no body",
-			mhttp2.Postf("/third_party/hook").
+			mhttp.Postf("/third_party/hook").
 				Headerf("X-Key", key).
 				Headerf(HeaderContentType, MIMETextPlain).
-				Reply(mhttp2.OK().PlainText("bye")),
+				Reply(mhttp.OK().PlainText("bye")),
 			Setup().
 				URL(target.URL("/third_party/hook")).
 				Method(http.MethodPost).
@@ -78,9 +78,9 @@ func TestWebHook_Run(t *testing.T) {
 		},
 		{
 			"bad request from target",
-			mhttp2.Postf("/third_party/hook").
+			mhttp.Postf("/third_party/hook").
 				Headerf(HeaderContentType, MIMETextPlain).
-				Reply(mhttp2.BadRequest()),
+				Reply(mhttp.BadRequest()),
 			Setup().
 				URL(target.URL("/third_party/hook")).
 				Method(http.MethodPost).
@@ -90,14 +90,14 @@ func TestWebHook_Run(t *testing.T) {
 		},
 		{
 			"transform",
-			mhttp2.Putf("/third_party/hook/transformed").
+			mhttp.Putf("/third_party/hook/transformed").
 				Headerf(HeaderContentType, MIMETextPlain).
 				Body(Eq("hello world")).
-				Reply(mhttp2.BadRequest()),
+				Reply(mhttp.BadRequest()),
 			Setup().
 				URL(target.URL("/third_party/hook")).
 				Method(http.MethodPost).
-				Transform(func(input *mhttp2.PostActionInput, args *Input) error {
+				Transform(func(input *mhttp.PostActionInput, args *Input) error {
 					args.URL += "/transformed"
 					args.Method = http.MethodPut
 					args.Body = "hello world"
@@ -109,12 +109,12 @@ func TestWebHook_Run(t *testing.T) {
 		},
 		{
 			"transform with error",
-			mhttp2.Getf("/third_party/hook/transformed").
-				Reply(mhttp2.BadRequest()),
+			mhttp.Getf("/third_party/hook/transformed").
+				Reply(mhttp.BadRequest()),
 			Setup().
 				URL(target.URL("/third_party/hook")).
 				Method(http.MethodGet).
-				Transform(func(input *mhttp2.PostActionInput, args *Input) error {
+				Transform(func(input *mhttp.PostActionInput, args *Input) error {
 					return errors.New("boom")
 				}).
 				Build(),
@@ -122,8 +122,8 @@ func TestWebHook_Run(t *testing.T) {
 		},
 		{
 			"malformed url",
-			mhttp2.Postf("/third_party/hook").
-				Reply(mhttp2.OK()),
+			mhttp.Postf("/third_party/hook").
+				Reply(mhttp.OK()),
 			Setup().
 				URL(" -   " + string(rune(0x7f))).
 				Method(http.MethodPost).
@@ -132,7 +132,7 @@ func TestWebHook_Run(t *testing.T) {
 		},
 		{
 			"unable to build http request",
-			mhttp2.Postf("/third_party/hook").Reply(mhttp2.OK()),
+			mhttp.Postf("/third_party/hook").Reply(mhttp.OK()),
 			Setup().
 				URL(target.URL("/third_party/hook")).
 				Method("ghjk%&^*()").
@@ -148,9 +148,9 @@ func TestWebHook_Run(t *testing.T) {
 
 			target.MustMock(tc.targetMock)
 
-			m.MustMock(mhttp2.Getf("/test").
+			m.MustMock(mhttp.Getf("/test").
 				PostAction(tc.webhookDef).
-				Reply(mhttp2.NoContent()))
+				Reply(mhttp.NoContent()))
 
 			client := &http.Client{}
 			req, _ := http.NewRequest(http.MethodGet, m.URL("/test"), nil)
@@ -175,18 +175,18 @@ func TestWebHook_TLS(t *testing.T) {
 	certPool := x509.NewCertPool()
 	certPool.AppendCertsFromPEM(caCert)
 
-	target := mhttp2.NewAPIWithT(t, mhttp2.Setup().TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile))
+	target := mhttp.NewAPIWithT(t, mhttp.Setup().TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile))
 	target.MustStartTLS()
-	target.MustMock(mhttp2.Postf("/third_party/hook/tls").
+	target.MustMock(mhttp.Postf("/third_party/hook/tls").
 		Headerf("X-Key", key).
 		Headerf(HeaderContentType, MIMETextPlainCharsetUTF8).
-		Reply(mhttp2.OK().PlainText("hello")))
+		Reply(mhttp.OK().PlainText("hello")))
 
-	m := mhttp2.NewAPIWithT(t, mhttp2.Setup().
+	m := mhttp.NewAPIWithT(t, mhttp.Setup().
 		TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile).
 		PostAction(Name, New()))
 	m.MustStartTLS()
-	m.MustMock(mhttp2.Putf("/test").
+	m.MustMock(mhttp.Putf("/test").
 		PostAction(Setup().
 			URL(target.URL("/third_party/hook/tls")).
 			Method(http.MethodPost).
@@ -195,7 +195,7 @@ func TestWebHook_TLS(t *testing.T) {
 			SSLVerify(true).
 			Body("hi").
 			Build()).
-		Reply(mhttp2.NoContent()))
+		Reply(mhttp.NoContent()))
 
 	client := &http.Client{
 		Transport: &http.Transport{
@@ -214,20 +214,20 @@ func TestWebHook_TLS(t *testing.T) {
 }
 
 func TestWebHook_FaultTarget(t *testing.T) {
-	target := mhttp2.NewAPIWithT(t)
+	target := mhttp.NewAPIWithT(t)
 	target.MustStart()
-	target.MustMock(mhttp2.Getf("/hook/fault").
+	target.MustMock(mhttp.Getf("/hook/fault").
 		Delay(1 * time.Minute).
-		Reply(mhttp2.OK().PlainText("hello")))
+		Reply(mhttp.OK().PlainText("hello")))
 
-	m := mhttp2.NewAPIWithT(t, mhttp2.Setup().PostAction(Name, New()))
+	m := mhttp.NewAPIWithT(t, mhttp.Setup().PostAction(Name, New()))
 	m.MustStart()
-	m.MustMock(mhttp2.Getf("/test").
+	m.MustMock(mhttp.Getf("/test").
 		PostAction(Setup().
 			URL(target.URL("/hook/fault")).
 			Method(http.MethodGet).
 			Build()).
-		Reply(mhttp2.NoContent()))
+		Reply(mhttp.NoContent()))
 
 	client := &http.Client{}
 	timeout := 2 * time.Second
@@ -264,21 +264,21 @@ func TestWebHook_InvalidArgs(t *testing.T) {
 	client := &http.Client{}
 	testCases := []any{make(chan struct{}), nil}
 
-	target := mhttp2.NewAPIWithT(t, mhttp2.Setup().HTTPClient(func() *http.Client {
+	target := mhttp.NewAPIWithT(t, mhttp.Setup().HTTPClient(func() *http.Client {
 		return client
 	}))
 	target.MustStart()
-	target.MustMock(mhttp2.Getf("/hook").Reply(mhttp2.OK()))
+	target.MustMock(mhttp.Getf("/hook").Reply(mhttp.OK()))
 
-	m := mhttp2.NewAPIWithT(t, mhttp2.Setup().PostAction(Name, New()))
+	m := mhttp.NewAPIWithT(t, mhttp.Setup().PostAction(Name, New()))
 	m.MustStart()
 
 	for i, tc := range testCases {
 		tc := tc
 		t.Run(strconv.FormatInt(int64(i), 10), func(t *testing.T) {
-			m.MustMock(mhttp2.Getf("/test").
-				PostAction(&mhttp2.PostActionDef{Name: Name, RawParameters: tc}).
-				Reply(mhttp2.NoContent()))
+			m.MustMock(mhttp.Getf("/test").
+				PostAction(&mhttp.PostActionDef{Name: Name, RawParameters: tc}).
+				Reply(mhttp.NoContent()))
 
 			res, err := client.Get(m.URL("/test"))
 
@@ -291,20 +291,20 @@ func TestWebHook_InvalidArgs(t *testing.T) {
 }
 
 func TestWebHook_FileSetup(t *testing.T) {
-	target := mhttp2.NewAPIWithT(t)
+	target := mhttp.NewAPIWithT(t)
 	target.MustStart()
-	target.MustMock(mhttp2.Postf("/fs/hook").
+	target.MustMock(mhttp.Postf("/fs/hook").
 		Headerf("hello", "world").
 		Headerf("dev", "ok").
 		ContentType(MIMEApplicationJSON).
 		Body(Eq(`{"task": "done"}`)).
-		Reply(mhttp2.NoContent()))
+		Reply(mhttp.NoContent()))
 
-	m := mhttp2.NewAPIWithT(t, mhttp2.Setup().PostAction(Name, New()))
+	m := mhttp.NewAPIWithT(t, mhttp.Setup().PostAction(Name, New()))
 	m.SetData(map[string]any{"webhook_target": target.URL("/fs/hook")})
 
 	m.MustStart()
-	m.MustMock(mhttp2.FromFile("testdata/1_webhook_complete_setup.yaml"))
+	m.MustMock(mhttp.FromFile("testdata/1_webhook_complete_setup.yaml"))
 
 	client := &http.Client{}
 	req, _ := http.NewRequest(http.MethodGet, m.URL("/test"), nil)
@@ -327,8 +327,8 @@ func TestWebHook_InvalidFiles(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			m := mhttp2.NewAPIWithT(t, mhttp2.Setup().PostAction(Name, New()))
-			_, err := m.Mock(mhttp2.FromFile(tc.filename))
+			m := mhttp.NewAPIWithT(t, mhttp.Setup().PostAction(Name, New()))
+			_, err := m.Mock(mhttp.FromFile(tc.filename))
 
 			require.Error(t, err)
 		})

@@ -11,20 +11,20 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	mhttp2 "github.com/vitorsalgado/mocha/v3/mhttp"
+	"github.com/vitorsalgado/mocha/v3/mhttp"
 )
 
 func TestCLI(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(func() { cancel() })
 
-	sc := mhttp2.StatusNoMatch
+	sc := mhttp.StatusNoMatch
 
 	port, err := getRandomPort()
 	require.NoError(t, err)
 
 	portTxt := strconv.FormatInt(int64(port), 10)
-	cfg := &mhttp2.Config{Addr: ":" + portTxt}
+	cfg := &mhttp.Config{Addr: ":" + portTxt}
 
 	go run(ctx, cfg)
 

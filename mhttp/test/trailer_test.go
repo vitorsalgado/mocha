@@ -8,19 +8,19 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	mhttp2 "github.com/vitorsalgado/mocha/v3/mhttp"
+	"github.com/vitorsalgado/mocha/v3/mhttp"
 	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
 func TestTrailer_WithBody(t *testing.T) {
-	m := mhttp2.NewAPI()
+	m := mhttp.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
 
 	scoped := m.MustMock(
-		mhttp2.Get(matcher.URLPath("/test")).
-			Reply(mhttp2.OK().
+		mhttp.Get(matcher.URLPath("/test")).
+			Reply(mhttp.OK().
 				PlainText("hello world").
 				Header(misc.HeaderContentType, misc.MIMETextPlain).
 				Trailer("trailer-1", "trailer-1-value").
@@ -46,14 +46,14 @@ func TestTrailer_WithBody(t *testing.T) {
 }
 
 func TestTrailer_WithoutBody(t *testing.T) {
-	m := mhttp2.NewAPI()
+	m := mhttp.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
 
 	scoped := m.MustMock(
-		mhttp2.Get(matcher.URLPath("/test")).
-			Reply(mhttp2.OK().
+		mhttp.Get(matcher.URLPath("/test")).
+			Reply(mhttp.OK().
 				Header(misc.HeaderContentType, misc.MIMETextPlain).
 				Trailer("trailer-1", "trailer-1-value").
 				Trailer("trailer-2", "trailer-2-value")))

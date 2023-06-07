@@ -9,18 +9,18 @@ import (
 	"github.com/stretchr/testify/require"
 
 	. "github.com/vitorsalgado/mocha/v3/matcher"
-	mhttp2 "github.com/vitorsalgado/mocha/v3/mhttp"
+	"github.com/vitorsalgado/mocha/v3/mhttp"
 )
 
 func TestSequenceReplies(t *testing.T) {
-	m := mhttp2.NewAPI()
+	m := mhttp.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
 
-	m.MustMock(mhttp2.Get(URLPath("/test")).
-		Reply(mhttp2.Seq().
-			Add(mhttp2.Unauthorized(), mhttp2.OK())))
+	m.MustMock(mhttp.Get(URLPath("/test")).
+		Reply(mhttp.Seq().
+			Add(mhttp.Unauthorized(), mhttp.OK())))
 
 	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
 
@@ -40,15 +40,15 @@ func TestSequenceReplies(t *testing.T) {
 }
 
 func TestSequenceRepliesOnSequenceEndsSet(t *testing.T) {
-	m := mhttp2.NewAPI()
+	m := mhttp.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
 
-	m.MustMock(mhttp2.Get(URLPath("/test")).
-		Reply(mhttp2.Seq().
-			Add(mhttp2.Unauthorized(), mhttp2.OK()).
-			OnSequenceEnded(mhttp2.Created())))
+	m.MustMock(mhttp.Get(URLPath("/test")).
+		Reply(mhttp.Seq().
+			Add(mhttp.Unauthorized(), mhttp.OK()).
+			OnSequenceEnded(mhttp.Created())))
 
 	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
 
@@ -74,12 +74,12 @@ func TestSequence_SetupFromFile(t *testing.T) {
 		Num  float64 `json:"num,omitempty"`
 	}
 
-	m := mhttp2.NewAPI()
+	m := mhttp.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
 
-	m.MustMock(mhttp2.FromFile("testdata/response_sequence/seq_01.yaml"))
+	m.MustMock(mhttp.FromFile("testdata/response_sequence/seq_01.yaml"))
 
 	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
 

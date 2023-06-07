@@ -9,7 +9,7 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
-	mhttp2 "github.com/vitorsalgado/mocha/v3/mhttp"
+	"github.com/vitorsalgado/mocha/v3/mhttp"
 )
 
 func TestHandlerGetById(t *testing.T) {
@@ -19,10 +19,10 @@ func TestHandlerGetById(t *testing.T) {
 	id := "super-id"
 	customer := Customer{ID: id, Name: "nice-name"}
 
-	m.MustMock(mhttp2.Get(URLPathf("/customers/%s", id)).
+	m.MustMock(mhttp.Get(URLPathf("/customers/%s", id)).
 		Header(headerAccept, StrictEqual(contentTypeJSON)).
 		Header(headerContentType, StrictEqual(contentTypeJSON)).
-		Reply(mhttp2.OK().BodyJSON(customer)))
+		Reply(mhttp.OK().BodyJSON(customer)))
 
 	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/customer/%s", id), nil)
 	rr := httptest.NewRecorder()

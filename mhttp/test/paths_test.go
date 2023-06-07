@@ -6,21 +6,21 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	mhttp2 "github.com/vitorsalgado/mocha/v3/mhttp"
+	"github.com/vitorsalgado/mocha/v3/mhttp"
 )
 
 func TestSimilarRequestURLPaths(t *testing.T) {
-	m := mhttp2.NewAPI()
+	m := mhttp.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
 
 	scope := m.MustMock(
-		mhttp2.Getf("/customers").Reply(mhttp2.OK()),
-		mhttp2.Getf("/customers/100").Reply(mhttp2.Accepted()),
-		mhttp2.Getf("/customers/100/orders").Reply(mhttp2.Unauthorized()),
-		mhttp2.Getf("/customers/100/orders/BR-500").Reply(mhttp2.BadRequest()),
-		mhttp2.Getf("/customers/100/orders/BR-500/items").Reply(mhttp2.InternalServerError()))
+		mhttp.Getf("/customers").Reply(mhttp.OK()),
+		mhttp.Getf("/customers/100").Reply(mhttp.Accepted()),
+		mhttp.Getf("/customers/100/orders").Reply(mhttp.Unauthorized()),
+		mhttp.Getf("/customers/100/orders/BR-500").Reply(mhttp.BadRequest()),
+		mhttp.Getf("/customers/100/orders/BR-500/items").Reply(mhttp.InternalServerError()))
 
 	res, err := http.DefaultClient.Get(m.URL() + "/customers")
 	require.NoError(t, err)
@@ -44,7 +44,7 @@ func TestSimilarRequestURLPaths(t *testing.T) {
 
 	res, err = http.DefaultClient.Get(m.URL() + "/customers/orders")
 	require.NoError(t, err)
-	require.Equal(t, mhttp2.StatusNoMatch, res.StatusCode)
+	require.Equal(t, mhttp.StatusNoMatch, res.StatusCode)
 
 	scope.AssertNumberOfCalls(t, 5)
 }

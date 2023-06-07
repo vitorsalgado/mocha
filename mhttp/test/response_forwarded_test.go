@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	. "github.com/vitorsalgado/mocha/v3/matcher"
-	mhttp2 "github.com/vitorsalgado/mocha/v3/mhttp"
+	"github.com/vitorsalgado/mocha/v3/mhttp"
 	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
@@ -32,14 +32,14 @@ func TestProxiedReplies(t *testing.T) {
 
 	defer dest.Close()
 
-	m := mhttp2.NewAPI()
+	m := mhttp.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
 
-	scoped := m.MustMock(mhttp2.Post(URLPath("/test")).
+	scoped := m.MustMock(mhttp.Post(URLPath("/test")).
 		Body(StrictEqual("hello world")).
-		Reply(mhttp2.From(dest.URL).
+		Reply(mhttp.From(dest.URL).
 			ForwardHeader("x-test", "ok").
 			Header("x-res", "example").
 			RemoveProxyHeaders("x-del")))
@@ -63,17 +63,17 @@ func TestProxiedReplies(t *testing.T) {
 }
 
 func TestProxiedReplyMockFileWithTemplate(t *testing.T) {
-	target := mhttp2.NewAPI()
+	target := mhttp.NewAPI()
 	target.MustStart()
 	defer target.Close()
 
 	targetScoped := target.MustMock(
-		mhttp2.Postf("/test").
+		mhttp.Postf("/test").
 			Headerf("test", "ok").
 			Header("del", Not(Present())).
-			Reply(mhttp2.OK().PlainText("done")))
+			Reply(mhttp.OK().PlainText("done")))
 
-	m := mhttp2.NewAPI()
+	m := mhttp.NewAPI()
 	m.MustStart()
 	defer m.Close()
 
@@ -81,7 +81,7 @@ func TestProxiedReplyMockFileWithTemplate(t *testing.T) {
 	data["target"] = target.URL()
 	m.SetData(data)
 
-	scoped := m.MustMock(mhttp2.FromFile("testdata/response_forwarded/proxied_response.yaml"))
+	scoped := m.MustMock(mhttp.FromFile("testdata/response_forwarded/proxied_response.yaml"))
 	httpClient := &http.Client{}
 
 	req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", strings.NewReader("hello world"))

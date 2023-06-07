@@ -6,16 +6,16 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	mhttp2 "github.com/vitorsalgado/mocha/v3/mhttp"
+	"github.com/vitorsalgado/mocha/v3/mhttp"
 )
 
 func TestRandom_SetupFromFileWithSeed(t *testing.T) {
-	m := mhttp2.NewAPI()
+	m := mhttp.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
 
-	m.MustMock(mhttp2.FromFile("testdata/response_random/rand_01.yaml"))
+	m.MustMock(mhttp.FromFile("testdata/response_random/rand_01.yaml"))
 
 	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
 

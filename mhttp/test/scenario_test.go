@@ -9,44 +9,44 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3/foundation"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
-	mhttp2 "github.com/vitorsalgado/mocha/v3/mhttp"
+	"github.com/vitorsalgado/mocha/v3/mhttp"
 )
 
 func TestScenarios(t *testing.T) {
 	testCases := []struct {
 		name string
-		s1   foundation.Builder[*mhttp2.HTTPMock, *mhttp2.HTTPMockApp]
-		s2   foundation.Builder[*mhttp2.HTTPMock, *mhttp2.HTTPMockApp]
-		s3   foundation.Builder[*mhttp2.HTTPMock, *mhttp2.HTTPMockApp]
+		s1   foundation.Builder[*mhttp.HTTPMock, *mhttp.HTTPMockApp]
+		s2   foundation.Builder[*mhttp.HTTPMock, *mhttp.HTTPMockApp]
+		s3   foundation.Builder[*mhttp.HTTPMock, *mhttp.HTTPMockApp]
 	}{
 		{"code",
-			mhttp2.Get(URLPath("/1")).
+			mhttp.Get(URLPath("/1")).
 				StartScenario("code").
 				ScenarioStateWillBe("step2").
 				Name("step-1").
-				Reply(mhttp2.OK().PlainText("step1")),
-			mhttp2.Get(URLPath("/2")).
+				Reply(mhttp.OK().PlainText("step1")),
+			mhttp.Get(URLPath("/2")).
 				ScenarioIs("code").
 				ScenarioStateIs("step2").
 				ScenarioStateWillBe("step3").
 				Name("step-2").
-				Reply(mhttp2.OK().PlainText("step2")),
-			mhttp2.Get(URLPath("/3")).
+				Reply(mhttp.OK().PlainText("step2")),
+			mhttp.Get(URLPath("/3")).
 				ScenarioIs("code").
 				ScenarioStateIs("step3").
 				ScenarioStateWillBe("step4").
 				Name("step-3").
-				Reply(mhttp2.OK().PlainText("step3"))},
+				Reply(mhttp.OK().PlainText("step3"))},
 
 		{"file",
-			mhttp2.FromFile("testdata/scenario/step_1.yaml"),
-			mhttp2.FromFile("testdata/scenario/step_2.yaml"),
-			mhttp2.FromFile("testdata/scenario/step_3.yaml")},
+			mhttp.FromFile("testdata/scenario/step_1.yaml"),
+			mhttp.FromFile("testdata/scenario/step_2.yaml"),
+			mhttp.FromFile("testdata/scenario/step_3.yaml")},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			m := mhttp2.NewAPIWithT(t)
+			m := mhttp.NewAPIWithT(t)
 			m.MustStart()
 
 			s1 := m.MustMock(tc.s1)
@@ -73,7 +73,7 @@ func TestScenarios(t *testing.T) {
 
 			require.NoError(t, err)
 			require.NoError(t, res.Body.Close())
-			require.Equal(t, mhttp2.StatusNoMatch, res.StatusCode)
+			require.Equal(t, mhttp.StatusNoMatch, res.StatusCode)
 
 			// --- step2
 
@@ -95,7 +95,7 @@ func TestScenarios(t *testing.T) {
 
 			require.NoError(t, err)
 			require.NoError(t, res.Body.Close())
-			require.Equal(t, mhttp2.StatusNoMatch, res.StatusCode)
+			require.Equal(t, mhttp.StatusNoMatch, res.StatusCode)
 
 			// --- step3
 
@@ -117,7 +117,7 @@ func TestScenarios(t *testing.T) {
 
 			require.NoError(t, err)
 			require.NoError(t, res.Body.Close())
-			require.Equal(t, mhttp2.StatusNoMatch, res.StatusCode)
+			require.Equal(t, mhttp.StatusNoMatch, res.StatusCode)
 		})
 	}
 }

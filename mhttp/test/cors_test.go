@@ -7,18 +7,18 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	mhttp2 "github.com/vitorsalgado/mocha/v3/mhttp"
+	"github.com/vitorsalgado/mocha/v3/mhttp"
 )
 
 func TestCORS(t *testing.T) {
 	client := &http.Client{}
-	m := mhttp2.NewAPI(mhttp2.Setup().CORS())
+	m := mhttp.NewAPI(mhttp.Setup().CORS())
 	m.MustStart()
 
 	defer m.Close()
 
-	m.MustMock(mhttp2.Get(matcher.URLPath("/test")).
-		Reply(mhttp2.OK()))
+	m.MustMock(mhttp.Get(matcher.URLPath("/test")).
+		Reply(mhttp.OK()))
 
 	corsReq, _ := http.NewRequest(http.MethodOptions, m.URL()+"/test", nil)
 	res, err := client.Do(corsReq)

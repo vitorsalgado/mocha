@@ -6,12 +6,12 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	mhttp2 "github.com/vitorsalgado/mocha/v3/mhttp"
+	"github.com/vitorsalgado/mocha/v3/mhttp"
 )
 
 func TestEnabledDisabledMocks(t *testing.T) {
 	httpClient := &http.Client{}
-	m := mhttp2.NewAPIWithT(t, mhttp2.Setup().MockFilePatterns("testdata/enabled/*.yaml"))
+	m := mhttp.NewAPIWithT(t, mhttp.Setup().MockFilePatterns("testdata/enabled/*.yaml"))
 	m.MustStart()
 
 	testCases := []struct {
@@ -20,7 +20,7 @@ func TestEnabledDisabledMocks(t *testing.T) {
 	}{
 		{"/test", 200},
 		{"/hello", 200},
-		{"/dev", mhttp2.StatusNoMatch},
+		{"/dev", mhttp.StatusNoMatch},
 	}
 
 	for _, tc := range testCases {

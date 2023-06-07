@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	mhttp2 "github.com/vitorsalgado/mocha/v3/mhttp"
+	"github.com/vitorsalgado/mocha/v3/mhttp"
 )
 
 func TestHandlerReply(t *testing.T) {
@@ -22,13 +22,13 @@ func TestHandlerReply(t *testing.T) {
 		w.Write([]byte(msg))
 	}
 
-	m := mhttp2.NewAPI()
+	m := mhttp.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
 
-	m.MustMock(mhttp2.Get(matcher.URLPath("/test")).
-		Reply(mhttp2.Handler(fn)),
+	m.MustMock(mhttp.Get(matcher.URLPath("/test")).
+		Reply(mhttp.Handler(fn)),
 	)
 
 	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
