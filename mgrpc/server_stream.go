@@ -76,17 +76,15 @@ func (r *BuiltInServerStreamReply) AnyMessages(arr []any) *BuiltInServerStreamRe
 	return r
 }
 
-func (r *BuiltInServerStreamReply) StreamText(reader io.Reader, messageType proto.Message) *BuiltInServerStreamReply {
+func (r *BuiltInServerStreamReply) Text(reader io.Reader) *BuiltInServerStreamReply {
 	r.response.Stream = reader
 	r.response.StreamType = StreamTypeText
-	r.response.MsgType = messageType
 	return r
 }
 
-func (r *BuiltInServerStreamReply) StreamJSON(reader io.Reader, messageType proto.Message) *BuiltInServerStreamReply {
+func (r *BuiltInServerStreamReply) JSON(reader io.Reader) *BuiltInServerStreamReply {
 	r.response.Stream = reader
 	r.response.StreamType = StreamTypeJSON
-	r.response.MsgType = messageType
 	return r
 }
 
@@ -154,10 +152,21 @@ func (r *BuiltInServerStreamReply) decode(b []byte, m proto.Message) error {
 	return fmt.Errorf("stream: unexpected stream type %d", r.response.StreamType)
 }
 
-func ServerStream() *BuiltInServerStreamReply {
+func ServerStreamT[T proto.Message]() *BuiltInServerStreamReply {
+	var msgType T
+
 	return &BuiltInServerStreamReply{response: &StreamResponse{
 		Header:  make(metadata.MD),
 		Trailer: make(metadata.MD),
+		MsgType: msgType,
+	}}
+}
+
+func ServerStream(messageType proto.Message) *BuiltInServerStreamReply {
+	return &BuiltInServerStreamReply{response: &StreamResponse{
+		Header:  make(metadata.MD),
+		Trailer: make(metadata.MD),
+		MsgType: messageType,
 	}}
 }
 
