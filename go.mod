@@ -6,7 +6,6 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/ohler55/ojg v1.18.3
-	github.com/redis/go-redis/v9 v9.0.3
 	github.com/rs/zerolog v1.29.0
 	github.com/ryanuber/go-glob v1.0.0
 	github.com/spf13/cobra v1.6.1
@@ -16,11 +15,6 @@ require (
 	github.com/xeipuuv/gojsonschema v1.2.0
 	go.uber.org/goleak v1.2.1
 	golang.org/x/net v0.8.0
-)
-
-require (
-	github.com/cespare/xxhash/v2 v2.2.0 // indirect
-	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 )
 
 require (
