@@ -9,8 +9,8 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3/foundation"
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/mhttp"
-	"github.com/vitorsalgado/mocha/v3/mhttp/test/testmock"
+	"github.com/vitorsalgado/mocha/v3/httpd"
+	"github.com/vitorsalgado/mocha/v3/httpd/test/testmock"
 )
 
 func TestScoped(t *testing.T) {

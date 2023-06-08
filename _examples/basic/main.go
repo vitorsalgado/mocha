@@ -9,9 +9,9 @@ import (
 	"syscall"
 
 	"github.com/vitorsalgado/mocha/v3"
+	"github.com/vitorsalgado/mocha/v3/httpd"
+	"github.com/vitorsalgado/mocha/v3/httpd/httpval"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/mhttp"
-	"github.com/vitorsalgado/mocha/v3/mhttpv"
 )
 
 func main() {
@@ -22,8 +22,8 @@ func main() {
 	m.MustStart()
 
 	m.MustMock(mhttp.Get(URLPath("/test")).
-		Header(mhttpv.HeaderAccept, Contain(mhttpv.MIMETextHTML)).
-		Header(mhttpv.HeaderContentType, StrictEqual("test")).
+		Header(httpval.HeaderAccept, Contain(httpval.MIMETextHTML)).
+		Header(httpval.HeaderContentType, StrictEqual("test")).
 		Header("any", All(Contain("test"), EqualIgnoreCase("dev"))).
 		Reply(mhttp.OK().
 			PlainText("hello world").

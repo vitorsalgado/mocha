@@ -2,7 +2,7 @@ package mocha
 
 import (
 	"github.com/vitorsalgado/mocha/v3/foundation"
-	"github.com/vitorsalgado/mocha/v3/mhttp"
+	"github.com/vitorsalgado/mocha/v3/httpd"
 )
 
 func NewAPI(config ...mhttp.Configurer) *mhttp.HTTPMockApp {
