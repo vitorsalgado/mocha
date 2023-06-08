@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/v3/internal/mid"
+	"github.com/vitorsalgado/mocha/v3/mhttp/internal/mid"
 	"github.com/vitorsalgado/mocha/v3/misc"
 )
 

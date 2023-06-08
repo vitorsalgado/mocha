@@ -16,11 +16,11 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3/foundation"
 	"github.com/vitorsalgado/mocha/v3/internal/colorize"
-	"github.com/vitorsalgado/mocha/v3/internal/mid"
-	"github.com/vitorsalgado/mocha/v3/internal/mid/recover"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/matcher/mfeat"
 	"github.com/vitorsalgado/mocha/v3/mhttp/cors"
+	"github.com/vitorsalgado/mocha/v3/mhttp/internal/mid"
+	recover2 "github.com/vitorsalgado/mocha/v3/mhttp/internal/mid/recover"
 )
 
 var (
@@ -99,7 +99,7 @@ func NewAPI(config ...Configurer) *HTTPMockApp {
 	parsers = append(parsers, conf.RequestBodyParsers...)
 	parsers = append(parsers, &plainTextParser{}, &formURLEncodedParser{}, &noopParser{})
 
-	recovery := recover.New(func(err error) { app.logger.Error().Err(err).Msg(err.Error()) },
+	recovery := recover2.New(func(err error) { app.logger.Error().Err(err).Msg(err.Error()) },
 		conf.RequestWasNotMatchedStatusCode)
 
 	middlewares := make([]func(handler http.Handler) http.Handler, 0)
@@ -135,8 +135,7 @@ func NewAPI(config ...Configurer) *HTTPMockApp {
 		lifecycle = &builtInMockHTTPLifecycle{app}
 	}
 
-	handler := mid.
-		Compose(middlewares...).
+	handler := mid.Compose(middlewares...).
 		Root(&mockHandler{app, lifecycle})
 
 	if conf.HandlerDecorator != nil {

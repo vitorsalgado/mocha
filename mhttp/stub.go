@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/vitorsalgado/mocha/v3/internal/httprec"
+	"github.com/vitorsalgado/mocha/v3/mhttp/internal/httprec"
 )
 
 // Stub defines the HTTP response that will be served once a Mock is matched for an HTTP Request.

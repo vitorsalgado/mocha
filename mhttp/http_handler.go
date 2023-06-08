@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/vitorsalgado/mocha/v3/foundation"
-	"github.com/vitorsalgado/mocha/v3/internal/httprec"
 	"github.com/vitorsalgado/mocha/v3/matcher"
+	"github.com/vitorsalgado/mocha/v3/mhttp/internal/httprec"
 	"github.com/vitorsalgado/mocha/v3/misc"
 )
 
