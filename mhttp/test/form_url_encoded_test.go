@@ -10,7 +10,7 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/mhttp"
-	"github.com/vitorsalgado/mocha/v3/misc"
+	"github.com/vitorsalgado/mocha/v3/mhttpv"
 )
 
 func TestFormUrlEncoded(t *testing.T) {
@@ -29,7 +29,7 @@ func TestFormUrlEncoded(t *testing.T) {
 
 	req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", strings.NewReader(data.Encode()))
 	req.Header.Add("test", "hello")
-	req.Header.Add(misc.HeaderContentType, misc.MIMEFormURLEncoded)
+	req.Header.Add(mhttpv.HeaderContentType, mhttpv.MIMEFormURLEncoded)
 	res, err := httpClient.Do(req)
 
 	require.NoError(t, err)
@@ -125,7 +125,7 @@ func TestFormUrlEncoded_FromFileMock(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", strings.NewReader(tc.data().Encode()))
-			req.Header.Add(misc.HeaderContentType, misc.MIMEFormURLEncoded)
+			req.Header.Add(mhttpv.HeaderContentType, mhttpv.MIMEFormURLEncoded)
 			res, err := httpClient.Do(req)
 
 			require.NoError(t, err)

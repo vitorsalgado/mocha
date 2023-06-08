@@ -17,7 +17,7 @@ import (
 	"github.com/vitorsalgado/mocha/v3"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/mhttp"
-	"github.com/vitorsalgado/mocha/v3/misc"
+	"github.com/vitorsalgado/mocha/v3/mhttpv"
 )
 
 type Srv struct {
@@ -115,19 +115,19 @@ func main() {
 	m.MustStart()
 
 	m.MustMock(mhttp.Get(URLPath("/test")).
-		Header(misc.HeaderAccept, Contain(misc.MIMETextPlain)).
+		Header(mhttpv.HeaderAccept, Contain(mhttpv.MIMETextPlain)).
 		Header("X-Scenario", StrictEqual("1")).
 		Reply(mhttp.OK().
 			PlainText("ok").
 			Header("X-Scenario-Result", "true")))
 
 	m.MustMock(mhttp.Post(URLPath("/test")).
-		Header(misc.HeaderContentType, Contain(misc.MIMEApplicationJSON)).
+		Header(mhttpv.HeaderContentType, Contain(mhttpv.MIMEApplicationJSON)).
 		Body(All(
 			JSONPath("active", StrictEqual(true)),
 			JSONPath("result", StrictEqual("ok")))).
 		Reply(mhttp.OK().
-			ContentType(misc.MIMEApplicationJSON).
+			ContentType(mhttpv.MIMEApplicationJSON).
 			BodyReader(f)),
 	)
 

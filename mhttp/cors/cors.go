@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/vitorsalgado/mocha/v3/misc"
+	"github.com/vitorsalgado/mocha/v3/mhttpv"
 )
 
 // Config represents the possible options to configure CORS.
@@ -143,8 +143,8 @@ func New(options *Config) func(http.Handler) http.Handler {
 				configureMaxAge(options, w)
 				configureHeaders(options, w, r)
 
-				w.Header().Add(misc.HeaderVary, misc.HeaderAccessControlRequestHeaders)
-				w.Header().Add(misc.HeaderContentLength, "0")
+				w.Header().Add(mhttpv.HeaderVary, mhttpv.HeaderAccessControlRequestHeaders)
+				w.Header().Add(mhttpv.HeaderContentLength, "0")
 
 				w.WriteHeader(options.SuccessStatusCode)
 			} else {
@@ -162,36 +162,36 @@ func New(options *Config) func(http.Handler) http.Handler {
 func configureHeaders(options *Config, w http.ResponseWriter, r *http.Request) {
 	// when allowed headers aren't specified, use values from header access-control-request-headers
 	if options.AllowedHeaders != "" {
-		w.Header().Add(misc.HeaderAccessControlAllowHeaders, options.AllowedHeaders)
+		w.Header().Add(mhttpv.HeaderAccessControlAllowHeaders, options.AllowedHeaders)
 	} else {
-		hs := r.Header.Get(misc.HeaderAccessControlRequestHeaders)
+		hs := r.Header.Get(mhttpv.HeaderAccessControlRequestHeaders)
 		if strings.TrimSpace(hs) != "" {
-			w.Header().Add(misc.HeaderAccessControlAllowHeaders, hs)
+			w.Header().Add(mhttpv.HeaderAccessControlAllowHeaders, hs)
 		}
 	}
 }
 
 func configureMaxAge(options *Config, w http.ResponseWriter) {
 	if options.MaxAge > -1 {
-		w.Header().Add(misc.HeaderAccessControlMaxAge, strconv.Itoa(options.MaxAge))
+		w.Header().Add(mhttpv.HeaderAccessControlMaxAge, strconv.Itoa(options.MaxAge))
 	}
 }
 
 func configureMethods(options *Config, w http.ResponseWriter) {
 	if len(options.AllowedMethods) > 0 {
-		w.Header().Add(misc.HeaderAccessControlAllowMethods, options.AllowedMethods)
+		w.Header().Add(mhttpv.HeaderAccessControlAllowMethods, options.AllowedMethods)
 	}
 }
 
 func configureExposedHeaders(options *Config, w http.ResponseWriter) {
 	if options.ExposeHeaders != "" {
-		w.Header().Add(misc.HeaderAccessControlExposeHeaders, options.ExposeHeaders)
+		w.Header().Add(mhttpv.HeaderAccessControlExposeHeaders, options.ExposeHeaders)
 	}
 }
 
 func configureCredentials(options *Config, w http.ResponseWriter) {
 	if options.AllowCredentials {
-		w.Header().Add(misc.HeaderAccessControlAllowCredentials, "true")
+		w.Header().Add(mhttpv.HeaderAccessControlAllowCredentials, "true")
 	}
 }
 
@@ -204,8 +204,8 @@ func configureOrigin(options *Config, r *http.Request, w http.ResponseWriter) {
 	size := len(origins)
 
 	if size == 1 {
-		w.Header().Add(misc.HeaderAccessControlAllowOrigin, options.AllowedOrigin)
-		w.Header().Add(misc.HeaderVary, misc.HeaderOrigin)
+		w.Header().Add(mhttpv.HeaderAccessControlAllowOrigin, options.AllowedOrigin)
+		w.Header().Add(mhttpv.HeaderVary, mhttpv.HeaderOrigin)
 		return
 	}
 
@@ -222,7 +222,7 @@ func configureOrigin(options *Config, r *http.Request, w http.ResponseWriter) {
 	}
 
 	if allowed {
-		w.Header().Add(misc.HeaderAccessControlAllowOrigin, origin)
-		w.Header().Add(misc.HeaderVary, misc.HeaderOrigin)
+		w.Header().Add(mhttpv.HeaderAccessControlAllowOrigin, origin)
+		w.Header().Add(mhttpv.HeaderVary, mhttpv.HeaderOrigin)
 	}
 }

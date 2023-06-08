@@ -2,7 +2,6 @@ package matcher
 
 import (
 	"fmt"
-	"reflect"
 
 	"github.com/vitorsalgado/mocha/v3/matcher/internal/mconv"
 	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"

@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	. "github.com/vitorsalgado/mocha/v3/mhttp"
-	"github.com/vitorsalgado/mocha/v3/misc"
+	"github.com/vitorsalgado/mocha/v3/mhttpv"
 )
 
 type testBodyParser struct {
@@ -47,7 +47,7 @@ func TestLogging(t *testing.T) {
 	m.MustMock(Postf("/fail").Reply(OK()))
 
 	req, _ := http.NewRequest(http.MethodPost, m.URL("/panic"), strings.NewReader("hi"))
-	req.Header.Add(misc.HeaderContentType, "PANIC")
+	req.Header.Add(mhttpv.HeaderContentType, "PANIC")
 
 	res, err = http.DefaultClient.Do(req)
 	require.NoError(t, err)
@@ -62,7 +62,7 @@ func TestLogging(t *testing.T) {
 	m.MustMock(Postf("/fail").Reply(OK()))
 
 	req, _ = http.NewRequest(http.MethodPost, m.URL("/fail"), strings.NewReader("hi"))
-	req.Header.Add(misc.HeaderContentType, "ERROR")
+	req.Header.Add(mhttpv.HeaderContentType, "ERROR")
 
 	res, err = http.DefaultClient.Do(req)
 

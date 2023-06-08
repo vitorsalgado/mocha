@@ -16,7 +16,7 @@ import (
 
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/mhttp"
-	. "github.com/vitorsalgado/mocha/v3/misc"
+	. "github.com/vitorsalgado/mocha/v3/mhttpv"
 )
 
 const (

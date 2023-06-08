@@ -9,7 +9,7 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/mhttp"
-	"github.com/vitorsalgado/mocha/v3/misc"
+	"github.com/vitorsalgado/mocha/v3/mhttpv"
 )
 
 func TestTrailer_WithBody(t *testing.T) {
@@ -22,7 +22,7 @@ func TestTrailer_WithBody(t *testing.T) {
 		mhttp.Get(matcher.URLPath("/test")).
 			Reply(mhttp.OK().
 				PlainText("hello world").
-				Header(misc.HeaderContentType, misc.MIMETextPlain).
+				Header(mhttpv.HeaderContentType, mhttpv.MIMETextPlain).
 				Trailer("trailer-1", "trailer-1-value").
 				Trailer("trailer-2", "trailer-2-value")))
 
@@ -33,7 +33,7 @@ func TestTrailer_WithBody(t *testing.T) {
 
 	require.True(t, scoped.AssertCalled(t))
 	require.Equal(t, http.StatusOK, res.StatusCode)
-	require.Equal(t, misc.MIMETextPlain, res.Header.Get(misc.HeaderContentType))
+	require.Equal(t, mhttpv.MIMETextPlain, res.Header.Get(mhttpv.HeaderContentType))
 	require.Len(t, res.Trailer, 2)
 
 	b, err := io.ReadAll(res.Body)
@@ -54,7 +54,7 @@ func TestTrailer_WithoutBody(t *testing.T) {
 	scoped := m.MustMock(
 		mhttp.Get(matcher.URLPath("/test")).
 			Reply(mhttp.OK().
-				Header(misc.HeaderContentType, misc.MIMETextPlain).
+				Header(mhttpv.HeaderContentType, mhttpv.MIMETextPlain).
 				Trailer("trailer-1", "trailer-1-value").
 				Trailer("trailer-2", "trailer-2-value")))
 
@@ -63,7 +63,7 @@ func TestTrailer_WithoutBody(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, scoped.AssertCalled(t))
 	require.Equal(t, http.StatusOK, res.StatusCode)
-	require.Equal(t, misc.MIMETextPlain, res.Header.Get(misc.HeaderContentType))
+	require.Equal(t, mhttpv.MIMETextPlain, res.Header.Get(mhttpv.HeaderContentType))
 	require.Len(t, res.Trailer, 2)
 
 	_, err = io.ReadAll(res.Body)

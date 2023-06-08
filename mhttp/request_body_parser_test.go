@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/vitorsalgado/mocha/v3/misc"
+	"github.com/vitorsalgado/mocha/v3/mhttpv"
 )
 
 func TestWithRequestBodyParsersCanParse(t *testing.T) {
@@ -35,15 +35,15 @@ func TestWithRequestBodyParsersCanParse(t *testing.T) {
 		req         *http.Request
 		expected    bool
 	}{
-		{"Form: can parse application/form-url-encoded", misc.MIMEFormURLEncoded, formParser, newReq(map[string]string{misc.HeaderContentType: misc.MIMEFormURLEncoded}), true},
-		{"Form: can parse application/form-url-encoded; charset=UTF-8", misc.MIMEFormURLEncodedCharsetUTF8, formParser, newReq(map[string]string{misc.HeaderContentType: misc.MIMEFormURLEncodedCharsetUTF8}), true},
-		{"Form: should not parse", misc.MIMEApplicationJSON, formParser, newReq(map[string]string{misc.HeaderContentType: misc.MIMEApplicationJSON}), false},
+		{"Form: can parse application/form-url-encoded", mhttpv.MIMEFormURLEncoded, formParser, newReq(map[string]string{mhttpv.HeaderContentType: mhttpv.MIMEFormURLEncoded}), true},
+		{"Form: can parse application/form-url-encoded; charset=UTF-8", mhttpv.MIMEFormURLEncodedCharsetUTF8, formParser, newReq(map[string]string{mhttpv.HeaderContentType: mhttpv.MIMEFormURLEncodedCharsetUTF8}), true},
+		{"Form: should not parse", mhttpv.MIMEApplicationJSON, formParser, newReq(map[string]string{mhttpv.HeaderContentType: mhttpv.MIMEApplicationJSON}), false},
 
-		{"Text: can parse text/plain", misc.MIMETextPlain, textParser, newReq(map[string]string{misc.HeaderContentType: misc.MIMETextPlain}), true},
-		{"Text: can parse text/plain; charset=UTF-8", misc.MIMETextPlainCharsetUTF8, textParser, newReq(map[string]string{misc.HeaderContentType: misc.MIMETextPlainCharsetUTF8}), true},
-		{"Text: should parse JSON as text", misc.MIMEApplicationJSON, textParser, newReq(map[string]string{misc.HeaderContentType: misc.MIMEApplicationJSON}), true},
+		{"Text: can parse text/plain", mhttpv.MIMETextPlain, textParser, newReq(map[string]string{mhttpv.HeaderContentType: mhttpv.MIMETextPlain}), true},
+		{"Text: can parse text/plain; charset=UTF-8", mhttpv.MIMETextPlainCharsetUTF8, textParser, newReq(map[string]string{mhttpv.HeaderContentType: mhttpv.MIMETextPlainCharsetUTF8}), true},
+		{"Text: should parse JSON as text", mhttpv.MIMEApplicationJSON, textParser, newReq(map[string]string{mhttpv.HeaderContentType: mhttpv.MIMEApplicationJSON}), true},
 
-		{"Noop: should always parse", misc.MIMETextPlain, noop, newReq(map[string]string{misc.HeaderContentType: misc.MIMETextPlain}), true},
+		{"Noop: should always parse", mhttpv.MIMETextPlain, noop, newReq(map[string]string{mhttpv.HeaderContentType: mhttpv.MIMETextPlain}), true},
 	}
 
 	for _, tc := range testCases {
@@ -70,7 +70,7 @@ func TestWithRequestBodyParsersParse(t *testing.T) {
 	}{
 		{"form", formParser, func(r *http.Request) *http.Request {
 			req, err := http.NewRequest(http.MethodPost, "https://localhost:8080", strings.NewReader("test=ok"))
-			req.Header.Add(misc.HeaderContentType, misc.MIMEFormURLEncoded)
+			req.Header.Add(mhttpv.HeaderContentType, mhttpv.MIMEFormURLEncoded)
 			require.NoError(t, err)
 
 			return req

@@ -547,15 +547,13 @@ func (cb *ConfigBuilder) Apply(conf *Config) error {
 func applyTLS(c *Config, certFile, keyFile, clientCertFile string) error {
 	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
-		panic(fmt.Errorf(
-			"config: failed to load certificate key pair from file=%s key=%s. %w", certFile, keyFile, err))
+		return fmt.Errorf("config: failed to load certificate key pair from file=%s key=%s. %w", certFile, keyFile, err)
 	}
 
 	if len(clientCertFile) > 0 {
 		cc, err := os.ReadFile(filepath.Clean(clientCertFile))
 		if err != nil {
-			panic(fmt.Errorf(
-				"config: failed to load client certificate from %s. %w", clientCertFile, err))
+			return fmt.Errorf("config: failed to load client certificate from %s. %w", clientCertFile, err)
 		}
 
 		cp := x509.NewCertPool()

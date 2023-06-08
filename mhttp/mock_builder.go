@@ -9,7 +9,7 @@ import (
 	"github.com/vitorsalgado/mocha/v3/foundation"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/matcher/mfeat"
-	"github.com/vitorsalgado/mocha/v3/misc"
+	"github.com/vitorsalgado/mocha/v3/mhttpv"
 )
 
 var _ foundation.Builder[*HTTPMock, *HTTPMockApp] = (*HTTPMockBuilder)(nil)
@@ -229,7 +229,7 @@ func (b *HTTPMockBuilder) Headerf(key string, value string, a ...any) *HTTPMockB
 
 // ContentType sets a matcher that will pass if the HTTP request content type is equal to given value.
 func (b *HTTPMockBuilder) ContentType(value string, a ...any) *HTTPMockBuilder {
-	return b.Header(misc.HeaderContentType, matcher.Eqi(fmt.Sprintf(value, a...)))
+	return b.Header(mhttpv.HeaderContentType, matcher.Eqi(fmt.Sprintf(value, a...)))
 }
 
 // Query defines a matcher to a specific query.

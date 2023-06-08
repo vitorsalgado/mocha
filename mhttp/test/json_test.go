@@ -13,7 +13,7 @@ import (
 
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 	. "github.com/vitorsalgado/mocha/v3/mhttp"
-	"github.com/vitorsalgado/mocha/v3/misc"
+	"github.com/vitorsalgado/mocha/v3/mhttpv"
 )
 
 func TestPostJSON(t *testing.T) {
@@ -54,7 +54,7 @@ func TestPostJSON(t *testing.T) {
 		require.NoError(t, json.NewEncoder(buf).Encode(&jsonTestModel{Name: "dev", OK: true}))
 		req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", buf)
 		req.Header.Add("test", "hello")
-		req.Header.Add(misc.HeaderContentType, misc.MIMEApplicationJSON)
+		req.Header.Add(mhttpv.HeaderContentType, mhttpv.MIMEApplicationJSON)
 
 		res, err := http.DefaultClient.Do(req)
 
@@ -81,7 +81,7 @@ func TestPostJSON(t *testing.T) {
 		require.NoError(t, json.NewEncoder(buf).Encode(data))
 		req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", buf)
 		req.Header.Add("test", "hello")
-		req.Header.Add(misc.HeaderContentType, misc.MIMEApplicationJSON)
+		req.Header.Add(mhttpv.HeaderContentType, mhttpv.MIMEApplicationJSON)
 
 		res, err := http.DefaultClient.Do(req)
 
@@ -109,7 +109,7 @@ func TestPostJSON(t *testing.T) {
 		require.NoError(t, json.NewEncoder(buf).Encode(data2))
 		req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", buf)
 		req.Header.Add("test", "hello")
-		req.Header.Add(misc.HeaderContentType, misc.MIMEApplicationJSON)
+		req.Header.Add(mhttpv.HeaderContentType, mhttpv.MIMEApplicationJSON)
 
 		res, err := http.DefaultClient.Do(req)
 
@@ -142,7 +142,7 @@ func TestPostJSON(t *testing.T) {
 		require.NoError(t, json.NewEncoder(buf).Encode(data))
 		req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", buf)
 		req.Header.Add("test", "hello")
-		req.Header.Add(misc.HeaderContentType, misc.MIMEApplicationJSON)
+		req.Header.Add(mhttpv.HeaderContentType, mhttpv.MIMEApplicationJSON)
 
 		res, err := http.DefaultClient.Do(req)
 
@@ -170,7 +170,7 @@ func TestPostJSON(t *testing.T) {
 		require.NoError(t, json.NewEncoder(buf).Encode(body))
 		req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", buf)
 		req.Header.Add("test", "hello")
-		req.Header.Add(misc.HeaderContentType, misc.MIMEApplicationJSON)
+		req.Header.Add(mhttpv.HeaderContentType, mhttpv.MIMEApplicationJSON)
 
 		res, err := http.DefaultClient.Do(req)
 
@@ -192,7 +192,7 @@ func TestPostJSON(t *testing.T) {
 			Reply(OK()))
 
 		req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", strings.NewReader(`{"name": null, "ok": true}`))
-		req.Header.Add(misc.HeaderContentType, misc.MIMEApplicationJSON)
+		req.Header.Add(mhttpv.HeaderContentType, mhttpv.MIMEApplicationJSON)
 
 		res, err := http.DefaultClient.Do(req)
 
@@ -262,7 +262,7 @@ func TestPostJSON(t *testing.T) {
 		require.NoError(t, json.NewEncoder(buf).Encode(body))
 		req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", buf)
 		req.Header.Add("test", "hello")
-		req.Header.Add(misc.HeaderContentType, misc.MIMEApplicationJSON)
+		req.Header.Add(mhttpv.HeaderContentType, mhttpv.MIMEApplicationJSON)
 
 		res, err := http.DefaultClient.Do(req)
 
@@ -297,7 +297,7 @@ func TestSimpleJSONValues(t *testing.T) {
 			buf := new(bytes.Buffer)
 			require.NoError(t, json.NewEncoder(buf).Encode(tc.value))
 			req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", buf)
-			req.Header.Add(misc.HeaderContentType, misc.MIMEApplicationJSON)
+			req.Header.Add(mhttpv.HeaderContentType, mhttpv.MIMEApplicationJSON)
 
 			res, err := http.DefaultClient.Do(req)
 
@@ -320,7 +320,7 @@ func TestMalformedJSON_ShouldMatchOtherFieldsAndContinue(t *testing.T) {
 
 	req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", strings.NewReader(`{"test": "malformed_json", "pass`))
 	req.Header.Add("test", "hello")
-	req.Header.Add(misc.HeaderContentType, misc.MIMEApplicationJSON)
+	req.Header.Add(mhttpv.HeaderContentType, mhttpv.MIMEApplicationJSON)
 
 	res, err := http.DefaultClient.Do(req)
 

@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/vitorsalgado/mocha/v3/misc"
+	"github.com/vitorsalgado/mocha/v3/mhttpv"
 )
 
 func TestForward(t *testing.T) {
@@ -90,8 +90,8 @@ func TestForward(t *testing.T) {
 	t.Run("should forward and respond POST with compressed body", func(t *testing.T) {
 		dest := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
-			w.Header().Add(misc.HeaderContentEncoding, "gzip")
-			w.Header().Add(misc.HeaderContentType, "application/json")
+			w.Header().Add(mhttpv.HeaderContentEncoding, "gzip")
+			w.Header().Add(mhttpv.HeaderContentType, "application/json")
 
 			b, err := io.ReadAll(r.Body)
 			require.NoError(t, err)

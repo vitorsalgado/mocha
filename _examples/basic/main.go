@@ -11,7 +11,7 @@ import (
 	"github.com/vitorsalgado/mocha/v3"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/mhttp"
-	"github.com/vitorsalgado/mocha/v3/misc"
+	"github.com/vitorsalgado/mocha/v3/mhttpv"
 )
 
 func main() {
@@ -22,8 +22,8 @@ func main() {
 	m.MustStart()
 
 	m.MustMock(mhttp.Get(URLPath("/test")).
-		Header(misc.HeaderAccept, Contain(misc.MIMETextHTML)).
-		Header(misc.HeaderContentType, StrictEqual("test")).
+		Header(mhttpv.HeaderAccept, Contain(mhttpv.MIMETextHTML)).
+		Header(mhttpv.HeaderContentType, StrictEqual("test")).
 		Header("any", All(Contain("test"), EqualIgnoreCase("dev"))).
 		Reply(mhttp.OK().
 			PlainText("hello world").

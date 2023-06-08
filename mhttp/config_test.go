@@ -15,13 +15,13 @@ import (
 	"github.com/vitorsalgado/mocha/v3/foundation"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/mhttp/cors"
-	"github.com/vitorsalgado/mocha/v3/misc"
+	"github.com/vitorsalgado/mocha/v3/mhttpv"
 )
 
 type testBodyParser struct{}
 
 func (p testBodyParser) CanParse(content string, r *http.Request) bool {
-	return content == misc.MIMETextPlain && r.Header.Get("x-test") == "num"
+	return content == mhttpv.MIMETextPlain && r.Header.Get("x-test") == "num"
 }
 
 func (p testBodyParser) Parse(body []byte, _ *http.Request) (any, error) {
@@ -98,7 +98,7 @@ func TestConfig(t *testing.T) {
 			Reply(OK()))
 
 		req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", strings.NewReader("10"))
-		req.Header.Add(misc.HeaderContentType, misc.MIMETextPlain)
+		req.Header.Add(mhttpv.HeaderContentType, mhttpv.MIMETextPlain)
 		req.Header.Add("x-test", "num")
 
 		res, err := client.Do(req)
@@ -114,7 +114,7 @@ func TestConfig(t *testing.T) {
 			return http.HandlerFunc(
 				func(w http.ResponseWriter, r *http.Request) {
 					w.Header().Add("intercepted", "true")
-					w.Header().Add(misc.HeaderContentType, misc.MIMETextPlain)
+					w.Header().Add(mhttpv.HeaderContentType, mhttpv.MIMETextPlain)
 					w.WriteHeader(http.StatusBadRequest)
 					w.Write([]byte(msg))
 				})

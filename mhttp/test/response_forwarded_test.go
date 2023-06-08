@@ -12,14 +12,14 @@ import (
 
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/mhttp"
-	"github.com/vitorsalgado/mocha/v3/misc"
+	"github.com/vitorsalgado/mocha/v3/mhttpv"
 )
 
 func TestProxiedReplies(t *testing.T) {
 	dest := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		assert.Equal(t, "ok", r.Header.Get("x-test"))
 		assert.Equal(t, "", r.Header.Get("x-del"))
-		assert.Equal(t, misc.MIMETextPlain, r.Header.Get(misc.HeaderContentType))
+		assert.Equal(t, mhttpv.MIMETextPlain, r.Header.Get(mhttpv.HeaderContentType))
 
 		b, err := io.ReadAll(r.Body)
 		if err != nil && err != io.EOF {
@@ -47,7 +47,7 @@ func TestProxiedReplies(t *testing.T) {
 	data := strings.NewReader("hello world")
 	req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", data)
 	req.Header.Add("x-del", "to-delete")
-	req.Header.Add(misc.HeaderContentType, misc.MIMETextPlain)
+	req.Header.Add(mhttpv.HeaderContentType, mhttpv.MIMETextPlain)
 
 	res, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
@@ -85,7 +85,7 @@ func TestProxiedReplyMockFileWithTemplate(t *testing.T) {
 	httpClient := &http.Client{}
 
 	req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", strings.NewReader("hello world"))
-	req.Header.Add(misc.HeaderContentType, misc.MIMETextPlain)
+	req.Header.Add(mhttpv.HeaderContentType, mhttpv.MIMETextPlain)
 	req.Header.Add("del", "to be deleted")
 
 	res, err := httpClient.Do(req)

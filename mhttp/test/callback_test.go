@@ -11,7 +11,7 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/mhttp"
-	"github.com/vitorsalgado/mocha/v3/misc"
+	"github.com/vitorsalgado/mocha/v3/mhttpv"
 )
 
 func TestCallbacks(t *testing.T) {
@@ -41,7 +41,7 @@ func TestCallbacks(t *testing.T) {
 			}).
 			Reply(mhttp.OK()))
 
-		res, err := http.Post(fmt.Sprintf("%s/test", m.URL()), misc.MIMETextPlain, strings.NewReader("hi"))
+		res, err := http.Post(fmt.Sprintf("%s/test", m.URL()), mhttpv.MIMETextPlain, strings.NewReader("hi"))
 
 		require.NoError(t, err)
 		require.True(t, scope.AssertCalled(t))

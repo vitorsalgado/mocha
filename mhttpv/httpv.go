@@ -1,5 +1,5 @@
-// Package misc implements utilities that might be useful to the users of this library.
-package misc
+// Package mhttpv implements utilities that might be useful to the users of this library.
+package mhttpv
 
 const _charsetUTF8 = "charset=UTF-8"
 

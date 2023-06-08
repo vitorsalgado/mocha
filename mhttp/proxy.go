@@ -11,7 +11,7 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/vitorsalgado/mocha/v3/misc"
+	"github.com/vitorsalgado/mocha/v3/mhttpv"
 )
 
 var _ ProxyConfigurer = (*ProxyConfig)(nil)
@@ -142,7 +142,7 @@ func (p *reverseProxy) handleTunneling(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *reverseProxy) handleHTTP(w http.ResponseWriter, r *http.Request) {
-	r.Header.Del(misc.HeaderConnection)
+	r.Header.Del(mhttpv.HeaderConnection)
 
 	res, err := p.roundTripper.RoundTrip(r)
 	if err != nil {
