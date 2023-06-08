@@ -8,7 +8,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -83,9 +82,9 @@ func NewAPI(config ...Configurer) *HTTPMockApp {
 		err := configurer.Apply(conf)
 		if err != nil {
 			panic(fmt.Errorf(
-				"server: error applying configuration at index %d with type %v\n%w",
+				"server: error applying configuration at index %d with type %T\n%w",
 				i,
-				reflect.TypeOf(configurer),
+				configurer,
 				err,
 			))
 		}

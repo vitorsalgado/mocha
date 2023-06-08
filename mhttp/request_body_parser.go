@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"reflect"
 	"strings"
 
 	"github.com/vitorsalgado/mocha/v3/misc"
@@ -52,7 +51,7 @@ func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (parsedBody 
 			parsedBody, err = parser.Parse(rawBody, r)
 			if err != nil {
 				return nil, rawBody,
-					fmt.Errorf("%v failed: %w", reflect.TypeOf(parser), err)
+					fmt.Errorf("%T failed: %w", parser, err)
 			}
 
 			return parsedBody, rawBody, nil

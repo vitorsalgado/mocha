@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"reflect"
 	"strings"
 	"text/template"
 	"time"
@@ -342,10 +341,7 @@ func buildMockFromBytes(app *HTTPMockApp, builder *HTTPMockBuilder, content []by
 		case int:
 			duration = time.Duration(float64(v) * float64(time.Millisecond))
 		default:
-			return nil, fmt.Errorf(
-				"[delay] type %v is not supported. supported types: string, number",
-				reflect.TypeOf(v),
-			)
+			return nil, fmt.Errorf("[delay] type %T is not supported. supported types: string, number", v)
 		}
 
 		builder.Delay(duration)
@@ -355,13 +351,13 @@ func buildMockFromBytes(app *HTTPMockApp, builder *HTTPMockBuilder, content []by
 		rawPa := vi.Get(_fPostActions)
 		postActions, ok := rawPa.([]any)
 		if !ok {
-			return nil, fmt.Errorf("[post_actions] expected an array of objects. got: %v", reflect.TypeOf(rawPa))
+			return nil, fmt.Errorf("[post_actions] expected an array of objects. got: %T", rawPa)
 		}
 
 		for i, item := range postActions {
 			pa, ok := item.(map[string]any)
 			if !ok {
-				return nil, fmt.Errorf("[post_actions][%d] expected an object. got: %v", i, reflect.TypeOf(item))
+				return nil, fmt.Errorf("[post_actions][%d] expected an object. got: %T", i, item)
 			}
 
 			builder.PostAction(

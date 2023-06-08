@@ -2,7 +2,6 @@ package matcher
 
 import (
 	"fmt"
-	"reflect"
 	"regexp"
 
 	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
@@ -31,7 +30,7 @@ func (m *regExpMatcher) Match(v any) (*Result, error) {
 		return &Result{Pass: e.Match([]byte(txt)), Ext: ext, Message: msg}, nil
 	default:
 		return nil,
-			fmt.Errorf("matcher does not accept the expression of type %v", reflect.TypeOf(v))
+			fmt.Errorf("matcher does not accept the expression of type %T", v)
 	}
 }
 

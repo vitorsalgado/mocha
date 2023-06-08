@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net"
 	"net/http"
-	"reflect"
 
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
@@ -37,9 +36,9 @@ func NewGRPC(config ...foundation.Configurer[*Config]) *GRPCMockApp {
 		err := configurer.Apply(conf)
 		if err != nil {
 			panic(fmt.Errorf(
-				"server: error applying configuration at index %d with type %v\n%w",
+				"server: error applying configuration at index %d with type %T\n%w",
 				i,
-				reflect.TypeOf(configurer),
+				configurer,
 				err,
 			))
 		}

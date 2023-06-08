@@ -20,8 +20,8 @@ func (m *lessOrEqualMatcher) Match(v any) (*Result, error) {
 	vv, err := mconv.ConvToFloat64(v)
 	if err != nil {
 		return nil, fmt.Errorf(
-			"type %v is not supported. value must be compatible with float64. %w",
-			reflect.TypeOf(v),
+			"type %T is not supported. value must be compatible with float64. %w",
+			v,
 			err,
 		)
 	}

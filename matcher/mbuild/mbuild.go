@@ -116,7 +116,7 @@ func extractMultipleMatchers(v any) ([]matcher.Matcher, error) {
 	a, ok := v.([]any)
 	if !ok {
 		return nil,
-			fmt.Errorf("matcher: attempt to build multiple matchers using non-array type. got: %v", reflect.TypeOf(v))
+			fmt.Errorf("matcher: attempt to build multiple matchers using non-array type. got: %T", v)
 	}
 
 	matchers := make([]matcher.Matcher, len(a))

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"reflect"
 	"strings"
 	"time"
 
@@ -145,9 +144,9 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		err = callback(callbackInput)
 		if err != nil {
 			h.lifecycle.OnWarning(reqValues, fmt.Errorf(
-				"callback: error with callback %d %v:\n%w",
+				"callback: error with callback %d %T:\n%w",
 				i,
-				reflect.TypeOf(callback),
+				callback,
 				err,
 			))
 		}
@@ -159,10 +158,10 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		err = postAction.Run(input)
 		if err != nil {
 			h.lifecycle.OnWarning(reqValues, fmt.Errorf(
-				"post_action: error with post action %s(%d) %v:\n%w",
+				"post_action: error with post action %s(%d) %T:\n%w",
 				def.Name,
 				i,
-				reflect.TypeOf(postAction),
+				postAction,
 				err,
 			))
 		}
