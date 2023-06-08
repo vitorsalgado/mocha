@@ -1,7 +1,7 @@
 package grpcd
 
 import (
-	"github.com/vitorsalgado/mocha/v3/foundation"
+	"github.com/vitorsalgado/mocha/v3/lib"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
@@ -14,17 +14,17 @@ type GRPCMockBuilder interface {
 }
 
 type GRPCMock struct {
-	*foundation.BaseMock
+	*lib.BaseMock
 
 	Reply any
 
 	after              []matcher.OnAfterMockServed
-	unaryExpectations  []*foundation.Expectation[*UnaryValueSelectorIn]
-	streamExpectations []*foundation.Expectation[*StreamValueSelectorIn]
+	unaryExpectations  []*lib.Expectation[*UnaryValueSelectorIn]
+	streamExpectations []*lib.Expectation[*StreamValueSelectorIn]
 }
 
 func newMock() *GRPCMock {
-	return &GRPCMock{BaseMock: foundation.NewMock(), after: make([]matcher.OnAfterMockServed, 0)}
+	return &GRPCMock{BaseMock: lib.NewMock(), after: make([]matcher.OnAfterMockServed, 0)}
 }
 
 func (m *GRPCMock) getRef() string {

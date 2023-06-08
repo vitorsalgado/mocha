@@ -10,12 +10,12 @@ import (
 )
 
 func TestRandom_SetupFromFileWithSeed(t *testing.T) {
-	m := mhttp.NewAPI()
+	m := httpd.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
 
-	m.MustMock(mhttp.FromFile("testdata/response_random/rand_01.yaml"))
+	m.MustMock(httpd.FromFile("testdata/response_random/rand_01.yaml"))
 
 	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
 

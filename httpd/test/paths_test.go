@@ -10,17 +10,17 @@ import (
 )
 
 func TestSimilarRequestURLPaths(t *testing.T) {
-	m := mhttp.NewAPI()
+	m := httpd.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
 
 	scope := m.MustMock(
-		mhttp.Getf("/customers").Reply(mhttp.OK()),
-		mhttp.Getf("/customers/100").Reply(mhttp.Accepted()),
-		mhttp.Getf("/customers/100/orders").Reply(mhttp.Unauthorized()),
-		mhttp.Getf("/customers/100/orders/BR-500").Reply(mhttp.BadRequest()),
-		mhttp.Getf("/customers/100/orders/BR-500/items").Reply(mhttp.InternalServerError()))
+		httpd.Getf("/customers").Reply(httpd.OK()),
+		httpd.Getf("/customers/100").Reply(httpd.Accepted()),
+		httpd.Getf("/customers/100/orders").Reply(httpd.Unauthorized()),
+		httpd.Getf("/customers/100/orders/BR-500").Reply(httpd.BadRequest()),
+		httpd.Getf("/customers/100/orders/BR-500/items").Reply(httpd.InternalServerError()))
 
 	res, err := http.DefaultClient.Get(m.URL() + "/customers")
 	require.NoError(t, err)
@@ -44,7 +44,7 @@ func TestSimilarRequestURLPaths(t *testing.T) {
 
 	res, err = http.DefaultClient.Get(m.URL() + "/customers/orders")
 	require.NoError(t, err)
-	require.Equal(t, mhttp.StatusNoMatch, res.StatusCode)
+	require.Equal(t, httpd.StatusNoMatch, res.StatusCode)
 
 	scope.AssertNumberOfCalls(t, 5)
 }

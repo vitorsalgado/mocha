@@ -6,14 +6,14 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/vitorsalgado/mocha/v3/foundation"
+	"github.com/vitorsalgado/mocha/v3/lib"
 	"github.com/vitorsalgado/mocha/v3/httpd"
 )
 
 type pipingTest struct {
 }
 
-func (a *pipingTest) Pipe(conduit *foundation.Conduit) {
+func (a *pipingTest) Pipe(conduit *lib.Conduit) {
 	for {
 		select {
 		case chunk, ok := <-conduit.In:
@@ -24,7 +24,7 @@ func (a *pipingTest) Pipe(conduit *foundation.Conduit) {
 
 			txt := string(chunk.Data)
 
-			conduit.Out <- &foundation.Chunk{
+			conduit.Out <- &lib.Chunk{
 				Data: []byte(txt + "(extra)"),
 			}
 		}
@@ -34,7 +34,7 @@ func (a *pipingTest) Pipe(conduit *foundation.Conduit) {
 type pipingTest2 struct {
 }
 
-func (a *pipingTest2) Pipe(conduit *foundation.Conduit) {
+func (a *pipingTest2) Pipe(conduit *lib.Conduit) {
 	for {
 		select {
 		case chunk, ok := <-conduit.In:
@@ -45,7 +45,7 @@ func (a *pipingTest2) Pipe(conduit *foundation.Conduit) {
 
 			txt := string(chunk.Data)
 
-			conduit.Out <- &foundation.Chunk{
+			conduit.Out <- &lib.Chunk{
 				Data: []byte(txt + "(other)"),
 			}
 		}
@@ -53,10 +53,10 @@ func (a *pipingTest2) Pipe(conduit *foundation.Conduit) {
 }
 
 func TestPipes(t *testing.T) {
-	m := mhttp.NewAPIWithT(t, mhttp.Setup().LogVerbosity(mhttp.LogBody))
+	m := httpd.NewAPIWithT(t, httpd.Setup().LogVerbosity(httpd.LogBody))
 	m.MustStart()
 
-	scope := m.MustMock(mhttp.Getf("/test").Pipe(&pipingTest{}).Pipe(&pipingTest2{}).Reply(mhttp.OK().BodyText("hi")))
+	scope := m.MustMock(httpd.Getf("/test").Pipe(&pipingTest{}).Pipe(&pipingTest2{}).Reply(httpd.OK().BodyText("hi")))
 
 	client := &http.Client{}
 	res, err := client.Get(m.URL("/test"))

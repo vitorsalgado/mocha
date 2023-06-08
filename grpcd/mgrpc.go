@@ -9,11 +9,11 @@ import (
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
 
-	"github.com/vitorsalgado/mocha/v3/foundation"
+	"github.com/vitorsalgado/mocha/v3/lib"
 )
 
 type GRPCMockApp struct {
-	*foundation.BaseApp[*GRPCMock, *GRPCMockApp]
+	*lib.BaseApp[*GRPCMock, *GRPCMockApp]
 
 	ctx     context.Context
 	cancel  context.CancelFunc
@@ -21,14 +21,14 @@ type GRPCMockApp struct {
 	config  *Config
 	logger  *zerolog.Logger
 	addr    string
-	storage *foundation.MockStore[*GRPCMock]
+	storage *lib.MockStore[*GRPCMock]
 }
 
 type ServerInfo struct {
 	Addr string
 }
 
-func NewGRPC(config ...foundation.Configurer[*Config]) *GRPCMockApp {
+func NewGRPC(config ...lib.Configurer[*Config]) *GRPCMockApp {
 	app := &GRPCMockApp{}
 	conf := defaultConfig()
 
@@ -44,7 +44,7 @@ func NewGRPC(config ...foundation.Configurer[*Config]) *GRPCMockApp {
 		}
 	}
 
-	store := foundation.NewStore[*GRPCMock]()
+	store := lib.NewStore[*GRPCMock]()
 	ctx, cancel := context.WithCancel(conf.Context)
 	in := &Interceptors{app: app}
 	srv := grpc.NewServer(
@@ -56,7 +56,7 @@ func NewGRPC(config ...foundation.Configurer[*Config]) *GRPCMockApp {
 		srv.RegisterService(conf.ServiceDesc, conf.Service)
 	}
 
-	app.BaseApp = foundation.NewBaseApp(app, store)
+	app.BaseApp = lib.NewBaseApp(app, store)
 	app.storage = store
 	app.ctx = ctx
 	app.cancel = cancel
@@ -66,7 +66,7 @@ func NewGRPC(config ...foundation.Configurer[*Config]) *GRPCMockApp {
 	return app
 }
 
-func NewGRPCWithT(t foundation.TestingT, config ...foundation.Configurer[*Config]) *GRPCMockApp {
+func NewGRPCWithT(t lib.TestingT, config ...lib.Configurer[*Config]) *GRPCMockApp {
 	app := NewGRPC(config...)
 	t.Cleanup(app.Close)
 

@@ -1,4 +1,4 @@
-package mhttp
+package httpd
 
 import (
 	"context"
@@ -14,7 +14,7 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/vitorsalgado/mocha/v3/foundation"
+	"github.com/vitorsalgado/mocha/v3/lib"
 	"github.com/vitorsalgado/mocha/v3/internal/colorize"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/matcher/mfeat"
@@ -24,7 +24,7 @@ import (
 )
 
 var (
-	_ foundation.MockApp[*HTTPMock] = (*HTTPMockApp)(nil)
+	_ lib.MockApp[*HTTPMock] = (*HTTPMockApp)(nil)
 )
 
 const (
@@ -40,22 +40,22 @@ const StatusNoMatch = http.StatusTeapot
 
 // HTTPMockApp is the base for the mock server.
 type HTTPMockApp struct {
-	*foundation.BaseApp[*HTTPMock, *HTTPMockApp]
+	*lib.BaseApp[*HTTPMock, *HTTPMockApp]
 
 	config             *Config
 	server             Server
-	storage            *foundation.MockStore[*HTTPMock]
+	storage            *lib.MockStore[*HTTPMock]
 	scenarioStore      *mfeat.ScenarioStore
 	ctx                context.Context
 	cancel             context.CancelFunc
 	requestBodyParsers []RequestBodyParser
-	params             foundation.Params
+	params             lib.Params
 	loaders            []Loader
 	rec                *recorder
 	rwMutex            sync.RWMutex
 	proxy              *reverseProxy
-	templateEngine     foundation.TemplateEngine
-	extensions         map[string]foundation.Extension
+	templateEngine     lib.TemplateEngine
+	extensions         map[string]lib.Extension
 	data               map[string]any
 	colorizer          *colorize.Colorize
 	logger             *zerolog.Logger
@@ -93,7 +93,7 @@ func NewAPI(config ...Configurer) *HTTPMockApp {
 	app.logger = app.getLog(conf)
 
 	colors := &colorize.Colorize{Enabled: conf.UseDescriptiveLogger}
-	store := foundation.NewStore[*HTTPMock]()
+	store := lib.NewStore[*HTTPMock]()
 
 	parsers := make([]RequestBodyParser, 0, len(conf.RequestBodyParsers)+3)
 	parsers = append(parsers, conf.RequestBodyParsers...)
@@ -111,11 +111,11 @@ func NewAPI(config ...Configurer) *HTTPMockApp {
 
 	middlewares = append(middlewares, conf.Middlewares...)
 
-	var params foundation.Params
+	var params lib.Params
 	if conf.Parameters != nil {
 		params = conf.Parameters
 	} else {
-		params = foundation.NewInMemoryParameters()
+		params = lib.NewInMemoryParameters()
 	}
 
 	var rec *recorder
@@ -161,7 +161,7 @@ func NewAPI(config ...Configurer) *HTTPMockApp {
 		app.templateEngine = tmpl
 	}
 
-	app.BaseApp = foundation.NewBaseApp[*HTTPMock, *HTTPMockApp](app, store)
+	app.BaseApp = lib.NewBaseApp[*HTTPMock, *HTTPMockApp](app, store)
 	app.server = server
 	app.storage = store
 	app.scenarioStore = mfeat.NewScenarioStore()
@@ -170,7 +170,7 @@ func NewAPI(config ...Configurer) *HTTPMockApp {
 	app.rec = rec
 	app.proxy = p
 	app.requestBodyParsers = parsers
-	app.extensions = make(map[string]foundation.Extension)
+	app.extensions = make(map[string]lib.Extension)
 	app.colorizer = colors
 
 	if app.config.Forward != nil {
@@ -196,7 +196,7 @@ func NewAPI(config ...Configurer) *HTTPMockApp {
 
 // NewAPIWithT creates a new HTTPMockApp mock server with the given configurations and
 // closes the server when the provided TestingT instance finishes.
-func NewAPIWithT(t foundation.TestingT, config ...Configurer) *HTTPMockApp {
+func NewAPIWithT(t lib.TestingT, config ...Configurer) *HTTPMockApp {
 	app := NewAPI(config...)
 	t.Cleanup(app.Close)
 
@@ -268,7 +268,7 @@ func (app *HTTPMockApp) Context() context.Context {
 }
 
 // Parameters returns Params instance associated with this application.
-func (app *HTTPMockApp) Parameters() foundation.Params {
+func (app *HTTPMockApp) Parameters() lib.Params {
 	return app.params
 }
 
@@ -283,7 +283,7 @@ func (app *HTTPMockApp) Server() Server {
 }
 
 // TemplateEngine returns the TemplateEngine associated with this instance.
-func (app *HTTPMockApp) TemplateEngine() foundation.TemplateEngine {
+func (app *HTTPMockApp) TemplateEngine() lib.TemplateEngine {
 	return app.templateEngine
 }
 
@@ -339,7 +339,7 @@ func (app *HTTPMockApp) CloseNow() {
 
 // CloseWithT register Server Close function on TestingT Cleanup().
 // Useful to close the server when tests finish.
-func (app *HTTPMockApp) CloseWithT(t foundation.TestingT) *HTTPMockApp {
+func (app *HTTPMockApp) CloseWithT(t lib.TestingT) *HTTPMockApp {
 	t.Cleanup(func() { app.Close() })
 	return app
 }
@@ -348,7 +348,7 @@ func (app *HTTPMockApp) StopRecording() {
 	app.rec.stop()
 }
 
-func (app *HTTPMockApp) RegisterExtension(extension foundation.Extension) error {
+func (app *HTTPMockApp) RegisterExtension(extension lib.Extension) error {
 	app.rwMutex.Lock()
 	defer app.rwMutex.Unlock()
 

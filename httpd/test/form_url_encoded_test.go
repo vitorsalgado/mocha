@@ -15,13 +15,13 @@ import (
 
 func TestFormUrlEncoded(t *testing.T) {
 	httpClient := &http.Client{}
-	m := mhttp.NewAPIWithT(t)
+	m := httpd.NewAPIWithT(t)
 	m.MustStart()
 
-	scoped := m.MustMock(mhttp.Post(matcher.URLPath("/test")).
+	scoped := m.MustMock(httpd.Post(matcher.URLPath("/test")).
 		FormField("var1", matcher.StrictEqual("dev")).
 		FormField("var2", matcher.Contain("q")).
-		Reply(mhttp.OK()))
+		Reply(httpd.OK()))
 
 	data := url.Values{}
 	data.Set("var1", "dev")
@@ -38,8 +38,8 @@ func TestFormUrlEncoded(t *testing.T) {
 }
 
 func TestFormUrlEncoded_InvalidFieldValues(t *testing.T) {
-	m := mhttp.NewAPIWithT(t)
-	scoped, err := m.Mock(mhttp.FromFile("testdata/form_url_encoded/01_invalid.yaml"))
+	m := httpd.NewAPIWithT(t)
+	scoped, err := m.Mock(httpd.FromFile("testdata/form_url_encoded/01_invalid.yaml"))
 
 	require.Nil(t, scoped)
 	require.Error(t, err)
@@ -47,10 +47,10 @@ func TestFormUrlEncoded_InvalidFieldValues(t *testing.T) {
 
 func TestFormUrlEncoded_FromFileMock(t *testing.T) {
 	httpClient := &http.Client{}
-	m := mhttp.NewAPIWithT(t)
+	m := httpd.NewAPIWithT(t)
 	m.MustStart()
 
-	scoped := m.MustMock(mhttp.FromFile("testdata/form_url_encoded/02_valid.yaml"))
+	scoped := m.MustMock(httpd.FromFile("testdata/form_url_encoded/02_valid.yaml"))
 
 	testCases := []struct {
 		name           string
@@ -81,7 +81,7 @@ func TestFormUrlEncoded_FromFileMock(t *testing.T) {
 			data.Set("job", "qa")
 
 			return data
-		}, mhttp.StatusNoMatch},
+		}, httpd.StatusNoMatch},
 
 		{"no match (missing +)", func() url.Values {
 			data := url.Values{}
@@ -94,7 +94,7 @@ func TestFormUrlEncoded_FromFileMock(t *testing.T) {
 			data.Set("job", "dev")
 
 			return data
-		}, mhttp.StatusNoMatch},
+		}, httpd.StatusNoMatch},
 
 		{"no match (missing field)", func() url.Values {
 			data := url.Values{}
@@ -106,7 +106,7 @@ func TestFormUrlEncoded_FromFileMock(t *testing.T) {
 			data.Set("job", "dev")
 
 			return data
-		}, mhttp.StatusNoMatch},
+		}, httpd.StatusNoMatch},
 
 		{"match (float)", func() url.Values {
 			data := url.Values{}

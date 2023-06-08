@@ -1,4 +1,4 @@
-package mhttp
+package httpd
 
 import (
 	"crypto/tls"

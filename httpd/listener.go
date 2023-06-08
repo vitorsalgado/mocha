@@ -1,20 +1,20 @@
-package mhttp
+package httpd
 
 import (
 	"bytes"
 	"net"
 	"time"
 
-	"github.com/vitorsalgado/mocha/v3/foundation"
+	"github.com/vitorsalgado/mocha/v3/lib"
 )
 
 type MListener struct {
 	wrapped net.Listener
-	rPipes  []foundation.Piping
-	wPipes  []foundation.Piping
+	rPipes  []lib.Piping
+	wPipes  []lib.Piping
 }
 
-func NewListener(wrapped net.Listener, rPipes []foundation.Piping, wPipes []foundation.Piping) net.Listener {
+func NewListener(wrapped net.Listener, rPipes []lib.Piping, wPipes []lib.Piping) net.Listener {
 	return &MListener{
 		wrapped: wrapped,
 		rPipes:  rPipes,
@@ -41,11 +41,11 @@ func (l *MListener) Addr() net.Addr {
 
 type MConn struct {
 	wrapped net.Conn
-	rPipes  []foundation.Piping
-	wPipes  []foundation.Piping
+	rPipes  []lib.Piping
+	wPipes  []lib.Piping
 }
 
-func newConn(c net.Conn, rPipes []foundation.Piping, wPipes []foundation.Piping) *MConn {
+func newConn(c net.Conn, rPipes []lib.Piping, wPipes []lib.Piping) *MConn {
 	return &MConn{
 		wrapped: c,
 		rPipes:  rPipes,
@@ -59,7 +59,7 @@ func (c *MConn) Read(b []byte) (n int, err error) {
 		return n, err
 	}
 
-	connector := foundation.NewConnector(c.rPipes)
+	connector := lib.NewConnector(c.rPipes)
 	bb := make([]byte, 0)
 	buf := bytes.NewBuffer(bb)
 
@@ -74,7 +74,7 @@ func (c *MConn) Read(b []byte) (n int, err error) {
 }
 
 func (c *MConn) Write(b []byte) (n int, err error) {
-	connector := foundation.NewConnector(c.wPipes)
+	connector := lib.NewConnector(c.wPipes)
 	return connector.Connect(b, c.wrapped)
 }
 

@@ -1,4 +1,4 @@
-package mhttp
+package httpd
 
 import (
 	"bufio"
@@ -11,7 +11,7 @@ import (
 	"net/textproto"
 	"os"
 
-	"github.com/vitorsalgado/mocha/v3/foundation"
+	"github.com/vitorsalgado/mocha/v3/lib"
 	"github.com/vitorsalgado/mocha/v3/httpd/httpval"
 )
 
@@ -33,11 +33,11 @@ type StdReply struct {
 	response            *Stub
 	bodyType            bodyType
 	bodyEncoding        bodyEncoding
-	bodyFilename        string
-	bodyTeRender        foundation.TemplateRenderer
-	bodyFnTeRender      foundation.TemplateRenderer
-	headerTeRender      foundation.TemplateRenderer
-	teType              teType
+	bodyFilename   string
+	bodyTeRender   lib.TemplateRenderer
+	bodyFnTeRender lib.TemplateRenderer
+	headerTeRender lib.TemplateRenderer
+	teType         teType
 	teHeader            http.Header
 	bodyTemplateContent string
 	teData              any

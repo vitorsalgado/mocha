@@ -1,4 +1,4 @@
-package mhttp
+package httpd
 
 import (
 	"errors"
@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/vitorsalgado/mocha/v3/foundation"
+	"github.com/vitorsalgado/mocha/v3/lib"
 	"github.com/vitorsalgado/mocha/v3/httpd/httpval"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/matcher/mfeat"
 )
 
-var _ foundation.Builder[*HTTPMock, *HTTPMockApp] = (*HTTPMockBuilder)(nil)
+var _ lib.Builder[*HTTPMock, *HTTPMockApp] = (*HTTPMockBuilder)(nil)
 
 var (
 	ErrNoExpectations = errors.New("mock: at least 1 request matcher must be set")
@@ -117,11 +117,11 @@ func (b *HTTPMockBuilder) Priority(p int) *HTTPMockBuilder {
 // Scheme sets the HTTP request scheme to be matched.
 func (b *HTTPMockBuilder) Scheme(scheme string) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:        foundation.TargetScheme,
+		Target:        lib.TargetScheme,
 		Key:           scheme,
 		Matcher:       matcher.EqualIgnoreCase(scheme),
 		ValueSelector: selectScheme,
-		Weight:        foundation.WeightVeryLow,
+		Weight:        lib.WeightVeryLow,
 	})
 
 	return b
@@ -130,10 +130,10 @@ func (b *HTTPMockBuilder) Scheme(scheme string) *HTTPMockBuilder {
 // SchemeMatches sets a matcher.Matcher for the URL scheme part.
 func (b *HTTPMockBuilder) SchemeMatches(m matcher.Matcher) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:        foundation.TargetScheme,
+		Target:        lib.TargetScheme,
 		Matcher:       m,
 		ValueSelector: selectScheme,
-		Weight:        foundation.WeightVeryLow,
+		Weight:        lib.WeightVeryLow,
 	})
 
 	return b
@@ -151,10 +151,10 @@ func (b *HTTPMockBuilder) Method(methods ...string) *HTTPMockBuilder {
 	}
 
 	b.appendExpectation(&HTTPExpectation{
-		Target:        foundation.TargetMethod,
+		Target:        lib.TargetMethod,
 		ValueSelector: selectMethod,
 		Matcher:       m,
-		Weight:        foundation.WeightNone,
+		Weight:        lib.WeightNone,
 	})
 
 	return b
@@ -164,10 +164,10 @@ func (b *HTTPMockBuilder) Method(methods ...string) *HTTPMockBuilder {
 // Useful to set a Mock for multiple HTTP Request methods.
 func (b *HTTPMockBuilder) MethodMatches(m matcher.Matcher) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:        foundation.TargetMethod,
+		Target:        lib.TargetMethod,
 		ValueSelector: selectMethod,
 		Matcher:       m,
-		Weight:        foundation.WeightNone,
+		Weight:        lib.WeightNone,
 	})
 
 	return b
@@ -176,10 +176,10 @@ func (b *HTTPMockBuilder) MethodMatches(m matcher.Matcher) *HTTPMockBuilder {
 // URL defines a matcher to be applied to the http.Request url.URL.
 func (b *HTTPMockBuilder) URL(m matcher.Matcher) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:        foundation.TargetURL,
+		Target:        lib.TargetURL,
 		ValueSelector: selectURL,
 		Matcher:       m,
-		Weight:        foundation.WeightRegular,
+		Weight:        lib.WeightRegular,
 	})
 
 	return b
@@ -194,10 +194,10 @@ func (b *HTTPMockBuilder) URLf(format string, a ...any) *HTTPMockBuilder {
 // URLPath defines a matcher to be applied to the url.URL path.
 func (b *HTTPMockBuilder) URLPath(m matcher.Matcher) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:        foundation.TargetURL,
+		Target:        lib.TargetURL,
 		ValueSelector: selectURLPath,
 		Matcher:       m,
-		Weight:        foundation.WeightRegular,
+		Weight:        lib.WeightRegular,
 	})
 
 	return b
@@ -212,11 +212,11 @@ func (b *HTTPMockBuilder) URLPathf(format string, a ...any) *HTTPMockBuilder {
 // Header adds a matcher to a specific http.Header key.
 func (b *HTTPMockBuilder) Header(key string, m matcher.Matcher) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:        foundation.TargetHeader,
+		Target:        lib.TargetHeader,
 		Key:           key,
 		ValueSelector: selectHeader(key),
 		Matcher:       m,
-		Weight:        foundation.WeightLow,
+		Weight:        lib.WeightLow,
 	})
 
 	return b
@@ -235,11 +235,11 @@ func (b *HTTPMockBuilder) ContentType(value string, a ...any) *HTTPMockBuilder {
 // Query defines a matcher to a specific query.
 func (b *HTTPMockBuilder) Query(key string, m matcher.Matcher) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:        foundation.TargetQuery,
+		Target:        lib.TargetQuery,
 		Key:           key,
 		ValueSelector: selectQuery(key),
 		Matcher:       m,
-		Weight:        foundation.WeightVeryLow,
+		Weight:        lib.WeightVeryLow,
 	})
 
 	return b
@@ -253,11 +253,11 @@ func (b *HTTPMockBuilder) Queryf(key string, value string, a ...any) *HTTPMockBu
 // Queries define a matcher.Matcher for query parameters that contains multiple values.
 func (b *HTTPMockBuilder) Queries(key string, m matcher.Matcher) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:        foundation.TargetQuery,
+		Target:        lib.TargetQuery,
 		Key:           key,
 		Matcher:       m,
 		ValueSelector: selectQueries(key),
-		Weight:        foundation.WeightVeryLow,
+		Weight:        lib.WeightVeryLow,
 	})
 
 	return b
@@ -279,10 +279,10 @@ func (b *HTTPMockBuilder) Body(matcherList ...matcher.Matcher) *HTTPMockBuilder 
 	}
 
 	b.appendExpectation(&HTTPExpectation{
-		Target:        foundation.TargetBody,
+		Target:        lib.TargetBody,
 		ValueSelector: selectBody,
 		Matcher:       m,
-		Weight:        foundation.WeightHigh,
+		Weight:        lib.WeightHigh,
 	})
 
 	return b
@@ -291,11 +291,11 @@ func (b *HTTPMockBuilder) Body(matcherList ...matcher.Matcher) *HTTPMockBuilder 
 // FormField defines a matcher for a specific form field by its key.
 func (b *HTTPMockBuilder) FormField(field string, m matcher.Matcher) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:        foundation.TargetForm,
+		Target:        lib.TargetForm,
 		Key:           field,
 		ValueSelector: selectFormField(field),
 		Matcher:       m,
-		Weight:        foundation.WeightVeryLow,
+		Weight:        lib.WeightVeryLow,
 	})
 
 	return b
@@ -309,9 +309,9 @@ func (b *HTTPMockBuilder) FormFieldf(field string, value string, a ...any) *HTTP
 // Times defines the total times that a mock should be served if the request matches.
 func (b *HTTPMockBuilder) Times(times int) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:  foundation.TargetRequest,
+		Target:  lib.TargetRequest,
 		Matcher: mfeat.Repeat(times),
-		Weight:  foundation.WeightNone,
+		Weight:  lib.WeightNone,
 	})
 
 	return b
@@ -320,9 +320,9 @@ func (b *HTTPMockBuilder) Times(times int) *HTTPMockBuilder {
 // Once defines that a mock should be served only one time.
 func (b *HTTPMockBuilder) Once() *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:  foundation.TargetRequest,
+		Target:  lib.TargetRequest,
 		Matcher: mfeat.Repeat(1),
-		Weight:  foundation.WeightNone,
+		Weight:  lib.WeightNone,
 	})
 
 	return b
@@ -331,10 +331,10 @@ func (b *HTTPMockBuilder) Once() *HTTPMockBuilder {
 // RequestMatches applies the given predicate to the incoming http.Request.
 func (b *HTTPMockBuilder) RequestMatches(predicate func(r *http.Request) (bool, error)) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:        foundation.TargetRequest,
+		Target:        lib.TargetRequest,
 		ValueSelector: selectRawRequest,
 		Matcher:       matcher.Func(func(v any) (bool, error) { return predicate(v.(*http.Request)) }),
-		Weight:        foundation.WeightLow,
+		Weight:        lib.WeightLow,
 	})
 
 	return b
@@ -382,7 +382,7 @@ func (b *HTTPMockBuilder) PostAction(input *PostActionDef) *HTTPMockBuilder {
 	return b
 }
 
-func (b *HTTPMockBuilder) Pipe(pipe foundation.Piping) *HTTPMockBuilder {
+func (b *HTTPMockBuilder) Pipe(pipe lib.Piping) *HTTPMockBuilder {
 	b.mock.Pipes = append(b.mock.Pipes, pipe)
 
 	return b
@@ -447,7 +447,7 @@ func (b *HTTPMockBuilder) Build(app *HTTPMockApp) (*HTTPMock, error) {
 
 	if b.scenario != "" {
 		b.appendExpectation(&HTTPExpectation{
-			Target:  foundation.TargetRequest,
+			Target:  lib.TargetRequest,
 			Matcher: mfeat.Scenario(app.scenarioStore, b.scenario, b.scenarioRequiredState, b.scenarioNewState),
 		})
 	}
@@ -466,7 +466,7 @@ func (b *HTTPMockBuilder) Build(app *HTTPMockApp) (*HTTPMock, error) {
 	return b.mock, nil
 }
 
-func (b *HTTPMockBuilder) appendExpectation(e *foundation.Expectation[*HTTPValueSelectorInput]) {
+func (b *HTTPMockBuilder) appendExpectation(e *lib.Expectation[*HTTPValueSelectorInput]) {
 	b.mock.expectations = append(b.mock.expectations, e)
 }
 

@@ -1,4 +1,4 @@
-package mhttp
+package httpd
 
 import (
 	"crypto/tls"
@@ -13,8 +13,8 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/vitorsalgado/mocha/v3/foundation"
 	"github.com/vitorsalgado/mocha/v3/httpd/cors"
+	"github.com/vitorsalgado/mocha/v3/lib"
 )
 
 type LogVerbosity int8
@@ -114,7 +114,7 @@ type Config struct {
 	HandlerDecorator func(handler http.Handler) http.Handler
 
 	// Parameters sets a custom reply parameters store.
-	Parameters foundation.Params
+	Parameters lib.Params
 
 	// MockFileSearchPatterns configures glob patterns to load mock from the file system.
 	MockFileSearchPatterns []string
@@ -133,7 +133,7 @@ type Config struct {
 	MockFileHandlers []MockFileHandler
 
 	// TemplateEngine sets a custom template engine.
-	TemplateEngine foundation.TemplateEngine
+	TemplateEngine lib.TemplateEngine
 
 	// TemplateFunctions sets custom template functions for the built-in template engine.
 	TemplateFunctions template.FuncMap
@@ -400,7 +400,7 @@ func (cb *ConfigBuilder) RedactHeader(names ...string) *ConfigBuilder {
 }
 
 // Parameters sets a custom reply parameters store.
-func (cb *ConfigBuilder) Parameters(params foundation.Params) *ConfigBuilder {
+func (cb *ConfigBuilder) Parameters(params lib.Params) *ConfigBuilder {
 	cb.conf.Parameters = params
 	return cb
 }
@@ -454,7 +454,7 @@ func (cb *ConfigBuilder) MockFileHandlers(handlers ...MockFileHandler) *ConfigBu
 
 // TemplateEngine sets the TemplateEngine to be used by all components.
 // Defaults to a built-in implementation based on Go Templates.
-func (cb *ConfigBuilder) TemplateEngine(te foundation.TemplateEngine) *ConfigBuilder {
+func (cb *ConfigBuilder) TemplateEngine(te lib.TemplateEngine) *ConfigBuilder {
 	cb.conf.TemplateEngine = te
 	return cb
 }

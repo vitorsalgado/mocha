@@ -1,14 +1,14 @@
 package grpcd
 
 import (
-	"github.com/vitorsalgado/mocha/v3/foundation"
+	"github.com/vitorsalgado/mocha/v3/lib"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"google.golang.org/grpc/metadata"
 )
 
 var (
-	_ foundation.Builder[*GRPCMock, *GRPCMockApp] = (*ServerStreamMockBuilder)(nil)
-	_ GRPCMockBuilder                             = (*ServerStreamMockBuilder)(nil)
+	_ lib.Builder[*GRPCMock, *GRPCMockApp] = (*ServerStreamMockBuilder)(nil)
+	_ GRPCMockBuilder                      = (*ServerStreamMockBuilder)(nil)
 )
 
 type ServerStreamMockBuilder struct {
@@ -19,7 +19,7 @@ func ServerStreamMethod(method string) *ServerStreamMockBuilder {
 	b := &ServerStreamMockBuilder{m: newMock()}
 	b.m.streamExpectations = append(
 		b.m.streamExpectations,
-		&foundation.Expectation[*StreamValueSelectorIn]{
+		&lib.Expectation[*StreamValueSelectorIn]{
 			Target:        0,
 			Key:           method,
 			Matcher:       matcher.Contain(method),
@@ -34,7 +34,7 @@ func ServerStreamMethod(method string) *ServerStreamMockBuilder {
 func (b *ServerStreamMockBuilder) Header(key string, m matcher.Matcher) *ServerStreamMockBuilder {
 	b.m.streamExpectations = append(
 		b.m.streamExpectations,
-		&foundation.Expectation[*StreamValueSelectorIn]{
+		&lib.Expectation[*StreamValueSelectorIn]{
 			Target:        0,
 			Key:           key,
 			Matcher:       m,
@@ -49,7 +49,7 @@ func (b *ServerStreamMockBuilder) Header(key string, m matcher.Matcher) *ServerS
 func (b *ServerStreamMockBuilder) Field(path string, m matcher.Matcher) *ServerStreamMockBuilder {
 	b.m.streamExpectations = append(
 		b.m.streamExpectations,
-		&foundation.Expectation[*StreamValueSelectorIn]{
+		&lib.Expectation[*StreamValueSelectorIn]{
 			Target:        0,
 			Key:           path,
 			Matcher:       matcher.Field(path, m),

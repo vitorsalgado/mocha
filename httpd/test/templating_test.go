@@ -12,12 +12,12 @@ import (
 )
 
 func TestTemplating(t *testing.T) {
-	m := mhttp.NewAPI()
+	m := httpd.NewAPI()
 	m.MustStart()
 	defer m.Close()
 
 	m.Parameters().MustSet("test", "hi")
-	m.MustMock(mhttp.FromFile("testdata/templating/templating_01.yaml"))
+	m.MustMock(httpd.FromFile("testdata/templating/templating_01.yaml"))
 
 	httpClient := &http.Client{}
 
@@ -38,11 +38,11 @@ func TestTemplating(t *testing.T) {
 }
 
 func TestTemplating_BodyFilename(t *testing.T) {
-	m := mhttp.NewAPI()
+	m := httpd.NewAPI()
 	m.MustStart()
 	defer m.Close()
 
-	m.MustMock(mhttp.FromFile("testdata/templating/templating_02.yaml"))
+	m.MustMock(httpd.FromFile("testdata/templating/templating_02.yaml"))
 
 	httpClient := &http.Client{}
 
@@ -60,11 +60,11 @@ func TestTemplating_BodyFilename(t *testing.T) {
 }
 
 func TestTemplating_BodyFilename_BodyTemplate(t *testing.T) {
-	m := mhttp.NewAPI()
+	m := httpd.NewAPI()
 	m.MustStart()
 	defer m.Close()
 
-	m.MustMock(mhttp.FromFile("testdata/templating/templating_03.yaml"))
+	m.MustMock(httpd.FromFile("testdata/templating/templating_03.yaml"))
 	_ = m.Parameters().Set("message", "hello world")
 
 	httpClient := &http.Client{}
@@ -83,11 +83,11 @@ func TestTemplating_BodyFilename_BodyTemplate(t *testing.T) {
 }
 
 func TestTemplating_Header(t *testing.T) {
-	m := mhttp.NewAPI()
+	m := httpd.NewAPI()
 	m.MustStart()
 	defer m.Close()
 
-	m.MustMock(mhttp.FromFile("testdata/templating/templating_04.yaml"))
+	m.MustMock(httpd.FromFile("testdata/templating/templating_04.yaml"))
 	m.Parameters().MustSet("test", "ok")
 	m.Parameters().MustSet("context", "test")
 
@@ -107,13 +107,13 @@ func TestTemplating_Header(t *testing.T) {
 }
 
 func TestTemplating_All(t *testing.T) {
-	m := mhttp.NewAPI()
+	m := httpd.NewAPI()
 	m.MustStart()
 	defer m.Close()
 
 	m.Parameters().MustSet("test", "ok")
 	m.Parameters().MustSet("context", "test")
-	m.MustMock(mhttp.FromFile("testdata/templating/templating_05.yaml"))
+	m.MustMock(httpd.FromFile("testdata/templating/templating_05.yaml"))
 
 	httpClient := &http.Client{}
 

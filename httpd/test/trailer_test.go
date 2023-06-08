@@ -13,14 +13,14 @@ import (
 )
 
 func TestTrailer_WithBody(t *testing.T) {
-	m := mhttp.NewAPI()
+	m := httpd.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
 
 	scoped := m.MustMock(
-		mhttp.Get(matcher.URLPath("/test")).
-			Reply(mhttp.OK().
+		httpd.Get(matcher.URLPath("/test")).
+			Reply(httpd.OK().
 				PlainText("hello world").
 				Header(httpval.HeaderContentType, httpval.MIMETextPlain).
 				Trailer("trailer-1", "trailer-1-value").
@@ -46,14 +46,14 @@ func TestTrailer_WithBody(t *testing.T) {
 }
 
 func TestTrailer_WithoutBody(t *testing.T) {
-	m := mhttp.NewAPI()
+	m := httpd.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
 
 	scoped := m.MustMock(
-		mhttp.Get(matcher.URLPath("/test")).
-			Reply(mhttp.OK().
+		httpd.Get(matcher.URLPath("/test")).
+			Reply(httpd.OK().
 				Header(httpval.HeaderContentType, httpval.MIMETextPlain).
 				Trailer("trailer-1", "trailer-1-value").
 				Trailer("trailer-2", "trailer-2-value")))

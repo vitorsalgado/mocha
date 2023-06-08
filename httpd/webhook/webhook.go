@@ -15,7 +15,7 @@ import (
 	"github.com/vitorsalgado/mocha/v3/httpd"
 )
 
-var _ mhttp.PostAction = (*WebHook)(nil)
+var _ httpd.PostAction = (*WebHook)(nil)
 
 // Name is the WebHook extension identifier used to register it.
 const Name = "webhook"
@@ -37,7 +37,7 @@ type Input struct {
 // Transform lets users transforms and customize the WebHook Input
 // before it is used to build the HTTP request.
 // It will be executed everytime WebHook.Run is called.
-type Transform func(input *mhttp.PostActionInput, args *Input) error
+type Transform func(input *httpd.PostActionInput, args *Input) error
 
 // WebHook is an automated HTTP request sent after a mocked response is served.
 type WebHook struct {
@@ -53,7 +53,7 @@ func New() *WebHook {
 }
 
 // Run calls parses the parameters and calls the configured service.
-func (w *WebHook) Run(input *mhttp.PostActionInput) error {
+func (w *WebHook) Run(input *httpd.PostActionInput) error {
 	logger := input.App.Logger()
 	conf := input.App.Config()
 

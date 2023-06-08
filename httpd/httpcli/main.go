@@ -50,7 +50,7 @@ func main() {
 	run(ctx) // should block
 }
 
-func run(ctx context.Context, custom ...mhttp.Configurer) {
+func run(ctx context.Context, custom ...httpd.Configurer) {
 	rootCmd := &cobra.Command{
 		Use:     _usage,
 		Short:   _shortDescription,
@@ -58,19 +58,19 @@ func run(ctx context.Context, custom ...mhttp.Configurer) {
 		Args:    cobra.MinimumNArgs(0),
 		Example: _example,
 		Run: func(cmd *cobra.Command, args []string) {
-			configurers := make([]mhttp.Configurer, 0)
+			configurers := make([]httpd.Configurer, 0)
 			if len(custom) > 0 {
 				configurers = append(configurers, custom...)
 			}
 
-			configurers = append(configurers, mhttp.UseLocals())
+			configurers = append(configurers, httpd.UseLocals())
 
 			_, exists := os.LookupEnv(_dockerHostEnv)
 			if exists {
 				configurers = append(configurers, &dockerConfigurer{})
 			}
 
-			m := mhttp.NewAPI(configurers...)
+			m := httpd.NewAPI(configurers...)
 			m.MustStart()
 
 			fmt.Println(_banner)
@@ -96,7 +96,7 @@ func versionCmd() *cobra.Command {
 		Use:   "version",
 		Short: "print version info",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println(mhttp.Version)
+			fmt.Println(httpd.Version)
 		},
 	}
 }

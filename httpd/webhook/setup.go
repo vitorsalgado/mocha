@@ -54,12 +54,12 @@ func (b *Builder) Transform(transform Transform) *Builder {
 }
 
 // Build builds the mocha.PostActionDef required to set up a WebHook for a mock.
-func (b *Builder) Build() *mhttp.PostActionDef {
+func (b *Builder) Build() *httpd.PostActionDef {
 	for k := range b.header {
 		b.input.Header[k] = b.header.Get(k)
 	}
 
 	b.header = nil
 
-	return &mhttp.PostActionDef{Name: Name, RawParameters: b.input}
+	return &httpd.PostActionDef{Name: Name, RawParameters: b.input}
 }

@@ -22,11 +22,11 @@ import (
 
 type Srv struct {
 	h    http.Handler
-	cfg  *mhttp.Config
-	info *mhttp.ServerInfo
+	cfg  *httpd.Config
+	info *httpd.ServerInfo
 }
 
-func (s *Srv) Setup(app *mhttp.HTTPMockApp, handler http.Handler) error {
+func (s *Srv) Setup(app *httpd.HTTPMockApp, handler http.Handler) error {
 	http.HandleFunc("/", handler.ServeHTTP)
 
 	s.h = handler
@@ -57,8 +57,8 @@ func (s *Srv) S() any {
 	return nil
 }
 
-func (s *Srv) Info() *mhttp.ServerInfo {
-	return &mhttp.ServerInfo{URL: ""}
+func (s *Srv) Info() *httpd.ServerInfo {
+	return &httpd.ServerInfo{URL: ""}
 }
 
 func main() {
@@ -108,25 +108,25 @@ func main() {
 	}
 
 	m := mocha.New(
-		mhttp.Setup().
+		httpd.Setup().
 			HandlerDecorator(h).
 			Server(&Srv{}).
 			Addr(":8080"))
 	m.MustStart()
 
-	m.MustMock(mhttp.Get(URLPath("/test")).
+	m.MustMock(httpd.Get(URLPath("/test")).
 		Header(httpval.HeaderAccept, Contain(httpval.MIMETextPlain)).
 		Header("X-Scenario", StrictEqual("1")).
-		Reply(mhttp.OK().
+		Reply(httpd.OK().
 			PlainText("ok").
 			Header("X-Scenario-Result", "true")))
 
-	m.MustMock(mhttp.Post(URLPath("/test")).
+	m.MustMock(httpd.Post(URLPath("/test")).
 		Header(httpval.HeaderContentType, Contain(httpval.MIMEApplicationJSON)).
 		Body(All(
 			JSONPath("active", StrictEqual(true)),
 			JSONPath("result", StrictEqual("ok")))).
-		Reply(mhttp.OK().
+		Reply(httpd.OK().
 			ContentType(httpval.MIMEApplicationJSON).
 			BodyReader(f)),
 	)

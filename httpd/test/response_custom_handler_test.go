@@ -22,13 +22,13 @@ func TestHandlerReply(t *testing.T) {
 		w.Write([]byte(msg))
 	}
 
-	m := mhttp.NewAPI()
+	m := httpd.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
 
-	m.MustMock(mhttp.Get(matcher.URLPath("/test")).
-		Reply(mhttp.Handler(fn)),
+	m.MustMock(httpd.Get(matcher.URLPath("/test")).
+		Reply(httpd.Handler(fn)),
 	)
 
 	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)

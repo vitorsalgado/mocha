@@ -1,15 +1,15 @@
-package mhttp
+package httpd
 
 import (
 	"net/http"
 	"net/url"
 	"time"
 
-	"github.com/vitorsalgado/mocha/v3/foundation"
+	"github.com/vitorsalgado/mocha/v3/lib"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
-var _ foundation.Mock = (*HTTPMock)(nil)
+var _ lib.Mock = (*HTTPMock)(nil)
 
 // RequestValues groups HTTP request data, including the parsed body.
 // It is used by several components during the request matching phase.
@@ -135,12 +135,12 @@ type HTTPValueSelectorInput struct {
 	ParsedBody any
 }
 
-type HTTPExpectation = foundation.Expectation[*HTTPValueSelectorInput]
+type HTTPExpectation = lib.Expectation[*HTTPValueSelectorInput]
 
 // HTTPMock holds metadata and expectations to be matched against HTTP requests in order to serve mocked responses.
 // This is the core entity of this project, and most features work based on it.
 type HTTPMock struct {
-	*foundation.BaseMock
+	*lib.BaseMock
 
 	// Callbacks holds a Callback list to be executed after the Mock was matched and served.
 	Callbacks []Callback
@@ -156,25 +156,25 @@ type HTTPMock struct {
 	// Mappers stores response mappers associated with this Mock.
 	Mappers []Mapper
 
-	Pipes []foundation.Piping
+	Pipes []lib.Piping
 
 	after        []matcher.OnAfterMockServed
-	expectations []*foundation.Expectation[*HTTPValueSelectorInput]
+	expectations []*lib.Expectation[*HTTPValueSelectorInput]
 }
 
 // newMock returns a new Mock with default values set.
 func newMock() *HTTPMock {
 	return &HTTPMock{
-		BaseMock:     foundation.NewMock(),
+		BaseMock:     lib.NewMock(),
 		Callbacks:    make([]Callback, 0),
 		PostActions:  make([]*PostActionDef, 0),
 		Mappers:      make([]Mapper, 0),
-		Pipes:        make([]foundation.Piping, 0),
-		expectations: make([]*foundation.Expectation[*HTTPValueSelectorInput], 0),
+		Pipes:        make([]lib.Piping, 0),
+		expectations: make([]*lib.Expectation[*HTTPValueSelectorInput], 0),
 	}
 }
 
-func (m *HTTPMock) GetExpectations() []*foundation.Expectation[*HTTPValueSelectorInput] {
+func (m *HTTPMock) GetExpectations() []*lib.Expectation[*HTTPValueSelectorInput] {
 	return m.expectations
 }
 

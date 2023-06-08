@@ -1,4 +1,4 @@
-package mhttp
+package httpd
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/v3/foundation"
+	"github.com/vitorsalgado/mocha/v3/lib"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
@@ -80,7 +80,7 @@ func TestMockMatches(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			res := foundation.Match(params, []*foundation.Expectation[*HTTPValueSelectorInput]{{
+			res := lib.Match(params, []*lib.Expectation[*HTTPValueSelectorInput]{{
 				Matcher: StrictEqual(tc.value),
 				ValueSelector: func(r *HTTPValueSelectorInput) any {
 					return tc.selector
@@ -92,7 +92,7 @@ func TestMockMatches(t *testing.T) {
 
 	t.Run("should return not matched and error when one of expectations returns error", func(t *testing.T) {
 		// string
-		res := foundation.Match(params, []*foundation.Expectation[*HTTPValueSelectorInput]{{
+		res := lib.Match(params, []*lib.Expectation[*HTTPValueSelectorInput]{{
 			Matcher: Func(func(_ any) (bool, error) {
 				return false, fmt.Errorf("fail")
 			}),
@@ -105,7 +105,7 @@ func TestMockMatches(t *testing.T) {
 
 	t.Run("should not pass when it panics", func(t *testing.T) {
 		// string
-		res := foundation.Match(params, []*foundation.Expectation[*HTTPValueSelectorInput]{{
+		res := lib.Match(params, []*lib.Expectation[*HTTPValueSelectorInput]{{
 			Matcher: Func(func(_ any) (bool, error) {
 				panic("boom!")
 			}),
@@ -118,7 +118,7 @@ func TestMockMatches(t *testing.T) {
 
 	t.Run("should return the sum of the matchers Weight when it matches", func(t *testing.T) {
 		// any
-		res := foundation.Match(params, []*foundation.Expectation[*HTTPValueSelectorInput]{
+		res := lib.Match(params, []*lib.Expectation[*HTTPValueSelectorInput]{
 			{
 				Matcher: StrictEqual("test"),
 				ValueSelector: func(r *HTTPValueSelectorInput) any {
@@ -147,7 +147,7 @@ func TestMockMatches(t *testing.T) {
 
 	t.Run("should return the sum of the matchers Weight when one of then doesn't match", func(t *testing.T) {
 		// any
-		res := foundation.Match(params, []*foundation.Expectation[*HTTPValueSelectorInput]{
+		res := lib.Match(params, []*lib.Expectation[*HTTPValueSelectorInput]{
 			{
 				Matcher: StrictEqual("test"),
 				ValueSelector: func(r *HTTPValueSelectorInput) any {

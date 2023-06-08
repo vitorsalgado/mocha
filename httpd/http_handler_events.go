@@ -1,4 +1,4 @@
-package mhttp
+package httpd
 
 import (
 	"fmt"
@@ -9,14 +9,14 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/vitorsalgado/mocha/v3/foundation"
+	"github.com/vitorsalgado/mocha/v3/lib"
 	"github.com/vitorsalgado/mocha/v3/internal/colorize"
 )
 
 type mockHTTPLifecycle interface {
 	OnRequest(*RequestValues)
 	OnMatch(*RequestValues, *Stub)
-	OnNoMatch(*RequestValues, *foundation.FindResult[*HTTPMock])
+	OnNoMatch(*RequestValues, *lib.FindResult[*HTTPMock])
 	OnWarning(*RequestValues, error)
 	OnError(*RequestValues, error)
 }
@@ -89,7 +89,7 @@ func (h *builtInMockHTTPLifecycle) OnMatch(r *RequestValues, s *Stub) {
 	evt.Msgf("<--- REQUEST MATCHED %s %s", r.RawRequest.Method, r.URL.Path)
 }
 
-func (h *builtInMockHTTPLifecycle) OnNoMatch(r *RequestValues, fr *foundation.FindResult[*HTTPMock]) {
+func (h *builtInMockHTTPLifecycle) OnNoMatch(r *RequestValues, fr *lib.FindResult[*HTTPMock]) {
 	if h.app.config.LogLevel == LogLevelDisabled {
 		return
 	}
@@ -257,7 +257,7 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnMatch(rv *RequestValues, s *Stub
 	fmt.Println(builder.String())
 }
 
-func (h *builtInDescriptiveMockHTTPLifecycle) OnNoMatch(rv *RequestValues, fr *foundation.FindResult[*HTTPMock]) {
+func (h *builtInDescriptiveMockHTTPLifecycle) OnNoMatch(rv *RequestValues, fr *lib.FindResult[*HTTPMock]) {
 	if h.app.config.LogLevel == LogLevelDisabled {
 		return
 	}

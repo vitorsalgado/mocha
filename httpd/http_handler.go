@@ -1,4 +1,4 @@
-package mhttp
+package httpd
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vitorsalgado/mocha/v3/foundation"
+	"github.com/vitorsalgado/mocha/v3/lib"
 	"github.com/vitorsalgado/mocha/v3/httpd/httpval"
 	"github.com/vitorsalgado/mocha/v3/httpd/internal/httprec"
 	"github.com/vitorsalgado/mocha/v3/matcher"
@@ -34,7 +34,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.lifecycle.OnRequest(reqValues)
 
 	mocks := h.app.storage.GetEligible()
-	result := foundation.FindMockForRequest(mocks,
+	result := lib.FindMockForRequest(mocks,
 		&HTTPValueSelectorInput{r, parsedURL, r.URL.Query(), r.Form, parsedBody})
 
 	if !result.Pass {
@@ -108,7 +108,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		if stub.Body != nil {
 			if len(mock.Pipes) > 0 {
-				connector := foundation.NewConnector(mock.Pipes)
+				connector := lib.NewConnector(mock.Pipes)
 				connector.Connect(stub.Body, w)
 			} else {
 				w.Write(stub.Body)
@@ -176,7 +176,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *RequestValues, result *foundation.FindResult[*HTTPMock]) {
+func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *RequestValues, result *lib.FindResult[*HTTPMock]) {
 	defer h.lifecycle.OnNoMatch(r, result)
 
 	builder := strings.Builder{}

@@ -18,14 +18,14 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	m := mocha.New(mhttp.Setup().Addr(":8080"))
+	m := mocha.New(httpd.Setup().Addr(":8080"))
 	m.MustStart()
 
-	m.MustMock(mhttp.Get(URLPath("/test")).
+	m.MustMock(httpd.Get(URLPath("/test")).
 		Header(httpval.HeaderAccept, Contain(httpval.MIMETextHTML)).
 		Header(httpval.HeaderContentType, StrictEqual("test")).
 		Header("any", All(Contain("test"), EqualIgnoreCase("dev"))).
-		Reply(mhttp.OK().
+		Reply(httpd.OK().
 			PlainText("hello world").
 			Header("x-basic", "true")))
 

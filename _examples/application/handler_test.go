@@ -19,10 +19,10 @@ func TestHandlerGetById(t *testing.T) {
 	id := "super-id"
 	customer := Customer{ID: id, Name: "nice-name"}
 
-	m.MustMock(mhttp.Get(URLPathf("/customers/%s", id)).
+	m.MustMock(httpd.Get(URLPathf("/customers/%s", id)).
 		Header(headerAccept, StrictEqual(contentTypeJSON)).
 		Header(headerContentType, StrictEqual(contentTypeJSON)).
-		Reply(mhttp.OK().BodyJSON(customer)))
+		Reply(httpd.OK().BodyJSON(customer)))
 
 	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/customer/%s", id), nil)
 	rr := httptest.NewRecorder()

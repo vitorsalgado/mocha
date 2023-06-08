@@ -1,4 +1,4 @@
-package mhttp
+package httpd
 
 import (
 	"crypto/tls"
@@ -12,7 +12,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/v3/foundation"
+	"github.com/vitorsalgado/mocha/v3/lib"
 	"github.com/vitorsalgado/mocha/v3/httpd/cors"
 	"github.com/vitorsalgado/mocha/v3/httpd/httpval"
 	"github.com/vitorsalgado/mocha/v3/matcher"
@@ -180,7 +180,7 @@ func TestConfigBuilder(t *testing.T) {
 		Logger(&customLogger).
 		UseDescriptiveLogger().
 		RedactHeader("header-1", "HEADER-2", "hEaDeR-3").
-		Parameters(foundation.NewInMemoryParameters()).
+		Parameters(lib.NewInMemoryParameters()).
 		MockFilePatterns("test", "dev").
 		Loader(&fileLoader{}).
 		MockFileHandlers(&customMockFileHandler{}).
@@ -205,7 +205,7 @@ func TestConfigBuilder(t *testing.T) {
 	assert.False(t, conf.LogPretty)
 	assert.Equal(t, &customLogger, conf.Logger)
 	assert.Equal(t, int64(100), conf.LogBodyMaxSize)
-	assert.Equal(t, foundation.NewInMemoryParameters(), conf.Parameters)
+	assert.Equal(t, lib.NewInMemoryParameters(), conf.Parameters)
 	assert.Equal(t, []string{"test", "dev"}, conf.MockFileSearchPatterns)
 	assert.True(t, conf.UseDescriptiveLogger)
 	assert.Len(t, conf.HeaderNamesToRedact, 3)

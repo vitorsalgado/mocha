@@ -1,4 +1,4 @@
-package mhttp
+package httpd
 
 import (
 	"bytes"
@@ -17,15 +17,15 @@ import (
 	"github.com/spf13/viper"
 	"github.com/xeipuuv/gojsonschema"
 
-	"github.com/vitorsalgado/mocha/v3/foundation"
+	"github.com/vitorsalgado/mocha/v3/lib"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/matcher/mbuild"
 )
 
 var (
-	_ foundation.Builder[*HTTPMock, *HTTPMockApp] = (*mockBuilderFromFile)(nil)
-	_ foundation.Builder[*HTTPMock, *HTTPMockApp] = (*mockBuilderFromBytes)(nil)
-	_ error                                       = (*jsonSchemaValidationErr)(nil)
+	_ lib.Builder[*HTTPMock, *HTTPMockApp] = (*mockBuilderFromFile)(nil)
+	_ lib.Builder[*HTTPMock, *HTTPMockApp] = (*mockBuilderFromBytes)(nil)
+	_ error                                = (*jsonSchemaValidationErr)(nil)
 )
 
 const (
@@ -125,7 +125,7 @@ type mockBuilderFromFile struct {
 // Since every mock file is a Go template by default,
 // if you need to define templates for the response URL, header or body, remember to escape it.
 // Eg.: body: {{`{{ .Request.Method }}`}}
-func FromFile(filename string) foundation.Builder[*HTTPMock, *HTTPMockApp] {
+func FromFile(filename string) lib.Builder[*HTTPMock, *HTTPMockApp] {
 	return &mockBuilderFromFile{filename: filename, builder: Request()}
 }
 
@@ -175,7 +175,7 @@ type mockBuilderFromBytes struct {
 	ext     string
 }
 
-func FromBytes(b []byte, extension string) foundation.Builder[*HTTPMock, *HTTPMockApp] {
+func FromBytes(b []byte, extension string) lib.Builder[*HTTPMock, *HTTPMockApp] {
 	return &mockBuilderFromBytes{bytes: b, builder: Request(), ext: extension}
 }
 

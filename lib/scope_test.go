@@ -1,4 +1,4 @@
-package foundation_test
+package lib_test
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/v3/foundation"
+	"github.com/vitorsalgado/mocha/v3/lib"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/httpd"
 	"github.com/vitorsalgado/mocha/v3/httpd/test/testmock"
@@ -18,12 +18,12 @@ func TestScoped(t *testing.T) {
 	m2 := newTestMock()
 	m3 := newTestMock()
 
-	repo := foundation.NewStore[foundation.Mock]()
+	repo := lib.NewStore[lib.Mock]()
 	repo.Save(m1)
 	repo.Save(m2)
 	repo.Save(m3)
 
-	scoped := foundation.NewScope(repo, []string{m1.GetID(), m2.GetID(), m3.GetID()})
+	scoped := lib.NewScope(repo, []string{m1.GetID(), m2.GetID(), m3.GetID()})
 
 	assert.Equal(t, 3, len(scoped.GetAll()))
 	assert.Equal(t, m1, scoped.Get(m1.GetID()))
@@ -73,15 +73,15 @@ func TestScoped(t *testing.T) {
 	})
 
 	t.Run("should only consider enabled store", func(t *testing.T) {
-		m := mhttp.NewAPI()
+		m := httpd.NewAPI()
 		m.MustStart()
 
 		defer m.Close()
 
-		s1 := m.MustMock(mhttp.Get(matcher.URLPath("/test1")).Reply(mhttp.OK()))
+		s1 := m.MustMock(httpd.Get(matcher.URLPath("/test1")).Reply(httpd.OK()))
 		s2 := m.MustMock(
-			mhttp.Get(matcher.URLPath("/test2")).Reply(mhttp.OK()),
-			mhttp.Get(matcher.URLPath("/test3")).Reply(mhttp.OK()))
+			httpd.Get(matcher.URLPath("/test2")).Reply(httpd.OK()),
+			httpd.Get(matcher.URLPath("/test3")).Reply(httpd.OK()))
 
 		t.Run("initial state (enabled)", func(t *testing.T) {
 			res, err := http.Get(fmt.Sprintf("%s/test1", m.URL()))
@@ -109,7 +109,7 @@ func TestScoped(t *testing.T) {
 			res, err := http.Get(fmt.Sprintf("%s/test1", m.URL()))
 
 			assert.NoError(t, err)
-			assert.Equal(t, mhttp.StatusNoMatch, res.StatusCode)
+			assert.Equal(t, httpd.StatusNoMatch, res.StatusCode)
 
 			res, err = http.Get(fmt.Sprintf("%s/test2", m.URL()))
 
@@ -143,12 +143,12 @@ func TestScoped(t *testing.T) {
 			res, err := http.Get(fmt.Sprintf("%s/test2", m.URL()))
 
 			assert.NoError(t, err)
-			assert.Equal(t, mhttp.StatusNoMatch, res.StatusCode)
+			assert.Equal(t, httpd.StatusNoMatch, res.StatusCode)
 
 			res, err = http.Get(fmt.Sprintf("%s/test3", m.URL()))
 
 			assert.NoError(t, err)
-			assert.Equal(t, mhttp.StatusNoMatch, res.StatusCode)
+			assert.Equal(t, httpd.StatusNoMatch, res.StatusCode)
 		})
 	})
 }
@@ -158,12 +158,12 @@ func TestScopedDelete(t *testing.T) {
 	m2 := newTestMock()
 	m3 := newTestMock()
 
-	repo := foundation.NewStore[foundation.Mock]()
+	repo := lib.NewStore[lib.Mock]()
 	repo.Save(m1)
 	repo.Save(m2)
 	repo.Save(m3)
 
-	scoped := foundation.NewScope(repo, []string{m1.GetID(), m2.GetID(), m3.GetID()})
+	scoped := lib.NewScope(repo, []string{m1.GetID(), m2.GetID(), m3.GetID()})
 
 	assert.True(t, scoped.Delete(m1.GetID()))
 	assert.False(t, scoped.Delete("unknown"))

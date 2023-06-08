@@ -8,14 +8,14 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
-	"github.com/vitorsalgado/mocha/v3/foundation"
+	"github.com/vitorsalgado/mocha/v3/lib"
 )
 
 type GRPCUnaryMock struct {
 	*GRPCMock
 }
 
-func (u *GRPCUnaryMock) GetExpectations() []*foundation.Expectation[*UnaryValueSelectorIn] {
+func (u *GRPCUnaryMock) GetExpectations() []*lib.Expectation[*UnaryValueSelectorIn] {
 	return u.unaryExpectations
 }
 
@@ -60,7 +60,7 @@ func (in *Interceptors) UnaryInterceptor(
 		wrappedMocks[i] = &GRPCUnaryMock{v}
 	}
 
-	result := foundation.FindMockForRequest(wrappedMocks, &UnaryValueSelectorIn{
+	result := lib.FindMockForRequest(wrappedMocks, &UnaryValueSelectorIn{
 		Context:        ctx,
 		RequestMessage: rawBody,
 		Info:           info,

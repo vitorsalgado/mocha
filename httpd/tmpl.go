@@ -1,4 +1,4 @@
-package mhttp
+package httpd
 
 import (
 	"fmt"
@@ -7,12 +7,12 @@ import (
 	"net/url"
 	"text/template"
 
-	"github.com/vitorsalgado/mocha/v3/foundation"
+	"github.com/vitorsalgado/mocha/v3/lib"
 )
 
 var (
-	_ foundation.TemplateEngine   = (*builtInGoTemplate)(nil)
-	_ foundation.TemplateRenderer = (*builtInGoTemplateRender)(nil)
+	_ lib.TemplateEngine   = (*builtInGoTemplate)(nil)
+	_ lib.TemplateRenderer = (*builtInGoTemplateRender)(nil)
 )
 
 // templateData is the data used in templates during rendering.
@@ -26,7 +26,7 @@ type templateAppWrapper struct {
 	app *HTTPMockApp
 }
 
-func (t *templateAppWrapper) Parameters() foundation.Params {
+func (t *templateAppWrapper) Parameters() lib.Params {
 	return t.app.Parameters()
 }
 
@@ -77,7 +77,7 @@ func (gt *builtInGoTemplate) FuncMap(fn template.FuncMap) *builtInGoTemplate {
 	return gt
 }
 
-func (gt *builtInGoTemplate) Parse(s string) (foundation.TemplateRenderer, error) {
+func (gt *builtInGoTemplate) Parse(s string) (lib.TemplateRenderer, error) {
 	t, err := template.New("").Funcs(gt.funcMap).Parse(s)
 	if err != nil {
 		return nil, err
@@ -90,7 +90,7 @@ type builtInGoTemplateRender struct {
 	template *template.Template
 }
 
-func newGoTemplateRender(template *template.Template) foundation.TemplateRenderer {
+func newGoTemplateRender(template *template.Template) lib.TemplateRenderer {
 	return &builtInGoTemplateRender{template: template}
 }
 

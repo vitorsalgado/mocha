@@ -1,4 +1,4 @@
-package foundation
+package lib
 
 import "io"
 

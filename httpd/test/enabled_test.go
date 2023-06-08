@@ -11,7 +11,7 @@ import (
 
 func TestEnabledDisabledMocks(t *testing.T) {
 	httpClient := &http.Client{}
-	m := mhttp.NewAPIWithT(t, mhttp.Setup().MockFilePatterns("testdata/enabled/*.yaml"))
+	m := httpd.NewAPIWithT(t, httpd.Setup().MockFilePatterns("testdata/enabled/*.yaml"))
 	m.MustStart()
 
 	testCases := []struct {
@@ -20,7 +20,7 @@ func TestEnabledDisabledMocks(t *testing.T) {
 	}{
 		{"/test", 200},
 		{"/hello", 200},
-		{"/dev", mhttp.StatusNoMatch},
+		{"/dev", httpd.StatusNoMatch},
 	}
 
 	for _, tc := range testCases {

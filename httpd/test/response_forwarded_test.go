@@ -32,14 +32,14 @@ func TestProxiedReplies(t *testing.T) {
 
 	defer dest.Close()
 
-	m := mhttp.NewAPI()
+	m := httpd.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
 
-	scoped := m.MustMock(mhttp.Post(URLPath("/test")).
+	scoped := m.MustMock(httpd.Post(URLPath("/test")).
 		Body(StrictEqual("hello world")).
-		Reply(mhttp.From(dest.URL).
+		Reply(httpd.From(dest.URL).
 			ForwardHeader("x-test", "ok").
 			Header("x-res", "example").
 			RemoveProxyHeaders("x-del")))
@@ -63,17 +63,17 @@ func TestProxiedReplies(t *testing.T) {
 }
 
 func TestProxiedReplyMockFileWithTemplate(t *testing.T) {
-	target := mhttp.NewAPI()
+	target := httpd.NewAPI()
 	target.MustStart()
 	defer target.Close()
 
 	targetScoped := target.MustMock(
-		mhttp.Postf("/test").
+		httpd.Postf("/test").
 			Headerf("test", "ok").
 			Header("del", Not(Present())).
-			Reply(mhttp.OK().PlainText("done")))
+			Reply(httpd.OK().PlainText("done")))
 
-	m := mhttp.NewAPI()
+	m := httpd.NewAPI()
 	m.MustStart()
 	defer m.Close()
 
@@ -81,7 +81,7 @@ func TestProxiedReplyMockFileWithTemplate(t *testing.T) {
 	data["target"] = target.URL()
 	m.SetData(data)
 
-	scoped := m.MustMock(mhttp.FromFile("testdata/response_forwarded/proxied_response.yaml"))
+	scoped := m.MustMock(httpd.FromFile("testdata/response_forwarded/proxied_response.yaml"))
 	httpClient := &http.Client{}
 
 	req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", strings.NewReader("hello world"))

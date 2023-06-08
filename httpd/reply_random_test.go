@@ -1,4 +1,4 @@
-package mhttp
+package httpd
 
 import (
 	"math/rand"

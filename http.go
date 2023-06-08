@@ -1,14 +1,14 @@
 package mocha
 
 import (
-	"github.com/vitorsalgado/mocha/v3/foundation"
 	"github.com/vitorsalgado/mocha/v3/httpd"
+	"github.com/vitorsalgado/mocha/v3/lib"
 )
 
-func NewAPI(config ...mhttp.Configurer) *mhttp.HTTPMockApp {
-	return mhttp.NewAPI(config...)
+func NewAPI(config ...httpd.Configurer) *httpd.HTTPMockApp {
+	return httpd.NewAPI(config...)
 }
 
-func NewAPIWithT(t foundation.TestingT, config ...mhttp.Configurer) *mhttp.HTTPMockApp {
-	return mhttp.NewAPIWithT(t, config...)
+func NewAPIWithT(t lib.TestingT, config ...httpd.Configurer) *httpd.HTTPMockApp {
+	return httpd.NewAPIWithT(t, config...)
 }

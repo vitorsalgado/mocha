@@ -16,14 +16,14 @@ import (
 	"google.golang.org/protobuf/encoding/prototext"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/vitorsalgado/mocha/v3/foundation"
+	"github.com/vitorsalgado/mocha/v3/lib"
 )
 
 type GRPCStreamMock struct {
 	*GRPCMock
 }
 
-func (s *GRPCStreamMock) GetExpectations() []*foundation.Expectation[*StreamValueSelectorIn] {
+func (s *GRPCStreamMock) GetExpectations() []*lib.Expectation[*StreamValueSelectorIn] {
 	return s.streamExpectations
 }
 
@@ -177,7 +177,7 @@ func (in *Interceptors) StreamInterceptor(
 		wrappedMocks[i] = &GRPCStreamMock{v}
 	}
 
-	result := foundation.FindMockForRequest(wrappedMocks, &StreamValueSelectorIn{
+	result := lib.FindMockForRequest(wrappedMocks, &StreamValueSelectorIn{
 		Context:        stream.Context(),
 		RequestMessage: rawBody,
 		Info:           info,

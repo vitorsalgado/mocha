@@ -18,13 +18,13 @@ func TestCLI(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(func() { cancel() })
 
-	sc := mhttp.StatusNoMatch
+	sc := httpd.StatusNoMatch
 
 	port, err := getRandomPort()
 	require.NoError(t, err)
 
 	portTxt := strconv.FormatInt(int64(port), 10)
-	cfg := &mhttp.Config{Addr: ":" + portTxt}
+	cfg := &httpd.Config{Addr: ":" + portTxt}
 
 	go run(ctx, cfg)
 

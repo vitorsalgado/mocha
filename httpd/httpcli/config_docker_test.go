@@ -11,7 +11,7 @@ import (
 )
 
 func TestConfigDockerDefaultHTTPHost(t *testing.T) {
-	config := &mhttp.Config{}
+	config := &httpd.Config{}
 	conf := &dockerConfigurer{}
 	err := conf.Apply(config)
 
@@ -21,7 +21,7 @@ func TestConfigDockerDefaultHTTPHost(t *testing.T) {
 }
 
 func TestConfigDockerDefaultHTTPsHost(t *testing.T) {
-	config := &mhttp.Config{}
+	config := &httpd.Config{}
 	config.UseHTTPS = true
 
 	conf := &dockerConfigurer{}
@@ -39,7 +39,7 @@ func TestConfigDockerHostDefined(t *testing.T) {
 
 	require.NoError(t, os.Setenv(_dockerHostEnv, "example.org"))
 
-	config := &mhttp.Config{}
+	config := &httpd.Config{}
 	conf := &dockerConfigurer{}
 	err := conf.Apply(config)
 
@@ -55,7 +55,7 @@ func TestConfigDockerHostDefinedWithDots(t *testing.T) {
 
 	require.NoError(t, os.Setenv(_dockerHostEnv, "example.org:"))
 
-	config := &mhttp.Config{}
+	config := &httpd.Config{}
 	conf := &dockerConfigurer{}
 	err := conf.Apply(config)
 

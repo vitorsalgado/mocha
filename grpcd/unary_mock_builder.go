@@ -1,14 +1,14 @@
 package grpcd
 
 import (
-	"github.com/vitorsalgado/mocha/v3/foundation"
+	"github.com/vitorsalgado/mocha/v3/lib"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"google.golang.org/grpc/metadata"
 )
 
 var (
-	_ foundation.Builder[*GRPCMock, *GRPCMockApp] = (*UnaryMockBuilder)(nil)
-	_ GRPCMockBuilder                             = (*UnaryMockBuilder)(nil)
+	_ lib.Builder[*GRPCMock, *GRPCMockApp] = (*UnaryMockBuilder)(nil)
+	_ GRPCMockBuilder                      = (*UnaryMockBuilder)(nil)
 )
 
 type UnaryMockBuilder struct {
@@ -19,7 +19,7 @@ func UnaryMethod(method string) *UnaryMockBuilder {
 	b := &UnaryMockBuilder{m: newMock()}
 	b.m.unaryExpectations = append(
 		b.m.unaryExpectations,
-		&foundation.Expectation[*UnaryValueSelectorIn]{
+		&lib.Expectation[*UnaryValueSelectorIn]{
 			Target:        0,
 			Key:           method,
 			Matcher:       matcher.Contain(method),
@@ -34,7 +34,7 @@ func UnaryMethod(method string) *UnaryMockBuilder {
 func (b *UnaryMockBuilder) Header(key string, m matcher.Matcher) *UnaryMockBuilder {
 	b.m.unaryExpectations = append(
 		b.m.unaryExpectations,
-		&foundation.Expectation[*UnaryValueSelectorIn]{
+		&lib.Expectation[*UnaryValueSelectorIn]{
 			Target:        0,
 			Key:           key,
 			Matcher:       m,
@@ -49,7 +49,7 @@ func (b *UnaryMockBuilder) Header(key string, m matcher.Matcher) *UnaryMockBuild
 func (b *UnaryMockBuilder) Field(path string, m matcher.Matcher) *UnaryMockBuilder {
 	b.m.unaryExpectations = append(
 		b.m.unaryExpectations,
-		&foundation.Expectation[*UnaryValueSelectorIn]{
+		&lib.Expectation[*UnaryValueSelectorIn]{
 			Target:        0,
 			Key:           path,
 			Matcher:       matcher.Field(path, m),

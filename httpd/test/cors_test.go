@@ -12,13 +12,13 @@ import (
 
 func TestCORS(t *testing.T) {
 	client := &http.Client{}
-	m := mhttp.NewAPI(mhttp.Setup().CORS())
+	m := httpd.NewAPI(httpd.Setup().CORS())
 	m.MustStart()
 
 	defer m.Close()
 
-	m.MustMock(mhttp.Get(matcher.URLPath("/test")).
-		Reply(mhttp.OK()))
+	m.MustMock(httpd.Get(matcher.URLPath("/test")).
+		Reply(httpd.OK()))
 
 	corsReq, _ := http.NewRequest(http.MethodOptions, m.URL()+"/test", nil)
 	res, err := client.Do(corsReq)

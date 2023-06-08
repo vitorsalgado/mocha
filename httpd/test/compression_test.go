@@ -14,13 +14,13 @@ import (
 )
 
 func TestCompressedResponse_GZIP(t *testing.T) {
-	m := mhttp.NewAPI()
+	m := httpd.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
 
-	m.MustMock(mhttp.Get(URLPath("/test")).
-		Reply(mhttp.OK().
+	m.MustMock(httpd.Get(URLPath("/test")).
+		Reply(httpd.OK().
 			BodyText("hello world").
 			Gzip()))
 
@@ -38,23 +38,23 @@ func TestCompressedResponse_GZIP(t *testing.T) {
 }
 
 func Test_GZIPProxiedResponse(t *testing.T) {
-	p := mhttp.NewAPI()
+	p := httpd.NewAPI()
 	p.MustStart()
 
 	defer p.Close()
 
-	ps := p.MustMock(mhttp.Get(URLPath("/test")).
-		Reply(mhttp.OK().
+	ps := p.MustMock(httpd.Get(URLPath("/test")).
+		Reply(httpd.OK().
 			BodyText("hello world").
 			Gzip()))
 
-	m := mhttp.NewAPI()
+	m := httpd.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
 
-	ms := m.MustMock(mhttp.Get(URLPath("/test")).
-		Reply(mhttp.From(p.URL())))
+	ms := m.MustMock(httpd.Get(URLPath("/test")).
+		Reply(httpd.From(p.URL())))
 
 	httpClient := &http.Client{Transport: &http.Transport{DisableCompression: true}}
 

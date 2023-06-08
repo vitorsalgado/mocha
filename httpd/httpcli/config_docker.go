@@ -10,7 +10,7 @@ import (
 type dockerConfigurer struct {
 }
 
-func (c *dockerConfigurer) Apply(conf *mhttp.Config) error {
+func (c *dockerConfigurer) Apply(conf *httpd.Config) error {
 	host := strings.TrimSpace(os.Getenv(_dockerHostEnv))
 	if host == "" {
 		host = "0.0.0.0:"

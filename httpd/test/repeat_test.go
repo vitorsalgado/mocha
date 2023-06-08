@@ -11,14 +11,14 @@ import (
 )
 
 func TestRepeat(t *testing.T) {
-	m := mhttp.NewAPI()
+	m := httpd.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
 
-	m.MustMock(mhttp.Get(matcher.URLPath("/test")).
+	m.MustMock(httpd.Get(matcher.URLPath("/test")).
 		Times(3).
-		Reply(mhttp.OK()))
+		Reply(httpd.OK()))
 
 	res, err := http.Get(m.URL() + "/test")
 	require.Equal(t, http.StatusOK, res.StatusCode)
@@ -33,31 +33,31 @@ func TestRepeat(t *testing.T) {
 	require.NoError(t, err)
 
 	res, err = http.Get(m.URL() + "/test")
-	require.Equal(t, mhttp.StatusNoMatch, res.StatusCode)
+	require.Equal(t, httpd.StatusNoMatch, res.StatusCode)
 	require.NoError(t, err)
 }
 
 func TestRepeat_Once(t *testing.T) {
-	m := mhttp.NewAPI()
+	m := httpd.NewAPI()
 	m.MustStart()
 
 	defer m.Close()
 
-	m.MustMock(mhttp.Get(matcher.URLPath("/test")).
+	m.MustMock(httpd.Get(matcher.URLPath("/test")).
 		Once().
-		Reply(mhttp.OK()))
+		Reply(httpd.OK()))
 
 	res, _ := http.Get(m.URL() + "/test")
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	res, _ = http.Get(m.URL() + "/test")
-	require.Equal(t, mhttp.StatusNoMatch, res.StatusCode)
+	require.Equal(t, httpd.StatusNoMatch, res.StatusCode)
 }
 
 func TestRepeat_FileSetup(t *testing.T) {
-	m := mhttp.NewAPIWithT(t)
+	m := httpd.NewAPIWithT(t)
 	m.MustStart()
-	m.MustMock(mhttp.FromFile("testdata/repeat/1_repeat.yaml"))
+	m.MustMock(httpd.FromFile("testdata/repeat/1_repeat.yaml"))
 
 	httpClient := &http.Client{}
 
@@ -69,5 +69,5 @@ func TestRepeat_FileSetup(t *testing.T) {
 
 	res, err := httpClient.Get(m.URL("/test"))
 	require.NoError(t, err)
-	require.Equal(t, mhttp.StatusNoMatch, res.StatusCode)
+	require.Equal(t, httpd.StatusNoMatch, res.StatusCode)
 }
