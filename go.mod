@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/google/uuid v1.3.0
 	github.com/mitchellh/mapstructure v1.5.0
-	github.com/ohler55/ojg v1.18.3
+	github.com/ohler55/ojg v1.18.7
 	github.com/rs/zerolog v1.29.0
 	github.com/ryanuber/go-glob v1.0.0
 	github.com/spf13/cobra v1.6.1
