@@ -14,13 +14,13 @@ import (
 
 	"github.com/rs/zerolog"
 
-	"github.com/vitorsalgado/mocha/v3/lib"
-	"github.com/vitorsalgado/mocha/v3/internal/colorize"
-	"github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/matcher/mfeat"
 	"github.com/vitorsalgado/mocha/v3/httpd/cors"
 	"github.com/vitorsalgado/mocha/v3/httpd/internal/mid"
 	recover2 "github.com/vitorsalgado/mocha/v3/httpd/internal/mid/recover"
+	"github.com/vitorsalgado/mocha/v3/internal/colorize"
+	"github.com/vitorsalgado/mocha/v3/lib"
+	"github.com/vitorsalgado/mocha/v3/matcher"
+	"github.com/vitorsalgado/mocha/v3/matcher/mfeat"
 )
 
 var (
@@ -28,7 +28,7 @@ var (
 )
 
 const (
-	Version = "3.0.0"
+	Version = "1.0.0"
 )
 
 // StatusNoMatch describes an HTTP response where no Mock was found.
