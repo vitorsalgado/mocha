@@ -8,9 +8,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/vitorsalgado/mocha/v3/lib"
 	"github.com/vitorsalgado/mocha/v3/httpd/httpval"
 	"github.com/vitorsalgado/mocha/v3/httpd/internal/httprec"
+	"github.com/vitorsalgado/mocha/v3/lib"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
@@ -109,7 +109,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if stub.Body != nil {
 			if len(mock.Pipes) > 0 {
 				connector := lib.NewConnector(mock.Pipes)
-				connector.Connect(stub.Body, w)
+				_, _ = connector.Connect(stub.Body, w)
 			} else {
 				w.Write(stub.Body)
 			}

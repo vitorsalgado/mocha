@@ -6,50 +6,39 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"github.com/vitorsalgado/mocha/v3/lib"
 	"github.com/vitorsalgado/mocha/v3/httpd"
+	"github.com/vitorsalgado/mocha/v3/lib"
 )
 
 type pipingTest struct {
 }
 
 func (a *pipingTest) Pipe(conduit *lib.Conduit) {
-	for {
-		select {
-		case chunk, ok := <-conduit.In:
-			if !ok {
-				close(conduit.Out)
-				return
-			}
+	for chunk := range conduit.In {
+		txt := string(chunk.Data)
 
-			txt := string(chunk.Data)
-
-			conduit.Out <- &lib.Chunk{
-				Data: []byte(txt + "(extra)"),
-			}
+		conduit.Out <- &lib.Chunk{
+			Data: []byte(txt + "(extra)"),
 		}
 	}
+
+	close(conduit.Out)
 }
 
 type pipingTest2 struct {
 }
 
 func (a *pipingTest2) Pipe(conduit *lib.Conduit) {
-	for {
-		select {
-		case chunk, ok := <-conduit.In:
-			if !ok {
-				close(conduit.Out)
-				return
-			}
+	for chunk := range conduit.In {
+		txt := string(chunk.Data)
 
-			txt := string(chunk.Data)
-
-			conduit.Out <- &lib.Chunk{
-				Data: []byte(txt + "(other)"),
-			}
+		conduit.Out <- &lib.Chunk{
+			Data: []byte(txt + "(other)"),
 		}
 	}
+
+	close(conduit.Out)
+
 }
 
 func TestPipes(t *testing.T) {

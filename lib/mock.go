@@ -62,9 +62,8 @@ type BaseMock struct {
 	// Delay sets the duration to delay serving the mocked response.
 	Delay time.Duration
 
-	after []matcher.OnAfterMockServed
-	mu    sync.RWMutex
-	hits  int
+	mu   sync.RWMutex
+	hits int
 }
 
 // NewMock returns a new Mock with default values set.
