@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"sort"
 	"sync"
-	"time"
 
 	"github.com/google/uuid"
 
@@ -60,7 +59,7 @@ type BaseMock struct {
 	Source string
 
 	// Delay sets the duration to delay serving the mocked response.
-	Delay time.Duration
+	Delay Delay
 
 	mu   sync.RWMutex
 	hits int

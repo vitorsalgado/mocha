@@ -61,8 +61,8 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	mock := result.Matched
 	reqValues.Mock = mock
 
-	if mock.Delay > 0 {
-		ctxTimeout, cancel := context.WithTimeout(r.Context(), mock.Delay)
+	if mock.Delay != nil {
+		ctxTimeout, cancel := context.WithTimeout(r.Context(), mock.Delay())
 		defer cancel()
 
 		<-ctxTimeout.Done()

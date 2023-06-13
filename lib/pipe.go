@@ -70,16 +70,3 @@ func (c *Connector) Connect(data []byte, w io.Writer) (int, error) {
 
 	return t, nil
 }
-
-// ---
-
-type S interface {
-}
-
-type SR struct {
-}
-
-func (S SR) Write(p []byte) (n int, err error) {
-	// TODO implement me
-	panic("implement me")
-}

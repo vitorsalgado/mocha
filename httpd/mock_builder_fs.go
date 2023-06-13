@@ -344,7 +344,7 @@ func buildMockFromBytes(app *HTTPMockApp, builder *HTTPMockBuilder, content []by
 			return nil, fmt.Errorf("[delay] type %T is not supported. supported types: string, number", v)
 		}
 
-		builder.Delay(duration)
+		builder.Delay(lib.Latency(duration))
 	}
 
 	if vi.IsSet(_fPostActions) {

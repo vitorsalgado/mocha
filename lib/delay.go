@@ -1,4 +1,4 @@
-package delay
+package lib
 
 import (
 	"math/rand"

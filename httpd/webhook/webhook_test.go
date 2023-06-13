@@ -16,6 +16,7 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3/httpd"
 	. "github.com/vitorsalgado/mocha/v3/httpd/httpval"
+	"github.com/vitorsalgado/mocha/v3/lib"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
@@ -217,7 +218,7 @@ func TestWebHook_FaultTarget(t *testing.T) {
 	target := httpd.NewAPIWithT(t)
 	target.MustStart()
 	target.MustMock(httpd.Getf("/hook/fault").
-		Delay(1 * time.Minute).
+		Delay(lib.Latency(1 * time.Minute)).
 		Reply(httpd.OK().PlainText("hello")))
 
 	m := httpd.NewAPIWithT(t, httpd.Setup().PostAction(Name, New()))

@@ -9,8 +9,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/vitorsalgado/mocha/v3/matcher"
 	. "github.com/vitorsalgado/mocha/v3/httpd"
+	"github.com/vitorsalgado/mocha/v3/lib"
+	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
 func TestResponseDelay(t *testing.T) {
@@ -23,7 +24,7 @@ func TestResponseDelay(t *testing.T) {
 	delay := 250 * time.Millisecond
 
 	scoped := m.MustMock(Get(matcher.URLPath("/test")).
-		Delay(delay).
+		Delay(lib.Latency(delay)).
 		Reply(OK()))
 
 	res, err := http.Get(fmt.Sprintf("%s/test", m.URL()))

@@ -4,10 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
-	"github.com/vitorsalgado/mocha/v3/lib"
 	"github.com/vitorsalgado/mocha/v3/httpd/httpval"
+	"github.com/vitorsalgado/mocha/v3/lib"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/matcher/mfeat"
 )
@@ -389,7 +388,7 @@ func (b *HTTPMockBuilder) Pipe(pipe lib.Piping) *HTTPMockBuilder {
 }
 
 // Delay sets a delay time before serving the mocked response.
-func (b *HTTPMockBuilder) Delay(duration time.Duration) *HTTPMockBuilder {
+func (b *HTTPMockBuilder) Delay(duration lib.Delay) *HTTPMockBuilder {
 	b.mock.Delay = duration
 
 	return b
