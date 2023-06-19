@@ -28,6 +28,28 @@ const (
 `
 )
 
+type dockerConfigurer struct {
+}
+
+func (c *dockerConfigurer) Apply(conf *httpd.Config) error {
+	host := strings.TrimSpace(os.Getenv(_dockerHostEnv))
+	if host == "" {
+		host = "0.0.0.0:"
+	}
+
+	if !strings.HasSuffix(host, ":") {
+		host += ":"
+	}
+
+	if conf.UseHTTPS {
+		conf.Addr = host + "8443"
+	} else {
+		conf.Addr = host + "8080"
+	}
+
+	return nil
+}
+
 var (
 	//go:embed banner.txt
 	_banner      string
@@ -51,6 +73,20 @@ func main() {
 }
 
 func run(ctx context.Context, custom ...httpd.Configurer) {
+	configurers := make([]httpd.Configurer, 0)
+	if len(custom) > 0 {
+		configurers = append(configurers, custom...)
+	}
+
+	configurers = append(configurers, httpd.UseLocals())
+
+	_, exists := os.LookupEnv(_dockerHostEnv)
+	if exists {
+		configurers = append(configurers, &dockerConfigurer{})
+	}
+
+	m := httpd.NewAPI(configurers...)
+
 	rootCmd := &cobra.Command{
 		Use:     _usage,
 		Short:   _shortDescription,
@@ -58,19 +94,6 @@ func run(ctx context.Context, custom ...httpd.Configurer) {
 		Args:    cobra.MinimumNArgs(0),
 		Example: _example,
 		Run: func(cmd *cobra.Command, args []string) {
-			configurers := make([]httpd.Configurer, 0)
-			if len(custom) > 0 {
-				configurers = append(configurers, custom...)
-			}
-
-			configurers = append(configurers, httpd.UseLocals())
-
-			_, exists := os.LookupEnv(_dockerHostEnv)
-			if exists {
-				configurers = append(configurers, &dockerConfigurer{})
-			}
-
-			m := httpd.NewAPI(configurers...)
 			m.MustStart()
 
 			fmt.Println(_banner)

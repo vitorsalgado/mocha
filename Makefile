@@ -20,7 +20,7 @@ run:
 
 .PHONY: build
 build: ## build binaries
-	@go build -o bin/$(PROJECT_NAME) cmd/moai/**.go
+	@go build -o bin/$(PROJECT_NAME) ./httpcli/**.go
 
 .PHONY: test
 test: ## run tests

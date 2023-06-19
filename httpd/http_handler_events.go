@@ -7,10 +7,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jwalton/gchalk"
 	"github.com/rs/zerolog"
 
 	"github.com/vitorsalgado/mocha/v3/lib"
-	"github.com/vitorsalgado/mocha/v3/internal/colorize"
 )
 
 type mockHTTPLifecycle interface {
@@ -169,7 +169,7 @@ func (h *builtInMockHTTPLifecycle) OnError(r *RequestValues, err error) {
 
 type builtInDescriptiveMockHTTPLifecycle struct {
 	app *HTTPMockApp
-	cz  *colorize.Colorize
+	cz  *gchalk.Builder
 }
 
 func (h *builtInDescriptiveMockHTTPLifecycle) OnRequest(rv *RequestValues) {
@@ -179,7 +179,7 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnRequest(rv *RequestValues) {
 
 	builder := strings.Builder{}
 	builder.WriteString(fmt.Sprintf("%s %s ---> %s %s\n%s %s",
-		h.cz.BlueBright(h.cz.Bold("REQUEST RECEIVED")),
+		h.cz.BrightBlue(h.cz.Bold("REQUEST RECEIVED")),
 		rv.StartedAt.Format(time.RFC3339),
 		h.cz.Blue(rv.RawRequest.Method),
 		h.cz.Blue(rv.URL.Path),
@@ -212,7 +212,7 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnMatch(rv *RequestValues, s *Stub
 
 	builder := strings.Builder{}
 	builder.WriteString(fmt.Sprintf("%s %s <--- %s %s\n%s ",
-		h.cz.GreenBright(h.cz.Bold("REQUEST MATCHED")),
+		h.cz.BrightGreen(h.cz.Bold("REQUEST MATCHED")),
 		time.Now().Format(time.RFC3339),
 		h.cz.Green(rv.RawRequest.Method),
 		h.cz.Green(rv.URL.Path),
@@ -264,7 +264,7 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnNoMatch(rv *RequestValues, fr *l
 
 	builder := strings.Builder{}
 	builder.WriteString(fmt.Sprintf("%s %s <--- %s %s\n%s %s\n",
-		h.cz.YellowBright(h.cz.Bold("REQUEST WAS NOT MATCHED")),
+		h.cz.BrightYellow(h.cz.Bold("REQUEST WAS NOT MATCHED")),
 		time.Now().Format(time.RFC3339),
 		h.cz.Yellow(rv.RawRequest.Method),
 		h.cz.Yellow(rv.URL.Path),
@@ -326,7 +326,7 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnWarning(r *RequestValues, err er
 	}
 
 	fmt.Printf("\n%s %s <--- %s %s\n%s %s\n%s: %v\n\n",
-		h.cz.RedBright(h.cz.Bold("WARNING")),
+		h.cz.BrightRed(h.cz.Bold("WARNING")),
 		time.Now().Format(time.RFC3339),
 		h.cz.Red(r.RawRequest.Method),
 		h.cz.Red(r.URL.Path),
@@ -343,7 +343,7 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnError(r *RequestValues, err erro
 	}
 
 	fmt.Printf("%s %s <--- %s %s\n%s %s\n%s: %v\n\n",
-		h.cz.RedBright(h.cz.Bold("ERROR")),
+		h.cz.BrightRed(h.cz.Bold("ERROR")),
 		time.Now().Format(time.RFC3339),
 		h.cz.Red(r.RawRequest.Method),
 		h.cz.Red(r.URL.Path),

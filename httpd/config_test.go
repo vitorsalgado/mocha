@@ -207,7 +207,7 @@ func TestConfigBuilder(t *testing.T) {
 	assert.Equal(t, int64(100), conf.LogBodyMaxSize)
 	assert.Equal(t, lib.NewInMemoryParameters(), conf.Parameters)
 	assert.Equal(t, []string{"test", "dev"}, conf.MockFileSearchPatterns)
-	assert.True(t, conf.UseDescriptiveLogger)
+	assert.True(t, conf.Debug)
 	assert.Len(t, conf.HeaderNamesToRedact, 3)
 	assert.Equal(t, conf.HeaderNamesToRedact["header-1"], struct{}{})
 	assert.Equal(t, conf.HeaderNamesToRedact["header-2"], struct{}{})

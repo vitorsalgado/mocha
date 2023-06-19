@@ -37,18 +37,18 @@ const (
 	_kConfig            = "config"
 	_kUseHTTPS          = "https"
 	_kColors            = "colors"
+	_kDebug             = "debug"
 
 	_kTLS        = "tls"
 	_kTLSCert    = "tls.cert"
 	_kTLSKey     = "tls.key"
 	_kTLSRootCAs = "tls.ca"
 
-	_kLog               = "logger"
-	_kLogLevel          = "logger.level"
-	_kLogVerbosity      = "logger.verbosity"
-	_kLogMaxBodySize    = "logger.max_body_size"
-	_kLogPretty         = "logger.pretty"
-	_kLogUseDescriptive = "logger.descriptive"
+	_kLog            = "log"
+	_kLogLevel       = "log.level"
+	_kLogVerbosity   = "log.verbosity"
+	_kLogMaxBodySize = "log.max_body_size"
+	_kLogPretty      = "log.pretty"
 
 	_kCORS                  = "cors"
 	_kCORSAllowedOrigin     = "cors.allowed_origin"
@@ -149,12 +149,12 @@ func (c *localConfigurer) Apply(conf *Config) (err error) {
 func (c *localConfigurer) apply(conf *Config, vi *viper.Viper) (err error) {
 	vi.SetDefault(_kName, conf.Name)
 	vi.SetDefault(_kAddr, conf.Addr)
-	vi.SetDefault(_kLogLevel, conf.LogLevel)
 	vi.SetDefault(_kConfig, DefaultConfigFileName)
+	vi.SetDefault(_kLogLevel, conf.LogLevel)
 	vi.SetDefault(_kLogVerbosity, int8(conf.LogVerbosity))
 	vi.SetDefault(_kLogPretty, conf.LogPretty)
-	vi.SetDefault(_kLogUseDescriptive, conf.UseDescriptiveLogger)
 	vi.SetDefault(_kLogMaxBodySize, conf.LogBodyMaxSize)
+	vi.SetDefault(_kDebug, conf.Debug)
 	vi.SetDefault(_kColors, conf.Colors)
 	vi.SetDefault(_kMockFiles, conf.MockFileSearchPatterns)
 	vi.SetDefault(_kRootDir, conf.RootDir)
@@ -167,29 +167,27 @@ func (c *localConfigurer) apply(conf *Config, vi *viper.Viper) (err error) {
 	conf.MockFileSearchPatterns = vi.GetStringSlice(_kMockFiles)
 	conf.Colors = vi.GetBool(_kColors)
 	conf.RequestWasNotMatchedStatusCode = vi.GetInt(_kNoMatchStatusCode)
+	conf.Debug = vi.GetBool(_kDebug)
+	conf.UseHTTPS = vi.GetBool(_kUseHTTPS)
 
-	if vi.IsSet(_kTLS) {
+	if vi.IsSet(_kTLSCert) && vi.IsSet(_kTLSKey) {
 		certFile := vi.GetString(_kTLSCert)
 		keyFile := vi.GetString(_kTLSKey)
-		clientCertFile := vi.GetString(_kTLSRootCAs)
 
 		if len(certFile) == 0 || len(keyFile) == 0 {
 			return fmt.Errorf("both cert and key filename are required. got cert=%s key=%s", certFile, keyFile)
 		}
 
-		err = applyTLS(conf, certFile, keyFile, clientCertFile)
+		err = applyTLS(conf, certFile, keyFile, vi.GetString(_kTLSRootCAs))
 		if err != nil {
 			return err
 		}
 	}
 
-	if vi.IsSet(_kLog) {
-		conf.LogLevel = LogLevel(vi.GetInt(_kLogLevel))
-		conf.LogVerbosity = LogVerbosity(vi.GetInt(_kLogVerbosity))
-		conf.LogBodyMaxSize = vi.GetInt64(_kLogMaxBodySize)
-		conf.LogPretty = vi.GetBool(_kLogPretty)
-		conf.UseDescriptiveLogger = vi.GetBool(_kLogUseDescriptive)
-	}
+	runIfKeyIsSet(vi, _kLogLevel, func() { conf.LogLevel = LogLevel(vi.GetInt(_kLogLevel)) })
+	runIfKeyIsSet(vi, _kLogVerbosity, func() { conf.LogVerbosity = LogVerbosity(vi.GetInt(_kLogVerbosity)) })
+	runIfKeyIsSet(vi, _kLogMaxBodySize, func() { conf.LogBodyMaxSize = vi.GetInt64(_kLogMaxBodySize) })
+	runIfKeyIsSet(vi, _kLogPretty, func() { conf.LogPretty = vi.GetBool(_kLogPretty) })
 
 	if vi.IsSet(_kCORS) {
 		def := cors.DefaultConfig
@@ -334,39 +332,58 @@ func bindFlags(v *viper.Viper) error {
 	cl.StringP(_kConfig, "c", "", "Use a custom configuration file. Commandline arguments take precedence over file values.")
 	cl.StringP(_kName, "n", "", "Mock server name.")
 	cl.String(_kRootDir, "", "Root directory to start looking for configurations and mocks.")
+	v.RegisterAlias(toFlagName(_kRootDir), _kRootDir)
+	cl.Bool(_kDebug, false, "Debug mode.")
 	cl.StringP(_kAddr, "a", "",
 		"Server address. Usage: <host>:<port>, :<port>, <port>. If no value is set, it will use a localhost with a random port.")
 	cl.Bool(_kColors, true, "Enabled/disable colors for descriptive logger only.")
 	cl.StringSlice(_kMockFiles, nil, "Mock files search glob patterns. E.g. testdata/*mock.yaml.")
-	cl.Bool(_kUseHTTPS, false, "Enabled HTTPS.")
+	v.RegisterAlias(toFlagName(_kMockFiles), _kMockFiles)
 
+	cl.Bool(_kUseHTTPS, false, "Enabled HTTPS.")
 	cl.String(_kTLSCert, "", "TLS certificate file.")
+	v.RegisterAlias(_kTLSCert, toFlagName(_kTLSCert))
 	cl.String(_kTLSKey, "", "TLS private key file.")
+	v.RegisterAlias(_kTLSKey, toFlagName(_kTLSKey))
 	cl.String(_kTLSRootCAs, "", "TLS trusted CA certificates filenames.")
+	v.RegisterAlias(toFlagName(_kTLSRootCAs), _kTLSRootCAs)
 
 	cl.Int8(_kLogLevel, LogLevelInfo, "Log level.")
+	v.RegisterAlias(toFlagName(_kLogLevel), _kLogLevel)
 	cl.Int8(_kLogVerbosity, int8(LogHeader), "Log verbosity.")
+	v.RegisterAlias(toFlagName(_kLogVerbosity), _kLogVerbosity)
 	cl.Bool(_kLogPretty, true, "Pretty logging.")
-	cl.Bool(_kLogUseDescriptive, false, "Use descriptive logger.")
+	v.RegisterAlias(toFlagName(_kLogPretty), _kLogPretty)
 	cl.Int64(_kLogMaxBodySize, 0, "Max body size to be logged.")
+	v.RegisterAlias(toFlagName(_kLogMaxBodySize), _kLogMaxBodySize)
 
 	cl.Bool(_kRecord, false, "Enabled mock recording.")
 	cl.String(_kRecordSaveDir, "", "Recorded mocks directory.")
+	v.RegisterAlias(toFlagName(_kRecordSaveDir), _kRecordSaveDir)
 	cl.Bool(_kRecordSaveBodyToFile, false, "Save recorded body to separate file, using \"body_file\" field.")
+	v.RegisterAlias(toFlagName(_kRecordSaveBodyToFile), _kRecordSaveBodyToFile)
 	cl.StringSlice(_kRecordRequestHeaders, nil, "Request headers to be recorded.")
+	v.RegisterAlias(toFlagName(_kRecordRequestHeaders), _kRecordRequestHeaders)
 	cl.StringSlice(_kRecordResponseHeaders, nil, "Response headers to be recorded.")
+	v.RegisterAlias(toFlagName(_kRecordResponseHeaders), _kRecordResponseHeaders)
 	cl.String(_kRecordFileType, "", "Recorded mock file format. E.g. json,yaml")
+	v.RegisterAlias(toFlagName(_kRecordFileType), _kRecordFileType)
 
 	cl.Bool(_kProxy, false, "Enabled reverse proxy.")
 	cl.String(_kProxyVia, "", "Route proxy requests to another proxy.")
+	v.RegisterAlias(toFlagName(_kProxyVia), _kProxyVia)
 	cl.Int64(_kProxyTimeout, _defaultProxyConfig.Timeout.Milliseconds(), "Proxy timeout in milliseconds.")
+	v.RegisterAlias(toFlagName(_kProxyTimeout), _kProxyTimeout)
 	cl.Bool(_kProxySSLVerify, false, "Verify SSL certificates.")
+	v.RegisterAlias(toFlagName(_kProxySSLVerify), _kProxySSLVerify)
 
 	cl.Bool(_kCORS, false, "Enabled CORS.")
 
 	cl.Bool(_kForward, false, "")
 	cl.String(_kForwardTarget, "", "Forward requests to the given URL.")
+	v.RegisterAlias(toFlagName(_kForwardTarget), _kForwardTarget)
 	cl.Bool(_kForwardSSLVerify, false, "SSL verify")
+	v.RegisterAlias(toFlagName(_kForwardSSLVerify), _kForwardSSLVerify)
 
 	err := cl.Parse(os.Args)
 	if err != nil {
@@ -382,4 +399,18 @@ func bindEnv(v *viper.Viper) error {
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
 
 	return nil
+}
+
+func toFlagName(name string) string {
+	name = strings.ToLower(name)
+	name = strings.ReplaceAll(name, ".", "-")
+	name = strings.ReplaceAll(name, "_", "-")
+
+	return name
+}
+
+func runIfKeyIsSet(v *viper.Viper, key string, action func()) {
+	if v.IsSet(key) {
+		action()
+	}
 }

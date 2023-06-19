@@ -12,12 +12,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jwalton/gchalk"
 	"github.com/rs/zerolog"
 
 	"github.com/vitorsalgado/mocha/v3/httpd/cors"
 	"github.com/vitorsalgado/mocha/v3/httpd/internal/mid"
 	recover2 "github.com/vitorsalgado/mocha/v3/httpd/internal/mid/recover"
-	"github.com/vitorsalgado/mocha/v3/internal/colorize"
 	"github.com/vitorsalgado/mocha/v3/lib"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/matcher/mfeat"
@@ -57,7 +57,7 @@ type HTTPMockApp struct {
 	templateEngine     lib.TemplateEngine
 	extensions         map[string]lib.Extension
 	data               map[string]any
-	colorizer          *colorize.Colorize
+	colorizer          *gchalk.Builder
 	logger             *zerolog.Logger
 	startOnce          sync.Once
 	random             *rand.Rand
@@ -92,7 +92,11 @@ func NewAPI(config ...Configurer) *HTTPMockApp {
 
 	app.logger = app.getLog(conf)
 
-	colors := &colorize.Colorize{Enabled: conf.UseDescriptiveLogger}
+	colors := gchalk.New()
+	if !conf.Colors {
+		colors.SetLevel(gchalk.LevelNone)
+	}
+
 	store := lib.NewStore[*HTTPMock]()
 
 	parsers := make([]RequestBodyParser, 0, len(conf.RequestBodyParsers)+3)
@@ -129,7 +133,7 @@ func NewAPI(config ...Configurer) *HTTPMockApp {
 	}
 
 	var lifecycle mockHTTPLifecycle
-	if conf.UseDescriptiveLogger {
+	if conf.Debug {
 		lifecycle = &builtInDescriptiveMockHTTPLifecycle{app, colors}
 	} else {
 		lifecycle = &builtInMockHTTPLifecycle{app}

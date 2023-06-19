@@ -162,11 +162,11 @@ type Config struct {
 	// By default, response bodies will be logged entirely.
 	LogBodyMaxSize int64
 
-	// UseDescriptiveLogger enable/disable the use of a more descriptive logger for HTTP request matching lifecycle.
+	// Debug enable/disable the use of a more descriptive logger for HTTP request matching lifecycle.
 	// This is useful, specially for console mode usage, to understand the details of an HTTP request and
 	// why a match did not occur.
 	// If true, The Logger options will be ignored for the HTTP request matching.
-	UseDescriptiveLogger bool
+	Debug bool
 
 	// Colors enable/disable terminal colors for the descriptive logger.
 	// Defaults to true.
@@ -226,7 +226,7 @@ func (c *Config) Apply(conf *Config) error {
 	conf.TemplateEngine = c.TemplateEngine
 	conf.TemplateFunctions = c.TemplateFunctions
 	conf.HTTPClientFactory = c.HTTPClientFactory
-	conf.UseDescriptiveLogger = c.UseDescriptiveLogger
+	conf.Debug = c.Debug
 	conf.Logger = c.Logger
 	conf.LogPretty = c.LogPretty
 	conf.LogVerbosity = c.LogVerbosity
@@ -262,7 +262,7 @@ func defaultConfig() *Config {
 		MockFileHandlers:               make([]MockFileHandler, 0),
 		PostActions:                    make(map[string]PostAction),
 		HeaderNamesToRedact:            make(map[string]struct{}),
-		UseDescriptiveLogger:           false,
+		Debug:                          false,
 		LogPretty:                      true,
 		LogLevel:                       LogLevelInfo,
 		LogVerbosity:                   LogHeader,
@@ -386,7 +386,7 @@ func (cb *ConfigBuilder) LogBodyMaxSize(max int64) *ConfigBuilder {
 // why a match did not occur.
 // If true, The Logger options will be ignored for the HTTP request matching.
 func (cb *ConfigBuilder) UseDescriptiveLogger() *ConfigBuilder {
-	cb.conf.UseDescriptiveLogger = true
+	cb.conf.Debug = true
 	return cb
 }
 
