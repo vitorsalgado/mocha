@@ -1,6 +1,7 @@
 package httpd
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"net/http"
@@ -17,6 +18,10 @@ import (
 type mockHandler struct {
 	app       *HTTPMockApp
 	lifecycle mockHTTPLifecycle
+}
+
+func newMockHandler(app *HTTPMockApp, lifecycle mockHTTPLifecycle) *mockHandler {
+	return &mockHandler{app, lifecycle}
 }
 
 func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -43,19 +48,21 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			h.app.proxy.ServeHTTP(w, r)
 
 			if h.app.rec != nil {
-				res, err := makeStub(w)
+				res := Stub{}
+				err := newResponseStub(w, &res)
 				if err != nil {
 					h.onError(w, reqValues, err)
 					return
 				}
 
-				h.app.rec.dispatch(r, parsedURL, rawBody, res)
+				h.app.rec.dispatch(r, parsedURL, rawBody, &res)
 			}
-			return
-		} else {
-			h.onNoMatches(w, reqValues, result)
+
 			return
 		}
+
+		h.onNoMatches(w, reqValues, result)
+		return
 	}
 
 	mock := result.Matched
@@ -90,11 +97,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		for k, v := range stub.Header {
-			for _, vv := range v {
-				w.Header().Add(k, vv)
-			}
-		}
+		copyHeaders(stub.Header, w.Header())
 
 		for k := range stub.Trailer {
 			w.Header().Add(httpval.HeaderTrailer, k)
@@ -109,7 +112,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if stub.Body != nil {
 			if len(mock.Pipes) > 0 {
 				connector := lib.NewConnector(mock.Pipes)
-				_, _ = connector.Connect(stub.Body, w)
+				connector.Connect(stub.Body, w)
 			} else {
 				w.Write(stub.Body)
 			}
@@ -121,7 +124,8 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
-		stub, err = makeStub(w)
+		stub := Stub{}
+		err = newResponseStub(w, &stub)
 		if err != nil {
 			h.onError(w, reqValues, err)
 			return
@@ -179,47 +183,54 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *RequestValues, result *lib.FindResult[*HTTPMock]) {
 	defer h.lifecycle.OnNoMatch(r, result)
 
-	builder := strings.Builder{}
-	builder.WriteString("REQUEST WAS NOT MATCHED\n")
+	buf := bytes.Buffer{}
+
+	buf.WriteString("REQUEST DID NOT MATCH\n")
 
 	if result.ClosestMatch != nil {
-		builder.WriteString(
-			fmt.Sprintf("CLOSEST MATCH: %s %s\n", result.ClosestMatch.GetID(), result.ClosestMatch.GetName()))
+		buf.WriteString(
+			fmt.Sprintf("NEAREST: %s %s\n", result.ClosestMatch.GetID(), result.ClosestMatch.GetName()))
 	}
 
-	builder.WriteString("MISMATCHES:\n")
+	buf.WriteString("MISSES:\n")
 
 	for _, detail := range result.MismatchDetails {
-		builder.WriteString("[" + detail.Target.String())
+		buf.WriteString("[")
+		buf.WriteString(detail.Target.String())
+
 		if detail.Key != "" {
-			builder.WriteString("(" + detail.Key + ")")
+			buf.WriteString("(")
+			buf.WriteString(detail.Key)
+			buf.WriteString(")")
 		}
-		builder.WriteString("] ")
-		builder.WriteString(detail.MatchersName)
+
+		buf.WriteString("] ")
+		buf.WriteString(detail.MatchersName)
 
 		if detail.Err != nil {
-			builder.WriteString(" ")
-			builder.WriteString(detail.Err.Error())
-			builder.WriteString("\n")
+			buf.WriteString(" ")
+			buf.WriteString(detail.Err.Error())
+			buf.WriteString("\n")
 			continue
 		}
 
-		builder.WriteString("(")
+		buf.WriteString("(")
+
 		if len(detail.Result.Ext) > 0 {
-			builder.WriteString(strings.Join(detail.Result.Ext, ", "))
-			builder.WriteString(") ")
-			builder.WriteString(detail.Result.Message)
+			buf.WriteString(strings.Join(detail.Result.Ext, ", "))
+			buf.WriteString(") ")
+			buf.WriteString(detail.Result.Message)
 		} else {
-			builder.WriteString(detail.Result.Message)
-			builder.WriteString(")")
+			buf.WriteString(detail.Result.Message)
+			buf.WriteString(")")
 		}
 
-		builder.WriteString("\n")
+		buf.WriteString("\n")
 	}
 
 	w.Header().Add(httpval.HeaderContentType, httpval.MIMETextPlainCharsetUTF8)
 	w.WriteHeader(h.app.config.RequestWasNotMatchedStatusCode)
-	w.Write([]byte(builder.String()))
+	buf.WriteTo(w)
 }
 
 func (h *mockHandler) onError(w http.ResponseWriter, r *RequestValues, err error) {
@@ -227,24 +238,25 @@ func (h *mockHandler) onError(w http.ResponseWriter, r *RequestValues, err error
 
 	w.Header().Add(httpval.HeaderContentType, httpval.MIMETextPlainCharsetUTF8)
 	w.WriteHeader(h.app.config.RequestWasNotMatchedStatusCode)
-	w.Write([]byte(fmt.Sprintf("ERROR DURING REQUEST MATCHING\n%v", err)))
+
+	fmt.Fprintf(w, "ERROR DURING REQUEST MATCHING\n%v", err)
 }
 
-func (h *mockHandler) parseURL(r *http.Request) (u *url.URL, pathSegments []string) {
+func (h *mockHandler) parseURL(r *http.Request) (*url.URL, []string) {
 	reqPath := r.URL.Path
 	if len(r.URL.RawQuery) > 0 {
 		reqPath += "?" + r.URL.RawQuery
 	}
 
-	segments := make([]string, 0)
-	urlSegments := strings.Split(reqPath, "/")
-	for _, segment := range urlSegments {
-		if segment != "" {
-			segments = append(segments, segment)
-		}
-	}
-
 	parsedURL, _ := url.Parse(h.app.URL() + reqPath)
 
-	return parsedURL, segments
+	return parsedURL, strings.FieldsFunc(reqPath, func(c rune) bool { return c == '/' })
+}
+
+func copyHeaders(src, dst http.Header) {
+	for k, vv := range src {
+		for _, v := range vv {
+			dst.Add(k, v)
+		}
+	}
 }

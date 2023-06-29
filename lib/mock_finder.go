@@ -1,7 +1,9 @@
 package lib
 
 import (
-	"reflect"
+	"fmt"
+
+	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
 // FindResult holds the results for an attempt to match a mock to a request.
@@ -24,38 +26,39 @@ func FindMockForRequest[TValueIn any, MOCK TMockMatcher[TValueIn]](
 	mocks []MOCK,
 	requestValues TValueIn,
 ) *FindResult[MOCK] {
-	var matched MOCK
-	var weights = 0
-	var details = make([]MismatchDetail, 0)
+	var nearest MOCK
+	var nearestPresent = false
+	var aggWeight = 0
+	var aggDetails = make([]MismatchDetail, 0)
 
 	for _, m := range mocks {
-		result := Match[TValueIn](requestValues, m.GetExpectations())
-
-		if result.Pass {
+		pass, weight, details := Match[TValueIn](requestValues, m.GetExpectations())
+		if pass {
 			return &FindResult[MOCK]{Pass: true, Matched: m}
 		}
 
-		if result.Weight > 0 && result.Weight > weights {
-			matched = m
-			weights = result.Weight
+		if weight > 0 && weight > aggWeight {
+			nearestPresent = true
+			nearest = m
+			aggWeight = weight
 		}
 
-		details = append(details, result.Details...)
+		aggDetails = append(aggDetails, details...)
 	}
 
-	if reflect.ValueOf(matched).IsNil() {
-		return &FindResult[MOCK]{Pass: false, MismatchDetails: details}
+	if nearestPresent {
+		return &FindResult[MOCK]{Pass: false, ClosestMatch: nearest, MismatchDetails: aggDetails}
 	}
 
-	return &FindResult[MOCK]{Pass: false, ClosestMatch: matched, MismatchDetails: details}
+	return &FindResult[MOCK]{Pass: false, MismatchDetails: aggDetails}
 }
 
 // Match checks if the current Mock matches against a list of expectations.
 // Will iterate through all expectations even if it doesn't match early.
-func Match[VS any](ri VS, expectations []*Expectation[VS]) *MatchResult {
+func Match[VS any](ri VS, expectations []*Expectation[VS]) (bool, int, []MismatchDetail) {
 	w := 0
 	ok := true
-	details := make([]MismatchDetail, 0)
+	details := make([]MismatchDetail, 0, len(expectations))
 
 	for _, exp := range expectations {
 		var val any
@@ -90,5 +93,21 @@ func Match[VS any](ri VS, expectations []*Expectation[VS]) *MatchResult {
 		}
 	}
 
-	return &MatchResult{Pass: ok, Weight: w, Details: details}
+	return ok, w, details
+}
+
+func matchExpectation[VS any](e *Expectation[VS], value any) (result *matcher.Result, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = fmt.Errorf("panic: matcher=%s. %v", e.Matcher.Name(), r)
+			return
+		}
+	}()
+
+	result, err = e.Matcher.Match(value)
+	if err != nil {
+		err = fmt.Errorf("%s: error while matching. %w", e.Matcher.Name(), err)
+	}
+
+	return
 }

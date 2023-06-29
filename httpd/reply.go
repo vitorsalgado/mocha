@@ -10,10 +10,13 @@ import (
 	"net/http"
 	"net/textproto"
 	"os"
+	"sync"
 
-	"github.com/vitorsalgado/mocha/v3/lib"
 	"github.com/vitorsalgado/mocha/v3/httpd/httpval"
+	"github.com/vitorsalgado/mocha/v3/lib"
 )
+
+var _ Reply = (*StdReply)(nil)
 
 // Reply defines the contract to set up an HTTP replier.
 type Reply interface {
@@ -26,22 +29,20 @@ type replyOnBeforeBuild interface {
 	beforeBuild(app *HTTPMockApp) error
 }
 
-var _ Reply = (*StdReply)(nil)
-
 // StdReply holds the configuration on how the Stub should be built.
 type StdReply struct {
-	response            *Stub
+	response            Stub
 	bodyType            bodyType
 	bodyEncoding        bodyEncoding
-	bodyFilename   string
-	bodyTeRender   lib.TemplateRenderer
-	bodyFnTeRender lib.TemplateRenderer
-	headerTeRender lib.TemplateRenderer
-	teType         teType
+	bodyFilename        string
+	bodyTeRender        lib.TemplateRenderer
+	bodyFnTeRender      lib.TemplateRenderer
+	headerTeRender      lib.TemplateRenderer
+	teType              teType
 	teHeader            http.Header
 	bodyTemplateContent string
 	teData              any
-	err                 error
+	delayedErr          error
 	encoded             bool
 }
 
@@ -68,13 +69,16 @@ const (
 	_teHeader
 )
 
+var gzipper = &sync.Pool{New: func() any { return gzip.NewWriter(nil) }}
+
 // NewReply creates a new StdReply. Prefer to use factory functions for each status code.
 func NewReply() *StdReply {
 	return &StdReply{
-		response:     newStub(),
+		response:     *newStub(),
 		bodyType:     _bodyDefault,
 		bodyEncoding: _bodyEncodingNone,
-		teHeader:     make(http.Header)}
+		teHeader:     make(http.Header),
+	}
 }
 
 // Status creates a new Reply with the given HTTP status code.
@@ -199,7 +203,7 @@ func (rep *StdReply) BodyText(text string) *StdReply {
 func (rep *StdReply) BodyJSON(data any) *StdReply {
 	b, err := json.Marshal(data)
 	if err != nil {
-		rep.err = err
+		rep.delayedErr = err
 		return rep
 	}
 
@@ -212,7 +216,7 @@ func (rep *StdReply) BodyJSON(data any) *StdReply {
 func (rep *StdReply) BodyReader(reader io.Reader) *StdReply {
 	b, err := io.ReadAll(reader)
 	if err != nil {
-		rep.err = err
+		rep.delayedErr = err
 	}
 
 	rep.response.Body = b
@@ -274,8 +278,8 @@ func (rep *StdReply) Gzip() *StdReply {
 }
 
 func (rep *StdReply) beforeBuild(app *HTTPMockApp) error {
-	if rep.err != nil {
-		return rep.err
+	if rep.delayedErr != nil {
+		return rep.delayedErr
 	}
 
 	if rep.teType&_teBodyFilename == _teBodyFilename {
@@ -330,8 +334,8 @@ func (rep *StdReply) Build(w http.ResponseWriter, r *RequestValues) (stub *Stub,
 }
 
 func (rep *StdReply) build(_ http.ResponseWriter, r *RequestValues) (stub *Stub, err error) {
-	if rep.err != nil {
-		return nil, rep.err
+	if rep.delayedErr != nil {
+		return nil, rep.delayedErr
 	}
 
 	switch rep.bodyType {
@@ -427,7 +431,7 @@ func (rep *StdReply) build(_ http.ResponseWriter, r *RequestValues) (stub *Stub,
 		return nil, err
 	}
 
-	return rep.response, nil
+	return &rep.response, nil
 }
 
 func (rep *StdReply) encodeBody() error {
@@ -438,7 +442,10 @@ func (rep *StdReply) encodeBody() error {
 	switch rep.bodyEncoding {
 	case _bodyEncodingGZIP:
 		buf := new(bytes.Buffer)
-		gz := gzip.NewWriter(buf)
+		gz := gzipper.Get().(*gzip.Writer)
+		defer gzipper.Put(gz)
+
+		gz.Reset(buf)
 
 		_, err := gz.Write(rep.response.Body)
 		if err != nil {

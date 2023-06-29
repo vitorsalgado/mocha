@@ -21,9 +21,9 @@ func (r *HTTPRec) Header() http.Header {
 }
 
 func (r *HTTPRec) Write(buf []byte) (int, error) {
-	_, err := r.recorder.Write(buf)
+	n, err := r.recorder.Write(buf)
 	if err != nil {
-		return 0, err
+		return n, err
 	}
 
 	return r.Wrapped.Write(buf)

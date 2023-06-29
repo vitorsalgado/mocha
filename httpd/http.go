@@ -134,13 +134,12 @@ func NewAPI(config ...Configurer) *HTTPMockApp {
 
 	var lifecycle mockHTTPLifecycle
 	if conf.Debug {
-		lifecycle = &builtInDescriptiveMockHTTPLifecycle{app, colors}
+		lifecycle = newBuiltInDescriptiveMockHTTPLifecycle(app, colors, os.Stdout)
 	} else {
-		lifecycle = &builtInMockHTTPLifecycle{app}
+		lifecycle = newBuiltInMockHTTPLifecycle(app)
 	}
 
-	handler := mid.Compose(middlewares...).
-		Root(&mockHandler{app, lifecycle})
+	handler := mid.Compose(middlewares...).Root(newMockHandler(app, lifecycle))
 
 	if conf.HandlerDecorator != nil {
 		handler = conf.HandlerDecorator(handler)

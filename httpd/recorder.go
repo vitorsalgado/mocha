@@ -167,6 +167,18 @@ func (r *recorder) start(ctx context.Context) {
 	}()
 }
 
+func (r *recorder) stop() {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if !r.active {
+		return
+	}
+
+	r.active = false
+	r.cancel()
+}
+
 func (r *recorder) dispatch(req *http.Request, parsedURL *url.URL, rawReqBody []byte, res *Stub) {
 	if !r.active {
 		return
@@ -190,19 +202,14 @@ func (r *recorder) dispatch(req *http.Request, parsedURL *url.URL, rawReqBody []
 	r.in <- input
 }
 
-func (r *recorder) stop() {
-	r.active = false
-	r.cancel()
-}
-
 func (r *recorder) process(arg *recArgs) error {
 	v := viper.New()
 
 	v.Set(_fRequestURLPath, arg.request.uri)
 	v.Set(_fRequestMethod, arg.request.method)
 
-	requestHeaders := make(map[string]string)
-	responseHeaders := make(map[string]string)
+	requestHeaders := make(map[string]string, len(arg.request.header))
+	responseHeaders := make(map[string]string, len(arg.response.header))
 	query := make(map[string]string, len(arg.request.query))
 	hasResBody := len(arg.response.body) > 0
 	requestBodyHash := ""

@@ -17,6 +17,7 @@ type Configurer[TConfig any] interface {
 type TestingT interface {
 	Helper()
 	Logf(format string, a ...any)
+	Error(a ...any)
 	Errorf(format string, a ...any)
 	Cleanup(func())
 }

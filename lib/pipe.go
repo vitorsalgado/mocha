@@ -22,24 +22,24 @@ type Piping interface {
 }
 
 type Connector struct {
-	Stubs []*Conduit
-	Pipes []Piping
-	In    chan<- *Chunk
-	Out   <-chan *Chunk
+	Conduits []*Conduit
+	Pipes    []Piping
+	In       chan<- *Chunk
+	Out      <-chan *Chunk
 }
 
 func NewConnector(pipes []Piping) *Connector {
-	connector := &Connector{Stubs: make([]*Conduit, len(pipes)), Pipes: pipes}
-	last := make(chan *Chunk)
-	connector.In = last
+	connector := &Connector{Conduits: make([]*Conduit, len(pipes)), Pipes: pipes}
+	ch := make(chan *Chunk)
+	connector.In = ch
 
 	for i := range pipes {
 		next := make(chan *Chunk)
-		connector.Stubs[i] = &Conduit{In: last, Out: next}
-		last = next
+		connector.Conduits[i] = &Conduit{In: ch, Out: next}
+		ch = next
 	}
 
-	connector.Out = last
+	connector.Out = ch
 
 	return connector
 }
@@ -55,7 +55,7 @@ func (c *Connector) Connect(data []byte, w io.Writer) (int, error) {
 	}()
 
 	for i, piping := range c.Pipes {
-		go c.Stubs[i].Pipe(piping)
+		go c.Conduits[i].Pipe(piping)
 	}
 
 	t := 0

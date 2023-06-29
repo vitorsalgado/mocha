@@ -124,3 +124,19 @@ func TestStdReplyBodyReader(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "hello\nworld\n", string(res.Body))
 }
+
+func BenchmarkReply(b *testing.B) {
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		NewReply().
+			Status(http.StatusCreated).
+			Header("test", "dev").
+			Header("test", "qa").
+			Header("hello", "world").
+			Cookie(&http.Cookie{Name: "cookie_test"}).
+			ExpireCookie(&http.Cookie{Name: "cookie_test_remove"}).
+			Body([]byte("hi")).
+			Build(nil, &RequestValues{RawRequest: _req, URL: _req.URL})
+	}
+}

@@ -35,13 +35,13 @@ func (s *Stub) Gunzip() ([]byte, error) {
 	return io.ReadAll(gz)
 }
 
-func makeStub(w http.ResponseWriter) (*Stub, error) {
+func newResponseStub(w http.ResponseWriter, stub *Stub) error {
 	rw := w.(*httprec.HTTPRec)
 	result := rw.Result()
 
 	body, err := io.ReadAll(result.Body)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	defer result.Body.Close()
@@ -56,15 +56,13 @@ func makeStub(w http.ResponseWriter) (*Stub, error) {
 		}
 	}
 
-	stub := &Stub{
-		StatusCode: result.StatusCode,
-		Header:     result.Header.Clone(),
-		Cookies:    result.Cookies(),
-	}
+	stub.StatusCode = result.StatusCode
+	stub.Header = result.Header.Clone()
+	stub.Cookies = result.Cookies()
 
 	if len(body) > 0 {
 		stub.Body = body
 	}
 
-	return stub, nil
+	return nil
 }

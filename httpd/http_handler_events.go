@@ -2,6 +2,7 @@ package httpd
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -25,6 +26,10 @@ type mockHTTPLifecycle interface {
 
 type builtInMockHTTPLifecycle struct {
 	app *HTTPMockApp
+}
+
+func newBuiltInMockHTTPLifecycle(app *HTTPMockApp) *builtInMockHTTPLifecycle {
+	return &builtInMockHTTPLifecycle{app}
 }
 
 func (h *builtInMockHTTPLifecycle) OnRequest(r *RequestValues) {
@@ -101,46 +106,46 @@ func (h *builtInMockHTTPLifecycle) OnNoMatch(r *RequestValues, fr *lib.FindResul
 			md.Str("name", fr.ClosestMatch.GetName())
 		}
 
-		evt.Dict("closest_match", md)
+		evt.Dict("nearest", md)
 	}
 
 	if len(fr.MismatchDetails) > 0 {
-		mismatches := zerolog.Arr()
-		builder := strings.Builder{}
+		mismatches := make([]interface{}, len(fr.MismatchDetails))
+		buf := &strings.Builder{}
 
-		for _, detail := range fr.MismatchDetails {
-			builder.WriteString("[" + detail.Target.String())
+		for i, detail := range fr.MismatchDetails {
+			buf.WriteString("[" + detail.Target.String())
 			if detail.Key != "" {
-				builder.WriteString("(" + detail.Key + ")")
+				buf.WriteString("(" + detail.Key + ")")
 			}
-			builder.WriteString("] ")
+			buf.WriteString("] ")
 
-			builder.WriteString(detail.MatchersName)
+			buf.WriteString(detail.MatchersName)
 
 			if detail.Err == nil {
-				builder.WriteString("(")
+				buf.WriteString("(")
 
 				if len(detail.Result.Ext) > 0 {
-					builder.WriteString(strings.Join(detail.Result.Ext, ", "))
-					builder.WriteString(") ")
-					builder.WriteString(detail.Result.Message)
+					buf.WriteString(strings.Join(detail.Result.Ext, ", "))
+					buf.WriteString(") ")
+					buf.WriteString(detail.Result.Message)
 				} else {
-					builder.WriteString(detail.Result.Message)
-					builder.WriteString(") ")
+					buf.WriteString(detail.Result.Message)
+					buf.WriteString(") ")
 				}
 			} else {
-				builder.WriteString(" ")
-				builder.WriteString(detail.Err.Error())
+				buf.WriteString(" ")
+				buf.WriteString(detail.Err.Error())
 			}
 
-			mismatches.Str(builder.String())
-			builder.Reset()
+			mismatches[i] = buf.String()
+			buf.Reset()
 		}
 
-		evt.Array("mismatches", mismatches)
+		evt.Interface("misses", mismatches)
 	}
 
-	evt.Msgf("<--- REQUEST WAS NOT MATCHED %s %s", r.RawRequest.Method, r.URL.Path)
+	evt.Msgf("<--- REQUEST DID NOT MATCH %s %s", r.RawRequest.Method, r.URL.Path)
 }
 
 func (h *builtInMockHTTPLifecycle) OnWarning(r *RequestValues, err error) {
@@ -170,6 +175,11 @@ func (h *builtInMockHTTPLifecycle) OnError(r *RequestValues, err error) {
 type builtInDescriptiveMockHTTPLifecycle struct {
 	app *HTTPMockApp
 	cz  *gchalk.Builder
+	out io.Writer
+}
+
+func newBuiltInDescriptiveMockHTTPLifecycle(app *HTTPMockApp, cz *gchalk.Builder, out io.Writer) *builtInDescriptiveMockHTTPLifecycle {
+	return &builtInDescriptiveMockHTTPLifecycle{app, cz, out}
 }
 
 func (h *builtInDescriptiveMockHTTPLifecycle) OnRequest(rv *RequestValues) {
@@ -177,8 +187,9 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnRequest(rv *RequestValues) {
 		return
 	}
 
-	builder := strings.Builder{}
-	builder.WriteString(fmt.Sprintf("%s %s ---> %s %s\n%s %s",
+	buf := &strings.Builder{}
+
+	buf.WriteString(fmt.Sprintf("%s %s ---> %s %s\n%s %s",
 		h.cz.BrightBlue(h.cz.Bold("REQUEST RECEIVED")),
 		rv.StartedAt.Format(time.RFC3339),
 		h.cz.Blue(rv.RawRequest.Method),
@@ -189,20 +200,19 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnRequest(rv *RequestValues) {
 	if h.app.config.LogVerbosity >= LogHeader && len(rv.RawRequest.Header) > 0 {
 		redactedHeader := redactHeader(rv.RawRequest.Header, h.app.config.HeaderNamesToRedact)
 
-		builder.WriteString("\n")
-		builder.WriteString(h.cz.Blue("Headers "))
-		builder.WriteString(fmt.Sprintf("%s", redactedHeader))
+		buf.WriteString("\n")
+		buf.WriteString(h.cz.Blue("Headers "))
+		buf.WriteString(fmt.Sprintf("%s", redactedHeader))
 	}
 
 	if h.app.config.LogVerbosity >= LogBody && len(rv.RawBody) > 0 {
-		builder.WriteString("\n")
-		builder.WriteString(h.cz.Blue("Body: "))
-		builder.WriteString(fmt.Sprintf("%v", string(rv.RawBody)))
+		buf.WriteString("\n")
+		buf.WriteString(h.cz.Blue("Body: "))
+		buf.WriteString(fmt.Sprintf("%v", string(rv.RawBody)))
 	}
 
-	builder.WriteString("\n")
-
-	fmt.Println(builder.String())
+	buf.WriteString("\n")
+	fmt.Fprint(h.out, buf.String())
 }
 
 func (h *builtInDescriptiveMockHTTPLifecycle) OnMatch(rv *RequestValues, s *Stub) {
@@ -210,51 +220,51 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnMatch(rv *RequestValues, s *Stub
 		return
 	}
 
-	builder := strings.Builder{}
-	builder.WriteString(fmt.Sprintf("%s %s <--- %s %s\n%s ",
+	buf := &strings.Builder{}
+
+	buf.WriteString(fmt.Sprintf("%s %s <--- %s %s\n%s ",
 		h.cz.BrightGreen(h.cz.Bold("REQUEST MATCHED")),
 		time.Now().Format(time.RFC3339),
 		h.cz.Green(rv.RawRequest.Method),
 		h.cz.Green(rv.URL.Path),
 		rv.RawRequest.Method))
-	builder.WriteString(rv.URL.String())
-	builder.WriteString("\n")
-	builder.WriteString(h.cz.Bold("Mock: "))
-	builder.WriteString(rv.Mock.GetID() + " " + rv.Mock.GetName())
-	builder.WriteString("\n")
-	builder.WriteString(h.cz.Green("Took(ms): "))
-	builder.WriteString(strconv.FormatInt(time.Since(rv.StartedAt).Milliseconds(), 10))
-	builder.WriteString("\n")
-	builder.WriteString(h.cz.Green("Status: "))
-	builder.WriteString(strconv.FormatInt(int64(s.StatusCode), 10))
+	buf.WriteString(rv.URL.String())
+	buf.WriteString("\n")
+	buf.WriteString(h.cz.Bold("Mock: "))
+	buf.WriteString(rv.Mock.GetID() + " " + rv.Mock.GetName())
+	buf.WriteString("\n")
+	buf.WriteString(h.cz.Green("Took(ms): "))
+	buf.WriteString(strconv.FormatInt(time.Since(rv.StartedAt).Milliseconds(), 10))
+	buf.WriteString("\n")
+	buf.WriteString(h.cz.Green("Status: "))
+	buf.WriteString(strconv.FormatInt(int64(s.StatusCode), 10))
 
 	if h.app.config.LogVerbosity >= LogHeader && len(s.Header) > 0 {
-		builder.WriteString("\n")
-		builder.WriteString(h.cz.Green("Headers: "))
-		builder.WriteString(fmt.Sprintf("%s", redactHeader(s.Header, h.app.config.HeaderNamesToRedact)))
+		buf.WriteString("\n")
+		buf.WriteString(h.cz.Green("Headers: "))
+		buf.WriteString(fmt.Sprintf("%s", redactHeader(s.Header, h.app.config.HeaderNamesToRedact)))
 
 		if len(s.Trailer) > 0 {
-			builder.WriteString("\n")
-			builder.WriteString(h.cz.Green("Trailers: "))
-			builder.WriteString(fmt.Sprintf("%s", redactHeader(s.Trailer, h.app.config.HeaderNamesToRedact)))
+			buf.WriteString("\n")
+			buf.WriteString(h.cz.Green("Trailers: "))
+			buf.WriteString(fmt.Sprintf("%s", redactHeader(s.Trailer, h.app.config.HeaderNamesToRedact)))
 		}
 	}
 
 	bodyLen := int64(len(s.Body))
 	if h.app.config.LogVerbosity >= LogBody && bodyLen > 0 &&
 		(h.app.config.LogBodyMaxSize == 0 || bodyLen <= h.app.config.LogBodyMaxSize) {
-		builder.WriteString("\n")
-		builder.WriteString(h.cz.Green("Body: "))
+		buf.WriteString("\n")
+		buf.WriteString(h.cz.Green("Body: "))
 		if s.Encoding == "" {
-			builder.WriteString(string(s.Body))
+			buf.WriteString(string(s.Body))
 		} else {
-			builder.WriteString("<encoded body omitted>")
+			buf.WriteString("<encoded body omitted>")
 		}
 	}
 
-	builder.WriteString("\n")
-
-	fmt.Println(builder.String())
+	buf.WriteString("\n")
+	fmt.Fprint(h.out, buf.String())
 }
 
 func (h *builtInDescriptiveMockHTTPLifecycle) OnNoMatch(rv *RequestValues, fr *lib.FindResult[*HTTPMock]) {
@@ -262,8 +272,9 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnNoMatch(rv *RequestValues, fr *l
 		return
 	}
 
-	builder := strings.Builder{}
-	builder.WriteString(fmt.Sprintf("%s %s <--- %s %s\n%s %s\n",
+	buf := &strings.Builder{}
+
+	buf.WriteString(fmt.Sprintf("%s %s <--- %s %s\n%s %s\n",
 		h.cz.BrightYellow(h.cz.Bold("REQUEST WAS NOT MATCHED")),
 		time.Now().Format(time.RFC3339),
 		h.cz.Yellow(rv.RawRequest.Method),
@@ -272,52 +283,51 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnNoMatch(rv *RequestValues, fr *l
 		rv.URL.String()))
 
 	if fr.ClosestMatch != nil {
-		builder.WriteString(fmt.Sprintf("%s: %s %s\n",
+		buf.WriteString(fmt.Sprintf("%s: %s %s\n",
 			h.cz.Bold("Closest Match"), fr.ClosestMatch.GetID(), fr.ClosestMatch.GetName()))
 	}
 
 	if len(fr.MismatchDetails) > 0 {
 		if h.app.config.LogVerbosity <= LogHeader {
-			builder.WriteString(fmt.Sprintf("%s: %d", h.cz.Bold("Mismatches"), len(fr.MismatchDetails)))
+			buf.WriteString(fmt.Sprintf("%s: %d", h.cz.Bold("Mismatches"), len(fr.MismatchDetails)))
 		} else {
-			builder.WriteString(fmt.Sprintf("%s(%d):\n", h.cz.Bold("Mismatches"), len(fr.MismatchDetails)))
+			buf.WriteString(fmt.Sprintf("%s(%d):\n", h.cz.Bold("Mismatches"), len(fr.MismatchDetails)))
 			for _, detail := range fr.MismatchDetails {
-				builder.WriteString("[" + detail.Target.String())
+				buf.WriteString("[" + detail.Target.String())
 				if detail.Key != "" {
-					builder.WriteString("(" + detail.Key + ")")
+					buf.WriteString("(" + detail.Key + ")")
 				}
-				builder.WriteString("] ")
-				builder.WriteString(detail.MatchersName)
-				builder.WriteString("(")
+				buf.WriteString("] ")
+				buf.WriteString(detail.MatchersName)
+				buf.WriteString("(")
 
 				if detail.Err != nil {
-					builder.WriteString(detail.Err.Error())
-					builder.WriteString(")\n")
+					buf.WriteString(detail.Err.Error())
+					buf.WriteString(")\n")
 					continue
 				}
 
 				if detail.Result == nil {
-					builder.WriteString(")\n")
+					buf.WriteString(")\n")
 					continue
 				}
 
 				if len(detail.Result.Ext) == 0 {
-					builder.WriteString(h.cz.Bold(detail.Result.Message))
-					builder.WriteString(")")
+					buf.WriteString(h.cz.Bold(detail.Result.Message))
+					buf.WriteString(")")
 				} else {
-					builder.WriteString(h.cz.Bold(strings.Join(detail.Result.Ext, ", ")))
-					builder.WriteString(") ")
-					builder.WriteString(detail.Result.Message)
+					buf.WriteString(h.cz.Bold(strings.Join(detail.Result.Ext, ", ")))
+					buf.WriteString(") ")
+					buf.WriteString(detail.Result.Message)
 				}
 
-				builder.WriteString("\n")
+				buf.WriteString("\n")
 			}
 		}
 	}
 
-	builder.WriteString("\n")
-
-	fmt.Println(builder.String())
+	buf.WriteString("\n")
+	fmt.Fprint(h.out, buf.String())
 }
 
 func (h *builtInDescriptiveMockHTTPLifecycle) OnWarning(r *RequestValues, err error) {
@@ -359,7 +369,7 @@ func redactHeader(h http.Header, toRedact map[string]struct{}) http.Header {
 
 	for k, v := range h {
 		if _, ok := toRedact[strings.ToLower(k)]; ok {
-			redactedHeader.Add(k, "<redacted>")
+			redactedHeader.Set(k, "<redacted>")
 		} else {
 			for _, vv := range v {
 				redactedHeader.Add(k, vv)

@@ -22,6 +22,10 @@ func (m *FakeT) Logf(format string, args ...any) {
 	m.Called(format, args)
 }
 
+func (m *FakeT) Error(args ...any) {
+	m.Called(args)
+}
+
 func (m *FakeT) Errorf(format string, args ...any) {
 	m.Called(format, args)
 }

@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"fmt"
 	"sort"
 	"sync"
 
@@ -199,7 +198,10 @@ func (s *MockStore[TMock]) GetAll() []TMock {
 	s.rwMutex.RLock()
 	defer s.rwMutex.RUnlock()
 
-	return s.data
+	ret := make([]TMock, len(s.data))
+	copy(ret, s.data)
+
+	return ret
 }
 
 func (s *MockStore[TMock]) Delete(id string) {
@@ -269,18 +271,6 @@ const (
 	WeightHigh
 )
 
-// MatchResult holds information related to a matching operation.
-type MatchResult struct {
-	// Details is the list of non-matches messages.
-	Details []MismatchDetail
-
-	// Weight for the matcher. It helps determine the closest match.
-	Weight int
-
-	// Pass indicates whether it matched or not.
-	Pass bool
-}
-
 // MismatchDetail gives more context about why a matcher did not match.
 type MismatchDetail struct {
 	MatchersName string
@@ -288,22 +278,6 @@ type MismatchDetail struct {
 	Key          string
 	Result       *matcher.Result
 	Err          error
-}
-
-func matchExpectation[VS any](e *Expectation[VS], value any) (result *matcher.Result, err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			err = fmt.Errorf("panic: matcher=%s. %v", e.Matcher.Name(), r)
-			return
-		}
-	}()
-
-	result, err = e.Matcher.Match(value)
-	if err != nil {
-		err = fmt.Errorf("%s: error while matching. %w", e.Matcher.Name(), err)
-	}
-
-	return
 }
 
 type Target int8
