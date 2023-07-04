@@ -1,21 +1,21 @@
 package mocha
 
 import (
-	"github.com/vitorsalgado/mocha/v3/httpd"
-	"github.com/vitorsalgado/mocha/v3/lib"
+	"github.com/vitorsalgado/mocha/v3/dzhttp"
+	"github.com/vitorsalgado/mocha/v3/dzstd"
 )
 
-func NewAPI(config ...httpd.Configurer) *httpd.HTTPMockApp {
-	return httpd.NewAPI(config...)
+func NewAPI(config ...dzhttp.Configurer) *dzhttp.HTTPMockApp {
+	return dzhttp.NewAPI(config...)
 }
 
-func NewAPIWithT(t lib.TestingT, config ...httpd.Configurer) *httpd.HTTPMockApp {
-	return httpd.NewAPIWithT(t, config...)
+func NewAPIWithT(t dzstd.TestingT, config ...dzhttp.Configurer) *dzhttp.HTTPMockApp {
+	return dzhttp.NewAPIWithT(t, config...)
 }
 
-func NewEchoServer(config ...httpd.Configurer) *httpd.HTTPMockApp {
-	app := httpd.NewAPI(config...)
-	app.MustMock(httpd.AnyMethod().Reply(httpd.Echo().Log()))
+func NewEchoServer(config ...dzhttp.Configurer) *dzhttp.HTTPMockApp {
+	app := dzhttp.NewAPI(config...)
+	app.MustMock(dzhttp.AnyMethod().Reply(dzhttp.Echo().Log()))
 
 	return app
 }

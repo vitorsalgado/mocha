@@ -15,18 +15,18 @@ import (
 	"syscall"
 
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/httpd"
-	"github.com/vitorsalgado/mocha/v3/httpd/httpval"
+	"github.com/vitorsalgado/mocha/v3/dzhttp"
+	"github.com/vitorsalgado/mocha/v3/dzhttp/httpval"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
 type Srv struct {
 	h    http.Handler
-	cfg  *httpd.Config
-	info *httpd.ServerInfo
+	cfg  *dzhttp.Config
+	info *dzhttp.ServerInfo
 }
 
-func (s *Srv) Setup(app *httpd.HTTPMockApp, handler http.Handler) error {
+func (s *Srv) Setup(app *dzhttp.HTTPMockApp, handler http.Handler) error {
 	http.HandleFunc("/", handler.ServeHTTP)
 
 	s.h = handler
@@ -57,8 +57,8 @@ func (s *Srv) S() any {
 	return nil
 }
 
-func (s *Srv) Info() *httpd.ServerInfo {
-	return &httpd.ServerInfo{URL: ""}
+func (s *Srv) Info() *dzhttp.ServerInfo {
+	return &dzhttp.ServerInfo{URL: ""}
 }
 
 func main() {
@@ -108,25 +108,25 @@ func main() {
 	}
 
 	m := mocha.New(
-		httpd.Setup().
+		dzhttp.Setup().
 			HandlerDecorator(h).
 			Server(&Srv{}).
 			Addr(":8080"))
 	m.MustStart()
 
-	m.MustMock(httpd.Get(URLPath("/test")).
+	m.MustMock(dzhttp.Get(URLPath("/test")).
 		Header(httpval.HeaderAccept, Contain(httpval.MIMETextPlain)).
 		Header("X-Scenario", StrictEqual("1")).
-		Reply(httpd.OK().
+		Reply(dzhttp.OK().
 			PlainText("ok").
 			Header("X-Scenario-Result", "true")))
 
-	m.MustMock(httpd.Post(URLPath("/test")).
+	m.MustMock(dzhttp.Post(URLPath("/test")).
 		Header(httpval.HeaderContentType, Contain(httpval.MIMEApplicationJSON)).
 		Body(All(
 			JSONPath("active", StrictEqual(true)),
 			JSONPath("result", StrictEqual("ok")))).
-		Reply(httpd.OK().
+		Reply(dzhttp.OK().
 			ContentType(httpval.MIMEApplicationJSON).
 			BodyReader(f)),
 	)

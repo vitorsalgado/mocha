@@ -9,8 +9,8 @@ import (
 	"syscall"
 
 	"github.com/vitorsalgado/mocha/v3"
-	"github.com/vitorsalgado/mocha/v3/httpd"
-	"github.com/vitorsalgado/mocha/v3/httpd/httpval"
+	"github.com/vitorsalgado/mocha/v3/dzhttp"
+	"github.com/vitorsalgado/mocha/v3/dzhttp/httpval"
 	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
@@ -18,14 +18,14 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	m := mocha.New(httpd.Setup().Addr(":8080"))
+	m := mocha.New(dzhttp.Setup().Addr(":8080"))
 	m.MustStart()
 
-	m.MustMock(httpd.Get(URLPath("/test")).
+	m.MustMock(dzhttp.Get(URLPath("/test")).
 		Header(httpval.HeaderAccept, Contain(httpval.MIMETextHTML)).
 		Header(httpval.HeaderContentType, StrictEqual("test")).
 		Header("any", All(Contain("test"), EqualIgnoreCase("dev"))).
-		Reply(httpd.OK().
+		Reply(dzhttp.OK().
 			PlainText("hello world").
 			Header("x-basic", "true")))
 
