@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	. "github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/dzhttp"
+	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
 func TestCompressedResponse_GZIP(t *testing.T) {

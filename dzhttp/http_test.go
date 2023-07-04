@@ -13,8 +13,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/goleak"
 
-	. "github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/dzhttp/test/testmock"
+	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
 func TestMain(m *testing.M) {

@@ -34,11 +34,11 @@ type StdReply struct {
 	response            Stub
 	bodyType            bodyType
 	bodyEncoding        bodyEncoding
-	bodyFilename   string
-	bodyTeRender   dzstd.TemplateRenderer
-	bodyFnTeRender dzstd.TemplateRenderer
-	headerTeRender dzstd.TemplateRenderer
-	teType         teType
+	bodyFilename        string
+	bodyTeRender        dzstd.TemplateRenderer
+	bodyFnTeRender      dzstd.TemplateRenderer
+	headerTeRender      dzstd.TemplateRenderer
+	teType              teType
 	teHeader            http.Header
 	bodyTemplateContent string
 	teData              any

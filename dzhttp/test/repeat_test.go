@@ -6,8 +6,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/dzhttp"
+	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
 func TestRepeat(t *testing.T) {

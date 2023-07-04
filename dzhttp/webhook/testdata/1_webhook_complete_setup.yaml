@@ -7,7 +7,7 @@ response:
 post_actions:
   - name: webhook
     parameters:
-      url: {{ .App.Data.webhook_target }}
+      url: {{.App.Data.webhook_target}}
       method: POST
       header:
         hello: world

@@ -1,9 +1,10 @@
 package dzgrpc
 
 import (
+	"google.golang.org/grpc/metadata"
+
 	"github.com/vitorsalgado/mocha/v3/dzstd"
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	"google.golang.org/grpc/metadata"
 )
 
 var (

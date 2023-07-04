@@ -7,10 +7,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/v3/dzstd"
-	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/dzhttp"
 	"github.com/vitorsalgado/mocha/v3/dzhttp/test/testmock"
+	"github.com/vitorsalgado/mocha/v3/dzstd"
+	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
 func TestScoped(t *testing.T) {

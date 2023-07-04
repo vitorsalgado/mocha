@@ -12,9 +12,9 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/vitorsalgado/mocha/v3/dzstd"
 	"github.com/vitorsalgado/mocha/v3/dzhttp/cors"
 	"github.com/vitorsalgado/mocha/v3/dzhttp/httpval"
+	"github.com/vitorsalgado/mocha/v3/dzstd"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 

@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/vitorsalgado/mocha/v3"
-	. "github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/dzhttp"
+	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
 func TestHandlerGetById(t *testing.T) {

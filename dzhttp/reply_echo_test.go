@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
 	"github.com/vitorsalgado/mocha/v3/dzhttp/httpval"
 )
 

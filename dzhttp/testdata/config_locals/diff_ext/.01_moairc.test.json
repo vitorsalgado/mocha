@@ -15,8 +15,8 @@
     "timeout": 5000
   },
   "record": {
-    "request_headers": ["header1", "header2"],
-    "response_headers": ["header3", "header4"],
+    "request_headers": [ "header1", "header2" ],
+    "response_headers": [ "header3", "header4" ],
     "save_dir": "nowhere",
     "save_body_to_file": true
   },

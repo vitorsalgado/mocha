@@ -9,8 +9,8 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/metadata"
 
-	. "github.com/vitorsalgado/mocha/v3/matcher"
 	pb "github.com/vitorsalgado/mocha/v3/dzgrpc/internal/protobuf"
+	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
 func TestUnary(t *testing.T) {
