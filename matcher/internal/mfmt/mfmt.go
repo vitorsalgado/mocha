@@ -11,15 +11,7 @@ import (
 var _indentRegExp = regexp.MustCompile("(?m)^")
 
 func Indent(str string) string {
-	times := 1
-	rep := ""
-
-	for times > 0 {
-		rep += " "
-		times--
-	}
-
-	return _indentRegExp.ReplaceAllString(str, rep)
+	return _indentRegExp.ReplaceAllString(str, " ")
 }
 
 func PrintReceived(val any) string {
