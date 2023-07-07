@@ -1,9 +1,9 @@
 .ONESHELL:
 .DEFAULT_GOAL := help
 
-PROJECT_NAME=moai
+PROJECT_NAME=dz
 DOCKER_IMAGE=$(PROJECT_NAME)
-PROTO_MESSAGES = mgrpc/internal/protobuf
+PROTO_MESSAGES = dzgrpc/internal/protobuf
 
 # allow user specific optional overrides
 -include Makefile.overrides
@@ -20,7 +20,7 @@ run:
 
 .PHONY: build
 build: ## build binaries
-	@go build -o bin/$(PROJECT_NAME) ./httpcli/**.go
+	@go build -o bin/$(PROJECT_NAME) ./dzhttpcli/**.go
 
 .PHONY: test
 test: ## run tests

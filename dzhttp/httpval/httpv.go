@@ -1,4 +1,4 @@
-// Package mhttpv implements utilities that might be useful to the users of this library.
+// Package httpval implements utilities that might be useful to the users of this library.
 package httpval
 
 const _charsetUTF8 = "charset=UTF-8"

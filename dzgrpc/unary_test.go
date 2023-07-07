@@ -19,7 +19,7 @@ func TestUnary(t *testing.T) {
 	}
 
 	m := NewGRPCWithT(t)
-	pb.RegisterTestServiceServer(m.Server(), &srv{})
+	pb.RegisterTestServiceServer(m.Server(), pb.UnimplementedTestServiceServer{})
 	m.MustStart()
 	m.MustMock(UnaryMethod("Greetings").
 		Header("h1", Eq("v1")).
