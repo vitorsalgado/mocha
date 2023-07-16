@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	. "github.com/vitorsalgado/mocha/v3/dzhttp"
@@ -29,12 +28,13 @@ func TestResponseDelay(t *testing.T) {
 
 	res, err := http.Get(fmt.Sprintf("%s/test", m.URL()))
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 
 	elapsed := time.Since(start)
 
 	scoped.AssertCalled(t)
-	assert.Equal(t, http.StatusOK, res.StatusCode)
-	assert.GreaterOrEqual(t, elapsed, delay)
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.GreaterOrEqual(t, elapsed, delay)
 }
 
 func TestResponseDelay_SetupFromFile(t *testing.T) {
@@ -63,6 +63,7 @@ func TestResponseDelay_SetupFromFile(t *testing.T) {
 
 			res, err := httpClient.Get(m.URL(tc.path))
 			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
 
 			elapsed := time.Since(start)
 

@@ -1,6 +1,7 @@
 package test
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -22,7 +23,7 @@ func TestProxiedReplies(t *testing.T) {
 		assert.Equal(t, httpval.MIMETextPlain, r.Header.Get(httpval.HeaderContentType))
 
 		b, err := io.ReadAll(r.Body)
-		if err != nil && err != io.EOF {
+		if err != nil && errors.Is(err, io.EOF) {
 			require.NoError(t, err)
 		}
 

@@ -2,6 +2,7 @@ package dzgrpc
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"net/http"
@@ -15,7 +16,6 @@ import (
 type GRPCMockApp struct {
 	*dzstd.BaseApp[*GRPCMock, *GRPCMockApp]
 
-	ctx     context.Context
 	cancel  context.CancelFunc
 	server  *grpc.Server
 	config  *Config
@@ -45,7 +45,6 @@ func NewGRPC(config ...dzstd.Configurer[*Config]) *GRPCMockApp {
 	}
 
 	store := dzstd.NewStore[*GRPCMock]()
-	ctx, cancel := context.WithCancel(conf.Context)
 	in := &Interceptors{app: app}
 	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(in.UnaryInterceptor),
@@ -58,8 +57,6 @@ func NewGRPC(config ...dzstd.Configurer[*Config]) *GRPCMockApp {
 
 	app.BaseApp = dzstd.NewBaseApp(app, store)
 	app.storage = store
-	app.ctx = ctx
-	app.cancel = cancel
 	app.config = conf
 	app.server = srv
 
@@ -80,16 +77,18 @@ func (app *GRPCMockApp) Start() error {
 		return fmt.Errorf("server: Start: failed to create listener: %w", err)
 	}
 
+	ctx, cancel := context.WithCancel(context.Background())
 	app.addr = lis.Addr().String()
+	app.cancel = cancel
 
 	go func() {
-		if err = app.server.Serve(lis); err != nil && err != http.ErrServerClosed {
+		if err = app.server.Serve(lis); err != nil && errors.Is(err, http.ErrServerClosed) {
 			app.logger.Warn().Err(err).Msg("server: Start: error listening")
 		}
 	}()
 
 	go func() {
-		<-app.ctx.Done()
+		<-ctx.Done()
 		app.server.GracefulStop()
 	}()
 

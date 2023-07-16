@@ -26,7 +26,7 @@ func (m *anyOfMatcher) Match(v any) (r Result, e error) {
 		idx = i
 		result, err := matcher.Match(v)
 		if err != nil {
-			return Result{}, fmt.Errorf("any: %d: %s", i, err.Error())
+			return Result{}, fmt.Errorf("any: %d: %w", i, err)
 		}
 
 		if !result.Pass {

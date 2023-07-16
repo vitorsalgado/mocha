@@ -28,6 +28,7 @@ func TestEnabledDisabledMocks(t *testing.T) {
 			res, err := httpClient.Get(m.URL(tc.path))
 
 			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
 			require.Equal(t, tc.status, res.StatusCode)
 		})
 	}

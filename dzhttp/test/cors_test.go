@@ -24,11 +24,13 @@ func TestCORS(t *testing.T) {
 	res, err := client.Do(corsReq)
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusNoContent, res.StatusCode)
 
 	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
 	res, err = client.Do(req)
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 }

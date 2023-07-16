@@ -30,6 +30,7 @@ func TestReplyEcho(t *testing.T) {
 	b, err := io.ReadAll(res.Body)
 	require.NoError(t, err)
 
+	require.NoError(t, res.Body.Close())
 	require.True(t, scope.AssertCalled(t))
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	require.Equal(t, httpval.MIMETextPlainCharsetUTF8, res.Header.Get(httpval.HeaderContentType))

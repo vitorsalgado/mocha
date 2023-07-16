@@ -1,6 +1,8 @@
 package dzgrpc
 
 import (
+	"context"
+
 	"google.golang.org/grpc/metadata"
 
 	"github.com/vitorsalgado/mocha/v3/dzstd"
@@ -67,13 +69,13 @@ func (b *ServerStreamMockBuilder) Build(_ *GRPCMockApp) (*GRPCMock, error) {
 	return b.m, nil
 }
 
-func streamSelectMethod(r *StreamValueSelectorIn) any {
+func streamSelectMethod(_ context.Context, r *StreamValueSelectorIn) any {
 	return r.Info.FullMethod
 }
 
 func streamSelectHeader(k string) StreamValueSelector {
-	return func(r *StreamValueSelectorIn) any {
-		md, ok := metadata.FromIncomingContext(r.Context)
+	return func(ctx context.Context, r *StreamValueSelectorIn) any {
+		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
 			return nil
 		}
@@ -87,6 +89,6 @@ func streamSelectHeader(k string) StreamValueSelector {
 	}
 }
 
-func streamSelectBody(r *StreamValueSelectorIn) any {
+func streamSelectBody(_ context.Context, r *StreamValueSelectorIn) any {
 	return r.RequestMessage
 }

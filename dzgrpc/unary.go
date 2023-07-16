@@ -19,16 +19,14 @@ func (u *GRPCUnaryMock) GetExpectations() []*dzstd.Expectation[*UnaryValueSelect
 	return u.unaryExpectations
 }
 
-type UnaryValueSelector func(in *UnaryValueSelectorIn) any
+type UnaryValueSelector func(ctx context.Context, in *UnaryValueSelectorIn) any
 
 type UnaryValueSelectorIn struct {
-	Context        context.Context
 	RequestMessage any
 	Info           *grpc.UnaryServerInfo
 }
 
 type UnaryRequestValues struct {
-	Context        context.Context
 	RequestMessage any
 	Info           *grpc.UnaryServerInfo
 	RawBody        any
@@ -61,8 +59,7 @@ func (in *Interceptors) UnaryInterceptor(
 	}
 
 	description := dzstd.Description{Buf: make([]string, 0, len(mocks))}
-	result := dzstd.FindMockForRequest(wrappedMocks, &UnaryValueSelectorIn{
-		Context:        ctx,
+	result := dzstd.FindMockForRequest(ctx, wrappedMocks, &UnaryValueSelectorIn{
 		RequestMessage: rawBody,
 		Info:           info,
 	}, &description)
@@ -77,7 +74,7 @@ func (in *Interceptors) UnaryInterceptor(
 		return nil, interceptError("unary: mock %s must implement an unary reply: got %T", mock.getRef(), mock.Reply)
 	}
 
-	res, err := reply.Build(&UnaryRequestValues{ctx, reqMsg, info, rawBody, in.app})
+	res, err := reply.Build(ctx, &UnaryRequestValues{reqMsg, info, rawBody, in.app})
 	if err != nil {
 		return nil, err
 	}
@@ -88,7 +85,7 @@ func (in *Interceptors) UnaryInterceptor(
 }
 
 type UnaryReply interface {
-	Build(rv *UnaryRequestValues) (any, error)
+	Build(ctx context.Context, rv *UnaryRequestValues) (any, error)
 }
 
 type BuiltInUnaryReply struct {
@@ -122,13 +119,13 @@ func (u *BuiltInUnaryReply) Message(msg any) *BuiltInUnaryReply {
 	return u
 }
 
-func (u *BuiltInUnaryReply) Build(rv *UnaryRequestValues) (any, error) {
-	err := grpc.SendHeader(rv.Context, u.response.Header)
+func (u *BuiltInUnaryReply) Build(ctx context.Context, rv *UnaryRequestValues) (any, error) {
+	err := grpc.SendHeader(ctx, u.response.Header)
 	if err != nil {
 		return nil, err
 	}
 
-	err = grpc.SetTrailer(rv.Context, u.response.Trailer)
+	err = grpc.SetTrailer(ctx, u.response.Trailer)
 	if err != nil {
 		return nil, err
 	}

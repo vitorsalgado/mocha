@@ -75,6 +75,7 @@ func TestHTTPMethods(t *testing.T) {
 			res, err := client.Do(req)
 
 			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
 			require.Equal(t, tc.status, res.StatusCode)
 
 			other := http.MethodGet
@@ -86,6 +87,7 @@ func TestHTTPMethods(t *testing.T) {
 			res, err = client.Do(req)
 
 			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
 			require.Equal(t, StatusNoMatch, res.StatusCode)
 
 			m.Clean()

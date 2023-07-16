@@ -50,7 +50,7 @@ func TestMatcherCombinations(t *testing.T) {
 	m := NewAPI()
 
 	sHTTP := m.MustMock(FromFile("testdata/matchers/01_matchers.yaml"))
-	sHTTPs := m.MustMock(FromFile("testdata/matchers/02_matchers.yaml"))
+	sHTTPS := m.MustMock(FromFile("testdata/matchers/02_matchers.yaml"))
 
 	actuateAndAssert := func(baseURL string) {
 		body := &model{
@@ -126,7 +126,7 @@ func TestMatcherCombinations(t *testing.T) {
 	m.Close()
 
 	require.True(t, sHTTP.AssertNumberOfCalls(t, 1))
-	require.True(t, sHTTPs.AssertNumberOfCalls(t, 1))
+	require.True(t, sHTTPS.AssertNumberOfCalls(t, 1))
 }
 
 func TestMatchers_MultipleMethods(t *testing.T) {
@@ -138,17 +138,20 @@ func TestMatchers_MultipleMethods(t *testing.T) {
 	res, err := client.Get(m.URL("/test?q=none"))
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusNoContent, res.StatusCode)
 
 	res, err = client.Post(m.URL("/test?q=none"), httpval.MIMETextPlain, nil)
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusNoContent, res.StatusCode)
 
 	req, _ := http.NewRequest(http.MethodPut, m.URL("/test?q=none"), nil)
 	res, err = client.Do(req)
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, StatusNoMatch, res.StatusCode)
 }
 
@@ -161,11 +164,13 @@ func TestMatchers_URLMatchRegex(t *testing.T) {
 	res, err := client.Get(m.URL("/test?q=hi"))
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusNoContent, res.StatusCode)
 
 	res, err = client.Get(m.URL("/test?q=bye"))
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, StatusNoMatch, res.StatusCode)
 }
 
@@ -178,11 +183,13 @@ func TestMatchers_URLCustomMatcher(t *testing.T) {
 	res, err := client.Get(m.URL("/test?q=hi"))
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusNoContent, res.StatusCode)
 
 	res, err = client.Get(m.URL("/test?q=bye"))
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, StatusNoMatch, res.StatusCode)
 }
 
@@ -195,11 +202,13 @@ func TestMatchers_PathCustomMatcher(t *testing.T) {
 	res, err := client.Get(m.URL("/hi"))
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusNoContent, res.StatusCode)
 
 	res, err = client.Get(m.URL("/bye"))
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, StatusNoMatch, res.StatusCode)
 }
 
@@ -212,5 +221,6 @@ func TestMatchers_NoReply_ShouldReturn200ByDefault(t *testing.T) {
 	res, err := client.Get(m.URL("/test"))
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 }

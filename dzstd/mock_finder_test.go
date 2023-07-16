@@ -1,6 +1,7 @@
 package dzstd_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -32,9 +33,9 @@ func TestMockMatches(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			desc := &dzstd.Description{}
-			pass, _ := dzstd.Match(params, desc, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{{
+			pass, _ := dzstd.Match(context.Background(), params, desc, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{{
 				Matcher: StrictEqual(tc.value),
-				ValueSelector: func(r *dzhttp.HTTPValueSelectorInput) any {
+				ValueSelector: func(_ context.Context, r *dzhttp.HTTPValueSelectorInput) any {
 					return tc.selector
 				},
 			}})
@@ -46,11 +47,11 @@ func TestMockMatches(t *testing.T) {
 	t.Run("should return not matched and error when one of expectations returns error", func(t *testing.T) {
 		// string
 		desc := &dzstd.Description{}
-		pass, _ := dzstd.Match(params, desc, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{{
+		pass, _ := dzstd.Match(context.Background(), params, desc, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{{
 			Matcher: Func(func(_ any) (bool, error) {
 				return false, fmt.Errorf("fail")
 			}),
-			ValueSelector: func(r *dzhttp.HTTPValueSelectorInput) any {
+			ValueSelector: func(_ context.Context, r *dzhttp.HTTPValueSelectorInput) any {
 				return "dev"
 			},
 		}})
@@ -61,11 +62,11 @@ func TestMockMatches(t *testing.T) {
 	t.Run("should not pass when it panics", func(t *testing.T) {
 		// string
 		desc := &dzstd.Description{}
-		pass, _ := dzstd.Match(params, desc, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{{
+		pass, _ := dzstd.Match(context.Background(), params, desc, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{{
 			Matcher: Func(func(_ any) (bool, error) {
 				panic("boom!")
 			}),
-			ValueSelector: func(r *dzhttp.HTTPValueSelectorInput) any {
+			ValueSelector: func(_ context.Context, r *dzhttp.HTTPValueSelectorInput) any {
 				return "dev"
 			},
 		}})
@@ -76,24 +77,24 @@ func TestMockMatches(t *testing.T) {
 	t.Run("should return the sum of the matchers Weight when it matches", func(t *testing.T) {
 		// any
 		desc := &dzstd.Description{}
-		pass, weigth := dzstd.Match(params, desc, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{
+		pass, weigth := dzstd.Match(context.Background(), params, desc, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{
 			{
 				Matcher: StrictEqual("test"),
-				ValueSelector: func(r *dzhttp.HTTPValueSelectorInput) any {
+				ValueSelector: func(_ context.Context, r *dzhttp.HTTPValueSelectorInput) any {
 					return "test"
 				},
 				Weight: 2,
 			},
 			{
 				Matcher: StrictEqual("test"),
-				ValueSelector: func(r *dzhttp.HTTPValueSelectorInput) any {
+				ValueSelector: func(_ context.Context, r *dzhttp.HTTPValueSelectorInput) any {
 					return "test"
 				},
 				Weight: 1,
 			},
 			{
 				Matcher: StrictEqual(10.0),
-				ValueSelector: func(r *dzhttp.HTTPValueSelectorInput) any {
+				ValueSelector: func(_ context.Context, r *dzhttp.HTTPValueSelectorInput) any {
 					return 10.0
 				},
 				Weight: 2,
@@ -107,24 +108,24 @@ func TestMockMatches(t *testing.T) {
 	t.Run("should return the sum of the matchers Weight when one of then doesn't match", func(t *testing.T) {
 		// any
 		desc := &dzstd.Description{}
-		pass, weight := dzstd.Match(params, desc, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{
+		pass, weight := dzstd.Match(context.Background(), params, desc, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{
 			{
 				Matcher: StrictEqual("test"),
-				ValueSelector: func(r *dzhttp.HTTPValueSelectorInput) any {
+				ValueSelector: func(_ context.Context, r *dzhttp.HTTPValueSelectorInput) any {
 					return "test"
 				},
 				Weight: 2,
 			},
 			{
 				Matcher: StrictEqual("test"),
-				ValueSelector: func(r *dzhttp.HTTPValueSelectorInput) any {
+				ValueSelector: func(_ context.Context, r *dzhttp.HTTPValueSelectorInput) any {
 					return "dev"
 				},
 				Weight: 1,
 			},
 			{
 				Matcher: StrictEqual(10.0),
-				ValueSelector: func(r *dzhttp.HTTPValueSelectorInput) any {
+				ValueSelector: func(_ context.Context, r *dzhttp.HTTPValueSelectorInput) any {
 					return 10.0
 				},
 				Weight: 2,

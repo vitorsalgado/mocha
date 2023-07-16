@@ -46,7 +46,6 @@ type HTTPMockApp struct {
 	server             Server
 	storage            *dzstd.MockStore[*HTTPMock]
 	scenarioStore      *mfeat.ScenarioStore
-	ctx                context.Context
 	cancel             context.CancelFunc
 	requestBodyParsers []RequestBodyParser
 	params             dzstd.Params
@@ -71,8 +70,7 @@ func NewAPI(config ...Configurer) *HTTPMockApp {
 	app := &HTTPMockApp{}
 	app.random = rand.New(rand.NewSource(time.Now().UnixNano()))
 
-	ctx, cancel := context.WithCancel(context.Background())
-	app.ctx = ctx
+	_, cancel := context.WithCancel(context.Background())
 	app.cancel = cancel
 
 	conf := defaultConfig()
@@ -263,11 +261,6 @@ func (app *HTTPMockApp) URL(paths ...string) string {
 	}
 
 	return u
-}
-
-// Context returns the server internal context.Context.
-func (app *HTTPMockApp) Context() context.Context {
-	return app.ctx
 }
 
 // Parameters returns Params instance associated with this application.
@@ -500,7 +493,7 @@ func (app *HTTPMockApp) onStart() (err error) {
 	}
 
 	if app.rec != nil {
-		app.rec.start(app.ctx)
+		app.rec.start(context.Background())
 	}
 
 	return nil

@@ -1,6 +1,7 @@
 package dzstd
 
 import (
+	"context"
 	"sort"
 	"strings"
 	"sync"
@@ -252,7 +253,7 @@ type Expectation[TValueIn any] struct {
 	Matcher matcher.Matcher
 
 	// ValueSelector will extract the http.Request or a specific field of it and feed it to the associated Matcher.
-	ValueSelector func(TValueIn) any
+	ValueSelector func(context.Context, TValueIn) any
 
 	// Weight of this Expectation.
 	Weight Weight

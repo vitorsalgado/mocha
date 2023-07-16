@@ -158,6 +158,7 @@ func TestWebHook_Run(t *testing.T) {
 			res, err := client.Do(req)
 
 			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
 			require.Equal(t, http.StatusNoContent, res.StatusCode)
 			require.True(t, target.AssertNumberOfCalls(t, tc.expectedCalls))
 			require.True(t, m.AssertNumberOfCalls(t, 1))
@@ -209,6 +210,7 @@ func TestWebHook_TLS(t *testing.T) {
 	res, err := client.Do(req)
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusNoContent, res.StatusCode)
 	require.True(t, target.AssertNumberOfCalls(t, 1))
 	require.True(t, m.AssertNumberOfCalls(t, 1))
@@ -258,6 +260,7 @@ func TestWebHook_FaultTarget(t *testing.T) {
 	res, err := client.Do(req)
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusNoContent, res.StatusCode)
 }
 
@@ -284,6 +287,7 @@ func TestWebHook_InvalidArgs(t *testing.T) {
 			res, err := client.Get(m.URL("/test"))
 
 			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
 			require.Equal(t, http.StatusNoContent, res.StatusCode)
 
 			m.Clean()
@@ -312,6 +316,7 @@ func TestWebHook_FileSetup(t *testing.T) {
 	res, err := client.Do(req)
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusAccepted, res.StatusCode)
 	require.True(t, target.AssertNumberOfCalls(t, 1))
 	require.True(t, m.AssertNumberOfCalls(t, 1))

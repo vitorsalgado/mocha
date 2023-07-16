@@ -76,6 +76,7 @@ func TestBuilderFs_FromBytes(t *testing.T) {
 			res, err := httpClient.Get(m.URL() + "/test")
 
 			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
 			require.Equal(t, http.StatusOK, res.StatusCode)
 
 			m.Close()

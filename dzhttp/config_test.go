@@ -10,7 +10,7 @@ import (
 	"text/template"
 
 	"github.com/rs/zerolog"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3/dzhttp/cors"
 	"github.com/vitorsalgado/mocha/v3/dzhttp/httpval"
@@ -80,11 +80,11 @@ func TestConfig(t *testing.T) {
 
 		req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
 		res, err := client.Do(req)
-
-		assert.NoError(t, err)
-		assert.True(t, scoped.HasBeenCalled())
-		assert.Equal(t, http.StatusOK, res.StatusCode)
-		assert.Contains(t, m.server.Info().URL, addr)
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
+		require.True(t, scoped.HasBeenCalled())
+		require.Equal(t, http.StatusOK, res.StatusCode)
+		require.Contains(t, m.server.Info().URL, addr)
 	})
 
 	t.Run("request body parsers from config should take precedence", func(t *testing.T) {
@@ -102,10 +102,10 @@ func TestConfig(t *testing.T) {
 		req.Header.Add("x-test", "num")
 
 		res, err := client.Do(req)
-
-		assert.NoError(t, err)
-		assert.True(t, scoped.HasBeenCalled())
-		assert.Equal(t, http.StatusOK, res.StatusCode)
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
+		require.True(t, scoped.HasBeenCalled())
+		require.Equal(t, http.StatusOK, res.StatusCode)
 	})
 
 	t.Run("middlewares from config should take precedence", func(t *testing.T) {
@@ -131,11 +131,11 @@ func TestConfig(t *testing.T) {
 
 		req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
 		res, err := client.Do(req)
-
-		assert.NoError(t, err)
-		assert.False(t, scoped.HasBeenCalled())
-		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-		assert.Equal(t, "true", res.Header.Get("intercepted"))
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
+		require.False(t, scoped.HasBeenCalled())
+		require.Equal(t, http.StatusBadRequest, res.StatusCode)
+		require.Equal(t, "true", res.Header.Get("intercepted"))
 	})
 
 	t.Run("configure custom server", func(t *testing.T) {
@@ -150,10 +150,10 @@ func TestConfig(t *testing.T) {
 
 		req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test", nil)
 		res, err := client.Do(req)
-
-		assert.NoError(t, err)
-		assert.True(t, scoped.HasBeenCalled())
-		assert.Equal(t, http.StatusOK, res.StatusCode)
+		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
+		require.True(t, scoped.HasBeenCalled())
+		require.Equal(t, http.StatusOK, res.StatusCode)
 	})
 }
 
@@ -192,38 +192,38 @@ func TestConfigBuilder(t *testing.T) {
 		TLSMutual("test/testdata/cert/cert.pem", "test/testdata/cert/key.pem", "test/testdata/cert/cert_client.pem"))
 	conf := m.Config()
 
-	assert.Equal(t, nm, conf.Name)
-	assert.Equal(t, addr, conf.Addr)
-	assert.Equal(t, "test_root_dir", conf.RootDir)
-	assert.Equal(t, http.StatusNotFound, conf.RequestWasNotMatchedStatusCode)
-	assert.Len(t, conf.RequestBodyParsers, 1)
-	assert.Len(t, conf.Middlewares, 0)
-	assert.Equal(t, &cors.DefaultConfig, conf.CORS)
-	assert.NotNil(t, conf.HandlerDecorator)
-	assert.Equal(t, LogBasic, conf.LogVerbosity)
-	assert.Equal(t, LogLevelInfo, conf.LogLevel)
-	assert.False(t, conf.LogPretty)
-	assert.Equal(t, &customLogger, conf.Logger)
-	assert.Equal(t, int64(100), conf.LogBodyMaxSize)
-	assert.Equal(t, dzstd.NewInMemoryParameters(), conf.Parameters)
-	assert.Equal(t, []string{"test", "dev"}, conf.MockFileSearchPatterns)
-	assert.True(t, conf.Debug)
-	assert.Len(t, conf.HeaderNamesToRedact, 3)
-	assert.Equal(t, conf.HeaderNamesToRedact["header-1"], struct{}{})
-	assert.Equal(t, conf.HeaderNamesToRedact["header-2"], struct{}{})
-	assert.Equal(t, conf.HeaderNamesToRedact["header-3"], struct{}{})
-	assert.Len(t, conf.Loaders, 1)
-	assert.Len(t, conf.MockFileHandlers, 1)
-	assert.IsType(t, &builtInGoTemplate{}, conf.TemplateEngine)
-	assert.Len(t, conf.TemplateFunctions, 1)
-	assert.NotNil(t, conf.Proxy)
-	assert.Equal(t, tlsConfig, conf.TLSConfig)
-	assert.NotNil(t, conf.TLSCertificates)
-	assert.NotNil(t, conf.TLSClientCAs)
+	require.Equal(t, nm, conf.Name)
+	require.Equal(t, addr, conf.Addr)
+	require.Equal(t, "test_root_dir", conf.RootDir)
+	require.Equal(t, http.StatusNotFound, conf.RequestWasNotMatchedStatusCode)
+	require.Len(t, conf.RequestBodyParsers, 1)
+	require.Len(t, conf.Middlewares, 0)
+	require.Equal(t, &cors.DefaultConfig, conf.CORS)
+	require.NotNil(t, conf.HandlerDecorator)
+	require.Equal(t, LogBasic, conf.LogVerbosity)
+	require.Equal(t, LogLevelInfo, conf.LogLevel)
+	require.False(t, conf.LogPretty)
+	require.Equal(t, &customLogger, conf.Logger)
+	require.Equal(t, int64(100), conf.LogBodyMaxSize)
+	require.Equal(t, dzstd.NewInMemoryParameters(), conf.Parameters)
+	require.Equal(t, []string{"test", "dev"}, conf.MockFileSearchPatterns)
+	require.True(t, conf.Debug)
+	require.Len(t, conf.HeaderNamesToRedact, 3)
+	require.Equal(t, conf.HeaderNamesToRedact["header-1"], struct{}{})
+	require.Equal(t, conf.HeaderNamesToRedact["header-2"], struct{}{})
+	require.Equal(t, conf.HeaderNamesToRedact["header-3"], struct{}{})
+	require.Len(t, conf.Loaders, 1)
+	require.Len(t, conf.MockFileHandlers, 1)
+	require.IsType(t, &builtInGoTemplate{}, conf.TemplateEngine)
+	require.Len(t, conf.TemplateFunctions, 1)
+	require.NotNil(t, conf.Proxy)
+	require.Equal(t, tlsConfig, conf.TLSConfig)
+	require.NotNil(t, conf.TLSCertificates)
+	require.NotNil(t, conf.TLSClientCAs)
 }
 
 func TestLogLevelString(t *testing.T) {
-	assert.Equal(t, LogBasic.String(), "basic")
-	assert.Equal(t, LogHeader.String(), "header")
-	assert.Equal(t, LogBody.String(), "body")
+	require.Equal(t, LogBasic.String(), "basic")
+	require.Equal(t, LogHeader.String(), "header")
+	require.Equal(t, LogBody.String(), "body")
 }

@@ -42,8 +42,10 @@ func TestCallbacks(t *testing.T) {
 			Reply(dzhttp.OK()))
 
 		res, err := http.Post(fmt.Sprintf("%s/test", m.URL()), httpval.MIMETextPlain, strings.NewReader("hi"))
-
 		require.NoError(t, err)
+
+		defer res.Body.Close()
+
 		require.True(t, scope.AssertCalled(t))
 		require.Equal(t, http.StatusOK, res.StatusCode)
 		require.True(t, spy)
@@ -67,8 +69,10 @@ func TestCallbacks(t *testing.T) {
 			Reply(dzhttp.OK()))
 
 		res, err := http.Get(fmt.Sprintf("%s/test", m.URL()))
-
 		require.NoError(t, err)
+
+		defer res.Body.Close()
+
 		require.True(t, scope.AssertCalled(t))
 		require.NotNil(t, callbackErrReceiver)
 		require.Equal(t, callbackErr, callbackErrReceiver)

@@ -26,15 +26,18 @@ func TestSequenceReplies(t *testing.T) {
 
 	res, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusUnauthorized, res.StatusCode)
 
 	res, err = http.DefaultClient.Do(req)
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	for i := 0; i < 3; i++ {
 		res, err = http.DefaultClient.Do(req)
 		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
 		require.Equal(t, http.StatusTeapot, res.StatusCode)
 	}
 }
@@ -54,15 +57,18 @@ func TestSequenceRepliesOnSequenceEndsSet(t *testing.T) {
 
 	res, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusUnauthorized, res.StatusCode)
 
 	res, err = http.DefaultClient.Do(req)
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	for i := 0; i < 2; i++ {
 		res, err = http.DefaultClient.Do(req)
 		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
 		require.Equal(t, http.StatusCreated, res.StatusCode)
 	}
 }
@@ -101,15 +107,18 @@ func TestSequence_SetupFromFile(t *testing.T) {
 
 	res, err = http.DefaultClient.Do(req)
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusCreated, res.StatusCode)
 
 	res, err = http.DefaultClient.Do(req)
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusBadRequest, res.StatusCode)
 
 	for i := 0; i < 3; i++ {
 		res, err = http.DefaultClient.Do(req)
 		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
 		require.Equal(t, http.StatusNotFound, res.StatusCode)
 	}
 }

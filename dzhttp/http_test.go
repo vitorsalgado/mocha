@@ -47,6 +47,7 @@ func TestMocha(t *testing.T) {
 	body, err := io.ReadAll(res.Body)
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.True(t, scoped.HasBeenCalled())
 	require.Equal(t, 201, res.StatusCode)
 	require.Equal(t, string(body), "hello world")
@@ -77,8 +78,8 @@ func TestResponseMapperModifyingResponse(t *testing.T) {
 	req.Header.Add("x-param", "dev")
 
 	res, err := http.DefaultClient.Do(req)
-
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	require.Equal(t, "dev", res.Header.Get("x-test"))
 	require.Equal(t, "test-ok", res.Header.Get("x-param-key"))
@@ -100,8 +101,8 @@ func TestErrors(t *testing.T) {
 			Reply(OK()))
 
 	res, err := http.Get(fmt.Sprintf("%s/test2", m.URL()))
-
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.False(t, scoped.HasBeenCalled())
 	require.Equal(t, StatusNoMatch, res.StatusCode)
 }
@@ -125,8 +126,8 @@ func TestMochaAssertions(t *testing.T) {
 	require.Equal(t, 0, m.Hits())
 
 	res, err := http.Get(m.URL() + "/test-ok")
-
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	require.Equal(t, 1, scoped.Hits())
 	require.True(t, m.AssertCalled(ft))
@@ -149,6 +150,7 @@ func TestMochaEnableDisable(t *testing.T) {
 
 	res, err := http.Get(m.URL() + "/test-1")
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	// disable all mocks
@@ -157,10 +159,12 @@ func TestMochaEnableDisable(t *testing.T) {
 
 	res, err = http.Get(m.URL() + "/test-1")
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, StatusNoMatch, res.StatusCode)
 
 	res, err = http.Get(m.URL() + "/test-2")
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, StatusNoMatch, res.StatusCode)
 
 	// re-enable mocks again
@@ -168,10 +172,12 @@ func TestMochaEnableDisable(t *testing.T) {
 
 	res, err = http.Get(m.URL() + "/test-1")
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	res, err = http.Get(m.URL() + "/test-2")
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 }
 
@@ -194,6 +200,7 @@ func TestMochaSilently(t *testing.T) {
 	body, err := io.ReadAll(res.Body)
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.True(t, scoped.HasBeenCalled())
 	require.Equal(t, 201, res.StatusCode)
 	require.Equal(t, string(body), "hello world")
@@ -214,9 +221,7 @@ func TestSchemeMatching(t *testing.T) {
 
 	res, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
-
-	defer res.Body.Close()
-
+	require.NoError(t, res.Body.Close())
 	require.True(t, scoped.HasBeenCalled())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 }
@@ -259,17 +264,14 @@ func TestMocha_RequestMatches(t *testing.T) {
 
 	res, err := httpClient.Do(req)
 	require.NoError(t, err)
-
-	defer res.Body.Close()
-
+	require.NoError(t, res.Body.Close())
 	require.True(t, scoped.HasBeenCalled())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	req, _ = http.NewRequest(http.MethodPost, m.URL()+"/test", nil)
 	res, err = httpClient.Do(req)
 	require.NoError(t, err)
-
-	defer res.Body.Close()
+	require.NoError(t, res.Body.Close())
 
 	scoped.AssertNumberOfCalls(t, 1)
 	require.Equal(t, StatusNoMatch, res.StatusCode)
@@ -336,27 +338,32 @@ func TestMochaConcurrentRequests(t *testing.T) {
 
 			res, err := httpClient.Get(m.URL() + "/test--" + num)
 			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
 			require.Equal(t, http.StatusOK, res.StatusCode)
 
 			m.MustMock(Getf("/test-after--" + num).Reply(BadRequest()))
 
 			res, err = httpClient.Get(m.URL() + "/concurrency--" + num)
 			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
 			require.Equal(t, http.StatusAccepted, res.StatusCode)
 
 			m.MustMock(Getf("/concurrency-after--" + num).Reply(InternalServerError()))
 
 			res, err = httpClient.Get(m.URL() + "/seq--" + num)
 			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
 			require.Equal(t, http.StatusOK, res.StatusCode)
 
 			res, err = httpClient.Get(m.URL() + "/seq--" + num)
 			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
 			require.Equal(t, http.StatusBadRequest, res.StatusCode)
 
 			for n := 0; n < 50; n++ {
 				res, err = httpClient.Get(m.URL() + "/rand--" + num)
 				require.NoError(t, err)
+				require.NoError(t, res.Body.Close())
 				require.True(t, res.StatusCode == http.StatusAccepted || res.StatusCode == http.StatusInternalServerError)
 			}
 
@@ -398,6 +405,7 @@ func TestSettingOnlyPort(t *testing.T) {
 	res, err := hc.Get(m.URL("/test"))
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	require.Contains(t, m.URL(), strconv.FormatInt(int64(port), 10))
 }

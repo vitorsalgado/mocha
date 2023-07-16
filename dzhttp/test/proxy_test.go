@@ -30,10 +30,12 @@ func TestProxy(t *testing.T) {
 
 	res, err := client.Get(targetSrv.URL() + "/test")
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusAccepted, res.StatusCode)
 
 	res, err = client.Get(targetSrv.URL() + "/other")
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusCreated, res.StatusCode)
 
 	proxyScope.AssertCalled(t)
@@ -58,10 +60,12 @@ func TestProxyTLS(t *testing.T) {
 
 	res, err := client.Get(targetSrv.URL() + "/test")
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusAccepted, res.StatusCode)
 
 	res, err = client.Get(targetSrv.URL() + "/other")
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusCreated, res.StatusCode)
 
 	proxyScope.AssertCalled(t)
@@ -100,10 +104,12 @@ func TestProxyTLS_CustomCert(t *testing.T) {
 
 	res, err := client.Get(targetSrv.URL() + "/test")
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusAccepted, res.StatusCode)
 
 	res, err = client.Get(targetSrv.URL() + "/other")
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusCreated, res.StatusCode)
 
 	proxyScope.AssertCalled(t)
@@ -127,7 +133,9 @@ func TestProxyViaAnotherProxy(t *testing.T) {
 	client := &http.Client{Transport: &http.Transport{Proxy: http.ProxyURL(u)}}
 
 	res, err := client.Get(m.URL() + "/test")
+
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	scope1.AssertCalled(t)
 	scope2.AssertNotCalled(t)
 	require.Equal(t, http.StatusAccepted, res.StatusCode)
@@ -135,5 +143,6 @@ func TestProxyViaAnotherProxy(t *testing.T) {
 	res, err = client.Get(m.URL() + "/other")
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusCreated, res.StatusCode)
 }

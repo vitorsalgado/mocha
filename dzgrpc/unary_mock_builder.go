@@ -1,6 +1,8 @@
 package dzgrpc
 
 import (
+	"context"
+
 	"google.golang.org/grpc/metadata"
 
 	"github.com/vitorsalgado/mocha/v3/dzstd"
@@ -67,13 +69,13 @@ func (b *UnaryMockBuilder) Build(_ *GRPCMockApp) (*GRPCMock, error) {
 	return b.m, nil
 }
 
-func unarySelectMethod(r *UnaryValueSelectorIn) any {
+func unarySelectMethod(_ context.Context, r *UnaryValueSelectorIn) any {
 	return r.Info.FullMethod
 }
 
 func unarySelectHeader(k string) UnaryValueSelector {
-	return func(r *UnaryValueSelectorIn) any {
-		md, ok := metadata.FromIncomingContext(r.Context)
+	return func(ctx context.Context, r *UnaryValueSelectorIn) any {
+		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
 			return nil
 		}
@@ -87,6 +89,6 @@ func unarySelectHeader(k string) UnaryValueSelector {
 	}
 }
 
-func unarySelectBody(r *UnaryValueSelectorIn) any {
+func unarySelectBody(_ context.Context, r *UnaryValueSelectorIn) any {
 	return r.RequestMessage
 }

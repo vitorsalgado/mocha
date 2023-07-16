@@ -21,14 +21,14 @@ func (m *urlPathMatcher) Match(v any) (Result, error) {
 	case string:
 		u, err := url.Parse(e)
 		if err != nil {
-			return Result{}, fmt.Errorf("urlpath: error parsing url: %s", err.Error())
+			return Result{}, fmt.Errorf("urlpath: error parsing url: %w", err)
 		}
 
 		value = u.Path
 	case fmt.Stringer:
 		u, err := url.Parse(e.String())
 		if err != nil {
-			return Result{}, fmt.Errorf("urlpath: error parsing url: %s", err.Error())
+			return Result{}, fmt.Errorf("urlpath: error parsing url: %w", err)
 		}
 
 		value = u.Path

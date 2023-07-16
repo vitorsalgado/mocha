@@ -237,6 +237,7 @@ func TestForward(t *testing.T) {
 		res, err := http.Get(m.URL() + "/proxy")
 
 		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
 		require.Equal(t, http.StatusAccepted, res.StatusCode)
 
 		scoped.AssertCalled(t)
@@ -263,6 +264,7 @@ func TestForward(t *testing.T) {
 		res, err := httpClient.Get(m.URL() + "/proxy")
 
 		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
 		require.Equal(t, http.StatusMovedPermanently, res.StatusCode)
 
 		scoped.AssertCalled(t)

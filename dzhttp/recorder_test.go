@@ -106,6 +106,7 @@ func TestRecordingWithWebProxy(t *testing.T) {
 	res, err = httpClient.Do(req)
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, StatusNoMatch, res.StatusCode)
 
 	req, _ = http.NewRequest(http.MethodGet, srv.URL()+"/other", nil)
@@ -207,6 +208,7 @@ func TestRecordingWithWebProxy_CustomRootDir(t *testing.T) {
 	res, err = httpClient.Do(req)
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, StatusNoMatch, res.StatusCode)
 
 	req, _ = http.NewRequest(http.MethodGet, srv.URL()+"/other", nil)
@@ -218,6 +220,7 @@ func TestRecordingWithWebProxy_CustomRootDir(t *testing.T) {
 	res.Body.Close()
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusCreated, res.StatusCode)
 	require.Equal(t, "hello world", string(b))
 	require.Empty(t, res.Header.Get(excludedResHeader))

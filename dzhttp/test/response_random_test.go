@@ -21,13 +21,16 @@ func TestRandom_SetupFromFileWithSeed(t *testing.T) {
 
 	res, err := http.DefaultClient.Do(req)
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusBadRequest, res.StatusCode)
 
 	res, err = http.DefaultClient.Do(req)
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	res, err = http.DefaultClient.Do(req)
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusBadRequest, res.StatusCode)
 }

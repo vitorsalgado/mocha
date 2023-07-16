@@ -1,6 +1,7 @@
 package dzstd
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/vitorsalgado/mocha/v3/matcher"
@@ -27,6 +28,7 @@ type TMockMatcher[TValueIn any] interface {
 // It runs all matchers of all eligible mocks on request until it finds one that matches every one of them.
 // It returns a FindResult with the find result, along with a possible closest match.
 func FindMockForRequest[TValueIn any, MOCK TMockMatcher[TValueIn]](
+	ctx context.Context,
 	mocks []MOCK,
 	requestValues TValueIn,
 	desc *Description,
@@ -37,7 +39,7 @@ func FindMockForRequest[TValueIn any, MOCK TMockMatcher[TValueIn]](
 	var misses = 0
 
 	for _, m := range mocks {
-		pass, weight := Match[TValueIn](requestValues, desc, m.GetExpectations())
+		pass, weight := Match[TValueIn](ctx, requestValues, desc, m.GetExpectations())
 		if pass {
 			return &FindResult[MOCK]{Pass: true, Matched: m}
 		}
@@ -60,13 +62,13 @@ func FindMockForRequest[TValueIn any, MOCK TMockMatcher[TValueIn]](
 
 // Match checks if the current Mock matches against a list of expectations.
 // Will iterate through all expectations even if it doesn't match early.
-func Match[VS any](ri VS, desc *Description, expectations []*Expectation[VS]) (bool, int) {
+func Match[VS any](ctx context.Context, ri VS, desc *Description, expectations []*Expectation[VS]) (bool, int) {
 	passed, aggW := true, 0
 
 	for i, exp := range expectations {
 		var val any
 		if exp.ValueSelector != nil {
-			val = exp.ValueSelector(ri)
+			val = exp.ValueSelector(ctx, ri)
 		}
 
 		result, err := wrapMatch(exp, val, i)

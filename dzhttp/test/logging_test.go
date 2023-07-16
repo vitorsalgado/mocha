@@ -38,10 +38,12 @@ func TestLogging(t *testing.T) {
 	res, err := http.Get(m.URL("/test"))
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	res, err = http.Get(m.URL("/test/nowhere"))
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, StatusNoMatch, res.StatusCode)
 
 	m.MustMock(Postf("/fail").Reply(OK()))
@@ -77,5 +79,6 @@ func TestLogging(t *testing.T) {
 	res, err = http.Get(m.URL("/err"))
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, StatusNoMatch, res.StatusCode)
 }

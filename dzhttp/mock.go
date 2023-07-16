@@ -1,6 +1,7 @@
 package dzhttp
 
 import (
+	"context"
 	"net/http"
 	"net/url"
 	"time"
@@ -118,7 +119,7 @@ type mockFileData struct {
 }
 
 // HTTPValueSelector defines a function that will be used to extract the value that will be passed to the associated matcher.
-type HTTPValueSelector func(r *HTTPValueSelectorInput) any
+type HTTPValueSelector func(ctx context.Context, r *HTTPValueSelectorInput) any
 
 type HTTPValueSelectorInput struct {
 	// RawRequest is the original incoming http.Request.

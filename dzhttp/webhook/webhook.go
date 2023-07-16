@@ -139,6 +139,8 @@ func (w *WebHook) Run(input *dzhttp.PostActionInput) error {
 		return fmt.Errorf("webhook: request failed: %w", err)
 	}
 
+	defer res.Body.Close()
+
 	level := zerolog.InfoLevel
 	if res.StatusCode >= http.StatusBadRequest {
 		level = zerolog.WarnLevel

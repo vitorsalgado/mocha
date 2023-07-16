@@ -302,6 +302,7 @@ func TestSimpleJSONValues(t *testing.T) {
 			res, err := http.DefaultClient.Do(req)
 
 			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
 			require.Equal(t, tc.status, res.StatusCode)
 			require.True(t, scoped.AssertCalled(t))
 		})

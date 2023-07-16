@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestMiddlewaresComposition(t *testing.T) {
@@ -24,16 +24,18 @@ func TestMiddlewaresComposition(t *testing.T) {
 	defer ts.Close()
 
 	res, err := http.Get(ts.URL)
-	assert.NoError(t, err)
+	require.NoError(t, err)
+
+	defer res.Body.Close()
 
 	body, err := io.ReadAll(res.Body)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
-	assert.Equal(t, http.StatusOK, res.StatusCode)
-	assert.Equal(t, "ok", res.Header.Get("x-one"))
-	assert.Equal(t, "nok", res.Header.Get("x-two"))
-	assert.Equal(t, "text/plain", res.Header.Get("content-type"))
-	assert.True(t, strings.Contains(string(body), msg))
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.Equal(t, "ok", res.Header.Get("x-one"))
+	require.Equal(t, "nok", res.Header.Get("x-two"))
+	require.Equal(t, "text/plain", res.Header.Get("content-type"))
+	require.True(t, strings.Contains(string(body), msg))
 }
 
 func one(next http.Handler) http.Handler {

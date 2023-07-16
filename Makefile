@@ -74,7 +74,6 @@ fmt: ## run gofmt in all project files
 
 .PHONY: lint
 lint: vet ## run linters
-	@staticcheck ./...
 	@golangci-lint run
 
 .PHONY: deps

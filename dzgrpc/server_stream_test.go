@@ -2,6 +2,7 @@ package dzgrpc
 
 import (
 	"context"
+	"errors"
 	"io"
 	"strings"
 	"sync"
@@ -46,7 +47,7 @@ func TestServerStreaming(t *testing.T) {
 		for {
 			item, err := res.Recv()
 			if err != nil {
-				if err == io.EOF {
+				if errors.Is(err, io.EOF) {
 					cancel()
 					return
 				}
@@ -106,7 +107,7 @@ func TestServerStream_MessageReader(t *testing.T) {
 		for {
 			item, err := res.Recv()
 			if err != nil {
-				if err == io.EOF {
+				if errors.Is(err, io.EOF) {
 					cancel()
 					return
 				}

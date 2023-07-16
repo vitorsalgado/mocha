@@ -51,7 +51,7 @@ func (l *fileLoader) Load(app *HTTPMockApp) error {
 	wg := sync.WaitGroup{}
 	once := sync.Once{}
 	w := 5
-	ctx, cancel := context.WithCancel(app.Context())
+	ctx, cancel := context.WithCancel(context.Background())
 
 	if len(filenames) < w {
 		w = len(filenames)

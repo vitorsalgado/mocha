@@ -40,6 +40,8 @@ func TestCLI(t *testing.T) {
 				break
 			}
 
+			res.Body.Close()
+
 			if attempts == max {
 				t.FailNow()
 			}
@@ -82,6 +84,7 @@ func TestDockerCLI(t *testing.T) {
 			res, err := http.Get("http://localhost:8080")
 
 			if err == nil && res.StatusCode == sc {
+				res.Body.Close()
 				success = true
 				break
 			}

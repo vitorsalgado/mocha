@@ -1,13 +1,10 @@
 package dzgrpc
 
 import (
-	"context"
-
 	"google.golang.org/grpc"
 )
 
 type Config struct {
-	Context       context.Context
 	Service       any
 	ServiceDesc   *grpc.ServiceDesc
 	ServerOptions []grpc.ServerOption
@@ -15,7 +12,6 @@ type Config struct {
 }
 
 func (c *Config) Apply(conf *Config) error {
-	conf.Context = c.Context
 	conf.Service = c.Service
 	conf.ServiceDesc = c.ServiceDesc
 	conf.ServerOptions = c.ServerOptions
@@ -25,7 +21,7 @@ func (c *Config) Apply(conf *Config) error {
 }
 
 func defaultConfig() *Config {
-	return &Config{Context: context.Background()}
+	return &Config{}
 }
 
 type ConfigBuilder struct {
@@ -34,11 +30,6 @@ type ConfigBuilder struct {
 
 func Setup() *ConfigBuilder {
 	return &ConfigBuilder{conf: defaultConfig()}
-}
-
-func (cb *ConfigBuilder) Context(ctx context.Context) *ConfigBuilder {
-	cb.conf.Context = ctx
-	return cb
 }
 
 func (cb *ConfigBuilder) Service(sd *grpc.ServiceDesc, service any) *ConfigBuilder {

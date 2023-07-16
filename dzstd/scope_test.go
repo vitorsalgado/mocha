@@ -5,8 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
+	"github.com/stretchr/testify/require"
 	"github.com/vitorsalgado/mocha/v3/dzhttp"
 	"github.com/vitorsalgado/mocha/v3/dzhttp/test/testmock"
 	"github.com/vitorsalgado/mocha/v3/dzstd"
@@ -33,16 +32,16 @@ func TestScoped(t *testing.T) {
 
 	scoped := dzstd.NewScope(repo, []string{m1.GetID(), m2.GetID(), m3.GetID()})
 
-	assert.Equal(t, 3, len(scoped.GetAll()))
-	assert.Equal(t, m1, scoped.Get(m1.GetID()))
-	assert.Nil(t, scoped.Get("unknown"))
+	require.Equal(t, 3, len(scoped.GetAll()))
+	require.Equal(t, m1, scoped.Get(m1.GetID()))
+	require.Nil(t, scoped.Get("unknown"))
 
 	t.Run("should not return done when there is still pending mocks", func(t *testing.T) {
 		ft := testmock.NewFakeT()
 
-		assert.False(t, scoped.HasBeenCalled())
-		assert.Equal(t, 3, len(scoped.GetPending()))
-		assert.True(t, scoped.IsPending())
+		require.False(t, scoped.HasBeenCalled())
+		require.Equal(t, 3, len(scoped.GetPending()))
+		require.True(t, scoped.IsPending())
 
 		scoped.AssertCalled(ft)
 		ft.AssertNumberOfCalls(t, "Errorf", 1)
@@ -53,31 +52,31 @@ func TestScoped(t *testing.T) {
 
 		m1.Inc()
 
-		assert.False(t, scoped.HasBeenCalled())
+		require.False(t, scoped.HasBeenCalled())
 		scoped.AssertCalled(ft)
 
 		m2.Inc()
 		m3.Inc()
 
 		ft.AssertNumberOfCalls(t, "Errorf", 1)
-		assert.True(t, scoped.AssertCalled(t))
-		assert.True(t, scoped.HasBeenCalled())
-		assert.True(t, scoped.AssertNumberOfCalls(t, 3))
-		assert.False(t, scoped.AssertNumberOfCalls(ft, 1))
-		assert.Equal(t, 0, len(scoped.GetPending()))
-		assert.False(t, scoped.IsPending())
+		require.True(t, scoped.AssertCalled(t))
+		require.True(t, scoped.HasBeenCalled())
+		require.True(t, scoped.AssertNumberOfCalls(t, 3))
+		require.False(t, scoped.AssertNumberOfCalls(ft, 1))
+		require.Equal(t, 0, len(scoped.GetPending()))
+		require.False(t, scoped.IsPending())
 	})
 
 	t.Run("should return total hits from store", func(t *testing.T) {
-		assert.Equal(t, 3, scoped.Hits())
+		require.Equal(t, 3, scoped.Hits())
 		scoped.AssertNumberOfCalls(t, 3)
 	})
 
 	t.Run("should clean all store associated with NewScope when calling .Clean()", func(t *testing.T) {
 		scoped.Clean()
-		assert.Equal(t, 0, len(scoped.GetPending()))
-		assert.True(t, scoped.AssertNumberOfCalls(t, 0))
-		assert.False(t, scoped.IsPending())
+		require.Equal(t, 0, len(scoped.GetPending()))
+		require.True(t, scoped.AssertNumberOfCalls(t, 0))
+		require.False(t, scoped.IsPending())
 	})
 
 	t.Run("should only consider enabled store", func(t *testing.T) {
@@ -93,42 +92,44 @@ func TestScoped(t *testing.T) {
 
 		t.Run("initial state (enabled)", func(t *testing.T) {
 			res, err := http.Get(fmt.Sprintf("%s/test1", m.URL()))
-
-			assert.NoError(t, err)
-			assert.Equal(t, http.StatusOK, res.StatusCode)
+			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
+			require.Equal(t, http.StatusOK, res.StatusCode)
 
 			res, err = http.Get(fmt.Sprintf("%s/test2", m.URL()))
-
-			assert.NoError(t, err)
-			assert.Equal(t, http.StatusOK, res.StatusCode)
+			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
+			require.Equal(t, http.StatusOK, res.StatusCode)
 
 			res, err = http.Get(fmt.Sprintf("%s/test3", m.URL()))
 
-			assert.NoError(t, err)
-			assert.Equal(t, http.StatusOK, res.StatusCode)
+			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
+			require.Equal(t, http.StatusOK, res.StatusCode)
 
-			assert.True(t, s1.HasBeenCalled())
-			assert.True(t, s2.HasBeenCalled())
+			require.True(t, s1.HasBeenCalled())
+			require.True(t, s2.HasBeenCalled())
 		})
 
 		t.Run("disabled", func(t *testing.T) {
 			s1.Disable()
 
 			res, err := http.Get(fmt.Sprintf("%s/test1", m.URL()))
-
-			assert.NoError(t, err)
-			assert.Equal(t, dzhttp.StatusNoMatch, res.StatusCode)
+			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
+			require.Equal(t, dzhttp.StatusNoMatch, res.StatusCode)
 
 			res, err = http.Get(fmt.Sprintf("%s/test2", m.URL()))
-
-			assert.NoError(t, err)
-			assert.Equal(t, http.StatusOK, res.StatusCode)
+			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
+			require.Equal(t, http.StatusOK, res.StatusCode)
 
 			res, err = http.Get(fmt.Sprintf("%s/test3", m.URL()))
 
-			assert.NoError(t, err)
-			assert.Equal(t, http.StatusOK, res.StatusCode)
-			assert.Equal(t, 1, s1.Hits())
+			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
+			require.Equal(t, http.StatusOK, res.StatusCode)
+			require.Equal(t, 1, s1.Hits())
 
 			s1.AssertNumberOfCalls(t, 1)
 		})
@@ -137,10 +138,10 @@ func TestScoped(t *testing.T) {
 			s1.Enable()
 
 			res, err := http.Get(fmt.Sprintf("%s/test1", m.URL()))
-
-			assert.NoError(t, err)
-			assert.Equal(t, http.StatusOK, res.StatusCode)
-			assert.Equal(t, 2, s1.Hits())
+			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
+			require.Equal(t, http.StatusOK, res.StatusCode)
+			require.Equal(t, 2, s1.Hits())
 
 			s1.AssertNumberOfCalls(t, 2)
 		})
@@ -149,14 +150,14 @@ func TestScoped(t *testing.T) {
 			s2.Disable()
 
 			res, err := http.Get(fmt.Sprintf("%s/test2", m.URL()))
-
-			assert.NoError(t, err)
-			assert.Equal(t, dzhttp.StatusNoMatch, res.StatusCode)
+			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
+			require.Equal(t, dzhttp.StatusNoMatch, res.StatusCode)
 
 			res, err = http.Get(fmt.Sprintf("%s/test3", m.URL()))
-
-			assert.NoError(t, err)
-			assert.Equal(t, dzhttp.StatusNoMatch, res.StatusCode)
+			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
+			require.Equal(t, dzhttp.StatusNoMatch, res.StatusCode)
 		})
 	})
 }
@@ -181,9 +182,9 @@ func TestScopedDelete(t *testing.T) {
 
 	scoped := dzstd.NewScope(repo, []string{m1.GetID(), m2.GetID(), m3.GetID()})
 
-	assert.True(t, scoped.Delete(m1.GetID()))
-	assert.False(t, scoped.Delete("unknown"))
+	require.True(t, scoped.Delete(m1.GetID()))
+	require.False(t, scoped.Delete("unknown"))
 
-	assert.Nil(t, scoped.Get(m1.GetID()))
-	assert.Nil(t, repo.Get(m1.GetID()))
+	require.Nil(t, scoped.Get(m1.GetID()))
+	require.Nil(t, repo.Get(m1.GetID()))
 }

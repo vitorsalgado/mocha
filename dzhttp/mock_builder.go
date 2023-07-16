@@ -1,6 +1,7 @@
 package dzhttp
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -469,21 +470,21 @@ func (b *HTTPMockBuilder) appendExpectation(e *dzstd.Expectation[*HTTPValueSelec
 // Request Values Selectors
 // --
 
-func selectScheme(r *HTTPValueSelectorInput) any  { return r.URL.Scheme }
-func selectMethod(r *HTTPValueSelectorInput) any  { return r.RawRequest.Method }
-func selectURL(r *HTTPValueSelectorInput) any     { return r.URL.String() }
-func selectURLPath(r *HTTPValueSelectorInput) any { return r.URL.Path }
+func selectScheme(_ context.Context, r *HTTPValueSelectorInput) any  { return r.URL.Scheme }
+func selectMethod(_ context.Context, r *HTTPValueSelectorInput) any  { return r.RawRequest.Method }
+func selectURL(_ context.Context, r *HTTPValueSelectorInput) any     { return r.URL.String() }
+func selectURLPath(_ context.Context, r *HTTPValueSelectorInput) any { return r.URL.Path }
 func selectHeader(k string) HTTPValueSelector {
-	return func(r *HTTPValueSelectorInput) any { return r.RawRequest.Header.Get(k) }
+	return func(_ context.Context, r *HTTPValueSelectorInput) any { return r.RawRequest.Header.Get(k) }
 }
 func selectQuery(k string) HTTPValueSelector {
-	return func(r *HTTPValueSelectorInput) any { return r.Query.Get(k) }
+	return func(_ context.Context, r *HTTPValueSelectorInput) any { return r.Query.Get(k) }
 }
 func selectQueries(k string) HTTPValueSelector {
-	return func(r *HTTPValueSelectorInput) any { return r.Query[k] }
+	return func(_ context.Context, r *HTTPValueSelectorInput) any { return r.Query[k] }
 }
-func selectBody(r *HTTPValueSelectorInput) any { return r.ParsedBody }
+func selectBody(_ context.Context, r *HTTPValueSelectorInput) any { return r.ParsedBody }
 func selectFormField(k string) HTTPValueSelector {
-	return func(r *HTTPValueSelectorInput) any { return r.RawRequest.Form.Get(k) }
+	return func(_ context.Context, r *HTTPValueSelectorInput) any { return r.RawRequest.Form.Get(k) }
 }
-func selectRawRequest(r *HTTPValueSelectorInput) any { return r.RawRequest }
+func selectRawRequest(_ context.Context, r *HTTPValueSelectorInput) any { return r.RawRequest }

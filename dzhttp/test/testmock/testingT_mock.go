@@ -23,7 +23,7 @@ func (m *FakeT) Logf(format string, args ...any) {
 }
 
 func (m *FakeT) Error(args ...any) {
-	m.Called(args)
+	m.Called(args...)
 }
 
 func (m *FakeT) Errorf(format string, args ...any) {

@@ -69,6 +69,7 @@ func TestTrailer_WithoutBody(t *testing.T) {
 	_, err = io.ReadAll(res.Body)
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Len(t, res.Trailer, 2)
 	require.Equal(t, "trailer-1-value", res.Trailer.Get("trailer-1"))
 	require.Equal(t, "trailer-2-value", res.Trailer.Get("trailer-2"))

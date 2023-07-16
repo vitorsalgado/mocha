@@ -33,6 +33,7 @@ func TestPriority(t *testing.T) {
 		res, err := http.Get(m.URL() + "/test")
 
 		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
 		assert.Equal(t, http.StatusBadRequest, res.StatusCode)
 		assert.False(t, one.HasBeenCalled())
 		assert.True(t, two.HasBeenCalled())
@@ -68,6 +69,7 @@ func TestPriority_DefaultIsZero(t *testing.T) {
 			res, err := httpClient.Get(m.URL() + tc.url)
 
 			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
 			require.Equal(t, tc.status, res.StatusCode)
 		})
 	}
@@ -102,6 +104,7 @@ func TestPriority_LowestShouldBeServed(t *testing.T) {
 			res, err := httpClient.Get(m.URL() + tc.url)
 
 			require.NoError(t, err)
+			require.NoError(t, res.Body.Close())
 			require.Equal(t, tc.status, res.StatusCode)
 		})
 	}

@@ -22,18 +22,22 @@ func TestRepeat(t *testing.T) {
 
 	res, err := http.Get(m.URL() + "/test")
 	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.NoError(t, res.Body.Close())
 	require.NoError(t, err)
 
 	res, err = http.Get(m.URL() + "/test")
 	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.NoError(t, res.Body.Close())
 	require.NoError(t, err)
 
 	res, err = http.Get(m.URL() + "/test")
 	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.NoError(t, res.Body.Close())
 	require.NoError(t, err)
 
 	res, err = http.Get(m.URL() + "/test")
 	require.Equal(t, dzhttp.StatusNoMatch, res.StatusCode)
+	require.NoError(t, res.Body.Close())
 	require.NoError(t, err)
 }
 
@@ -48,9 +52,11 @@ func TestRepeat_Once(t *testing.T) {
 		Reply(dzhttp.OK()))
 
 	res, _ := http.Get(m.URL() + "/test")
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	res, _ = http.Get(m.URL() + "/test")
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, dzhttp.StatusNoMatch, res.StatusCode)
 }
 
@@ -64,10 +70,12 @@ func TestRepeat_FileSetup(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		res, err := httpClient.Get(m.URL("test"))
 		require.NoError(t, err)
+		require.NoError(t, res.Body.Close())
 		require.Equal(t, http.StatusOK, res.StatusCode, i)
 	}
 
 	res, err := httpClient.Get(m.URL("/test"))
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, dzhttp.StatusNoMatch, res.StatusCode)
 }

@@ -40,7 +40,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	mocks := h.app.storage.GetEligible()
 	description := dzstd.Description{Buf: make([]string, 0, len(mocks))}
-	result := dzstd.FindMockForRequest(mocks,
+	result := dzstd.FindMockForRequest(r.Context(), mocks,
 		&HTTPValueSelectorInput{r, parsedURL, r.URL.Query(), r.Form, parsedBody}, &description)
 
 	if !result.Pass {

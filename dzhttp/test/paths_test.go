@@ -24,26 +24,32 @@ func TestSimilarRequestURLPaths(t *testing.T) {
 
 	res, err := http.DefaultClient.Get(m.URL() + "/customers")
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	res, err = http.DefaultClient.Get(m.URL() + "/customers/100")
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusAccepted, res.StatusCode)
 
 	res, err = http.DefaultClient.Get(m.URL() + "/customers/100/orders")
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusUnauthorized, res.StatusCode)
 
 	res, err = http.DefaultClient.Get(m.URL() + "/customers/100/orders/BR-500")
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusBadRequest, res.StatusCode)
 
 	res, err = http.DefaultClient.Get(m.URL() + "/customers/100/orders/BR-500/items")
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusInternalServerError, res.StatusCode)
 
 	res, err = http.DefaultClient.Get(m.URL() + "/customers/orders")
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, dzhttp.StatusNoMatch, res.StatusCode)
 
 	scope.AssertNumberOfCalls(t, 5)

@@ -304,7 +304,7 @@ func bindFile(v *viper.Viper, filename string, paths []string) error {
 
 	err := v.ReadInConfig()
 	if err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+		if errors.As(err, &viper.ConfigFileNotFoundError{}) {
 			return nil
 		}
 

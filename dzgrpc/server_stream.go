@@ -27,16 +27,14 @@ func (s *GRPCStreamMock) GetExpectations() []*dzstd.Expectation[*StreamValueSele
 	return s.streamExpectations
 }
 
-type StreamValueSelector func(in *StreamValueSelectorIn) any
+type StreamValueSelector func(ctx context.Context, in *StreamValueSelectorIn) any
 
 type StreamValueSelectorIn struct {
-	Context        context.Context
 	RequestMessage any
 	Info           *grpc.StreamServerInfo
 }
 
 type StreamRequestValues struct {
-	Context        context.Context
 	RequestMessage any
 	ServerStream   grpc.ServerStream
 	Info           *grpc.StreamServerInfo
@@ -59,7 +57,7 @@ type StreamResponse[T any] struct {
 }
 
 type ServerStreamReply interface {
-	Build(values *StreamRequestValues) error
+	Build(ctx context.Context, values *StreamRequestValues) error
 }
 
 type BuiltInServerStreamReply[T any] struct {
@@ -88,13 +86,13 @@ func (r *BuiltInServerStreamReply[T]) JSON(reader io.Reader) *BuiltInServerStrea
 	return r
 }
 
-func (r *BuiltInServerStreamReply[T]) Build(values *StreamRequestValues) error {
-	err := grpc.SendHeader(values.Context, r.response.Header)
+func (r *BuiltInServerStreamReply[T]) Build(ctx context.Context, values *StreamRequestValues) error {
+	err := grpc.SendHeader(ctx, r.response.Header)
 	if err != nil {
 		return err
 	}
 
-	err = grpc.SetTrailer(values.Context, r.response.Trailer)
+	err = grpc.SetTrailer(ctx, r.response.Trailer)
 	if err != nil {
 		return err
 	}
@@ -178,8 +176,7 @@ func (in *Interceptors) StreamInterceptor(
 	}
 
 	description := dzstd.Description{Buf: make([]string, 0, len(mocks))}
-	result := dzstd.FindMockForRequest(wrappedMocks, &StreamValueSelectorIn{
-		Context:        stream.Context(),
+	result := dzstd.FindMockForRequest(stream.Context(), wrappedMocks, &StreamValueSelectorIn{
 		RequestMessage: rawBody,
 		Info:           info,
 	}, &description)
@@ -199,7 +196,7 @@ func (in *Interceptors) StreamInterceptor(
 		)
 	}
 
-	err = reply.Build(&StreamRequestValues{stream.Context(), rawBody, stream, info, in.app})
+	err = reply.Build(stream.Context(), &StreamRequestValues{rawBody, stream, info, in.app})
 	if err != nil {
 		return fmt.Errorf("stream: failed to reply: %w", err)
 	}
