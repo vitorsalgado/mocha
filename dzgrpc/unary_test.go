@@ -14,10 +14,6 @@ import (
 )
 
 func TestUnary(t *testing.T) {
-	type srv struct {
-		pb.UnimplementedTestServiceServer
-	}
-
 	m := NewGRPCWithT(t)
 	pb.RegisterTestServiceServer(m.Server(), pb.UnimplementedTestServiceServer{})
 	m.MustStart()

@@ -14,6 +14,14 @@ import (
 )
 
 func TestScoped(t *testing.T) {
+	type testMock struct {
+		*dzstd.BaseMock
+	}
+
+	newTestMock := func() *testMock {
+		return &testMock{BaseMock: dzstd.NewMock()}
+	}
+
 	m1 := newTestMock()
 	m2 := newTestMock()
 	m3 := newTestMock()
@@ -154,6 +162,14 @@ func TestScoped(t *testing.T) {
 }
 
 func TestScopedDelete(t *testing.T) {
+	type testMock struct {
+		*dzstd.BaseMock
+	}
+
+	newTestMock := func() *testMock {
+		return &testMock{BaseMock: dzstd.NewMock()}
+	}
+
 	m1 := newTestMock()
 	m2 := newTestMock()
 	m3 := newTestMock()
