@@ -64,7 +64,7 @@ const (
 func TryBuildMatcher(possibleMatcher any) (m matcher.Matcher, err error) {
 	val := reflect.ValueOf(possibleMatcher)
 	if possibleMatcher == nil || !val.IsValid() {
-		return nil, fmt.Errorf("matcher: definition must be a string or an array in the format: [\"<MATCHER_NAME>\", ARG_1, ARG_2...]")
+		return nil, fmt.Errorf("definition must be a string or an array in the format: [\"<MATCHER_NAME>\", ARG_1, ARG_2...]")
 	}
 
 	switch val.Kind() {
@@ -79,7 +79,7 @@ func TryBuildMatcher(possibleMatcher any) (m matcher.Matcher, err error) {
 func BuildMatcher(possibleMatcher any) (m matcher.Matcher, err error) {
 	val := reflect.ValueOf(possibleMatcher)
 	if possibleMatcher == nil || !val.IsValid() {
-		return nil, fmt.Errorf("matcher: definition must be a string or an array in the format: [\"<MATCHER_NAME>\", ARG_1, ARG_2...]")
+		return nil, fmt.Errorf("definition must be a string or an array in the format: [\"<MATCHER_NAME>\", ARG_1, ARG_2...]")
 	}
 
 	switch val.Kind() {
@@ -93,13 +93,13 @@ func BuildMatcher(possibleMatcher any) (m matcher.Matcher, err error) {
 func buildMatcherFromArray(possibleMatcher any) (matcher.Matcher, error) {
 	val := reflect.ValueOf(possibleMatcher)
 	if val.Len() == 0 {
-		return nil, fmt.Errorf("matcher: definition must be a string or an array in the format: [\"<MATCHER_NAME>\", ARG_1, ARG_2...]")
+		return nil, fmt.Errorf("definition must be a string or an array in the format: [\"<MATCHER_NAME>\", ARG_1, ARG_2...]")
 	}
 
 	mk, ok := val.Index(0).Interface().(string)
 	if !ok {
 		return nil, fmt.Errorf(
-			"matcher: first index of a matcher definition must be the matcher name. eg.: [\"<MATCHER_NAME>\", ARGUMENTS...]. got: %v",
+			"first index of a matcher definition must be the matcher name. eg.: [\"<MATCHER_NAME>\", ARGUMENTS...]. got: %v",
 			val.Index(0).Interface())
 	}
 
@@ -116,7 +116,7 @@ func extractMultipleMatchers(v any) ([]matcher.Matcher, error) {
 	a, ok := v.([]any)
 	if !ok {
 		return nil,
-			fmt.Errorf("matcher: attempt to build multiple matchers using non-array type. got: %T", v)
+			fmt.Errorf("attempt to build multiple matchers using non-array type. got: %T", v)
 	}
 
 	matchers := make([]matcher.Matcher, len(a))
@@ -135,7 +135,7 @@ func extractMultipleMatchers(v any) ([]matcher.Matcher, error) {
 
 		if err != nil {
 			return nil,
-				fmt.Errorf("matcher: error building multiple matchers at index %d.\n%w", i, err)
+				fmt.Errorf("error building multiple matchers at index %d.\n%w", i, err)
 		}
 
 		matchers[i] = mat

@@ -3,6 +3,7 @@ package mfeat
 import (
 	"fmt"
 	"strings"
+	"sync"
 
 	"github.com/vitorsalgado/mocha/v3/matcher"
 )
@@ -24,6 +25,7 @@ func (s *scenarioState) hasStarted() bool {
 
 type ScenarioStore struct {
 	data map[string]*scenarioState
+	mu   sync.RWMutex
 }
 
 func NewScenarioStore() *ScenarioStore {
@@ -36,19 +38,23 @@ func (store *ScenarioStore) fetchByName(name string) (*scenarioState, bool) {
 }
 
 func (store *ScenarioStore) createNewIfNeeded(name string) *scenarioState {
-	s, ok := store.fetchByName(strings.ToLower(strings.TrimSpace(name)))
+	s, ok := store.fetchByName(name)
 
 	if !ok {
-		scenario := newScenarioState(name)
-		store.save(scenario)
-		return scenario
+		store.mu.Lock()
+
+		s, ok = store.fetchByName(name)
+
+		if !ok {
+			scenario := newScenarioState(name)
+			store.data[scenario.name] = scenario
+			return scenario
+		}
+
+		store.mu.Unlock()
 	}
 
 	return s
-}
-
-func (store *ScenarioStore) save(scenario *scenarioState) {
-	store.data[scenario.name] = scenario
 }
 
 type scenarioMatcher struct {
@@ -58,27 +64,22 @@ type scenarioMatcher struct {
 	name          string
 }
 
-func (m *scenarioMatcher) Name() string {
-	return "Scenario"
-}
-
-func (m *scenarioMatcher) Match(_ any) (*matcher.Result, error) {
+func (m *scenarioMatcher) Match(_ any) (matcher.Result, error) {
 	if m.requiredState == ScenarioStateStarted {
 		m.store.createNewIfNeeded(m.name)
 	}
 
 	scn, ok := m.store.fetchByName(m.name)
 	if !ok {
-		return &matcher.Result{Pass: true}, nil
+		return matcher.Result{Pass: true}, nil
 	}
 
 	if scn.state == m.requiredState {
-		return &matcher.Result{Pass: true}, nil
+		return matcher.Result{Pass: true}, nil
 	}
 
-	return &matcher.Result{
-		Ext:     []string{m.name, scn.state},
-		Message: fmt.Sprintf("required scenario state: %s", m.requiredState),
+	return matcher.Result{
+		Message: fmt.Sprintf("Scenario(%s): Required state: %s. Actual: %s", scn.name, m.requiredState, scn.state),
 	}, nil
 }
 

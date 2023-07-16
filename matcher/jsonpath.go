@@ -2,6 +2,7 @@ package matcher
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/ohler55/ojg/jp"
 	"github.com/ohler55/ojg/oj"
@@ -14,18 +15,14 @@ type jsonPathMatcher struct {
 	name    string
 }
 
-func (m *jsonPathMatcher) Name() string {
-	return m.name
-}
-
-func (m *jsonPathMatcher) Match(v any) (*Result, error) {
+func (m *jsonPathMatcher) Match(v any) (Result, error) {
 	var results []any
 
 	switch vv := v.(type) {
 	case string:
 		data, err := oj.ParseString(vv)
 		if err != nil {
-			return nil, fmt.Errorf("error parsing incoming json: %w", err)
+			return Result{}, fmt.Errorf("field: %s: error parsing json: %w", m.path, err)
 		}
 
 		results = m.expr.Get(data)
@@ -33,7 +30,7 @@ func (m *jsonPathMatcher) Match(v any) (*Result, error) {
 		results = m.expr.Get(vv)
 	}
 
-	var r *Result
+	var r Result
 	var err error
 
 	size := len(results)
@@ -46,16 +43,15 @@ func (m *jsonPathMatcher) Match(v any) (*Result, error) {
 	}
 
 	if err != nil {
-		return nil, err
+		return Result{}, fmt.Errorf("field: %w", err)
 	}
 
 	if r.Pass {
-		return &Result{Pass: true}, nil
+		return Result{Pass: true}, nil
 	}
 
-	return &Result{
-		Ext:     []string{m.path, prettierName(m.matcher, r)},
-		Message: r.Message,
+	return Result{
+		Message: strings.Join([]string{"Field(", m.path, ") ", r.Message}, ""),
 	}, nil
 }
 

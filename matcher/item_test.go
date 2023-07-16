@@ -43,15 +43,11 @@ func TestItem(t *testing.T) {
 func TestItemInvalidIndex(t *testing.T) {
 	res, err := Item(-1, Equal("dev")).Match([]string{"dev"})
 	require.Error(t, err)
-	require.Nil(t, res)
+	require.False(t, res.Pass)
 }
 
 func TestInvalidType(t *testing.T) {
 	res, err := Item(0, Equal("dev")).Match(true)
 	require.Error(t, err)
-	require.Nil(t, res)
-}
-
-func TestItemMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, Item(10, Eq("")).Name())
+	require.False(t, res.Pass)
 }

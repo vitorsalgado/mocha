@@ -3,6 +3,7 @@ package matcher
 import (
 	"fmt"
 	"reflect"
+	"strings"
 
 	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
@@ -11,19 +12,12 @@ type equalStrictMatcher struct {
 	expected any
 }
 
-func (m *equalStrictMatcher) Name() string {
-	return "StrictEqual"
-}
-
-func (m *equalStrictMatcher) Match(v any) (*Result, error) {
+func (m *equalStrictMatcher) Match(v any) (Result, error) {
 	if reflect.DeepEqual(m.expected, v) {
-		return &Result{Pass: true}, nil
+		return Result{Pass: true}, nil
 	}
 
-	return &Result{
-		Ext:     []string{mfmt.Stringify(m.expected)},
-		Message: mfmt.PrintReceived(v),
-	}, nil
+	return mismatch(strings.Join([]string{"StrictEq(", mfmt.Stringify(m.expected), ") Got: ", mfmt.Stringify(v)}, "")), nil
 }
 
 // StrictEqual strictly compares the expected value with incoming request values, considering value and type.

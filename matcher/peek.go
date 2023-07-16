@@ -7,14 +7,10 @@ type peekMatcher struct {
 	action  func(v any) error
 }
 
-func (m *peekMatcher) Name() string {
-	return fmt.Sprintf("Peek(%s)", m.matcher.Name())
-}
-
-func (m *peekMatcher) Match(v any) (*Result, error) {
+func (m *peekMatcher) Match(v any) (Result, error) {
 	err := m.action(v)
 	if err != nil {
-		return nil, err
+		return Result{}, fmt.Errorf("peek: %w", err)
 	}
 
 	return m.matcher.Match(v)

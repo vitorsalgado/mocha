@@ -36,9 +36,5 @@ func TestLessOrEqualUnhandledType(t *testing.T) {
 	res, err := Lte(10).Match(true)
 
 	require.Error(t, err)
-	require.Nil(t, res)
-}
-
-func TestLessOrEqualMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, Lte(10).Name())
+	require.False(t, res.Pass)
 }

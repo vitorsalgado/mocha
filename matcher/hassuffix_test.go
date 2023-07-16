@@ -24,7 +24,3 @@ func TestHasSuffix(t *testing.T) {
 		})
 	}
 }
-
-func TestHasSuffixMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, HasSuffix("").Name())
-}

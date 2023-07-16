@@ -11,9 +11,11 @@ func TestEqualIgnoreCase(t *testing.T) {
 		name              string
 		expectedValue     string
 		expectedValueArgs []any
-		matchValue        string
+		matchValue        any
 		expected          bool
 	}{
+		{"nil value (empty)", "", nil, nil, true},
+		{"nil value", "test", nil, nil, false},
 		{"diff case", "TesT", nil, "test", true},
 		{"equal values", "test", nil, "test", true},
 		{"diff values", "TeST", nil, "TeST DEV", false},
@@ -22,7 +24,7 @@ func TestEqualIgnoreCase(t *testing.T) {
 
 	for _, tc := range tcs {
 		t.Run(tc.name, func(t *testing.T) {
-			var result *Result
+			var result Result
 			var err error
 
 			if len(tc.expectedValueArgs) > 0 {
@@ -35,8 +37,4 @@ func TestEqualIgnoreCase(t *testing.T) {
 			require.Equal(t, tc.expected, result.Pass)
 		})
 	}
-}
-
-func TestEqualIgnoreCaseMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, Eqi("").Name())
 }

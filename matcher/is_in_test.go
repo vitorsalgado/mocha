@@ -33,9 +33,5 @@ func TestIsIn(t *testing.T) {
 func TestInInWithInvalidItems(t *testing.T) {
 	res, err := IsIn(true).Match(true)
 	require.Error(t, err)
-	require.Nil(t, res)
-}
-
-func TestIsContainedInMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, IsIn([]string{}).Name())
+	require.False(t, res.Pass)
 }

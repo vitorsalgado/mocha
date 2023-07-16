@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestXor(t *testing.T) {
@@ -39,7 +38,7 @@ func TestXorError(t *testing.T) {
 		res, err := m.Match("dev")
 
 		assert.Error(t, err)
-		assert.Nil(t, res)
+		assert.False(t, res.Pass)
 	})
 
 	t.Run("should return error from left matcher", func(t *testing.T) {
@@ -52,7 +51,7 @@ func TestXorError(t *testing.T) {
 		res, err := m.Match("dev")
 
 		assert.Error(t, err)
-		assert.Nil(t, res)
+		assert.False(t, res.Pass)
 	})
 
 	t.Run("should return error when both matchers fails", func(t *testing.T) {
@@ -67,10 +66,6 @@ func TestXorError(t *testing.T) {
 		res, err := m.Match("nothing")
 
 		assert.Error(t, err)
-		assert.Nil(t, res)
+		assert.False(t, res.Pass)
 	})
-}
-
-func TestXorMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, XOR(Eq(""), Empty()).Name())
 }

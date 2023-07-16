@@ -35,9 +35,5 @@ func TestTruthyInvalidSyntax(t *testing.T) {
 	result, err := Truthy().Match("y")
 
 	require.Error(t, err)
-	require.Nil(t, result)
-}
-
-func TestTruthyMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, Truthy().Name())
+	require.False(t, result.Pass)
 }

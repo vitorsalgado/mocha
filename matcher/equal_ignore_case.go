@@ -3,31 +3,27 @@ package matcher
 import (
 	"fmt"
 	"strings"
-
-	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
 type equalIgnoreCaseMatcher struct {
 	expected string
 }
 
-func (m *equalIgnoreCaseMatcher) Name() string {
-	return "EqualIgnoreCase"
-}
-
-func (m *equalIgnoreCaseMatcher) Match(v any) (*Result, error) {
-	if v == nil {
-		v = ""
+func (m *equalIgnoreCaseMatcher) Match(v any) (Result, error) {
+	txt := ""
+	if v != nil {
+		var ok bool
+		txt, ok = v.(string)
+		if !ok {
+			return Result{}, fmt.Errorf("eqi: value must be a string. got: %T", v)
+		}
 	}
 
-	if strings.EqualFold(m.expected, v.(string)) {
-		return &Result{Pass: true}, nil
+	if strings.EqualFold(m.expected, txt) {
+		return Result{Pass: true}, nil
 	}
 
-	return &Result{
-		Message: mfmt.PrintReceived(v),
-		Ext:     []string{mfmt.Stringify(m.expected)},
-	}, nil
+	return mismatch(strings.Join([]string{"Eqi(", m.expected, ") Got: ", txt}, "")), nil
 }
 
 // EqualIgnoreCase compares the expected value with the incoming request value ignoring the case.

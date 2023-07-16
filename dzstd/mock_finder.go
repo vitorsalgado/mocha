@@ -8,10 +8,14 @@ import (
 
 // FindResult holds the results for an attempt to match a mock to a request.
 type FindResult[MOCK Mock] struct {
-	Pass            bool
-	Matched         MOCK
-	ClosestMatch    MOCK
-	MismatchDetails []MismatchDetail
+	Pass    bool
+	Matched MOCK
+
+	// Closest matched mock.
+	// Populated only in case of mismatch.
+	ClosestMatch MOCK
+
+	MismatchesCount int
 }
 
 type TMockMatcher[TValueIn any] interface {
@@ -25,14 +29,15 @@ type TMockMatcher[TValueIn any] interface {
 func FindMockForRequest[TValueIn any, MOCK TMockMatcher[TValueIn]](
 	mocks []MOCK,
 	requestValues TValueIn,
+	desc *Description,
 ) *FindResult[MOCK] {
 	var nearest MOCK
 	var nearestPresent = false
 	var aggWeight = 0
-	var aggDetails = make([]MismatchDetail, 0)
+	var misses = 0
 
 	for _, m := range mocks {
-		pass, weight, details := Match[TValueIn](requestValues, m.GetExpectations())
+		pass, weight := Match[TValueIn](requestValues, desc, m.GetExpectations())
 		if pass {
 			return &FindResult[MOCK]{Pass: true, Matched: m}
 		}
@@ -43,71 +48,52 @@ func FindMockForRequest[TValueIn any, MOCK TMockMatcher[TValueIn]](
 			aggWeight = weight
 		}
 
-		aggDetails = append(aggDetails, details...)
+		misses++
 	}
 
 	if nearestPresent {
-		return &FindResult[MOCK]{Pass: false, ClosestMatch: nearest, MismatchDetails: aggDetails}
+		return &FindResult[MOCK]{Pass: false, ClosestMatch: nearest, MismatchesCount: misses}
 	}
 
-	return &FindResult[MOCK]{Pass: false, MismatchDetails: aggDetails}
+	return &FindResult[MOCK]{Pass: false, MismatchesCount: misses}
 }
 
 // Match checks if the current Mock matches against a list of expectations.
 // Will iterate through all expectations even if it doesn't match early.
-func Match[VS any](ri VS, expectations []*Expectation[VS]) (bool, int, []MismatchDetail) {
-	w := 0
-	ok := true
-	details := make([]MismatchDetail, 0, len(expectations))
+func Match[VS any](ri VS, desc *Description, expectations []*Expectation[VS]) (bool, int) {
+	passed, aggW := true, 0
 
-	for _, exp := range expectations {
+	for i, exp := range expectations {
 		var val any
 		if exp.ValueSelector != nil {
 			val = exp.ValueSelector(ri)
 		}
 
-		result, err := matchExpectation(exp, val)
-
+		result, err := wrapMatch(exp, val, i)
 		if err != nil {
-			ok = false
-			details = append(details, MismatchDetail{
-				MatchersName: exp.Matcher.Name(),
-				Target:       exp.Target,
-				Key:          exp.Key,
-				Err:          err,
-			})
-
+			desc.AppendList(" ", exp.Target, err.Error())
+			passed = false
 			continue
 		}
 
 		if result.Pass {
-			w += int(exp.Weight)
+			aggW += int(exp.Weight)
 		} else {
-			ok = false
-			details = append(details, MismatchDetail{
-				MatchersName: exp.Matcher.Name(),
-				Target:       exp.Target,
-				Key:          exp.Key,
-				Result:       result,
-			})
+			desc.AppendList(" ", exp.Target, result.Message)
+			passed = false
 		}
 	}
 
-	return ok, w, details
+	return passed, aggW
 }
 
-func matchExpectation[VS any](e *Expectation[VS], value any) (result *matcher.Result, err error) {
+func wrapMatch[VS any](e *Expectation[VS], value any, idx int) (m matcher.Result, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = fmt.Errorf("panic: matcher=%s. %v", e.Matcher.Name(), r)
+			err = fmt.Errorf("panic: matcher[%d]: %v", idx, r)
 			return
 		}
 	}()
 
-	result, err = e.Matcher.Match(value)
-	if err != nil {
-		err = fmt.Errorf("%s: error while matching. %w", e.Matcher.Name(), err)
-	}
-
-	return
+	return e.Matcher.Match(value)
 }

@@ -317,7 +317,7 @@ func buildMockFromBytes(app *HTTPMockApp, builder *HTTPMockBuilder, content []by
 	builder.Enabled(vi.GetBool(_fEnabled))
 
 	if vi.IsSet(_fRepeat) {
-		builder.Times(vi.GetInt(_fRepeat))
+		builder.Times(vi.GetInt64(_fRepeat))
 	}
 
 	if vi.IsSet(_fScenario) {

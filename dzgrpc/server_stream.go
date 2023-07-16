@@ -177,11 +177,12 @@ func (in *Interceptors) StreamInterceptor(
 		wrappedMocks[i] = &GRPCStreamMock{v}
 	}
 
+	description := dzstd.Description{Buf: make([]string, 0, len(mocks))}
 	result := dzstd.FindMockForRequest(wrappedMocks, &StreamValueSelectorIn{
 		Context:        stream.Context(),
 		RequestMessage: rawBody,
 		Info:           info,
-	})
+	}, &description)
 
 	if !result.Pass {
 		return status.Error(codes.NotFound, "stream: request was not matched with any mock")

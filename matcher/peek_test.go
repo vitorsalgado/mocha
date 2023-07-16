@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,8 +13,8 @@ func TestPeek(t *testing.T) {
 		result, err := Peek(StrictEqual("test"), func(_ any) error { return actionErr }).Match("test")
 
 		require.Error(t, err)
-		assert.Equal(t, actionErr, err)
-		assert.Nil(t, result)
+		require.Contains(t, err.Error(), actionErr.Error())
+		require.False(t, result.Pass)
 	})
 
 	t.Run("should execute action before returning provided matcher expected", func(t *testing.T) {
@@ -23,11 +22,7 @@ func TestPeek(t *testing.T) {
 		result, err := Peek(StrictEqual("test"), func(v any) error { c = v.(string); return nil }).Match("test")
 
 		require.NoError(t, err)
-		assert.True(t, result.Pass)
-		assert.Equal(t, "test", c)
+		require.True(t, result.Pass)
+		require.Equal(t, "test", c)
 	})
-}
-
-func TestPeekMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, Peek(Empty(), nil).Name())
 }

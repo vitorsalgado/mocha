@@ -36,9 +36,5 @@ func TestBothMatcherErr(t *testing.T) {
 		Contain("qa")).Match("test")
 
 	require.Error(t, err)
-	require.Nil(t, result)
-}
-
-func TestBothMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, Both(Eq("yes"), Eq("no")).Name())
+	require.False(t, result.Pass)
 }

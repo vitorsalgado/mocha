@@ -1,44 +1,42 @@
 package matcher
 
+import (
+	"fmt"
+	"strings"
+)
+
 type xorMatcher struct {
 	first  Matcher
 	second Matcher
 }
 
-func (m *xorMatcher) Name() string {
-	return "XOR"
-}
-
-func (m *xorMatcher) Match(v any) (*Result, error) {
+func (m *xorMatcher) Match(v any) (Result, error) {
 	a, err := m.first.Match(v)
 	if err != nil {
-		return nil, err
+		return Result{}, fmt.Errorf("xor: first: %w", err)
 	}
 
 	b, err := m.second.Match(v)
 	if err != nil {
-		return nil, err
+		return Result{}, fmt.Errorf("xor: second: %w", err)
 	}
 
 	if a.Pass != b.Pass {
-		return &Result{Pass: true}, nil
+		return Result{Pass: true}, nil
 	}
 
-	desc := ""
-
+	message := ""
 	if !a.Pass {
-		desc = a.Message
+		message = a.Message
 	}
-
 	if !b.Pass {
-		desc += "\n\n"
-		desc += b.Message
+		if !b.Pass {
+			message += " - "
+		}
+		message += b.Message
 	}
 
-	return &Result{
-		Message: desc,
-		Ext:     []string{prettierName(m.first, a), prettierName(m.second, b)},
-	}, nil
+	return Result{Message: strings.Join([]string{"XOR()", message}, " ")}, nil
 }
 
 func (m *xorMatcher) AfterMockServed() error {

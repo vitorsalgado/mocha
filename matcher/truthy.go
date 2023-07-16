@@ -1,17 +1,14 @@
 package matcher
 
 import (
+	"fmt"
 	"strconv"
 )
 
 type truthyMatcher struct {
 }
 
-func (m *truthyMatcher) Name() string {
-	return "Truthy"
-}
-
-func (m *truthyMatcher) Match(v any) (*Result, error) {
+func (m *truthyMatcher) Match(v any) (Result, error) {
 	var b bool
 	var err error
 
@@ -25,10 +22,14 @@ func (m *truthyMatcher) Match(v any) (*Result, error) {
 	}
 
 	if err != nil {
-		return nil, err
+		return Result{}, fmt.Errorf("truthy: error parsing value to bool")
 	}
 
-	return &Result{Pass: b}, nil
+	if !b {
+		return Result{Message: "Truthy() Expected true but it is actually false"}, nil
+	}
+
+	return Result{Pass: true}, nil
 }
 
 // Truthy passes if the request value is true.

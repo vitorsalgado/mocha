@@ -14,10 +14,6 @@ func Indent(str string) string {
 	return _indentRegExp.ReplaceAllString(str, " ")
 }
 
-func PrintReceived(val any) string {
-	return fmt.Sprintf("received: %s", Stringify(val))
-}
-
 type stringer interface {
 	String() string
 }

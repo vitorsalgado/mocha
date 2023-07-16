@@ -9,25 +9,29 @@ import (
 type bePresentMatcher struct {
 }
 
-func (m *bePresentMatcher) Name() string {
-	return "Present"
-}
-
-func (m *bePresentMatcher) Match(v any) (*Result, error) {
+func (m *bePresentMatcher) Match(v any) (Result, error) {
 	if v == nil {
-		return &Result{}, nil
+		return Result{}, nil
 	}
 
 	val := reflect.ValueOf(v)
 
 	switch val.Kind() {
 	case reflect.String, reflect.Array, reflect.Slice, reflect.Map, reflect.Struct, reflect.Interface:
-		return &Result{Pass: !val.IsZero(), Message: mfmt.Stringify(v)}, nil
+		if !val.IsZero() {
+			return success(), nil
+		}
+
+		return Result{Message: "Present() Expected value to be present. Got: " + mfmt.Stringify(v)}, nil
 	case reflect.Pointer:
-		return &Result{Pass: !val.IsNil(), Message: mfmt.Stringify(v)}, nil
+		if !val.IsNil() {
+			return success(), nil
+		}
+
+		return Result{Message: "Present() Expected value to be present. Got: " + mfmt.Stringify(v)}, nil
 	}
 
-	return &Result{Pass: true}, nil
+	return Result{Pass: true}, nil
 }
 
 // Present checks if the incoming request value contains a value that is not nil or the zero value for the argument type.

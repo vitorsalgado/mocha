@@ -27,7 +27,3 @@ func TestLen_String(t *testing.T) {
 		})
 	}
 }
-
-func TestLenMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, Len(10).Name())
-}

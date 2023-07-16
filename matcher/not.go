@@ -8,23 +8,18 @@ type notMatcher struct {
 	matcher Matcher
 }
 
-func (m *notMatcher) Name() string {
-	return "Not"
-}
-
-func (m *notMatcher) Match(v any) (*Result, error) {
+func (m *notMatcher) Match(v any) (Result, error) {
 	result, err := m.matcher.Match(v)
 	if err != nil {
-		return nil, err
+		return Result{}, fmt.Errorf("not: %w", err)
 	}
 
 	if !result.Pass {
-		return &Result{Pass: true}, nil
+		return Result{Pass: true}, nil
 	}
 
-	return &Result{
+	return Result{
 		Message: fmt.Sprintf("!(%s)", result.Message),
-		Ext:     []string{prettierName(m.matcher, result)},
 	}, nil
 }
 

@@ -31,7 +31,8 @@ func TestMockMatches(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			pass, _, _ := dzstd.Match(params, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{{
+			desc := &dzstd.Description{}
+			pass, _ := dzstd.Match(params, desc, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{{
 				Matcher: StrictEqual(tc.value),
 				ValueSelector: func(r *dzhttp.HTTPValueSelectorInput) any {
 					return tc.selector
@@ -44,7 +45,8 @@ func TestMockMatches(t *testing.T) {
 
 	t.Run("should return not matched and error when one of expectations returns error", func(t *testing.T) {
 		// string
-		pass, _, _ := dzstd.Match(params, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{{
+		desc := &dzstd.Description{}
+		pass, _ := dzstd.Match(params, desc, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{{
 			Matcher: Func(func(_ any) (bool, error) {
 				return false, fmt.Errorf("fail")
 			}),
@@ -58,7 +60,8 @@ func TestMockMatches(t *testing.T) {
 
 	t.Run("should not pass when it panics", func(t *testing.T) {
 		// string
-		pass, _, _ := dzstd.Match(params, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{{
+		desc := &dzstd.Description{}
+		pass, _ := dzstd.Match(params, desc, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{{
 			Matcher: Func(func(_ any) (bool, error) {
 				panic("boom!")
 			}),
@@ -72,7 +75,8 @@ func TestMockMatches(t *testing.T) {
 
 	t.Run("should return the sum of the matchers Weight when it matches", func(t *testing.T) {
 		// any
-		pass, weigth, _ := dzstd.Match(params, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{
+		desc := &dzstd.Description{}
+		pass, weigth := dzstd.Match(params, desc, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{
 			{
 				Matcher: StrictEqual("test"),
 				ValueSelector: func(r *dzhttp.HTTPValueSelectorInput) any {
@@ -102,7 +106,8 @@ func TestMockMatches(t *testing.T) {
 
 	t.Run("should return the sum of the matchers Weight when one of then doesn't match", func(t *testing.T) {
 		// any
-		pass, weight, _ := dzstd.Match(params, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{
+		desc := &dzstd.Description{}
+		pass, weight := dzstd.Match(params, desc, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{
 			{
 				Matcher: StrictEqual("test"),
 				ValueSelector: func(r *dzhttp.HTTPValueSelectorInput) any {

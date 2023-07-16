@@ -60,11 +60,12 @@ func (in *Interceptors) UnaryInterceptor(
 		wrappedMocks[i] = &GRPCUnaryMock{v}
 	}
 
+	description := dzstd.Description{Buf: make([]string, 0, len(mocks))}
 	result := dzstd.FindMockForRequest(wrappedMocks, &UnaryValueSelectorIn{
 		Context:        ctx,
 		RequestMessage: rawBody,
 		Info:           info,
-	})
+	}, &description)
 
 	if !result.Pass {
 		return nil, interceptError("unary: request was not matched with any mock")

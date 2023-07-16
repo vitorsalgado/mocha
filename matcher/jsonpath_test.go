@@ -100,14 +100,6 @@ func TestJSONPathMatcherInvalidPaths(t *testing.T) {
 	}
 }
 
-func TestJsonPathMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, JSONPath("", Eq("")).Name())
-}
-
-func TestFieldMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, Field("", Eq("")).Name())
-}
-
 func TestJSONPathNew(t *testing.T) {
 	require.Panics(t, func() {
 		JSONPath(".", Eq(""))

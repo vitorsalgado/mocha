@@ -1,28 +1,26 @@
 package matcher
 
 import (
+	"fmt"
 	"strings"
-
-	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
 type hasSuffixMatcher struct {
 	suffix string
 }
 
-func (m *hasSuffixMatcher) Name() string {
-	return "HasSuffix"
-}
-
-func (m *hasSuffixMatcher) Match(v any) (*Result, error) {
-	txt := v.(string)
-	if strings.HasSuffix(txt, m.suffix) {
-		return &Result{Pass: true}, nil
+func (m *hasSuffixMatcher) Match(v any) (Result, error) {
+	txt, ok := v.(string)
+	if !ok {
+		return Result{}, fmt.Errorf("has_suffix: it only works with string type. got %T", v)
 	}
 
-	return &Result{
-		Ext:     []string{m.suffix},
-		Message: mfmt.PrintReceived(txt),
+	if strings.HasSuffix(txt, m.suffix) {
+		return Result{Pass: true}, nil
+	}
+
+	return Result{
+		Message: strings.Join([]string{"HasSuffix(", m.suffix, ") Prefix is not present. Got: ", txt}, ""),
 	}, nil
 }
 

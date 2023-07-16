@@ -39,8 +39,9 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.lifecycle.OnRequest(reqValues)
 
 	mocks := h.app.storage.GetEligible()
+	description := dzstd.Description{Buf: make([]string, 0, len(mocks))}
 	result := dzstd.FindMockForRequest(mocks,
-		&HTTPValueSelectorInput{r, parsedURL, r.URL.Query(), r.Form, parsedBody})
+		&HTTPValueSelectorInput{r, parsedURL, r.URL.Query(), r.Form, parsedBody}, &description)
 
 	if !result.Pass {
 		if h.app.proxy != nil {
@@ -61,7 +62,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		h.onNoMatches(w, reqValues, result)
+		h.onNoMatches(w, reqValues, result, &description)
 		return
 	}
 
@@ -135,20 +136,17 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	for _, aa := range mock.after {
-		err = aa.AfterMockServed()
+	for _, idx := range mock.after {
+		err = mock.expectations[idx].Matcher.(matcher.OnAfterMockServed).AfterMockServed()
 		if err != nil {
 			h.lifecycle.OnWarning(reqValues,
-				fmt.Errorf(
-					"http: matcher %s failed while executing the AfterMockServed() function. mapper: %w",
-					aa.(matcher.Matcher).Name(),
-					err))
+				fmt.Errorf("http: after mock served event: matcher[%d] %w", idx, err))
 		}
 	}
 
-	callbackInput := &CallbackInput{r, parsedURL, parsedBody, h.app, mock, stub}
+	callbackInput := CallbackInput{r, parsedURL, parsedBody, h.app, mock, stub}
 	for i, callback := range mock.Callbacks {
-		err = callback(callbackInput)
+		err = callback(&callbackInput)
 		if err != nil {
 			h.lifecycle.OnWarning(reqValues, fmt.Errorf(
 				"callback: error with callback %d %T:\n%w",
@@ -161,8 +159,8 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	for i, def := range mock.PostActions {
 		postAction := h.app.config.PostActions[def.Name]
-		input := &PostActionInput{r, parsedURL, parsedBody, h.app, mock, stub, def.RawParameters}
-		err = postAction.Run(input)
+		input := PostActionInput{r, parsedURL, parsedBody, h.app, mock, stub, def.RawParameters}
+		err = postAction.Run(&input)
 		if err != nil {
 			h.lifecycle.OnWarning(reqValues, fmt.Errorf(
 				"post_action: error with post action %s(%d) %T:\n%w",
@@ -183,56 +181,25 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *RequestValues, result *dzstd.FindResult[*HTTPMock]) {
-	defer h.lifecycle.OnNoMatch(r, result)
+func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *RequestValues, result *dzstd.FindResult[*HTTPMock], desc *dzstd.Description) {
+	defer h.lifecycle.OnNoMatch(r, result, desc)
 
 	buf := bytes.Buffer{}
 
 	buf.WriteString("REQUEST DID NOT MATCH\n")
 
 	if result.ClosestMatch != nil {
-		buf.WriteString(
-			fmt.Sprintf("NEAREST: %s %s\n", result.ClosestMatch.GetID(), result.ClosestMatch.GetName()))
+		fmt.Fprintf(&buf, "NEAREST: %s %s\n", result.ClosestMatch.GetID(), result.ClosestMatch.GetName())
 	}
 
-	buf.WriteString("MISSES:\n")
-
-	for _, detail := range result.MismatchDetails {
-		buf.WriteString("[")
-		buf.WriteString(detail.Target.String())
-
-		if detail.Key != "" {
-			buf.WriteString("(")
-			buf.WriteString(detail.Key)
-			buf.WriteString(")")
-		}
-
-		buf.WriteString("] ")
-		buf.WriteString(detail.MatchersName)
-
-		if detail.Err != nil {
-			buf.WriteString(" ")
-			buf.WriteString(detail.Err.Error())
-			buf.WriteString("\n")
-			continue
-		}
-
-		buf.WriteString("(")
-
-		if len(detail.Result.Ext) > 0 {
-			buf.WriteString(strings.Join(detail.Result.Ext, ", "))
-			buf.WriteString(") ")
-			buf.WriteString(detail.Result.Message)
-		} else {
-			buf.WriteString(detail.Result.Message)
-			buf.WriteString(")")
-		}
-
-		buf.WriteString("\n")
+	if desc.Len() > 0 {
+		buf.WriteString("MISSES:\n")
+		buf.WriteString(desc.String())
 	}
 
 	w.Header().Add(httpval.HeaderContentType, httpval.MIMETextPlainCharsetUTF8)
 	w.WriteHeader(h.app.config.RequestWasNotMatchedStatusCode)
+
 	buf.WriteTo(w)
 }
 
@@ -241,8 +208,8 @@ func (h *mockHandler) onError(w http.ResponseWriter, r *RequestValues, err error
 
 	w.Header().Add(httpval.HeaderContentType, httpval.MIMETextPlainCharsetUTF8)
 	w.WriteHeader(h.app.config.RequestWasNotMatchedStatusCode)
-
-	fmt.Fprintf(w, "ERROR DURING REQUEST MATCHING\n%v", err)
+	w.Write([]byte("ERROR DURING REQUEST MATCHING\n"))
+	w.Write([]byte(err.Error()))
 }
 
 func (h *mockHandler) parseURL(r *http.Request) (*url.URL, []string) {

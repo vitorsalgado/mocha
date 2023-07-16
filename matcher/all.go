@@ -2,6 +2,7 @@ package matcher
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
@@ -11,63 +12,34 @@ type allOfMatcher struct {
 	matchers []Matcher
 }
 
-func (m *allOfMatcher) Name() string {
-	return "All"
-}
-
-func (m *allOfMatcher) Match(v any) (r *Result, e error) {
+func (m *allOfMatcher) Match(v any) (r Result, err error) {
 	var idx int
-	var cur Matcher
-
 	defer func() {
 		if recovery := recover(); recovery != nil {
-			n := ""
-			if cur != nil {
-				n = cur.Name()
-			}
-
-			r = nil
-			e = fmt.Errorf("%v, matcher=%s, index=%d", recovery, n, idx)
+			err = fmt.Errorf("all: matcher[%d]: panic: %v", idx, recovery)
 		}
 	}()
 
-	ok := true
-	errs := make([]string, 0)
-	failed := make([]string, 0)
+	mismatches := make([]string, 0, len(m.matchers))
 
 	for i, matcher := range m.matchers {
 		idx = i
-		cur = matcher
-
-		result, err := matcher.Match(v)
+		res, err := matcher.Match(v)
 		if err != nil {
-			ok = false
-			errs = append(errs, err.Error())
-			failed = append(failed, err.Error())
-
-			continue
+			return Result{}, fmt.Errorf("all: %d: %w", i, err)
 		}
 
-		if !result.Pass {
-			ok = false
-			failed = append(failed,
-				fmt.Sprintf("%s(%s) %s", matcher.Name(), strings.Join(result.Ext, ", "), result.Message))
+		if !res.Pass {
+			mismatches = append(mismatches, res.Message)
 		}
 	}
 
-	var err error
-	if len(errs) > 0 {
-		err = fmt.Errorf(strings.Join(errs, "\n"))
+	if len(mismatches) == 0 {
+		return success(), nil
 	}
 
-	if !ok || err != nil {
-		return &Result{
-			Message: "\n" + mfmt.Indent(strings.Join(failed, "\n")),
-			Ext:     []string{fmt.Sprintf("+%d", len(m.matchers))},
-		}, err
-	}
-
-	return &Result{Pass: true}, nil
+	return Result{
+		Message: strings.Join([]string{"All(", strconv.Itoa(len(m.matchers)), ")\n", mfmt.Indent(strings.Join(mismatches, "\n"))}, "")}, nil
 }
 
 func (m *allOfMatcher) AfterMockServed() error {
@@ -80,7 +52,7 @@ func (m *allOfMatcher) AfterMockServed() error {
 //	All(Equal("test"), EqualIgnoreCase("test"), Contain("tes"))
 func All(matchers ...Matcher) Matcher {
 	if len(matchers) == 0 {
-		panic("matcher: [All] requires at least 1 matcher")
+		panic("all: requires at least 1 matcher")
 	}
 
 	return &allOfMatcher{matchers: matchers}

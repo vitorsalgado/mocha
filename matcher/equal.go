@@ -2,6 +2,7 @@ package matcher
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
@@ -14,16 +15,12 @@ func (m *equalMatcher) Name() string {
 	return "Equal"
 }
 
-func (m *equalMatcher) Match(v any) (*Result, error) {
+func (m *equalMatcher) Match(v any) (Result, error) {
 	if equalValues(m.expected, v, true) {
-		return &Result{Pass: true}, nil
+		return success(), nil
 	}
 
-	return &Result{
-			Ext:     []string{mfmt.Stringify(m.expected)},
-			Message: fmt.Sprintf("received: %s", mfmt.Stringify(v)),
-		},
-		nil
+	return mismatch(strings.Join([]string{"Equal(", mfmt.Stringify(m.expected), ") Got: ", mfmt.Stringify(v)}, "")), nil
 }
 
 // Equal asserts that the given expectation is equal to the incoming request value.

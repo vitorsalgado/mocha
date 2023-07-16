@@ -34,3 +34,18 @@ func (m *GRPCMock) getRef() string {
 
 	return m.Name
 }
+
+const (
+	targetMethod    = "Method"
+	targetHeader    = "Header"
+	targetBody      = "Body"
+	targetBodyField = "Field"
+)
+
+func describeTarget(target, key string) string {
+	if len(key) == 0 {
+		return target
+	}
+
+	return target + "(" + key + ")"
+}

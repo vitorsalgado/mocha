@@ -1,7 +1,7 @@
 package matcher
 
 import (
-	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -9,27 +9,20 @@ import (
 
 func TestRegExpMatches(t *testing.T) {
 	tcs := []struct {
-		name       string
-		expression any
+		expression string
 		value      any
 		expected   bool
 	}{
-		{"string pattern", "tEsT", "tEsT", true},
-		{"string pattern using a non string argument", "10", 10, true},
-		{"regular expression (pointer)", regexp.MustCompile("tEsT"), "tEsT", true},
-		{"regular expression (non-pointer)", *regexp.MustCompile("tEsT"), "tEsT", true},
-		{"regular expression (does not match)", regexp.MustCompile("tEsT"), "dev", false},
+		{"tEsT", "tEsT", true},
+		{"(?mi)hi", "/test?q=bye", false},
+		{"(?mi)hi", "/test?q=hi", true},
 	}
 
-	for _, tc := range tcs {
-		t.Run(tc.name, func(t *testing.T) {
+	for i, tc := range tcs {
+		t.Run(strconv.Itoa(i), func(t *testing.T) {
 			result, err := Matches(tc.expression).Match(tc.value)
 			require.NoError(t, err)
 			require.Equal(t, tc.expected, result.Pass)
 		})
 	}
-}
-
-func TestRegExpMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, Matches("").Name())
 }

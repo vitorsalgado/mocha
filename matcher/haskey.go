@@ -2,6 +2,7 @@ package matcher
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/ohler55/ojg/jp"
 	"github.com/ohler55/ojg/oj"
@@ -12,18 +13,14 @@ type hasKeyMatcher struct {
 	expr jp.Expr
 }
 
-func (m *hasKeyMatcher) Name() string {
-	return "HasKey"
-}
-
-func (m *hasKeyMatcher) Match(v any) (*Result, error) {
+func (m *hasKeyMatcher) Match(v any) (Result, error) {
 	var results []any
 
 	switch vv := v.(type) {
 	case string:
 		data, err := oj.ParseString(vv)
 		if err != nil {
-			return nil, fmt.Errorf("error parsing incoming json: %w", err)
+			return Result{}, fmt.Errorf("has_key: %s: error parsing incoming json: %w", m.path, err)
 		}
 
 		results = m.expr.Get(data)
@@ -33,13 +30,12 @@ func (m *hasKeyMatcher) Match(v any) (*Result, error) {
 
 	size := len(results)
 	if size == 0 || (size == 1 && results[0] == nil) {
-		return &Result{
-			Ext:     []string{m.Name(), m.path},
-			Message: fmt.Sprintf("key <%s> is not present", m.path),
+		return Result{
+			Message: strings.Join([]string{"HasKey(", m.path, ") Is not present"}, ""),
 		}, nil
 	}
 
-	return &Result{Pass: true}, nil
+	return Result{Pass: true}, nil
 }
 
 // HasKey passes if the JSON key in the given path is present.

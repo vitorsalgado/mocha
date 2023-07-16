@@ -1,11 +1,8 @@
 package matcher
 
 import (
-	"errors"
-	"fmt"
 	"reflect"
 	"strconv"
-	"strings"
 )
 
 func equalValues(expected any, actual any, lenient bool) bool {
@@ -135,35 +132,4 @@ func laxEq(
 	}
 
 	return false
-}
-
-func runAfterMockServed(matchers ...Matcher) error {
-	var errs []string
-
-	for _, matcher := range matchers {
-		m, ok := matcher.(OnAfterMockServed)
-		if !ok {
-			continue
-		}
-
-		err := m.AfterMockServed()
-		if err != nil {
-			errs = append(errs, err.Error())
-		}
-	}
-
-	if len(errs) > 0 {
-		return errors.New(strings.Join(errs, ", "))
-	}
-
-	return nil
-}
-
-func prettierName(m Matcher, r *Result) string {
-	var ext []string
-	if r != nil {
-		ext = r.Ext
-	}
-
-	return fmt.Sprintf("%s(%s)", m.Name(), strings.Join(ext, ", "))
 }

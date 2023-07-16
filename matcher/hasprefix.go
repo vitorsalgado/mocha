@@ -9,19 +9,17 @@ type hasPrefixMatcher struct {
 	prefix string
 }
 
-func (m *hasPrefixMatcher) Name() string {
-	return "HasPrefix"
-}
-
-func (m *hasPrefixMatcher) Match(v any) (*Result, error) {
-	txt := v.(string)
+func (m *hasPrefixMatcher) Match(v any) (Result, error) {
+	txt, ok := v.(string)
+	if !ok {
+		return Result{}, fmt.Errorf("has_prefix: it only works with string type. got %T", v)
+	}
 	if strings.HasPrefix(txt, m.prefix) {
-		return &Result{Pass: true}, nil
+		return Result{Pass: true}, nil
 	}
 
-	return &Result{
-		Ext:     []string{m.prefix},
-		Message: fmt.Sprintf("expected prefix: %s. text: %s", m.prefix, txt),
+	return Result{
+		Message: strings.Join([]string{"HasPrefix(", m.prefix, ") Prefix is not present. Got: ", txt}, ""),
 	}, nil
 }
 

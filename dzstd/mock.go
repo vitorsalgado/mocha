@@ -2,6 +2,7 @@ package dzstd
 
 import (
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/google/uuid"
@@ -244,10 +245,8 @@ func (s *MockStore[TMock]) DeleteAll() {
 // Expectation holds metadata related to one http.Request Matcher.
 type Expectation[TValueIn any] struct {
 	// Target is an optional metadata that describes the target of the matcher.
-	// Example: the target could have the "header", meaning that the matcher will be applied to one request misc.Header
-	Target Target
-
-	Key string
+	// Eg.: Header(Content-Type)
+	Target string
 
 	// Matcher associated with this Expectation.
 	Matcher matcher.Matcher
@@ -264,55 +263,29 @@ type Weight int8
 
 // Enum of Weight.
 const (
-	WeightNone Weight = iota
-	WeightLow  Weight = iota * 2
-	WeightVeryLow
+	WeightNone    Weight = iota
+	WeightVeryLow Weight = iota * 2
+	WeightLow
 	WeightRegular
 	WeightHigh
 )
 
-// MismatchDetail gives more context about why a matcher did not match.
-type MismatchDetail struct {
-	MatchersName string
-	Target       Target
-	Key          string
-	Result       *matcher.Result
-	Err          error
+type Description struct {
+	Buf []string
 }
 
-type Target int8
+func (d *Description) Append(v string) {
+	d.Buf = append(d.Buf, v)
+}
 
-// Target constants to help debug unmatched requests.
-const (
-	TargetRequest Target = iota
-	TargetScheme
-	TargetMethod
-	TargetURL
-	TargetHeader
-	TargetQuery
-	TargetBody
-	TargetForm
-)
+func (d *Description) AppendList(sep string, v ...string) {
+	d.Buf = append(d.Buf, strings.Join(v, sep))
+}
 
-func (mt Target) String() string {
-	switch mt {
-	case TargetRequest:
-		return "request"
-	case TargetScheme:
-		return "scheme"
-	case TargetMethod:
-		return "method"
-	case TargetURL:
-		return "url"
-	case TargetHeader:
-		return "header"
-	case TargetQuery:
-		return "query"
-	case TargetBody:
-		return "body"
-	case TargetForm:
-		return "form"
-	default:
-		return ""
-	}
+func (d *Description) Len() int {
+	return len(d.Buf)
+}
+
+func (d *Description) String() string {
+	return strings.Join(d.Buf, "\n")
 }

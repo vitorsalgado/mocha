@@ -35,9 +35,5 @@ func TestGreaterUnhandledType(t *testing.T) {
 	res, err := Gt(10).Match(true)
 
 	require.Error(t, err)
-	require.Nil(t, res)
-}
-
-func TestGreaterMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, Gt(10).Name())
+	require.False(t, res.Pass)
 }

@@ -158,7 +158,7 @@ type HTTPMock struct {
 
 	Pipes []dzstd.Piping
 
-	after        []matcher.OnAfterMockServed
+	after        []int
 	expectations []*dzstd.Expectation[*HTTPValueSelectorInput]
 }
 
@@ -184,10 +184,29 @@ func (m *HTTPMock) Build() (*HTTPMock, error) {
 }
 
 func (m *HTTPMock) Prepare() {
-	for _, e := range m.expectations {
-		ee, ok := e.Matcher.(matcher.OnAfterMockServed)
+	for i, e := range m.expectations {
+		_, ok := e.Matcher.(matcher.OnAfterMockServed)
 		if ok {
-			m.after = append(m.after, ee)
+			m.after = append(m.after, i)
 		}
 	}
+}
+
+const (
+	targetRequest = "Req"
+	targetScheme  = "Scheme"
+	targetMethod  = "Method"
+	targetURL     = "URL"
+	targetHeader  = "Header"
+	targetQuery   = "Query"
+	targetBody    = "Body"
+	targetForm    = "Field"
+)
+
+func describeTarget(target, key string) string {
+	if len(key) == 0 {
+		return target
+	}
+
+	return target + "(" + key + ")"
 }

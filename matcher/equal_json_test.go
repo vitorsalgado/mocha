@@ -66,9 +66,5 @@ func TestEqualJSON_Errors(t *testing.T) {
 	result, err := Eqj(ch).Match(map[string]interface{}{"ok": true, "name": "dev"})
 
 	require.Error(t, err)
-	require.Nil(t, result)
-}
-
-func TestEqualJSONMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, Eqj("").Name())
+	require.False(t, result.Pass)
 }

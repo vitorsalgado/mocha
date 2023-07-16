@@ -30,8 +30,8 @@ func TestAnyOf(t *testing.T) {
 		require.False(t, result.Pass)
 	})
 
-	t.Run("should return false when an error occurs", func(t *testing.T) {
-		_, err := Any(
+	t.Run("should return error and false when any error occurs", func(t *testing.T) {
+		res, err := Any(
 			StrictEqual("dev"),
 			ToUpper(StrictEqual("none")),
 			Func(func(v any) (bool, error) {
@@ -40,6 +40,7 @@ func TestAnyOf(t *testing.T) {
 			EqualIgnoreCase("qa")).
 			Match("test")
 		require.Error(t, err)
+		require.False(t, res.Pass)
 	})
 
 	t.Run("no matchers", func(t *testing.T) {
@@ -47,8 +48,4 @@ func TestAnyOf(t *testing.T) {
 			Any()
 		})
 	})
-}
-
-func TestAnyOfMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, Any(Eq("")).Name())
 }

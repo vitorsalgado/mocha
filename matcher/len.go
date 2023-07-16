@@ -2,25 +2,24 @@ package matcher
 
 import (
 	"reflect"
-
-	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
+	"strconv"
+	"strings"
 )
 
 type lenMatcher struct {
 	length int
 }
 
-func (m *lenMatcher) Name() string {
-	return "Len"
-}
-
-func (m *lenMatcher) Match(v any) (*Result, error) {
+func (m *lenMatcher) Match(v any) (Result, error) {
 	value := reflect.ValueOf(v)
-	if value.Len() == m.length {
-		return &Result{Pass: true}, nil
+	actual := value.Len()
+	if actual == m.length {
+		return Result{Pass: true}, nil
 	}
 
-	return &Result{Message: mfmt.Stringify(m.length)}, nil
+	return Result{
+		Message: strings.
+			Join([]string{"Len(", strconv.Itoa(m.length), ") Got: ", strconv.Itoa(actual)}, "")}, nil
 }
 
 // Len passes when the expected value length is equal to the incoming request value.

@@ -14,10 +14,15 @@ import (
 	"github.com/vitorsalgado/mocha/v3/dzstd"
 )
 
+var (
+	_ mockHTTPLifecycle = (*builtInMockHTTPLifecycle)(nil)
+	_ mockHTTPLifecycle = (*builtInDescriptiveMockHTTPLifecycle)(nil)
+)
+
 type mockHTTPLifecycle interface {
 	OnRequest(*RequestValues)
 	OnMatch(*RequestValues, *Stub)
-	OnNoMatch(*RequestValues, *dzstd.FindResult[*HTTPMock])
+	OnNoMatch(*RequestValues, *dzstd.FindResult[*HTTPMock], *dzstd.Description)
 	OnWarning(*RequestValues, error)
 	OnError(*RequestValues, error)
 }
@@ -94,7 +99,7 @@ func (h *builtInMockHTTPLifecycle) OnMatch(r *RequestValues, s *Stub) {
 	evt.Msgf("<--- REQUEST MATCHED %s %s", r.RawRequest.Method, r.URL.Path)
 }
 
-func (h *builtInMockHTTPLifecycle) OnNoMatch(r *RequestValues, fr *dzstd.FindResult[*HTTPMock]) {
+func (h *builtInMockHTTPLifecycle) OnNoMatch(r *RequestValues, fr *dzstd.FindResult[*HTTPMock], d *dzstd.Description) {
 	if h.app.config.LogLevel == LogLevelDisabled {
 		return
 	}
@@ -109,40 +114,8 @@ func (h *builtInMockHTTPLifecycle) OnNoMatch(r *RequestValues, fr *dzstd.FindRes
 		evt.Dict("nearest", md)
 	}
 
-	if len(fr.MismatchDetails) > 0 {
-		mismatches := make([]interface{}, len(fr.MismatchDetails))
-		buf := strings.Builder{}
-
-		for i, detail := range fr.MismatchDetails {
-			buf.WriteString("[" + detail.Target.String())
-			if detail.Key != "" {
-				buf.WriteString("(" + detail.Key + ")")
-			}
-			buf.WriteString("] ")
-
-			buf.WriteString(detail.MatchersName)
-
-			if detail.Err == nil {
-				buf.WriteString("(")
-
-				if len(detail.Result.Ext) > 0 {
-					buf.WriteString(strings.Join(detail.Result.Ext, ", "))
-					buf.WriteString(") ")
-					buf.WriteString(detail.Result.Message)
-				} else {
-					buf.WriteString(detail.Result.Message)
-					buf.WriteString(") ")
-				}
-			} else {
-				buf.WriteString(" ")
-				buf.WriteString(detail.Err.Error())
-			}
-
-			mismatches[i] = buf.String()
-			buf.Reset()
-		}
-
-		evt.Interface("mismatches", mismatches)
+	if d.Len() > 0 {
+		evt.Strs("mismatches", d.Buf)
 	}
 
 	evt.Msgf("<--- REQUEST DID NOT MATCH %s %s", r.RawRequest.Method, r.URL.Path)
@@ -222,12 +195,12 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnMatch(rv *RequestValues, s *Stub
 
 	buf := strings.Builder{}
 
-	buf.WriteString(fmt.Sprintf("%s %s <--- %s %s\n%s ",
+	fmt.Fprintf(&buf, "%s %s <--- %s %s\n%s ",
 		h.cz.BrightGreen(h.cz.Bold("REQUEST MATCHED")),
 		time.Now().Format(time.RFC3339),
 		h.cz.Green(rv.RawRequest.Method),
 		h.cz.Green(rv.URL.Path),
-		rv.RawRequest.Method))
+		rv.RawRequest.Method)
 	buf.WriteString(rv.URL.String())
 	buf.WriteString("\n")
 	buf.WriteString(h.cz.Bold("Mock: "))
@@ -242,12 +215,12 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnMatch(rv *RequestValues, s *Stub
 	if h.app.config.LogVerbosity >= LogHeader && len(s.Header) > 0 {
 		buf.WriteString("\n")
 		buf.WriteString(h.cz.Green("Headers: "))
-		buf.WriteString(fmt.Sprintf("%s", redactHeader(s.Header, h.app.config.HeaderNamesToRedact)))
+		fmt.Fprintf(&buf, "%s", redactHeader(s.Header, h.app.config.HeaderNamesToRedact))
 
 		if len(s.Trailer) > 0 {
 			buf.WriteString("\n")
 			buf.WriteString(h.cz.Green("Trailers: "))
-			buf.WriteString(fmt.Sprintf("%s", redactHeader(s.Trailer, h.app.config.HeaderNamesToRedact)))
+			fmt.Fprintf(&buf, "%s", redactHeader(s.Trailer, h.app.config.HeaderNamesToRedact))
 		}
 	}
 
@@ -264,73 +237,39 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnMatch(rv *RequestValues, s *Stub
 	}
 
 	buf.WriteString("\n")
+
 	fmt.Fprint(h.out, buf.String())
 }
 
 func (h *builtInDescriptiveMockHTTPLifecycle) OnNoMatch(
 	reqValues *RequestValues,
 	result *dzstd.FindResult[*HTTPMock],
+	d *dzstd.Description,
 ) {
 	if h.app.config.LogLevel == LogLevelDisabled {
 		return
 	}
 
-	buf := strings.Builder{}
-
-	buf.WriteString(fmt.Sprintf("%s %s <--- %s %s\n%s %s\n",
+	fmt.Fprintf(h.out, "%s %s <--- %s %s\n%s %s\n",
 		h.cz.BrightYellow(h.cz.Bold("REQUEST DID NOT MATCH")),
 		time.Now().Format(time.RFC3339),
 		h.cz.Yellow(reqValues.RawRequest.Method),
 		h.cz.Yellow(reqValues.URL.Path),
 		reqValues.RawRequest.Method,
-		reqValues.URL.String()))
+		reqValues.URL.String())
 
 	if result.ClosestMatch != nil {
-		buf.WriteString(fmt.Sprintf("%s: %s %s\n",
-			h.cz.Bold("Closest Match"), result.ClosestMatch.GetID(), result.ClosestMatch.GetName()))
+		fmt.Fprintf(h.out, "%s: %s %s\n",
+			h.cz.Bold("Closest Match"), result.ClosestMatch.GetID(), result.ClosestMatch.GetName())
 	}
 
-	if len(result.MismatchDetails) > 0 {
+	if d.Len() > 0 {
 		if h.app.config.LogVerbosity <= LogHeader {
-			buf.WriteString(fmt.Sprintf("%s: %d", h.cz.Bold("Mismatches"), len(result.MismatchDetails)))
+			fmt.Fprintf(h.out, "%s: %d", h.cz.Bold("Mismatches"), result.MismatchesCount)
 		} else {
-			buf.WriteString(fmt.Sprintf("%s(%d):\n", h.cz.Bold("Mismatches"), len(result.MismatchDetails)))
-			for _, detail := range result.MismatchDetails {
-				buf.WriteString("[" + detail.Target.String())
-				if detail.Key != "" {
-					buf.WriteString("(" + detail.Key + ")")
-				}
-				buf.WriteString("] ")
-				buf.WriteString(detail.MatchersName)
-				buf.WriteString("(")
-
-				if detail.Err != nil {
-					buf.WriteString(detail.Err.Error())
-					buf.WriteString(")\n")
-					continue
-				}
-
-				if detail.Result == nil {
-					buf.WriteString(")\n")
-					continue
-				}
-
-				if len(detail.Result.Ext) == 0 {
-					buf.WriteString(h.cz.Bold(detail.Result.Message))
-					buf.WriteString(")")
-				} else {
-					buf.WriteString(h.cz.Bold(strings.Join(detail.Result.Ext, ", ")))
-					buf.WriteString(") ")
-					buf.WriteString(detail.Result.Message)
-				}
-
-				buf.WriteString("\n")
-			}
+			fmt.Fprintf(h.out, "%s(%d):\n%s", h.cz.Bold("Mismatches"), result.MismatchesCount, d.String())
 		}
 	}
-
-	buf.WriteString("\n")
-	fmt.Fprint(h.out, buf.String())
 }
 
 func (h *builtInDescriptiveMockHTTPLifecycle) OnWarning(r *RequestValues, err error) {

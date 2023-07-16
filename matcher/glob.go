@@ -2,31 +2,26 @@ package matcher
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/ryanuber/go-glob"
-
-	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
 type globMatcher struct {
 	pattern string
 }
 
-func (m *globMatcher) Name() string {
-	return "Glob"
-}
-
-func (m *globMatcher) Match(v any) (*Result, error) {
+func (m *globMatcher) Match(v any) (Result, error) {
 	text, ok := v.(string)
 	if !ok {
-		return nil, fmt.Errorf("glob only works with string types")
+		return Result{}, fmt.Errorf("glob: it only works with string types. got %T", v)
 	}
 
 	if glob.Glob(m.pattern, text) {
-		return &Result{Pass: true}, nil
+		return Result{Pass: true}, nil
 	}
 
-	return &Result{Message: mfmt.PrintReceived(text), Ext: []string{m.pattern}}, nil
+	return Result{Message: strings.Join([]string{"Glob(", m.pattern, ") ", text}, "")}, nil
 }
 
 func GlobMatch(pattern string) Matcher {

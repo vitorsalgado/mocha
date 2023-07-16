@@ -2,6 +2,7 @@ package matcher
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/vitorsalgado/mocha/v3/matcher/internal/mconv"
 	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
@@ -11,28 +12,21 @@ type greaterOrEqualMatcher struct {
 	expected float64
 }
 
-func (m *greaterOrEqualMatcher) Name() string {
-	return "GreaterOrEqual"
-}
-
-func (m *greaterOrEqualMatcher) Match(v any) (*Result, error) {
+func (m *greaterOrEqualMatcher) Match(v any) (Result, error) {
 	vv, err := mconv.ConvToFloat64(v)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"type %T is not supported. the value must be compatible with float64. %w",
+		return Result{}, fmt.Errorf(
+			"gte: type %T is not supported. the value must be compatible with float64. %w",
 			v,
 			err,
 		)
 	}
 
 	if vv >= m.expected {
-		return &Result{Pass: true}, nil
+		return Result{Pass: true}, nil
 	}
 
-	return &Result{
-		Ext:     []string{mfmt.Stringify(m.expected)},
-		Message: mfmt.PrintReceived(vv),
-	}, nil
+	return Result{Message: strings.Join([]string{"Gte(", mfmt.Stringify(m.expected), ") Got: ", mfmt.Stringify(v)}, "")}, nil
 }
 
 // GreaterThanOrEqual passes if the incoming request value is greater than or equal to the given value.

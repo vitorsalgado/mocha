@@ -36,13 +36,9 @@ func TestURLPath(t *testing.T) {
 		})
 	}
 
-	t.Run("should panic when providing a type that is not handled by URLPath", func(t *testing.T) {
-		assert.Panics(t, func() {
-			_, _ = URLPath("/test/hello").Match(10)
-		})
+	t.Run("should return error when providing a type that is not handled by URLPath", func(t *testing.T) {
+		res, err := URLPath("/test/hello").Match(10)
+		require.Error(t, err)
+		require.False(t, res.Pass)
 	})
-}
-
-func TestUrlPathMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, URLPath("").Name())
 }

@@ -42,7 +42,3 @@ func TestEachInvalidValueType(t *testing.T) {
 	_, err := Each(Anything()).Match("hello")
 	require.Error(t, err)
 }
-
-func TestEachMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, Each(Eq("")).Name())
-}

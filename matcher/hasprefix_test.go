@@ -23,7 +23,3 @@ func TestHasPrefix(t *testing.T) {
 		})
 	}
 }
-
-func TestHasPrefixMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, HasPrefix("").Name())
-}

@@ -1,30 +1,23 @@
 package matcher
 
-import (
-	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
-)
+import "fmt"
 
 type funcMatcher struct {
 	fn func(v any) (bool, error)
 }
 
-func (m *funcMatcher) Name() string {
-	return "Func"
-}
-
-func (m *funcMatcher) Match(v any) (*Result, error) {
+func (m *funcMatcher) Match(v any) (Result, error) {
 	pass, err := m.fn(v)
 	if err != nil {
-		return nil, err
+		return Result{}, fmt.Errorf("fn: matcher: %w", err)
 	}
 
 	if pass {
-		return &Result{Pass: true}, nil
+		return Result{Pass: true}, nil
 	}
 
-	return &Result{
-		Ext:     []string{mfmt.Stringify(v)},
-		Message: "predicate evaluated to false",
+	return Result{
+		Message: "F() Wrapped predicate did not match",
 	}, nil
 }
 

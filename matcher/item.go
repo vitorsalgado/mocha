@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 type itemMatcher struct {
@@ -11,42 +12,33 @@ type itemMatcher struct {
 	matcher Matcher
 }
 
-func (m *itemMatcher) Name() string {
-	return "Item"
-}
-
-func (m *itemMatcher) Match(v any) (*Result, error) {
+func (m *itemMatcher) Match(v any) (Result, error) {
 	if m.index < 0 {
-		return nil, fmt.Errorf("index must greater or equal to 0. got %d", m.index)
+		return Result{}, fmt.Errorf("item: index must greater or equal to 0. got %d", m.index)
 	}
 
 	typeOfV := reflect.TypeOf(v)
 	kind := typeOfV.Kind()
 	if kind != reflect.Slice && kind != reflect.Array {
-		return nil, fmt.Errorf("matcher only works with slices. got: %v", typeOfV)
+		return Result{}, fmt.Errorf("item: %d: it only works with slices. got: %T", m.index, v)
 	}
 
 	vv := reflect.ValueOf(v)
-
 	if vv.Len() == 0 {
-		return &Result{Message: "array is empty", Ext: []string{strconv.FormatInt(
-			int64(m.index),
-			10,
-		)}}, nil
+		return Result{Message: strings.Join([]string{"Item(", strconv.Itoa(m.index), ") Empty array"}, "")}, nil
 	}
 
 	res, err := m.matcher.Match(vv.Index(m.index).Interface())
 	if err != nil {
-		return nil, err
+		return Result{}, fmt.Errorf("item: %d: %w", m.index, err)
 	}
 
 	if res.Pass {
-		return &Result{Pass: true}, nil
+		return Result{Pass: true}, nil
 	}
 
-	return &Result{
-		Message: res.Message,
-		Ext:     []string{strconv.FormatInt(int64(m.index), 10), prettierName(m.matcher, res)},
+	return Result{
+		Message: strings.Join([]string{"Item(", strconv.Itoa(m.index), ") ", res.Message}, ""),
 	}, nil
 }
 

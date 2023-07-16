@@ -33,9 +33,5 @@ func TestFnError(t *testing.T) {
 		Match("ok")
 
 	require.Error(t, err)
-	require.Nil(t, res)
-}
-
-func TestFuncMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, Func(nil).Name())
+	require.False(t, res.Pass)
 }

@@ -3,6 +3,7 @@ package matcher
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
@@ -11,11 +12,7 @@ type equalJSONMatcher struct {
 	expected any
 }
 
-func (m *equalJSONMatcher) Name() string {
-	return "EqualJSON"
-}
-
-func (m *equalJSONMatcher) Match(v any) (*Result, error) {
+func (m *equalJSONMatcher) Match(v any) (Result, error) {
 	var expJSON []byte
 	var err error
 
@@ -25,14 +22,14 @@ func (m *equalJSONMatcher) Match(v any) (*Result, error) {
 	default:
 		expJSON, err = json.Marshal(m.expected)
 		if err != nil {
-			return nil, err
+			return Result{}, fmt.Errorf("equal_json: %w", err)
 		}
 	}
 
 	var exp any
 	err = json.Unmarshal(expJSON, &exp)
 	if err != nil {
-		return nil, err
+		return Result{}, fmt.Errorf("equal_json: %w", err)
 	}
 
 	switch vv := v.(type) {
@@ -40,21 +37,20 @@ func (m *equalJSONMatcher) Match(v any) (*Result, error) {
 		b := new(any)
 		err = json.Unmarshal([]byte(vv), b)
 		if err != nil {
-			return nil, err
+			return Result{}, fmt.Errorf("equal_json: %w", err)
 		}
 
 		if equalValues(*b, exp, false) {
-			return &Result{Pass: true}, err
+			return Result{Pass: true}, nil
 		}
 	default:
 		if equalValues(v, exp, false) {
-			return &Result{Pass: true}, err
+			return Result{Pass: true}, nil
 		}
 	}
 
-	return &Result{
-		Ext:     []string{mfmt.Stringify(m.expected)},
-		Message: fmt.Sprintf("expected: %s. received: %s", mfmt.Stringify(m.expected), mfmt.Stringify(v)),
+	return Result{
+		Message: strings.Join([]string{"EqualJSON(", mfmt.Stringify(v), ") Got: ", string(expJSON)}, ""),
 	}, nil
 }
 

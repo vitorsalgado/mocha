@@ -1,13 +1,13 @@
 package matcher
 
-// Matcher defines an HTTP request matcher.
-type Matcher interface {
-	// Name names the Matcher.
-	// Useful to give more context on non-matched requests.
-	Name() string
+import (
+	"errors"
+	"strings"
+)
 
-	// Match is the function that does the actual matching logic.
-	Match(value any) (*Result, error)
+// Matcher matches values.
+type Matcher interface {
+	Match(v any) (Result, error)
 }
 
 // OnAfterMockServed describes a Matcher that has post processes that need to be executed.
@@ -24,7 +24,29 @@ type Result struct {
 
 	// Message describes why the associated Matcher did not pass.
 	Message string
-
-	// Ext defines extra information that gives more context to non-matched results.
-	Ext []string
 }
+
+func runAfterMockServed(matchers ...Matcher) error {
+	var errs []string
+
+	for _, matcher := range matchers {
+		m, ok := matcher.(OnAfterMockServed)
+		if !ok {
+			continue
+		}
+
+		err := m.AfterMockServed()
+		if err != nil {
+			errs = append(errs, err.Error())
+		}
+	}
+
+	if len(errs) > 0 {
+		return errors.New(strings.Join(errs, ", "))
+	}
+
+	return nil
+}
+
+func success() Result                { return Result{Pass: true, Message: ""} }
+func mismatch(message string) Result { return Result{Pass: false, Message: message} }

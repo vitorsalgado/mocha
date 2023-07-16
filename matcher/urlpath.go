@@ -3,18 +3,15 @@ package matcher
 import (
 	"fmt"
 	"net/url"
+	"strings"
 )
 
 type urlPathMatcher struct {
 	matcher Matcher
 }
 
-func (m *urlPathMatcher) Name() string {
-	return "URLPath"
-}
-
-func (m *urlPathMatcher) Match(v any) (*Result, error) {
-	var value any
+func (m *urlPathMatcher) Match(v any) (Result, error) {
+	var value string
 
 	switch e := v.(type) {
 	case *url.URL:
@@ -24,31 +21,31 @@ func (m *urlPathMatcher) Match(v any) (*Result, error) {
 	case string:
 		u, err := url.Parse(e)
 		if err != nil {
-			return nil, err
+			return Result{}, fmt.Errorf("urlpath: error parsing url: %s", err.Error())
 		}
 
 		value = u.Path
 	case fmt.Stringer:
 		u, err := url.Parse(e.String())
 		if err != nil {
-			return nil, err
+			return Result{}, fmt.Errorf("urlpath: error parsing url: %s", err.Error())
 		}
 
 		value = u.Path
 	default:
-		panic("URLPath matcher only accepts the types: *url.URL | url.URL | string")
+		return Result{}, fmt.Errorf("urlpath: it only accepts the types: *url.URL | url.URL | string. got: %T", v)
 	}
 
 	res, err := m.matcher.Match(value)
 	if err != nil {
-		return nil, err
+		return Result{}, fmt.Errorf("urlpath: %w", err)
 	}
 
 	if res.Pass {
-		return &Result{Pass: true}, nil
+		return Result{Pass: true}, nil
 	}
 
-	return &Result{Message: res.Message, Ext: []string{prettierName(m.matcher, res)}}, nil
+	return Result{Message: strings.Join([]string{"URLPath(", value, ") ", res.Message}, "")}, nil
 }
 
 // URLPath compares the URL path with the expected value and matches if they are equal.

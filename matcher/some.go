@@ -12,38 +12,41 @@ type someMatcher struct {
 	matcher Matcher
 }
 
-func (m *someMatcher) Name() string {
-	return "Some"
-}
+func (m *someMatcher) Match(v any) (Result, error) {
+	if v == nil {
+		return mismatch("Some() Expected some values to match but got nil"), nil
+	}
 
-func (m *someMatcher) Match(v any) (*Result, error) {
 	typeOfV := reflect.TypeOf(v)
 	kind := typeOfV.Kind()
 	if kind != reflect.Slice && kind != reflect.Array {
-		return nil, fmt.Errorf("matcher only works with slices. got: %v", typeOfV)
+		return Result{}, fmt.Errorf("some: matcher only works with slices. got: %v", typeOfV)
 	}
 
 	vv := reflect.ValueOf(v)
-	messages := make([]string, 0)
+	if vv.IsZero() {
+		return mismatch("Some() Expected some values to match but got zero"), nil
+	}
 
-	for i := 0; i < vv.Len(); i++ {
+	length := vv.Len()
+	messages := make([]string, 0, length)
+
+	for i := 0; i < length; i++ {
 		res, err := m.matcher.Match(vv.Index(i).Interface())
 		if err != nil {
-			return nil, err
+			return Result{}, fmt.Errorf("some: %w", err)
 		}
 
 		if res.Pass {
-			return &Result{Pass: true}, nil
+			return Result{Pass: true}, nil
 		}
 
 		messages = append(messages, res.Message)
 	}
 
-	return &Result{
-		Ext: []string{mfmt.Stringify(v), prettierName(m.matcher, nil)},
+	return Result{
 		Message: fmt.Sprintf(
-			"%s\n%s",
-			prettierName(m.matcher, nil),
+			"Some()\n%s",
 			mfmt.Indent(strings.Join(messages, "\n")),
 		),
 	}, nil

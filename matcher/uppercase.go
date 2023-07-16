@@ -9,29 +9,22 @@ type upperCaseMatcher struct {
 	matcher Matcher
 }
 
-func (m *upperCaseMatcher) Name() string {
-	return "ToUpper"
-}
-
-func (m *upperCaseMatcher) Match(v any) (*Result, error) {
+func (m *upperCaseMatcher) Match(v any) (Result, error) {
 	txt, ok := v.(string)
 	if !ok {
-		return nil, fmt.Errorf("type %T is not supported. accepted types: string", v)
+		return Result{}, fmt.Errorf("upper: type %T is not supported. accepted types: string", v)
 	}
 
 	result, err := m.matcher.Match(strings.ToUpper(txt))
 	if err != nil {
-		return nil, err
+		return Result{}, fmt.Errorf("upper: %w", err)
 	}
 
 	if result.Pass {
-		return &Result{Pass: true}, nil
+		return Result{Pass: true}, nil
 	}
 
-	return &Result{
-		Ext:     []string{txt, prettierName(m.matcher, result)},
-		Message: result.Message,
-	}, nil
+	return Result{Message: strings.Join([]string{"Upper(", txt, ") ", result.Message}, "")}, nil
 }
 
 func (m *upperCaseMatcher) AfterMockServed() error {

@@ -3,7 +3,6 @@ package matcher
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -26,12 +25,8 @@ func TestEqualElementsMatcher(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			res, err := ItemsMatch(tc.value).Match(tc.expectedValue)
 
-			assert.NoError(t, err)
-			assert.Equal(t, tc.expected, res.Pass)
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, res.Pass)
 		})
 	}
-}
-
-func TestItemsMatchMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, ItemsMatch("").Name())
 }

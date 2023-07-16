@@ -2,6 +2,7 @@ package matcher
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/vitorsalgado/mocha/v3/matcher/internal/mconv"
 	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
@@ -11,27 +12,23 @@ type lessOrEqualMatcher struct {
 	expected float64
 }
 
-func (m *lessOrEqualMatcher) Name() string {
-	return "LessOrEqual"
-}
-
-func (m *lessOrEqualMatcher) Match(v any) (*Result, error) {
+func (m *lessOrEqualMatcher) Match(v any) (Result, error) {
 	vv, err := mconv.ConvToFloat64(v)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"type %T is not supported. value must be compatible with float64. %w",
+		return Result{}, fmt.Errorf(
+			"lte: type %T is not supported. value must be compatible with float64. %w",
 			v,
 			err,
 		)
 	}
 
 	if vv <= m.expected {
-		return &Result{Pass: true}, nil
+		return Result{Pass: true}, nil
 	}
 
-	return &Result{
-			Ext:     []string{mfmt.Stringify(m.expected)},
-			Message: mfmt.PrintReceived(vv)},
+	return Result{
+			Message: strings.
+				Join([]string{"Lte(", mfmt.Stringify(m.expected), ") Value is ", mfmt.Stringify(v)}, "")},
 		nil
 }
 

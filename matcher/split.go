@@ -10,29 +10,22 @@ type splitMatcher struct {
 	matcher   Matcher
 }
 
-func (m *splitMatcher) Name() string {
-	return "Split"
-}
-
-func (m *splitMatcher) Match(v any) (*Result, error) {
+func (m *splitMatcher) Match(v any) (Result, error) {
 	txt, ok := v.(string)
 	if !ok {
-		return nil, fmt.Errorf("type %T is not supported. accepted types: string", v)
+		return Result{}, fmt.Errorf("split: type %T is not supported. accepted types: string", v)
 	}
 
 	result, err := m.matcher.Match(strings.Split(txt, m.separator))
 	if err != nil {
-		return nil, err
+		return Result{}, fmt.Errorf("split: %w", err)
 	}
 
 	if result.Pass {
-		return &Result{Pass: true}, err
+		return Result{Pass: true}, err
 	}
 
-	return &Result{
-		Ext:     []string{m.separator, prettierName(m.matcher, result)},
-		Message: result.Message,
-	}, nil
+	return Result{Message: strings.Join([]string{"Split(", m.separator, ") ", result.Message}, "")}, nil
 }
 
 func (m *splitMatcher) AfterMockServed() error {

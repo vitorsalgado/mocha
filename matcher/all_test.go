@@ -41,8 +41,8 @@ func TestAllOf(t *testing.T) {
 		require.False(t, result.Pass)
 	})
 
-	t.Run("should return false when an error occurs", func(t *testing.T) {
-		_, err := All(
+	t.Run("should return false and an error when any error occurs", func(t *testing.T) {
+		res, err := All(
 			StrictEqual("dev"),
 			EqualIgnoreCase("qa"),
 			ToUpper(StrictEqual("none")),
@@ -51,6 +51,7 @@ func TestAllOf(t *testing.T) {
 			})).
 			Match("test")
 		require.Error(t, err)
+		require.False(t, res.Pass)
 	})
 
 	t.Run("no matchers", func(t *testing.T) {
@@ -58,8 +59,4 @@ func TestAllOf(t *testing.T) {
 			All()
 		})
 	})
-}
-
-func TestAllOfMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, All(Eq("")).Name())
 }

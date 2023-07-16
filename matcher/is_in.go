@@ -3,37 +3,30 @@ package matcher
 import (
 	"fmt"
 	"reflect"
-
-	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
 type isContainedInMatcher struct {
 	items any
 }
 
-func (m *isContainedInMatcher) Name() string {
-	return "IsIn"
-}
-
-func (m *isContainedInMatcher) Match(v any) (*Result, error) {
+func (m *isContainedInMatcher) Match(v any) (Result, error) {
 	typeOfItems := reflect.TypeOf(m.items)
 	kind := typeOfItems.Kind()
 	if kind != reflect.Slice && kind != reflect.Array {
-		return nil, fmt.Errorf("matcher only works with slices. got: %v", typeOfItems)
+		return Result{}, fmt.Errorf("is_in: it only works with slices. got: %v", typeOfItems)
 	}
 
 	valueOf := reflect.ValueOf(m.items)
 
 	for i := 0; i < valueOf.Len(); i++ {
 		if equalValues(v, valueOf.Index(i).Interface(), false) {
-			return &Result{Pass: true}, nil
+			return Result{Pass: true}, nil
 		}
 	}
 
-	return &Result{
-		Ext: []string{mfmt.Stringify(m.items)},
+	return Result{
 		Message: fmt.Sprintf(
-			"value %v is not contained in the %v",
+			"IsIn() Value %v is not contained in %v",
 			v,
 			m.items),
 	}, nil

@@ -9,28 +9,23 @@ type lowerCaseMatcher struct {
 	matcher Matcher
 }
 
-func (m *lowerCaseMatcher) Name() string {
-	return "ToLower"
-}
-
-func (m *lowerCaseMatcher) Match(v any) (*Result, error) {
+func (m *lowerCaseMatcher) Match(v any) (Result, error) {
 	txt, ok := v.(string)
 	if !ok {
-		return nil, fmt.Errorf("type %T is not supported. accepted types: string", v)
+		return Result{}, fmt.Errorf("lower: type %T is not supported. accepted types: string", v)
 	}
 
 	result, err := m.matcher.Match(strings.ToLower(txt))
 	if err != nil {
-		return nil, err
+		return Result{}, fmt.Errorf("lower: %w", err)
 	}
 
 	if result.Pass {
-		return &Result{Pass: true}, nil
+		return Result{Pass: true}, nil
 	}
 
-	return &Result{
-		Ext:     []string{txt, prettierName(m.matcher, result)},
-		Message: result.Message,
+	return Result{
+		Message: "Lower() " + result.Message,
 	}, nil
 }
 

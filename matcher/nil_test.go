@@ -27,7 +27,3 @@ func TestNil(t *testing.T) {
 		})
 	}
 }
-
-func TestNilMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, IsNil().Name())
-}

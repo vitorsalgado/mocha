@@ -25,7 +25,3 @@ func TestNot(t *testing.T) {
 		})
 	}
 }
-
-func TestNotMatcher_Name(t *testing.T) {
-	require.NotEmpty(t, Not(Eq("")).Name())
-}

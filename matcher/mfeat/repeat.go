@@ -1,42 +1,34 @@
 package mfeat
 
 import (
-	"sync"
+	"strconv"
+	"strings"
+	"sync/atomic"
 
 	"github.com/vitorsalgado/mocha/v3/matcher"
-	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
 type repeatMatcher struct {
-	max  int
-	hits int
-	mu   sync.Mutex
+	max  int64
+	hits int64
 }
 
-func (m *repeatMatcher) Name() string {
-	return "Times"
-}
-
-func (m *repeatMatcher) Match(_ any) (*matcher.Result, error) {
-	if m.hits < m.max {
-		return &matcher.Result{Pass: true}, nil
+func (m *repeatMatcher) Match(_ any) (matcher.Result, error) {
+	if atomic.LoadInt64(&m.hits) < m.max {
+		return matcher.Result{Pass: true}, nil
 	}
 
-	return &matcher.Result{
-		Ext:     []string{mfmt.Stringify(m.max)},
-		Message: mfmt.PrintReceived(m.hits),
+	return matcher.Result{
+		Message: strings.Join([]string{"Repeat(", strconv.FormatInt(m.max, 10), ") Reached the max matched requests for this mock"}, ""),
 	}, nil
 }
 
 func (m *repeatMatcher) AfterMockServed() error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	m.hits++
+	atomic.AddInt64(&m.hits, 1)
 
 	return nil
 }
 
-func Repeat(times int) matcher.Matcher {
+func Repeat(times int64) matcher.Matcher {
 	return &repeatMatcher{max: times}
 }
