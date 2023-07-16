@@ -42,10 +42,4 @@ func TestAnyOf(t *testing.T) {
 		require.Error(t, err)
 		require.False(t, res.Pass)
 	})
-
-	t.Run("no matchers", func(t *testing.T) {
-		require.Panics(t, func() {
-			Any()
-		})
-	})
 }

@@ -39,10 +39,6 @@ func (m *xorMatcher) Match(v any) (Result, error) {
 	return Result{Message: strings.Join([]string{"XOR()", message}, " ")}, nil
 }
 
-func (m *xorMatcher) AfterMockServed() error {
-	return runAfterMockServed(m.first, m.second)
-}
-
 // XOR is an exclusive OR matcher.
 func XOR(first Matcher, second Matcher) Matcher {
 	return &xorMatcher{first: first, second: second}

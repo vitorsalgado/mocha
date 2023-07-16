@@ -40,18 +40,10 @@ func (m *anyOfMatcher) Match(v any) (r Result, e error) {
 	return Result{Message: strings.Join([]string{"Any(", strconv.Itoa(len(m.matchers)), ")\n", mfmt.Indent(strings.Join(mismatches, "\n"))}, "")}, nil
 }
 
-func (m *anyOfMatcher) AfterMockServed() error {
-	return runAfterMockServed(m.matchers...)
-}
-
 // Any matches when any of the given matchers pass.
 // Example:
 //
 //	Any(Equal("test"), EqualIgnoreCase("TEST"), Contain("tes"))
 func Any(matchers ...Matcher) Matcher {
-	if len(matchers) == 0 {
-		panic("any: requires at least 1 matcher")
-	}
-
 	return &anyOfMatcher{matchers: matchers}
 }

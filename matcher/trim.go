@@ -27,10 +27,6 @@ func (m *trimMatcher) Match(v any) (Result, error) {
 	return Result{Message: strings.Join([]string{"Trim(", txt, ") ", result.Message}, "")}, nil
 }
 
-func (m *trimMatcher) AfterMockServed() error {
-	return runAfterMockServed(m.matcher)
-}
-
 // Trim trims' spaces of the incoming request value before submitting it to the provided matcher.
 func Trim(matcher Matcher) Matcher {
 	return &trimMatcher{matcher: matcher}

@@ -83,7 +83,7 @@ func (m *scenarioMatcher) Match(_ any) (matcher.Result, error) {
 	}, nil
 }
 
-func (m *scenarioMatcher) AfterMockServed() error {
+func (m *scenarioMatcher) OnMockSent() error {
 	scn, ok := m.store.fetchByName(m.name)
 	if !ok {
 		return nil

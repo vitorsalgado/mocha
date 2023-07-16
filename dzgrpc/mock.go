@@ -18,13 +18,13 @@ type GRPCMock struct {
 
 	Reply any
 
-	after              []matcher.OnAfterMockServed
+	after              []matcher.OnMockSent
 	unaryExpectations  []*dzstd.Expectation[*UnaryValueSelectorIn]
 	streamExpectations []*dzstd.Expectation[*StreamValueSelectorIn]
 }
 
 func newMock() *GRPCMock {
-	return &GRPCMock{BaseMock: dzstd.NewMock(), after: make([]matcher.OnAfterMockServed, 0)}
+	return &GRPCMock{BaseMock: dzstd.NewMock(), after: make([]matcher.OnMockSent, 0)}
 }
 
 func (m *GRPCMock) getRef() string {

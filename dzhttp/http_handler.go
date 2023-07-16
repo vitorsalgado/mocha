@@ -137,7 +137,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	for _, idx := range mock.after {
-		err = mock.expectations[idx].Matcher.(matcher.OnAfterMockServed).AfterMockServed()
+		err = mock.expectations[idx].Matcher.(matcher.OnMockSent).OnMockSent()
 		if err != nil {
 			h.lifecycle.OnWarning(reqValues,
 				fmt.Errorf("http: after mock served event: matcher[%d] %w", idx, err))

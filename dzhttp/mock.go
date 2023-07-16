@@ -185,7 +185,7 @@ func (m *HTTPMock) Build() (*HTTPMock, error) {
 
 func (m *HTTPMock) Prepare() {
 	for i, e := range m.expectations {
-		_, ok := e.Matcher.(matcher.OnAfterMockServed)
+		_, ok := e.Matcher.(matcher.OnMockSent)
 		if ok {
 			m.after = append(m.after, i)
 		}

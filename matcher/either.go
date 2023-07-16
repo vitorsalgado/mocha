@@ -40,10 +40,6 @@ func (m *eitherMatcher) Match(v any) (Result, error) {
 	return Result{Message: strings.Join([]string{"Either() ", message}, "")}, nil
 }
 
-func (m *eitherMatcher) AfterMockServed() error {
-	return runAfterMockServed(m.first, m.second)
-}
-
 // Either passes when any of the two given matchers pass.
 func Either(first Matcher, second Matcher) Matcher {
 	return &eitherMatcher{first: first, second: second}

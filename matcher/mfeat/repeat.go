@@ -23,7 +23,7 @@ func (m *repeatMatcher) Match(_ any) (matcher.Result, error) {
 	}, nil
 }
 
-func (m *repeatMatcher) AfterMockServed() error {
+func (m *repeatMatcher) OnMockSent() error {
 	atomic.AddInt64(&m.hits, 1)
 
 	return nil

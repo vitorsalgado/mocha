@@ -42,18 +42,10 @@ func (m *allOfMatcher) Match(v any) (r Result, err error) {
 		Message: strings.Join([]string{"All(", strconv.Itoa(len(m.matchers)), ")\n", mfmt.Indent(strings.Join(mismatches, "\n"))}, "")}, nil
 }
 
-func (m *allOfMatcher) AfterMockServed() error {
-	return runAfterMockServed(m.matchers...)
-}
-
 // All matches when all the given matchers pass.
 // Example:
 //
 //	All(Equal("test"), EqualIgnoreCase("test"), Contain("tes"))
 func All(matchers ...Matcher) Matcher {
-	if len(matchers) == 0 {
-		panic("all: requires at least 1 matcher")
-	}
-
 	return &allOfMatcher{matchers: matchers}
 }

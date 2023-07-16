@@ -23,10 +23,6 @@ func (m *notMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
-func (m *notMatcher) AfterMockServed() error {
-	return runAfterMockServed(m.matcher)
-}
-
 // Not negates the provided matcher.
 func Not(matcher Matcher) Matcher {
 	return &notMatcher{matcher: matcher}
