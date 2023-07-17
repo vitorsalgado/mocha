@@ -126,6 +126,7 @@ func (s *httpTestServer) Close() error {
 	s.rwMutex.Lock()
 	defer s.rwMutex.Unlock()
 
+	s.server.CloseClientConnections()
 	s.server.Close()
 	s.needSetup = true
 

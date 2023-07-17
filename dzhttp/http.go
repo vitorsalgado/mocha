@@ -17,7 +17,7 @@ import (
 
 	"github.com/vitorsalgado/mocha/v3/dzhttp/cors"
 	"github.com/vitorsalgado/mocha/v3/dzhttp/internal/mid"
-	recover2 "github.com/vitorsalgado/mocha/v3/dzhttp/internal/mid/recover"
+	"github.com/vitorsalgado/mocha/v3/dzhttp/internal/mid/recover"
 	"github.com/vitorsalgado/mocha/v3/dzstd"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 	"github.com/vitorsalgado/mocha/v3/matcher/mfeat"
@@ -101,7 +101,7 @@ func NewAPI(config ...Configurer) *HTTPMockApp {
 	parsers = append(parsers, conf.RequestBodyParsers...)
 	parsers = append(parsers, &plainTextParser{}, &formURLEncodedParser{}, &noopParser{})
 
-	recovery := recover2.New(func(err error) { app.logger.Error().Err(err).Msg(err.Error()) },
+	recovery := recover.New(func(err error) { app.logger.Error().Err(err).Msg(err.Error()) },
 		conf.RequestWasNotMatchedStatusCode)
 
 	middlewares := make([]func(handler http.Handler) http.Handler, 0)
@@ -149,7 +149,8 @@ func NewAPI(config ...Configurer) *HTTPMockApp {
 		server = newServer()
 	}
 
-	loaders := make([]Loader, 0, len(conf.Loaders)+1 /* 1 is the number of internal loaders */)
+	internalLoaders := 1
+	loaders := make([]Loader, 0, len(conf.Loaders)+internalLoaders)
 	loaders = append(loaders, &fileLoader{})
 	loaders = append(loaders, conf.Loaders...)
 
@@ -320,19 +321,6 @@ func (app *HTTPMockApp) Close() {
 	}
 }
 
-func (app *HTTPMockApp) CloseNow() {
-	app.cancel()
-
-	err := app.server.CloseNow()
-	if err != nil {
-		app.logger.Debug().Err(err).Msg("server: CloseNow: error force closing server")
-	}
-
-	if app.rec != nil {
-		app.rec.stop()
-	}
-}
-
 // CloseWithT register Server Close function on TestingT Cleanup().
 // Useful to close the server when tests finish.
 func (app *HTTPMockApp) CloseWithT(t dzstd.TestingT) *HTTPMockApp {
@@ -493,7 +481,7 @@ func (app *HTTPMockApp) onStart() (err error) {
 	}
 
 	if app.rec != nil {
-		app.rec.start(context.Background())
+		app.rec.start()
 	}
 
 	return nil

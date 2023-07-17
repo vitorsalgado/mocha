@@ -3,7 +3,6 @@ package dzhttp
 import (
 	"bytes"
 	"compress/gzip"
-	"context"
 	"encoding/hex"
 	"fmt"
 	"hash/fnv"
@@ -30,8 +29,8 @@ type recorder struct {
 	app    *HTTPMockApp
 	active bool
 	config *RecordConfig
-	in     chan *recArgs
-	cancel context.CancelFunc
+	in     chan recArgs
+	close  chan struct{}
 	mu     sync.Mutex
 }
 
@@ -134,17 +133,11 @@ type recResponse struct {
 }
 
 func newRecorder(app *HTTPMockApp, config *RecordConfig) *recorder {
-	return &recorder{app: app, config: config}
+	return &recorder{app: app, config: config, close: make(chan struct{})}
 }
 
-func (r *recorder) start(ctx context.Context) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	ctx, cancel := context.WithCancel(ctx)
-
-	r.in = make(chan *recArgs)
-	r.cancel = cancel
+func (r *recorder) start() {
+	r.in = make(chan recArgs)
 	r.active = true
 
 	go func() {
@@ -157,10 +150,11 @@ func (r *recorder) start(ctx context.Context) {
 
 				err := r.process(a)
 				if err != nil {
-					r.app.logger.Error().Err(fmt.Errorf("recorder: %w", err)).Msgf(err.Error())
+					r.app.logger.Error().Err(err).Msgf(err.Error())
 				}
 
-			case <-ctx.Done():
+			case <-r.close:
+				r.stop()
 				return
 			}
 		}
@@ -175,8 +169,8 @@ func (r *recorder) stop() {
 		return
 	}
 
+	r.close <- struct{}{}
 	r.active = false
-	r.cancel()
 }
 
 func (r *recorder) dispatch(req *http.Request, parsedURL *url.URL, rawReqBody []byte, res *Stub) {
@@ -184,25 +178,13 @@ func (r *recorder) dispatch(req *http.Request, parsedURL *url.URL, rawReqBody []
 		return
 	}
 
-	input := &recArgs{
-		request: recRequest{
-			uri:    parsedURL.RequestURI(),
-			method: req.Method,
-			header: req.Header.Clone(),
-			query:  req.URL.Query(),
-			body:   rawReqBody,
-		},
-		response: recResponse{
-			status: res.StatusCode,
-			header: res.Header.Clone(),
-			body:   res.Body,
-		},
+	r.in <- recArgs{
+		request:  recRequest{parsedURL.RequestURI(), req.Method, req.Header.Clone(), req.URL.Query(), rawReqBody},
+		response: recResponse{res.StatusCode, res.Header.Clone(), res.Body},
 	}
-
-	r.in <- input
 }
 
-func (r *recorder) process(arg *recArgs) error {
+func (r *recorder) process(arg recArgs) error {
 	v := viper.New()
 
 	v.Set(_fRequestURLPath, arg.request.uri)
@@ -291,12 +273,11 @@ func (r *recorder) process(arg *recArgs) error {
 
 				defer gz.Close()
 
-				body, err := io.ReadAll(gz)
+				_, err = io.Copy(b, gz)
 				if err != nil {
 					return err
 				}
 
-				b.Write(body)
 				v.Set(_fResponseEncoding, "gzip")
 			default:
 				b.Write(arg.response.body)

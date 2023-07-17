@@ -247,7 +247,7 @@ func TestWebHook_FaultTarget(t *testing.T) {
 			case <-exit:
 				return
 			case <-ctx.Done():
-				target.CloseNow()
+				target.Close()
 				return
 			}
 		}
