@@ -209,6 +209,24 @@ func (b *HTTPMockBuilder) URLPathf(format string, a ...any) *HTTPMockBuilder {
 	return b.URLPath(matcher.StrictEqual(fmt.Sprintf(format, a...)))
 }
 
+// URLPathf sets a Matcher that compares the http.Request url.URL path with the given value, ignoring the case.
+// The expected value will be formatted with the provided format specifier.
+func (b *HTTPMockBuilder) URLFragmentf(format string, a ...any) *HTTPMockBuilder {
+	return b.URLFragment(matcher.StrictEqual(fmt.Sprintf(format, a...)))
+}
+
+// URLPath defines a matcher to be applied to the url.URL path.
+func (b *HTTPMockBuilder) URLFragment(m matcher.Matcher) *HTTPMockBuilder {
+	b.appendExpectation(&HTTPExpectation{
+		Target:        describeTarget(targetURL, ""),
+		ValueSelector: selectURLFragment,
+		Matcher:       m,
+		Weight:        dzstd.WeightLow,
+	})
+
+	return b
+}
+
 // Header adds a matcher to a specific http.Header key.
 func (b *HTTPMockBuilder) Header(name string, m matcher.Matcher) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
@@ -470,10 +488,11 @@ func (b *HTTPMockBuilder) appendExpectation(e *dzstd.Expectation[*HTTPValueSelec
 // Request Values Selectors
 // --
 
-func selectScheme(_ context.Context, r *HTTPValueSelectorInput) any  { return r.URL.Scheme }
-func selectMethod(_ context.Context, r *HTTPValueSelectorInput) any  { return r.RawRequest.Method }
-func selectURL(_ context.Context, r *HTTPValueSelectorInput) any     { return r.URL.String() }
-func selectURLPath(_ context.Context, r *HTTPValueSelectorInput) any { return r.URL.Path }
+func selectScheme(_ context.Context, r *HTTPValueSelectorInput) any      { return r.URL.Scheme }
+func selectMethod(_ context.Context, r *HTTPValueSelectorInput) any      { return r.RawRequest.Method }
+func selectURL(_ context.Context, r *HTTPValueSelectorInput) any         { return r.URL.String() }
+func selectURLPath(_ context.Context, r *HTTPValueSelectorInput) any     { return r.URL.Path }
+func selectURLFragment(_ context.Context, r *HTTPValueSelectorInput) any { return r.URL.Fragment }
 func selectHeader(k string) HTTPValueSelector {
 	return func(_ context.Context, r *HTTPValueSelectorInput) any { return r.RawRequest.Header.Get(k) }
 }

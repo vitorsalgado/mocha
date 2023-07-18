@@ -212,6 +212,40 @@ func TestMatchers_PathCustomMatcher(t *testing.T) {
 	require.Equal(t, StatusNoMatch, res.StatusCode)
 }
 
+func TestMatchers_URLFragment(t *testing.T) {
+	m := NewAPI()
+	m.MustStart()
+	m.MustMock(Getf("/test").URLFragmentf("contacts").Reply(OK().BodyText("hello world")))
+
+	t.Cleanup(m.Close)
+
+	// no fragment
+	client := &http.Client{}
+	res, err := client.Get(m.URL("/test"))
+
+	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
+	require.Equal(t, StatusNoMatch, res.StatusCode)
+
+	// wrong fragment
+	client = &http.Client{}
+	res, err = client.Get(m.URL("/test#wrong-value"))
+
+	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
+	require.Equal(t, StatusNoMatch, res.StatusCode)
+
+	// the right fragment value
+	res, err = client.Get(m.URL("/test#contacts"))
+	require.NoError(t, err)
+
+	b, err := io.ReadAll(res.Body)
+	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
+	require.Equal(t, http.StatusOK, res.StatusCode)
+	require.Equal(t, "hello world", string(b))
+}
+
 func TestMatchers_NoReply_ShouldReturn200ByDefault(t *testing.T) {
 	m := NewAPIWithT(t)
 	m.MustStart()
