@@ -22,7 +22,7 @@ linters:
     - contextcheck
     # - cyclop
     # - deadcode
-    # - decorder
+    - decorder
     - depguard
     # - dogsled
     # - dupl
