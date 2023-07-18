@@ -10,6 +10,8 @@ import (
 
 const ScenarioStateStarted = "started"
 
+var rmu sync.RWMutex
+
 type scenarioState struct {
 	name  string
 	state string
@@ -25,7 +27,6 @@ func (s *scenarioState) hasStarted() bool {
 
 type ScenarioStore struct {
 	data map[string]*scenarioState
-	mu   sync.RWMutex
 }
 
 func NewScenarioStore() *ScenarioStore {
@@ -41,8 +42,6 @@ func (store *ScenarioStore) createNewIfNeeded(name string) *scenarioState {
 	s, ok := store.fetchByName(name)
 
 	if !ok {
-		store.mu.Lock()
-
 		s, ok = store.fetchByName(name)
 
 		if !ok {
@@ -50,8 +49,6 @@ func (store *ScenarioStore) createNewIfNeeded(name string) *scenarioState {
 			store.data[scenario.name] = scenario
 			return scenario
 		}
-
-		store.mu.Unlock()
 	}
 
 	return s
@@ -66,10 +63,14 @@ type scenarioMatcher struct {
 
 func (m *scenarioMatcher) Match(_ any) (matcher.Result, error) {
 	if m.requiredState == ScenarioStateStarted {
+		rmu.Lock()
 		m.store.createNewIfNeeded(m.name)
+		rmu.Unlock()
 	}
 
+	rmu.RLock()
 	scn, ok := m.store.fetchByName(m.name)
+	rmu.RUnlock()
 	if !ok {
 		return matcher.Result{Pass: true}, nil
 	}
@@ -84,13 +85,17 @@ func (m *scenarioMatcher) Match(_ any) (matcher.Result, error) {
 }
 
 func (m *scenarioMatcher) OnMockSent() error {
+	rmu.RLock()
 	scn, ok := m.store.fetchByName(m.name)
+	rmu.RUnlock()
 	if !ok {
 		return nil
 	}
 
 	if m.newState != "" {
+		rmu.Lock()
 		scn.state = m.newState
+		rmu.Unlock()
 	}
 
 	return nil
