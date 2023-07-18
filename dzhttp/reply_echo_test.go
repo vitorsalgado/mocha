@@ -12,7 +12,7 @@ import (
 )
 
 func TestReplyEcho(t *testing.T) {
-	m := NewAPIWithT(t)
+	m := NewAPI().CloseWithT(t)
 	m.MustStart()
 
 	defer m.Close()

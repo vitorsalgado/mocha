@@ -130,7 +130,7 @@ func TestMatcherCombinations(t *testing.T) {
 }
 
 func TestMatchers_MultipleMethods(t *testing.T) {
-	m := NewAPIWithT(t)
+	m := NewAPI().CloseWithT(t)
 	m.MustStart()
 	m.MustMock(FromFile("testdata/matchers/03_url_template.yaml"))
 
@@ -156,7 +156,7 @@ func TestMatchers_MultipleMethods(t *testing.T) {
 }
 
 func TestMatchers_URLMatchRegex(t *testing.T) {
-	m := NewAPIWithT(t)
+	m := NewAPI().CloseWithT(t)
 	m.MustStart()
 	m.MustMock(FromFile("testdata/matchers/04_url_match.yaml"))
 
@@ -175,7 +175,7 @@ func TestMatchers_URLMatchRegex(t *testing.T) {
 }
 
 func TestMatchers_URLCustomMatcher(t *testing.T) {
-	m := NewAPIWithT(t)
+	m := NewAPI().CloseWithT(t)
 	m.MustStart()
 	m.MustMock(FromFile("testdata/matchers/05_url_custom_matcher.yaml"))
 
@@ -194,7 +194,7 @@ func TestMatchers_URLCustomMatcher(t *testing.T) {
 }
 
 func TestMatchers_PathCustomMatcher(t *testing.T) {
-	m := NewAPIWithT(t)
+	m := NewAPI().CloseWithT(t)
 	m.MustStart()
 	m.MustMock(FromFile("testdata/matchers/06_path_custom_matcher.yaml"))
 
@@ -247,7 +247,7 @@ func TestMatchers_URLFragment(t *testing.T) {
 }
 
 func TestMatchers_NoReply_ShouldReturn200ByDefault(t *testing.T) {
-	m := NewAPIWithT(t)
+	m := NewAPI().CloseWithT(t)
 	m.MustStart()
 	m.MustMock(FromFile("testdata/matchers/07_no_reply.yaml"))
 

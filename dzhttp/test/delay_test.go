@@ -39,7 +39,7 @@ func TestResponseDelay(t *testing.T) {
 
 func TestResponseDelay_SetupFromFile(t *testing.T) {
 	httpClient := &http.Client{}
-	m := NewAPIWithT(t)
+	m := NewAPI().CloseWithT(t)
 	m.MustStart()
 
 	testCases := []struct {

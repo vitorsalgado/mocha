@@ -15,7 +15,7 @@ import (
 
 func TestFormUrlEncoded(t *testing.T) {
 	httpClient := &http.Client{}
-	m := dzhttp.NewAPIWithT(t)
+	m := dzhttp.NewAPI().CloseWithT(t)
 	m.MustStart()
 
 	scoped := m.MustMock(dzhttp.Post(matcher.URLPath("/test")).
@@ -38,7 +38,7 @@ func TestFormUrlEncoded(t *testing.T) {
 }
 
 func TestFormUrlEncoded_InvalidFieldValues(t *testing.T) {
-	m := dzhttp.NewAPIWithT(t)
+	m := dzhttp.NewAPI().CloseWithT(t)
 	scoped, err := m.Mock(dzhttp.FromFile("testdata/form_url_encoded/01_invalid.yaml"))
 
 	require.Nil(t, scoped)
@@ -47,7 +47,7 @@ func TestFormUrlEncoded_InvalidFieldValues(t *testing.T) {
 
 func TestFormUrlEncoded_FromFileMock(t *testing.T) {
 	httpClient := &http.Client{}
-	m := dzhttp.NewAPIWithT(t)
+	m := dzhttp.NewAPI().CloseWithT(t)
 	m.MustStart()
 
 	scoped := m.MustMock(dzhttp.FromFile("testdata/form_url_encoded/02_valid.yaml"))

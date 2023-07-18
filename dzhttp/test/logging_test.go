@@ -27,11 +27,12 @@ func (p testBodyParser) Parse(_ []byte, _ *http.Request) (any, error) {
 }
 
 func TestLogging(t *testing.T) {
-	m := NewAPIWithT(t, Setup().
+	m := NewAPI(Setup().
 		UseDescriptiveLogger().
 		RequestBodyParsers(
 			&testBodyParser{"PANIC", func() error { panic("BOOM") }},
-			&testBodyParser{"ERROR", func() error { return errors.New("FAIL") }}))
+			&testBodyParser{"ERROR", func() error { return errors.New("FAIL") }})).
+		CloseWithT(t)
 	m.MustStart()
 	m.MustMock(Getf("/test").Reply(OK()))
 

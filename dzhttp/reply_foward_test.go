@@ -273,10 +273,10 @@ func TestForward(t *testing.T) {
 	})
 
 	t.Run("tls", func(t *testing.T) {
-		target := NewAPIWithT(t)
+		target := NewAPI().CloseWithT(t)
 		target.MustStartTLS()
 
-		m := NewAPIWithT(t)
+		m := NewAPI().CloseWithT(t)
 		m.MustStart()
 
 		s1 := target.MustMock(Getf("/test").Reply(OK().PlainText("hi")))

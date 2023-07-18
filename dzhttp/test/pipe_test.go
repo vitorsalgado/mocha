@@ -43,7 +43,7 @@ func (a *pipingTest2) Pipe(conduit *dzstd.Conduit) {
 }
 
 func TestPipes(t *testing.T) {
-	m := dzhttp.NewAPIWithT(t, dzhttp.Setup().LogVerbosity(dzhttp.LogBody))
+	m := dzhttp.NewAPI(dzhttp.Setup().LogVerbosity(dzhttp.LogBody)).CloseWithT(t)
 	m.MustStart()
 
 	scope := m.MustMock(dzhttp.Getf("/test").Pipe(&pipingTest{}).Pipe(&pipingTest2{}).Reply(dzhttp.OK().BodyText("hi")))

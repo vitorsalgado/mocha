@@ -274,7 +274,7 @@ func TestPostJSON(t *testing.T) {
 }
 
 func TestSimpleJSONValues(t *testing.T) {
-	m := NewAPIWithT(t)
+	m := NewAPI().CloseWithT(t)
 	m.MustStart()
 
 	testCases := []struct {

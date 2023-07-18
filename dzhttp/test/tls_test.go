@@ -40,7 +40,7 @@ func TestTLS(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			m := NewAPIWithT(t, tc.config)
+			m := NewAPI(tc.config).CloseWithT(t)
 			m.MustStartTLS()
 
 			scoped := m.MustMock(
@@ -68,7 +68,7 @@ func TestTLS_FileSetup(t *testing.T) {
 	client := &http.Client{
 		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
 	}
-	m := NewAPIWithT(t, UseConfig("testdata/tls/tls_app.yaml"))
+	m := NewAPI(UseConfig("testdata/tls/tls_app.yaml")).CloseWithT(t)
 	m.MustStartTLS()
 
 	scoped := m.MustMock(
@@ -109,7 +109,7 @@ func TestTLSMutual(t *testing.T) {
 			}},
 	}
 
-	target := NewAPIWithT(t, Setup().TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile))
+	target := NewAPI(Setup().TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile)).CloseWithT(t)
 	target.MustStartTLS()
 	target.MustMock(Getf("/test").Reply(Accepted().PlainText("accepted")))
 
@@ -143,11 +143,11 @@ func TestTLSMutualWithProxy(t *testing.T) {
 			}},
 	}
 
-	target := NewAPIWithT(t, Setup().TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile))
+	target := NewAPI(Setup().TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile)).CloseWithT(t)
 	target.MustStartTLS()
 	target.MustMock(Getf("/test").Reply(Accepted().PlainText("accepted")))
 
-	m := NewAPIWithT(t, Setup().TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile))
+	m := NewAPI(Setup().TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile)).CloseWithT(t)
 	m.MustStartTLS()
 	m.MustMock(Get(URLPath("/test")).
 		Header("test", StrictEqual("hello")).
@@ -185,11 +185,11 @@ func TestTLSMutualWithProxy_FileSetup(t *testing.T) {
 			}},
 	}
 
-	target := NewAPIWithT(t, UseConfig("testdata/tls/tls_ca_target.yaml"))
+	target := NewAPI(UseConfig("testdata/tls/tls_ca_target.yaml")).CloseWithT(t)
 	target.MustStartTLS()
 	target.MustMock(Getf("/test").Reply(Accepted().PlainText("accepted")))
 
-	m := NewAPIWithT(t, UseConfig("testdata/tls/tls_ca.yaml"))
+	m := NewAPI(UseConfig("testdata/tls/tls_ca.yaml")).CloseWithT(t)
 	m.MustStartTLS()
 	m.MustMock(Get(URLPath("/test")).
 		Header("test", StrictEqual("hello")).

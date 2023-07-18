@@ -397,7 +397,7 @@ func TestSettingOnlyPort(t *testing.T) {
 	}
 
 	port := randomPort()
-	m := NewAPIWithT(t, Setup().Port(port))
+	m := NewAPI(Setup().Port(port)).CloseWithT(t)
 	m.MustStart()
 	m.MustMock(Getf("/test").Reply(OK()))
 

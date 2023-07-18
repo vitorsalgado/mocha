@@ -28,10 +28,10 @@ const (
 
 func TestWebHook_Run(t *testing.T) {
 	key := "test_key"
-	target := dzhttp.NewAPIWithT(t)
+	target := dzhttp.NewAPI().CloseWithT(t)
 	target.MustStart()
 
-	m := dzhttp.NewAPIWithT(t, dzhttp.Setup().PostAction(Name, New()))
+	m := dzhttp.NewAPI(dzhttp.Setup().PostAction(Name, New())).CloseWithT(t)
 	m.MustStart()
 
 	testCases := []struct {
@@ -177,16 +177,17 @@ func TestWebHook_TLS(t *testing.T) {
 	certPool := x509.NewCertPool()
 	certPool.AppendCertsFromPEM(caCert)
 
-	target := dzhttp.NewAPIWithT(t, dzhttp.Setup().TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile))
+	target := dzhttp.NewAPI(dzhttp.Setup().TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile)).CloseWithT(t)
 	target.MustStartTLS()
 	target.MustMock(dzhttp.Postf("/third_party/hook/tls").
 		Headerf("X-Key", key).
 		Headerf(HeaderContentType, MIMETextPlainCharsetUTF8).
 		Reply(dzhttp.OK().PlainText("hello")))
 
-	m := dzhttp.NewAPIWithT(t, dzhttp.Setup().
+	m := dzhttp.NewAPI(dzhttp.Setup().
 		TLSMutual(_tlsCertFile, _tlsKeyFile, _tlsClientCertFile).
-		PostAction(Name, New()))
+		PostAction(Name, New())).
+		CloseWithT(t)
 	m.MustStartTLS()
 	m.MustMock(dzhttp.Putf("/test").
 		PostAction(Setup().
@@ -217,13 +218,13 @@ func TestWebHook_TLS(t *testing.T) {
 }
 
 func TestWebHook_FaultTarget(t *testing.T) {
-	target := dzhttp.NewAPIWithT(t)
+	target := dzhttp.NewAPI().CloseWithT(t)
 	target.MustStart()
 	target.MustMock(dzhttp.Getf("/hook/fault").
 		Delay(dzstd.Latency(1 * time.Minute)).
 		Reply(dzhttp.OK().PlainText("hello")))
 
-	m := dzhttp.NewAPIWithT(t, dzhttp.Setup().PostAction(Name, New()))
+	m := dzhttp.NewAPI(dzhttp.Setup().PostAction(Name, New())).CloseWithT(t)
 	m.MustStart()
 	m.MustMock(dzhttp.Getf("/test").
 		PostAction(Setup().
@@ -268,13 +269,15 @@ func TestWebHook_InvalidArgs(t *testing.T) {
 	client := &http.Client{}
 	testCases := []any{make(chan struct{}), nil}
 
-	target := dzhttp.NewAPIWithT(t, dzhttp.Setup().HTTPClient(func() *http.Client {
-		return client
-	}))
+	target := dzhttp.
+		NewAPI(dzhttp.Setup().HTTPClient(func() *http.Client {
+			return client
+		})).
+		CloseWithT(t)
 	target.MustStart()
 	target.MustMock(dzhttp.Getf("/hook").Reply(dzhttp.OK()))
 
-	m := dzhttp.NewAPIWithT(t, dzhttp.Setup().PostAction(Name, New()))
+	m := dzhttp.NewAPI(dzhttp.Setup().PostAction(Name, New())).CloseWithT(t)
 	m.MustStart()
 
 	for i, tc := range testCases {
@@ -296,7 +299,7 @@ func TestWebHook_InvalidArgs(t *testing.T) {
 }
 
 func TestWebHook_FileSetup(t *testing.T) {
-	target := dzhttp.NewAPIWithT(t)
+	target := dzhttp.NewAPI().CloseWithT(t)
 	target.MustStart()
 	target.MustMock(dzhttp.Postf("/fs/hook").
 		Headerf("hello", "world").
@@ -305,7 +308,7 @@ func TestWebHook_FileSetup(t *testing.T) {
 		Body(Eq(`{"task": "done"}`)).
 		Reply(dzhttp.NoContent()))
 
-	m := dzhttp.NewAPIWithT(t, dzhttp.Setup().PostAction(Name, New()))
+	m := dzhttp.NewAPI(dzhttp.Setup().PostAction(Name, New())).CloseWithT(t)
 	m.SetData(map[string]any{"webhook_target": target.URL("/fs/hook")})
 
 	m.MustStart()
@@ -333,7 +336,7 @@ func TestWebHook_InvalidFiles(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			m := dzhttp.NewAPIWithT(t, dzhttp.Setup().PostAction(Name, New()))
+			m := dzhttp.NewAPI(dzhttp.Setup().PostAction(Name, New())).CloseWithT(t)
 			_, err := m.Mock(dzhttp.FromFile(tc.filename))
 
 			require.Error(t, err)

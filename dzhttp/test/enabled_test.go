@@ -11,7 +11,7 @@ import (
 
 func TestEnabledDisabledMocks(t *testing.T) {
 	httpClient := &http.Client{}
-	m := dzhttp.NewAPIWithT(t, dzhttp.Setup().MockFilePatterns("testdata/enabled/*.yaml"))
+	m := dzhttp.NewAPI(dzhttp.Setup().MockFilePatterns("testdata/enabled/*.yaml")).CloseWithT(t)
 	m.MustStart()
 
 	testCases := []struct {

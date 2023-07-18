@@ -196,15 +196,6 @@ func NewAPI(config ...Configurer) *HTTPMockApp {
 	return app
 }
 
-// NewAPIWithT creates a new HTTPMockApp mock server with the given configurations and
-// closes the server when the provided TestingT instance finishes.
-func NewAPIWithT(t dzstd.TestingT, config ...Configurer) *HTTPMockApp {
-	app := NewAPI(config...)
-	t.Cleanup(app.Close)
-
-	return app
-}
-
 // Name returns mock server name.
 func (app *HTTPMockApp) Name() string {
 	return app.config.Name

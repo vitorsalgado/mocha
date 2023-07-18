@@ -46,7 +46,7 @@ func TestScenarios(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			m := dzhttp.NewAPIWithT(t)
+			m := dzhttp.NewAPI().CloseWithT(t)
 			m.MustStart()
 
 			s1 := m.MustMock(tc.s1)

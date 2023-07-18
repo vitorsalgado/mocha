@@ -61,7 +61,7 @@ func TestRepeat_Once(t *testing.T) {
 }
 
 func TestRepeat_FileSetup(t *testing.T) {
-	m := dzhttp.NewAPIWithT(t)
+	m := dzhttp.NewAPI().CloseWithT(t)
 	m.MustStart()
 	m.MustMock(dzhttp.FromFile("testdata/repeat/1_repeat.yaml"))
 

@@ -13,7 +13,7 @@ import (
 func TestHTTPMethods(t *testing.T) {
 	client := &http.Client{}
 
-	m := NewAPIWithT(t)
+	m := NewAPI().CloseWithT(t)
 	m.MustStart()
 
 	path1 := "/test/1"
