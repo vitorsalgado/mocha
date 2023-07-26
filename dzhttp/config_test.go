@@ -169,6 +169,8 @@ func TestConfigBuilder(t *testing.T) {
 		RootDir("test_root_dir").
 		MockNotFoundStatusCode(http.StatusNotFound).
 		RequestBodyParsers(&plainTextParser{}).
+		MaxBodyParsingLimit(10).
+		NoBodyParsing().
 		Middlewares().
 		CORS(&cors.DefaultConfig).
 		Server(&httpTestServer{}).
@@ -197,6 +199,8 @@ func TestConfigBuilder(t *testing.T) {
 	require.Equal(t, "test_root_dir", conf.RootDir)
 	require.Equal(t, http.StatusNotFound, conf.RequestWasNotMatchedStatusCode)
 	require.Len(t, conf.RequestBodyParsers, 1)
+	require.EqualValues(t, conf.MaxBodyParsingLimit, 10)
+	require.True(t, conf.NoBodyParsing)
 	require.Len(t, conf.Middlewares, 0)
 	require.Equal(t, &cors.DefaultConfig, conf.CORS)
 	require.NotNil(t, conf.HandlerDecorator)

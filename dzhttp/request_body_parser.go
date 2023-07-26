@@ -23,16 +23,31 @@ type RequestBodyParser interface {
 
 // parseRequestBody tests given parsers until it finds one that can parse the request body.
 // The user provided RequestBodyParser takes precedence.
-func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (parsedBody any, rawBody []byte, err error) {
-	if r.Body == nil {
-		return
+func parseRequestBody(app *HTTPMockApp, r *http.Request) (parsedBody any, rawBody []byte, err error) {
+	if app.config.NoBodyParsing {
+		return nil, nil, nil
 	}
 
 	if r.Method == http.MethodGet || r.Method == http.MethodHead {
 		return
 	}
 
-	rawBody, err = io.ReadAll(r.Body)
+	if r.Body == nil {
+		return
+	}
+
+	var reader io.Reader
+	if app.config.MaxBodyParsingLimit > 0 {
+		reader = io.LimitReader(r.Body, app.config.MaxBodyParsingLimit)
+	} else {
+		reader = r.Body
+	}
+
+	rawBody, err = io.ReadAll(reader)
+
+	r.Body.Close()
+	r.Body = io.NopCloser(bytes.NewBuffer(rawBody))
+
 	if err != nil {
 		return nil, nil, err
 	}
@@ -41,12 +56,9 @@ func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (parsedBody 
 		return nil, nil, nil
 	}
 
-	r.Body.Close()
-	r.Body = io.NopCloser(bytes.NewBuffer(rawBody))
-
 	contentType := r.Header.Get(httpval.HeaderContentType)
 
-	for _, parser := range parsers {
+	for _, parser := range app.requestBodyParsers {
 		if parser.CanParse(contentType, r) {
 			parsedBody, err = parser.Parse(rawBody, r)
 			if err != nil {

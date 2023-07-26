@@ -99,6 +99,14 @@ type Config struct {
 	// RequestBodyParsers defines request body parsers to be executed before core parsers.
 	RequestBodyParsers []RequestBodyParser
 
+	// MaxBodyParsingLimit sets the limit of bytes that request body parsers should read.
+	// Zero means no limit.
+	MaxBodyParsingLimit int64
+
+	// NoBodyParsing disables request body parsing.
+	// This will also disable HTTP request body matching.
+	NoBodyParsing bool
+
 	// Middlewares defines a list of custom middlewares that will be
 	// set after panic recovery and before mock handler.
 	Middlewares []func(http.Handler) http.Handler
@@ -211,6 +219,8 @@ func (c *Config) Apply(conf *Config) error {
 	conf.RootDir = c.RootDir
 	conf.RequestWasNotMatchedStatusCode = c.RequestWasNotMatchedStatusCode
 	conf.RequestBodyParsers = c.RequestBodyParsers
+	conf.MaxBodyParsingLimit = c.MaxBodyParsingLimit
+	conf.NoBodyParsing = c.NoBodyParsing
 	conf.Middlewares = c.Middlewares
 	conf.CORS = c.CORS
 	conf.Server = c.Server
@@ -262,7 +272,6 @@ func defaultConfig() *Config {
 		MockFileHandlers:               make([]MockFileHandler, 0),
 		PostActions:                    make(map[string]PostAction),
 		HeaderNamesToRedact:            make(map[string]struct{}),
-		Debug:                          false,
 		LogPretty:                      true,
 		LogLevel:                       LogLevelInfo,
 		LogVerbosity:                   LogHeader,
@@ -312,6 +321,19 @@ func (cb *ConfigBuilder) MockNotFoundStatusCode(code int) *ConfigBuilder {
 // RequestBodyParsers adds a custom list of RequestBodyParsers.
 func (cb *ConfigBuilder) RequestBodyParsers(bp ...RequestBodyParser) *ConfigBuilder {
 	cb.conf.RequestBodyParsers = append(cb.conf.RequestBodyParsers, bp...)
+	return cb
+}
+
+// NoBodyParsing disables request body parsing.
+func (cb *ConfigBuilder) NoBodyParsing() *ConfigBuilder {
+	cb.conf.NoBodyParsing = true
+	return cb
+}
+
+// MaxBodyParsingLimit sets the limit of bytes that request body parsers should read.
+// Zero means no limit.
+func (cb *ConfigBuilder) MaxBodyParsingLimit(n int64) *ConfigBuilder {
+	cb.conf.MaxBodyParsingLimit = n
 	return cb
 }
 

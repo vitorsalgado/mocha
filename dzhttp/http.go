@@ -260,7 +260,7 @@ func (app *HTTPMockApp) Parameters() dzstd.Params {
 	return app.params
 }
 
-// Config returns a copy of the mock server Config.
+// Config returns the mock server Config.
 func (app *HTTPMockApp) Config() *Config {
 	return app.config
 }

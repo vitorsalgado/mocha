@@ -10,9 +10,10 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/vitorsalgado/mocha/v3/dzhttp/httpval"
+	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
-func TestWithRequestBodyParsersCanParse(t *testing.T) {
+func TestRequestBodyParsers_CanParse(t *testing.T) {
 	formParser := &formURLEncodedParser{}
 	textParser := &plainTextParser{}
 	noop := &noopParser{}
@@ -53,7 +54,7 @@ func TestWithRequestBodyParsersCanParse(t *testing.T) {
 	}
 }
 
-func TestWithRequestBodyParsersParse(t *testing.T) {
+func TestRequestBodyParsers_Parse(t *testing.T) {
 	formParser := &formURLEncodedParser{}
 	textParser := &plainTextParser{}
 	noop := &noopParser{}
@@ -83,8 +84,25 @@ func TestWithRequestBodyParsersParse(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			b, err := tc.parser.Parse(tc.body, tc.req)
 
-			assert.NoError(t, err)
-			assert.Equal(t, tc.expected, b)
+			require.NoError(t, err)
+			require.Equal(t, tc.expected, b)
 		})
 	}
+}
+
+func TestRequestBodyParser_Limit(t *testing.T) {
+	m := NewAPI(Setup().MaxBodyParsingLimit(5))
+	m.MustMock(Postf("/test").Body(Eq("hello")).Reply(OK()))
+	m.MustStart()
+
+	defer m.Close()
+
+	client := &http.Client{}
+	req, _ := http.NewRequest(http.MethodPost, m.URL("/test"), strings.NewReader("hello world"))
+
+	res, err := client.Do(req)
+
+	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
+	require.Equal(t, http.StatusOK, res.StatusCode)
 }

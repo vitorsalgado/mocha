@@ -27,7 +27,7 @@ func newMockHandler(app *HTTPMockApp, lifecycle mockHTTPLifecycle) *mockHandler 
 func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w = httprec.Wrap(w)
 	parsedURL, urlSegments := h.parseURL(r)
-	parsedBody, rawBody, err := parseRequestBody(r, h.app.requestBodyParsers)
+	parsedBody, rawBody, err := parseRequestBody(h.app, r)
 	reqValues := &RequestValues{time.Now(), r, parsedURL, urlSegments, nil, nil, h.app, nil}
 	if err != nil {
 		h.lifecycle.OnWarning(reqValues, fmt.Errorf("request_body_parser: %w", err))
