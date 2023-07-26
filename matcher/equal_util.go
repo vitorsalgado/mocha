@@ -95,13 +95,7 @@ func equalValues(expected any, actual any, lenient bool) bool {
 	return false
 }
 
-func laxEq(
-	aKind reflect.Kind,
-	bKind reflect.Kind,
-	aValue reflect.Value,
-	bValue reflect.Value,
-	lenient bool,
-) bool {
+func laxEq(aKind, bKind reflect.Kind, aValue, bValue reflect.Value, lenient bool) bool {
 	switch aKind {
 	case reflect.String:
 		switch bKind {
