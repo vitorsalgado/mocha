@@ -1,5 +1,7 @@
 package matcher
 
+import "github.com/vitorsalgado/mocha/v3/coretype"
+
 // Matcher matches values.
 type Matcher interface {
 	Match(v any) (Result, error)
@@ -19,3 +21,11 @@ type OnMockSent interface {
 
 func success() Result                { return Result{Pass: true, Message: ""} }
 func mismatch(message string) Result { return Result{Pass: false, Message: message} }
+
+func describe(m Matcher) any {
+	if sd, ok := m.(coretype.SelfDescribing); ok {
+		return sd.Describe()
+	}
+
+	return Anything().(coretype.SelfDescribing).Describe()
+}

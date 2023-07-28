@@ -29,6 +29,10 @@ func (m *repeatMatcher) OnMockSent() error {
 	return nil
 }
 
+func (m *repeatMatcher) Describe() any {
+	return map[string]any{"repeat": m.max}
+}
+
 func Repeat(times int64) matcher.Matcher {
 	return &repeatMatcher{max: times}
 }

@@ -23,6 +23,10 @@ func (m *hasPrefixMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
+func (m *hasPrefixMatcher) Describe() any {
+	return []any{"hasPrefix", m.prefix}
+}
+
 // HasPrefix passes if the matcher argument starts with the given prefix.
 func HasPrefix(prefix string) Matcher {
 	return &hasPrefixMatcher{prefix: prefix}

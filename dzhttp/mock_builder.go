@@ -118,10 +118,12 @@ func (b *HTTPMockBuilder) Priority(p int) *HTTPMockBuilder {
 // Scheme sets the HTTP request scheme to be matched.
 func (b *HTTPMockBuilder) Scheme(scheme string) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:        describeTarget(targetScheme, scheme),
-		Matcher:       matcher.EqualIgnoreCase(scheme),
-		ValueSelector: selectScheme,
-		Weight:        dzstd.WeightVeryLow,
+		Target:            int(targetScheme),
+		TargetDescription: describeTarget(targetScheme, scheme),
+		Key:               scheme,
+		Matcher:           matcher.EqualIgnoreCase(scheme),
+		ValueSelector:     selectScheme,
+		Weight:            dzstd.WeightVeryLow,
 	})
 
 	return b
@@ -130,10 +132,11 @@ func (b *HTTPMockBuilder) Scheme(scheme string) *HTTPMockBuilder {
 // SchemeMatches sets a matcher.Matcher for the URL scheme part.
 func (b *HTTPMockBuilder) SchemeMatches(m matcher.Matcher) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:        describeTarget(targetScheme, ""),
-		Matcher:       m,
-		ValueSelector: selectScheme,
-		Weight:        dzstd.WeightVeryLow,
+		Target:            int(targetScheme),
+		TargetDescription: describeTarget(targetScheme, ""),
+		Matcher:           m,
+		ValueSelector:     selectScheme,
+		Weight:            dzstd.WeightVeryLow,
 	})
 
 	return b
@@ -142,19 +145,24 @@ func (b *HTTPMockBuilder) SchemeMatches(m matcher.Matcher) *HTTPMockBuilder {
 // Method sets the HTTP request method to be matched.
 func (b *HTTPMockBuilder) Method(methods ...string) *HTTPMockBuilder {
 	var m matcher.Matcher
+	var key string
+
 	if len(methods) == 0 {
 		panic(".Method() requires at least one HTTP Method")
 	} else if len(methods) == 1 {
 		m = matcher.EqualIgnoreCase(methods[0])
+		key = methods[0]
 	} else {
 		m = matcher.IsIn(methods)
 	}
 
 	b.appendExpectation(&HTTPExpectation{
-		Target:        describeTarget(targetMethod, strings.Join(methods, ",")),
-		ValueSelector: selectMethod,
-		Matcher:       m,
-		Weight:        dzstd.WeightNone,
+		Target:            int(targetMethod),
+		TargetDescription: describeTarget(targetMethod, strings.Join(methods, ",")),
+		Key:               key,
+		ValueSelector:     selectMethod,
+		Matcher:           m,
+		Weight:            dzstd.WeightNone,
 	})
 
 	return b
@@ -164,10 +172,11 @@ func (b *HTTPMockBuilder) Method(methods ...string) *HTTPMockBuilder {
 // Useful to set a Mock for multiple HTTP Request methods.
 func (b *HTTPMockBuilder) MethodMatches(m matcher.Matcher) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:        describeTarget(targetMethod, ""),
-		ValueSelector: selectMethod,
-		Matcher:       m,
-		Weight:        dzstd.WeightNone,
+		Target:            int(targetMethod),
+		TargetDescription: describeTarget(targetMethod, ""),
+		ValueSelector:     selectMethod,
+		Matcher:           m,
+		Weight:            dzstd.WeightNone,
 	})
 
 	return b
@@ -176,10 +185,11 @@ func (b *HTTPMockBuilder) MethodMatches(m matcher.Matcher) *HTTPMockBuilder {
 // URL defines a matcher to be applied to the http.Request url.URL.
 func (b *HTTPMockBuilder) URL(m matcher.Matcher) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:        describeTarget(targetURL, ""),
-		ValueSelector: selectURL,
-		Matcher:       m,
-		Weight:        dzstd.WeightRegular,
+		Target:            int(targetURL),
+		TargetDescription: describeTarget(targetURL, ""),
+		ValueSelector:     selectURL,
+		Matcher:           m,
+		Weight:            dzstd.WeightRegular,
 	})
 
 	return b
@@ -194,10 +204,11 @@ func (b *HTTPMockBuilder) URLf(format string, a ...any) *HTTPMockBuilder {
 // URLPath defines a matcher to be applied to the url.URL path.
 func (b *HTTPMockBuilder) URLPath(m matcher.Matcher) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:        describeTarget(targetURL, ""),
-		ValueSelector: selectURLPath,
-		Matcher:       m,
-		Weight:        dzstd.WeightRegular,
+		Target:            int(targetURL),
+		TargetDescription: describeTarget(targetURL, ""),
+		ValueSelector:     selectURLPath,
+		Matcher:           m,
+		Weight:            dzstd.WeightRegular,
 	})
 
 	return b
@@ -218,10 +229,11 @@ func (b *HTTPMockBuilder) URLFragmentf(format string, a ...any) *HTTPMockBuilder
 // URLPath defines a matcher to be applied to the url.URL path.
 func (b *HTTPMockBuilder) URLFragment(m matcher.Matcher) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:        describeTarget(targetURL, ""),
-		ValueSelector: selectURLFragment,
-		Matcher:       m,
-		Weight:        dzstd.WeightLow,
+		Target:            int(targetURL),
+		TargetDescription: describeTarget(targetURL, ""),
+		ValueSelector:     selectURLFragment,
+		Matcher:           m,
+		Weight:            dzstd.WeightLow,
 	})
 
 	return b
@@ -230,10 +242,12 @@ func (b *HTTPMockBuilder) URLFragment(m matcher.Matcher) *HTTPMockBuilder {
 // Header adds a matcher to a specific http.Header key.
 func (b *HTTPMockBuilder) Header(name string, m matcher.Matcher) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:        describeTarget(targetHeader, name),
-		ValueSelector: selectHeader(name),
-		Matcher:       m,
-		Weight:        dzstd.WeightLow,
+		Target:            int(targetHeader),
+		TargetDescription: describeTarget(targetHeader, name),
+		Key:               name,
+		ValueSelector:     selectHeader(name),
+		Matcher:           m,
+		Weight:            dzstd.WeightLow,
 	})
 
 	return b
@@ -252,10 +266,12 @@ func (b *HTTPMockBuilder) ContentType(value string, a ...any) *HTTPMockBuilder {
 // Query defines a matcher to a specific query.
 func (b *HTTPMockBuilder) Query(name string, m matcher.Matcher) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:        describeTarget(targetQuery, name),
-		ValueSelector: selectQuery(name),
-		Matcher:       m,
-		Weight:        dzstd.WeightVeryLow,
+		Target:            int(targetQuery),
+		TargetDescription: describeTarget(targetQuery, name),
+		Key:               name,
+		ValueSelector:     selectQuery(name),
+		Matcher:           m,
+		Weight:            dzstd.WeightVeryLow,
 	})
 
 	return b
@@ -267,12 +283,14 @@ func (b *HTTPMockBuilder) Queryf(name string, value string, a ...any) *HTTPMockB
 }
 
 // Queries define a matcher.Matcher for query parameters that contains multiple values.
-func (b *HTTPMockBuilder) Queries(key string, m matcher.Matcher) *HTTPMockBuilder {
+func (b *HTTPMockBuilder) Queries(name string, m matcher.Matcher) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:        describeTarget(targetQuery, key),
-		Matcher:       m,
-		ValueSelector: selectQueries(key),
-		Weight:        dzstd.WeightVeryLow,
+		Target:            int(targetQueries),
+		TargetDescription: describeTarget(targetQueries, name),
+		Key:               name,
+		Matcher:           m,
+		ValueSelector:     selectQueries(name),
+		Weight:            dzstd.WeightVeryLow,
 	})
 
 	return b
@@ -294,22 +312,25 @@ func (b *HTTPMockBuilder) Body(matcherList ...matcher.Matcher) *HTTPMockBuilder 
 	}
 
 	b.appendExpectation(&HTTPExpectation{
-		Target:        describeTarget(targetBody, ""),
-		ValueSelector: selectBody,
-		Matcher:       m,
-		Weight:        dzstd.WeightHigh,
+		Target:            int(targetBody),
+		TargetDescription: describeTarget(targetBody, ""),
+		ValueSelector:     selectBody,
+		Matcher:           m,
+		Weight:            dzstd.WeightHigh,
 	})
 
 	return b
 }
 
 // FormField defines a matcher for a specific form field by its key.
-func (b *HTTPMockBuilder) FormField(field string, m matcher.Matcher) *HTTPMockBuilder {
+func (b *HTTPMockBuilder) FormField(name string, m matcher.Matcher) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:        describeTarget(targetForm, field),
-		ValueSelector: selectFormField(field),
-		Matcher:       m,
-		Weight:        dzstd.WeightVeryLow,
+		Target:            int(targetFormField),
+		TargetDescription: describeTarget(targetFormField, name),
+		Key:               name,
+		ValueSelector:     selectFormField(name),
+		Matcher:           m,
+		Weight:            dzstd.WeightVeryLow,
 	})
 
 	return b
@@ -323,9 +344,10 @@ func (b *HTTPMockBuilder) FormFieldf(field string, value string, a ...any) *HTTP
 // Times defines the total times that a mock should be served if the request matches.
 func (b *HTTPMockBuilder) Times(times int64) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:  describeTarget(targetRequest, "repeat"),
-		Matcher: mfeat.Repeat(times),
-		Weight:  dzstd.WeightNone,
+		Target:            int(targetUnscoped),
+		TargetDescription: describeTarget(targetUnscoped, "repeat"),
+		Matcher:           mfeat.Repeat(times),
+		Weight:            dzstd.WeightNone,
 	})
 
 	return b
@@ -333,22 +355,17 @@ func (b *HTTPMockBuilder) Times(times int64) *HTTPMockBuilder {
 
 // Once defines that a mock should be served only one time.
 func (b *HTTPMockBuilder) Once() *HTTPMockBuilder {
-	b.appendExpectation(&HTTPExpectation{
-		Target:  describeTarget(targetRequest, "repeat"),
-		Matcher: mfeat.Repeat(1),
-		Weight:  dzstd.WeightNone,
-	})
-
-	return b
+	return b.Times(1)
 }
 
 // RequestMatches applies the given predicate to the incoming http.Request.
 func (b *HTTPMockBuilder) RequestMatches(predicate func(r *http.Request) (bool, error)) *HTTPMockBuilder {
 	b.appendExpectation(&HTTPExpectation{
-		Target:        describeTarget(targetRequest, ""),
-		ValueSelector: selectRawRequest,
-		Matcher:       matcher.Func(func(v any) (bool, error) { return predicate(v.(*http.Request)) }),
-		Weight:        dzstd.WeightLow,
+		Target:            int(targetUnscoped),
+		TargetDescription: describeTarget(targetUnscoped, ""),
+		ValueSelector:     selectRawRequest,
+		Matcher:           matcher.Func(func(v any) (bool, error) { return predicate(v.(*http.Request)) }),
+		Weight:            dzstd.WeightLow,
 	})
 
 	return b
@@ -461,8 +478,9 @@ func (b *HTTPMockBuilder) Build(app *HTTPMockApp) (*HTTPMock, error) {
 
 	if b.scenario != "" {
 		b.appendExpectation(&HTTPExpectation{
-			Target:  describeTarget("scenario", b.scenario),
-			Matcher: mfeat.Scenario(app.scenarioStore, b.scenario, b.scenarioRequiredState, b.scenarioNewState),
+			Target:            int(targetScenario),
+			TargetDescription: describeTarget(targetScenario, b.scenario),
+			Matcher:           mfeat.Scenario(app.scenarioStore, b.scenario, b.scenarioRequiredState, b.scenarioNewState),
 		})
 	}
 

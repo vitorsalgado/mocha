@@ -23,6 +23,10 @@ func (m *emptyMatcher) Match(v any) (Result, error) {
 	return Result{result.Pass, strings.Join([]string{"Empty(", mfmt.Stringify(v), ")"}, "")}, nil
 }
 
+func (m *emptyMatcher) Describe() any {
+	return []any{"empty"}
+}
+
 // Empty passes if the incoming request value is empty or has zero value.
 func Empty() Matcher {
 	return &emptyMatcher{}

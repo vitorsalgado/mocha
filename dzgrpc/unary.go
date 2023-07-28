@@ -58,7 +58,7 @@ func (in *Interceptors) UnaryInterceptor(
 		wrappedMocks[i] = &GRPCUnaryMock{v}
 	}
 
-	description := dzstd.Description{Buf: make([]string, 0, len(mocks))}
+	description := dzstd.Results{Buf: make([]string, 0, len(mocks))}
 	result := dzstd.FindMockForRequest(ctx, wrappedMocks, &UnaryValueSelectorIn{
 		RequestMessage: rawBody,
 		Info:           info,

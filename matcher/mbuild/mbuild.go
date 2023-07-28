@@ -27,6 +27,7 @@ const (
 	_mEqualToStrict           = "equalstrict"
 	_mEqualToStrictAlias      = "eqs"
 	_mFalsy                   = "falsy"
+	_mGlob                    = "glob"
 	_mGreater                 = "greater"
 	_mGreaterAlias            = "gt"
 	_mGreaterThanOrEqual      = "greatereq"
@@ -241,6 +242,15 @@ func discoverAndBuild(key string, args any) (ma matcher.Matcher, err error) {
 
 	case _mFalsy:
 		return matcher.Falsy(), nil
+
+	case _mGlob:
+		str, ok := args.(string)
+		if !ok {
+			return nil,
+				fmt.Errorf("[%s] expects a string argument. got=%v", _mGlob, args)
+		}
+
+		return matcher.GlobMatch(str), nil
 
 	case _mGreater, _mGreaterAlias:
 		num, err := getFloat64(args)
@@ -484,8 +494,12 @@ func discoverAndBuild(key string, args any) (ma matcher.Matcher, err error) {
 	case _mURLPath:
 		str, ok := args.(string)
 		if !ok {
-			return nil,
-				fmt.Errorf("[%s] matcher expects a string argument. got=%v", _mURLPath, args)
+			m, err := BuildMatcher(args)
+			if err != nil {
+				return nil, fmt.Errorf("[%s] building error.\n%w", _mURLPath, err)
+			}
+
+			return matcher.URLPathMatch(m), nil
 		}
 
 		return matcher.URLPath(str), nil

@@ -2,6 +2,7 @@ package dzhttp
 
 import (
 	"bytes"
+	"compress/gzip"
 	"context"
 	"fmt"
 	"net/http"
@@ -39,7 +40,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.lifecycle.OnRequest(reqValues)
 
 	mocks := h.app.storage.GetEligible()
-	description := dzstd.Description{Buf: make([]string, 0, len(mocks))}
+	description := dzstd.Results{Buf: make([]string, 0, len(mocks))}
 	result := dzstd.FindMockForRequest(r.Context(), mocks,
 		&HTTPValueSelectorInput{r, parsedURL, r.URL.Query(), r.Form, parsedBody}, &description)
 
@@ -118,7 +119,23 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					h.lifecycle.OnWarning(reqValues, err)
 				}
 			} else {
-				w.Write(stub.Body)
+				buf := new(bytes.Buffer)
+				gz := gzipper.Get().(*gzip.Writer)
+				defer gzipper.Put(gz)
+
+				gz.Reset(buf)
+
+				_, err := gz.Write(stub.Body)
+				if err != nil {
+					// TODO: handle error
+				}
+
+				err = gz.Close()
+				if err != nil {
+					// TODO: handle error
+				}
+
+				buf.WriteTo(w)
 			}
 		}
 
@@ -181,7 +198,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *RequestValues, result *dzstd.FindResult[*HTTPMock], desc *dzstd.Description) {
+func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *RequestValues, result *dzstd.FindResult[*HTTPMock], desc *dzstd.Results) {
 	defer h.lifecycle.OnNoMatch(r, result, desc)
 
 	buf := bytes.Buffer{}

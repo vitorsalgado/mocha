@@ -178,7 +178,7 @@ func (in *Interceptors) StreamInterceptor(
 		wrappedMocks[i] = &GRPCStreamMock{v}
 	}
 
-	description := dzstd.Description{Buf: make([]string, 0, len(mocks))}
+	description := dzstd.Results{Buf: make([]string, 0, len(mocks))}
 	result := dzstd.FindMockForRequest(stream.Context(), wrappedMocks, &StreamValueSelectorIn{
 		RequestMessage: rawBody,
 		Info:           info,

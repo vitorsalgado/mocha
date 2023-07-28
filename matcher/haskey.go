@@ -38,6 +38,10 @@ func (m *hasKeyMatcher) Match(v any) (Result, error) {
 	return Result{Pass: true}, nil
 }
 
+func (m *hasKeyMatcher) Describe() any {
+	return []any{"hasKey", m.path}
+}
+
 // HasKey passes if the JSON key in the given path is present.
 // Example:
 //

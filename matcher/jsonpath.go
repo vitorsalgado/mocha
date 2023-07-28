@@ -55,6 +55,10 @@ func (m *jsonPathMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
+func (m *jsonPathMatcher) Describe() any {
+	return []any{"jsonPath", m.path, describe(m.matcher)}
+}
+
 // JSONPath applies the provided matcher to the JSON field value in the given path.
 // Example:
 //

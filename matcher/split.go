@@ -28,6 +28,10 @@ func (m *splitMatcher) Match(v any) (Result, error) {
 	return Result{Message: strings.Join([]string{"Split(", m.separator, ") ", result.Message}, "")}, nil
 }
 
+func (m *splitMatcher) Describe() any {
+	return []any{"split", m.separator, describe(m.matcher)}
+}
+
 // Split splits the incoming request value text using the separator parameter and
 // test each element with the provided matcher.
 func Split(separator string, matcher Matcher) Matcher {

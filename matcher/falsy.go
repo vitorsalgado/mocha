@@ -32,6 +32,10 @@ func (m *falsyMatcher) Match(v any) (Result, error) {
 	return Result{Pass: true}, nil
 }
 
+func (m *falsyMatcher) Describe() any {
+	return []any{"falsy"}
+}
+
 // Falsy checks if the incoming request value is false.
 func Falsy() Matcher {
 	return &falsyMatcher{}

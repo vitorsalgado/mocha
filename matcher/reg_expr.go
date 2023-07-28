@@ -40,6 +40,10 @@ func (m *regExpMatcher) Match(v any) (Result, error) {
 	return Result{Message: strings.Join([]string{"Match(", m.expression, ") Expression did not match. Got: ", txt}, "")}, nil
 }
 
+func (m *regExpMatcher) Describe() any {
+	return []any{"regexp", m.expression}
+}
+
 // Matches passes when the given regular expression matches the incoming request value.
 // It accepts a string, regexp.Regexp or *regexp.Regexp.
 func Matches(expression string) Matcher {

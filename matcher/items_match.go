@@ -63,6 +63,10 @@ func (m *itemsMatchMatcher) Match(v any) (Result, error) {
 	return Result{Message: "ItemsMatch() Items doesn't match"}, nil
 }
 
+func (m *itemsMatchMatcher) Describe() any {
+	return []any{"itemsMatch", m.expected}
+}
+
 // ItemsMatch if the given array items match with the incoming request value array.
 func ItemsMatch(items any) Matcher {
 	return &itemsMatchMatcher{expected: items}

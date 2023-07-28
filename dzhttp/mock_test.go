@@ -1,10 +1,13 @@
 package dzhttp
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	. "github.com/vitorsalgado/mocha/v3/matcher"
 )
 
 func TestRace(t *testing.T) {
@@ -66,4 +69,21 @@ func TestMockBuild(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.Equal(t, m, mm)
+}
+
+func TestMock_MarshalJSON(t *testing.T) {
+	app := NewAPI()
+	builder := Request().
+		Header("accept", Eq("test")).
+		Once().
+		ScenarioIs("test").ScenarioStateIs("state").ScenarioStateWillBe("future").
+		Reply(OK())
+
+	m, err := builder.Build(app)
+	require.NoError(t, err)
+
+	b, err := m.MarshalJSON()
+	require.NoError(t, err)
+
+	fmt.Println(string(b))
 }

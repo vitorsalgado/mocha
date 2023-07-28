@@ -28,6 +28,10 @@ func (m *greaterMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
+func (m *greaterMatcher) Describe() any {
+	return []any{"gt", m.expected}
+}
+
 // GreaterThan passes if the incoming request value is greater than the given value.
 func GreaterThan(expected float64) Matcher {
 	return &greaterMatcher{expected: expected}

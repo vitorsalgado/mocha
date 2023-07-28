@@ -155,9 +155,22 @@ func (rep *StdReply) Header(key, value string) *StdReply {
 	return rep
 }
 
+// HeaderArr adds a header with multiple values to the Stub.
+func (rep *StdReply) HeaderArr(key string, values ...string) *StdReply {
+	rep.response.Header[key] = values
+	return rep
+}
+
 // HeaderTemplate adds a header that can have its value changed using templates.
 func (rep *StdReply) HeaderTemplate(key, value string) *StdReply {
 	rep.teHeader.Add(key, value)
+	rep.teType += _teHeader
+	return rep
+}
+
+// HeaderArrTemplate adds a header with multiple values that can have its value changed using templates.
+func (rep *StdReply) HeaderArrTemplate(key string, value ...string) *StdReply {
+	rep.teHeader[key] = value
 	rep.teType += _teHeader
 	return rep
 }
@@ -171,6 +184,12 @@ func (rep *StdReply) ContentType(mime string) *StdReply {
 // Trailer adds a trailer header to the response.
 func (rep *StdReply) Trailer(key, value string) *StdReply {
 	rep.response.Trailer.Add(key, value)
+	return rep
+}
+
+// TrailerArr adds a trailer with multiple values to the response.
+func (rep *StdReply) TrailerArr(key string, values ...string) *StdReply {
+	rep.response.Trailer[key] = values
 	return rep
 }
 
@@ -315,9 +334,15 @@ func (rep *StdReply) beforeBuild(app *HTTPMockApp) error {
 		rep.headerTeRender = r
 	}
 
-	err := rep.encodeBody()
-	if err != nil {
-		return err
+	if rep.encoded || len(rep.response.Body) == 0 {
+		return nil
+	}
+
+	switch rep.bodyEncoding {
+	case _bodyEncodingGZIP:
+		rep.response.Header.Add(httpval.HeaderContentEncoding, "gzip")
+		rep.response.Encoding = "gzip"
+		rep.encoded = true
 	}
 
 	return nil
@@ -426,11 +451,6 @@ func (rep *StdReply) build(_ http.ResponseWriter, r *RequestValues) (stub *Stub,
 		}
 	}
 
-	err = rep.encodeBody()
-	if err != nil {
-		return nil, err
-	}
-
 	return &rep.response, nil
 }
 
@@ -477,4 +497,44 @@ func (rep *StdReply) buildTemplateData(r *RequestValues, ext any) *templateData 
 	}
 
 	return &templateData{Request: reqExtra, App: &templateAppWrapper{r.App}, Ext: ext}
+}
+
+func (rep *StdReply) Describe() any {
+	headers := rep.response.Header.Clone()
+	for _, cookie := range rep.response.Cookies {
+		headers.Add("Set-Cookie", cookie.String())
+	}
+
+	response := map[string]any{"status": rep.response.StatusCode}
+
+	if len(headers) > 0 {
+		response["header"] = headers
+	}
+
+	if len(rep.response.Trailer) > 0 {
+		response["trailers"] = rep.response.Trailer.Clone()
+	}
+
+	if len(rep.response.Encoding) > 0 {
+		response["encoding"] = rep.response.Encoding
+	}
+
+	if len(rep.bodyFilename) > 0 {
+		response["body_file"] = rep.bodyFilename
+	} else if rep.response.Body != nil {
+		response["body"] = string(rep.response.Body)
+	}
+
+	switch rep.bodyType {
+	case _bodyTemplate:
+		tmpl := map[string]any{"enabled": true}
+
+		if rep.teData != nil {
+			tmpl["data"] = rep.teData
+		}
+
+		response["template"] = tmpl
+	}
+
+	return map[string]any{"response": response}
 }

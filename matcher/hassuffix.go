@@ -24,6 +24,10 @@ func (m *hasSuffixMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
+func (m *hasSuffixMatcher) Describe() any {
+	return []any{"hasSuffix", m.suffix}
+}
+
 // HasSuffix passes when matcher argument ends with the given suffix.
 func HasSuffix(suffix string) Matcher {
 	return &hasSuffixMatcher{suffix: suffix}

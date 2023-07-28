@@ -26,6 +26,10 @@ func (m *equalIgnoreCaseMatcher) Match(v any) (Result, error) {
 	return mismatch(strings.Join([]string{"Eqi(", m.expected, ") Got: ", txt}, "")), nil
 }
 
+func (m *equalIgnoreCaseMatcher) Describe() any {
+	return []any{"eqi", m.expected}
+}
+
 // EqualIgnoreCase compares the expected value with the incoming request value ignoring the case.
 func EqualIgnoreCase(expected string) Matcher {
 	return &equalIgnoreCaseMatcher{expected: expected}

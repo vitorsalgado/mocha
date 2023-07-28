@@ -106,7 +106,7 @@ func TestMatcherCombinations(t *testing.T) {
 		r := new(response)
 		err = json.Unmarshal(b, r)
 
-		require.NoError(t, err, baseURL)
+		require.NoError(t, err, u)
 		require.Equal(t, httpval.MIMEApplicationJSON, res.Header.Get(httpval.HeaderContentType))
 		require.Equal(t, "success", res.Header.Get("x-custom"))
 		require.Equal(t, http.StatusOK, res.StatusCode)
@@ -127,6 +127,18 @@ func TestMatcherCombinations(t *testing.T) {
 
 	require.True(t, sHTTP.AssertNumberOfCalls(t, 1))
 	require.True(t, sHTTPS.AssertNumberOfCalls(t, 1))
+
+	m = NewAPI()
+	m.MustStart()
+	defer m.Close()
+
+	entry := sHTTP.GetAll()[0]
+	b, err := entry.MarshalJSON()
+	require.NoError(t, err)
+
+	m.MustMock(FromBytes(b, "json"))
+
+	actuateAndAssert(m.URL())
 }
 
 func TestMatchers_MultipleMethods(t *testing.T) {

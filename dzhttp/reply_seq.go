@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"sync"
 	"sync/atomic"
+
+	"github.com/vitorsalgado/mocha/v3/coretype"
 )
 
 var _ Reply = (*SequentialReply)(nil)
@@ -73,9 +75,28 @@ func (r *SequentialReply) Build(w http.ResponseWriter, req *RequestValues) (*Stu
 	return reply.Build(w, req)
 }
 
+func (r *SequentialReply) Describe() any {
+	replies := make([]any, 0, len(r.replies))
+	for _, v := range r.replies {
+		if sd, ok := v.(coretype.SelfDescribing); ok {
+			replies = append(replies, sd.Describe())
+		}
+	}
+
+	desc := map[string]any{"response_sequence": map[string]any{"responses": replies}}
+
+	if r.replyAfterSequenceEnded != nil {
+		if sd, ok := r.replyAfterSequenceEnded.(coretype.SelfDescribing); ok {
+			desc["after_ended"] = sd.Describe()
+		}
+	}
+
+	return desc
+}
+
 func (r *SequentialReply) totalHits() int {
-	r.rwMutex.Lock()
-	defer r.rwMutex.Unlock()
+	r.rwMutex.RLock()
+	defer r.rwMutex.RUnlock()
 
 	return int(r.hits)
 }

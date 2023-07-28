@@ -20,6 +20,10 @@ func (m *equalStrictMatcher) Match(v any) (Result, error) {
 	return mismatch(strings.Join([]string{"StrictEq(", mfmt.Stringify(m.expected), ") Got: ", mfmt.Stringify(v)}, "")), nil
 }
 
+func (m *equalStrictMatcher) Describe() any {
+	return []any{"eqs", m.expected}
+}
+
 // StrictEqual strictly compares the expected value with incoming request values, considering value and type.
 func StrictEqual(expected any) Matcher {
 	return &equalStrictMatcher{expected: expected}

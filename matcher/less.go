@@ -27,6 +27,10 @@ func (m *lessMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
+func (m *lessMatcher) Describe() any {
+	return []any{"lt", m.expected}
+}
+
 // LessThan passes if the incoming request value is lower than the given value.
 func LessThan(expected float64) Matcher {
 	return &lessMatcher{expected: expected}

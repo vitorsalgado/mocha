@@ -22,7 +22,7 @@ var (
 type mockHTTPLifecycle interface {
 	OnRequest(*RequestValues)
 	OnMatch(*RequestValues, *Stub)
-	OnNoMatch(*RequestValues, *dzstd.FindResult[*HTTPMock], *dzstd.Description)
+	OnNoMatch(*RequestValues, *dzstd.FindResult[*HTTPMock], *dzstd.Results)
 	OnWarning(*RequestValues, error)
 	OnError(*RequestValues, error)
 }
@@ -99,7 +99,7 @@ func (h *builtInMockHTTPLifecycle) OnMatch(r *RequestValues, s *Stub) {
 	evt.Msgf("<--- REQUEST MATCHED %s %s", r.RawRequest.Method, r.URL.Path)
 }
 
-func (h *builtInMockHTTPLifecycle) OnNoMatch(r *RequestValues, fr *dzstd.FindResult[*HTTPMock], d *dzstd.Description) {
+func (h *builtInMockHTTPLifecycle) OnNoMatch(r *RequestValues, fr *dzstd.FindResult[*HTTPMock], d *dzstd.Results) {
 	if h.app.config.LogLevel == LogLevelDisabled {
 		return
 	}
@@ -244,7 +244,7 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnMatch(rv *RequestValues, s *Stub
 func (h *builtInDescriptiveMockHTTPLifecycle) OnNoMatch(
 	reqValues *RequestValues,
 	result *dzstd.FindResult[*HTTPMock],
-	d *dzstd.Description,
+	d *dzstd.Results,
 ) {
 	if h.app.config.LogLevel == LogLevelDisabled {
 		return

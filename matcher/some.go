@@ -52,6 +52,10 @@ func (m *someMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
+func (m *someMatcher) Describe() any {
+	return []any{"some", describe(m.matcher)}
+}
+
 // Some will use the given matcher to test whether at least one element in the request value passes.
 func Some(matcher Matcher) Matcher {
 	return &someMatcher{matcher: matcher}

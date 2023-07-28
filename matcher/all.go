@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/vitorsalgado/mocha/v3/coretype"
 	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
@@ -40,6 +41,17 @@ func (m *allOfMatcher) Match(v any) (r Result, err error) {
 
 	return Result{
 		Message: strings.Join([]string{"All(", strconv.Itoa(len(m.matchers)), ")\n", mfmt.Indent(strings.Join(mismatches, "\n"))}, "")}, nil
+}
+
+func (m *allOfMatcher) Describe() any {
+	d := make([]any, 0, len(m.matchers))
+	for _, v := range m.matchers {
+		if vv, ok := v.(coretype.SelfDescribing); ok {
+			d = append(d, vv.Describe())
+		}
+	}
+
+	return []any{"all", d}
 }
 
 // All matches when all the given matchers pass.

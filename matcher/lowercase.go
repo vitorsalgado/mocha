@@ -29,6 +29,10 @@ func (m *lowerCaseMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
+func (m *lowerCaseMatcher) Describe() any {
+	return []any{"lowercase", describe(m.matcher)}
+}
+
 // ToLower lowers the incoming request value case value before submitting it to provided matcher.
 func ToLower(matcher Matcher) Matcher {
 	return &lowerCaseMatcher{matcher: matcher}

@@ -55,9 +55,10 @@ const (
 	_fRequestForm     = "request.form_url_encoded"
 	_fRequestBody     = "request.body"
 
-	_fResponse         = "response"
-	_fResponseStatus   = "response.status"
-	_fResponseHeader   = "response.header"
+	_fResponse       = "response"
+	_fResponseStatus = "response.status"
+	_fResponseHeader = "response.header"
+
 	_fResponseBody     = "response.body"
 	_fResponseEncoding = "response.encoding"
 	_fResponseBodyFile = "response.body_file"
@@ -87,6 +88,7 @@ const (
 	_resStatus          = "status"
 	_resHeader          = "header"
 	_resHeaderTemplate  = "header_template"
+	_resTrailer         = "trailer"
 	_resBody            = "body"
 	_resBodyFile        = "body_file"
 	_resTemplateEnabled = "template.enabled"
@@ -204,12 +206,37 @@ func buildReply(vi *viper.Viper) (Reply, error) {
 	res := NewReply()
 	res.Status(vi.GetInt(_resStatus))
 
-	for k, v := range vi.GetStringMapString(_resHeader) {
-		res.Header(k, v)
+	for k, v := range vi.GetStringMap(_resHeader) {
+		switch vv := v.(type) {
+		case string:
+			res.Header(k, vv)
+		case []any:
+			for _, h := range vv {
+				res.Header(k, h.(string))
+			}
+		}
 	}
 
-	for k, v := range vi.GetStringMapString(_resHeaderTemplate) {
-		res.HeaderTemplate(k, v)
+	for k, v := range vi.GetStringMap(_resHeaderTemplate) {
+		switch vv := v.(type) {
+		case string:
+			res.HeaderTemplate(k, vv)
+		case []any:
+			for _, h := range vv {
+				res.HeaderTemplate(k, h.(string))
+			}
+		}
+	}
+
+	for k, v := range vi.GetStringMap(_resTrailer) {
+		switch vv := v.(type) {
+		case string:
+			res.Trailer(k, vv)
+		case []any:
+			for _, h := range vv {
+				res.Trailer(k, h.(string))
+			}
+		}
 	}
 
 	switch vi.GetString(_resEncoding) {
@@ -376,7 +403,12 @@ func buildMockFromBytes(app *HTTPMockApp, builder *HTTPMockBuilder, content []by
 
 		switch t := mv.(type) {
 		case string:
-			builder.Method(t)
+			methods := strings.Split(t, ",")
+			for i, v := range methods {
+				methods[i] = strings.TrimSpace(v)
+			}
+
+			builder.Method(methods...)
 		default:
 			m, err := mbuild.BuildMatcher(mv)
 			if err != nil {
@@ -497,7 +529,7 @@ func buildMockFromBytes(app *HTTPMockApp, builder *HTTPMockBuilder, content []by
 	// --
 	// End Request
 
-	// Begin Stub
+	// Begin Response
 	// --
 
 	var rep Reply
@@ -632,7 +664,7 @@ func buildMockFromBytes(app *HTTPMockApp, builder *HTTPMockBuilder, content []by
 	builder.Reply(rep)
 
 	// --
-	// End Stub
+	// End Response
 
 	// User defined handlers
 

@@ -4,6 +4,7 @@
   "description": "Describes an HTTP mock definition.",
   "type": "object",
   "properties": {
+    "id": { "type": "string" },
     "name": { "type": "string" },
     "priority": { "type": "integer" },
     "enabled": { "type": "boolean" },
@@ -16,7 +17,6 @@
         "required_state": { "type": "string" },
         "new_state": { "type": "string" }
       },
-      "required": [ "name" ],
       "additionalProperties": false
     },
     "post_actions": { "type": "array", "item": { "$ref": "#/$defs/post_action" } },
@@ -59,8 +59,8 @@
       "type": "object",
       "properties": {
         "target": { "type": "string" },
-        "forward_header": { "$ref": "#/$defs/string_map" },
-        "header": { "$ref": "#/$defs/string_map" },
+        "forward_header": { "$ref": "#/$defs/header_map" },
+        "header": { "$ref": "#/$defs/header_map" },
         "remove_headers": { "type": "array", "items": { "type": "string" } },
         "trim_prefix": { "type": "string" },
         "trim_suffix": { "type": "string" },
@@ -92,13 +92,8 @@
       "type": "object",
       "properties": {
         "status": { "type": "integer" },
-        "header": { "$ref": "#/$defs/string_map" },
-        "header_template": {
-          "type": "object",
-          "patternProperties": {
-            "^.*$": { "type": "string" }
-          }
-        },
+        "header": { "$ref": "#/$defs/header_map" },
+        "header_template":  { "$ref": "#/$defs/header_map" },
         "body": { },
         "body_file": { "type": "string" },
         "template": {
@@ -124,6 +119,12 @@
       "type": "object",
       "patternProperties": {
         "^.*$": { "type": "string" }
+      }
+    },
+    "header_map": {
+      "type": "object",
+      "patternProperties": {
+        "^.*$": { "oneOf": [ {"type": "string"}, {"type": "array", "items": {"type": "string"} } ] }
       }
     }
   }

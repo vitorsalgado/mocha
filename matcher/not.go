@@ -23,6 +23,10 @@ func (m *notMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
+func (m *notMatcher) Describe() any {
+	return []any{"not", describe(m.matcher)}
+}
+
 // Not negates the provided matcher.
 func Not(matcher Matcher) Matcher {
 	return &notMatcher{matcher: matcher}

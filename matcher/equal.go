@@ -11,16 +11,16 @@ type equalMatcher struct {
 	expected any
 }
 
-func (m *equalMatcher) Name() string {
-	return "Equal"
-}
-
 func (m *equalMatcher) Match(v any) (Result, error) {
 	if equalValues(m.expected, v, true) {
 		return success(), nil
 	}
 
 	return mismatch(strings.Join([]string{"Equal(", mfmt.Stringify(m.expected), ") Got: ", mfmt.Stringify(v)}, "")), nil
+}
+
+func (m *equalMatcher) Describe() any {
+	return []any{"eq", m.expected}
 }
 
 // Equal asserts that the given expectation is equal to the incoming request value.

@@ -11,6 +11,10 @@ func (m *nilMatcher) Match(v any) (Result, error) {
 	return Result{Message: "Nil() Value is not nil"}, nil
 }
 
+func (m *nilMatcher) Describe() any {
+	return []any{"nil"}
+}
+
 // IsNil passes if the incoming request value is nil.
 func IsNil() Matcher {
 	return &nilMatcher{}

@@ -101,6 +101,14 @@ func (m *scenarioMatcher) OnMockSent() error {
 	return nil
 }
 
+func (m *scenarioMatcher) Describe() any {
+	return map[string]any{"scenario": map[string]any{
+		"name":           m.name,
+		"required_state": m.requiredState,
+		"new_state":      m.newState,
+	}}
+}
+
 func Scenario(store *ScenarioStore, name, requiredState, newState string) matcher.Matcher {
 	return &scenarioMatcher{
 		store:         store,

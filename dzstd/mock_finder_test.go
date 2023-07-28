@@ -32,7 +32,7 @@ func TestMockMatches(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			desc := &dzstd.Description{}
+			desc := &dzstd.Results{}
 			pass, _ := dzstd.Match(context.Background(), params, desc, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{{
 				Matcher: StrictEqual(tc.value),
 				ValueSelector: func(_ context.Context, r *dzhttp.HTTPValueSelectorInput) any {
@@ -46,7 +46,7 @@ func TestMockMatches(t *testing.T) {
 
 	t.Run("should return not matched and error when one of expectations returns error", func(t *testing.T) {
 		// string
-		desc := &dzstd.Description{}
+		desc := &dzstd.Results{}
 		pass, _ := dzstd.Match(context.Background(), params, desc, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{{
 			Matcher: Func(func(_ any) (bool, error) {
 				return false, fmt.Errorf("fail")
@@ -61,7 +61,7 @@ func TestMockMatches(t *testing.T) {
 
 	t.Run("should not pass when it panics", func(t *testing.T) {
 		// string
-		desc := &dzstd.Description{}
+		desc := &dzstd.Results{}
 		pass, _ := dzstd.Match(context.Background(), params, desc, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{{
 			Matcher: Func(func(_ any) (bool, error) {
 				panic("boom!")
@@ -76,7 +76,7 @@ func TestMockMatches(t *testing.T) {
 
 	t.Run("should return the sum of the matchers Weight when it matches", func(t *testing.T) {
 		// any
-		desc := &dzstd.Description{}
+		desc := &dzstd.Results{}
 		pass, weigth := dzstd.Match(context.Background(), params, desc, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{
 			{
 				Matcher: StrictEqual("test"),
@@ -107,7 +107,7 @@ func TestMockMatches(t *testing.T) {
 
 	t.Run("should return the sum of the matchers Weight when one of then doesn't match", func(t *testing.T) {
 		// any
-		desc := &dzstd.Description{}
+		desc := &dzstd.Results{}
 		pass, weight := dzstd.Match(context.Background(), params, desc, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{
 			{
 				Matcher: StrictEqual("test"),

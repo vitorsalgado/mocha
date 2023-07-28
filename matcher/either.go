@@ -40,6 +40,10 @@ func (m *eitherMatcher) Match(v any) (Result, error) {
 	return Result{Message: strings.Join([]string{"Either() ", message}, "")}, nil
 }
 
+func (m *eitherMatcher) Describe() any {
+	return []any{"either", describe(m.first), describe(m.second)}
+}
+
 // Either passes when any of the two given matchers pass.
 func Either(first Matcher, second Matcher) Matcher {
 	return &eitherMatcher{first: first, second: second}

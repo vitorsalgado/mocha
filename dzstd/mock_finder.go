@@ -31,7 +31,7 @@ func FindMockForRequest[TValueIn any, MOCK TMockMatcher[TValueIn]](
 	ctx context.Context,
 	mocks []MOCK,
 	requestValues TValueIn,
-	desc *Description,
+	desc *Results,
 ) *FindResult[MOCK] {
 	var nearest MOCK
 	var nearestPresent = false
@@ -62,7 +62,7 @@ func FindMockForRequest[TValueIn any, MOCK TMockMatcher[TValueIn]](
 
 // Match checks if the current Mock matches against a list of expectations.
 // Will iterate through all expectations even if it doesn't match early.
-func Match[VS any](ctx context.Context, ri VS, desc *Description, expectations []*Expectation[VS]) (bool, int) {
+func Match[VS any](ctx context.Context, ri VS, desc *Results, expectations []*Expectation[VS]) (bool, int) {
 	passed, aggW := true, 0
 
 	for i, exp := range expectations {
@@ -73,7 +73,7 @@ func Match[VS any](ctx context.Context, ri VS, desc *Description, expectations [
 
 		result, err := wrapMatch(exp, val, i)
 		if err != nil {
-			desc.AppendList(" ", exp.Target, err.Error())
+			desc.AppendList(" ", exp.TargetDescription, err.Error())
 			passed = false
 			continue
 		}
@@ -81,7 +81,7 @@ func Match[VS any](ctx context.Context, ri VS, desc *Description, expectations [
 		if result.Pass {
 			aggW += int(exp.Weight)
 		} else {
-			desc.AppendList(" ", exp.Target, result.Message)
+			desc.AppendList(" ", exp.TargetDescription, result.Message)
 			passed = false
 		}
 	}

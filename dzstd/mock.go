@@ -2,6 +2,7 @@ package dzstd
 
 import (
 	"context"
+	"encoding/json"
 	"sort"
 	"strings"
 	"sync"
@@ -16,6 +17,8 @@ var (
 )
 
 type Mock interface {
+	json.Marshaler
+
 	GetID() string
 	GetName() string
 	GetPriority() int
@@ -146,6 +149,10 @@ func (m *BaseMock) Build() (*BaseMock, error) {
 	return m, nil
 }
 
+func (m *BaseMock) MarshalJSON() ([]byte, error) {
+	return nil, nil
+}
+
 type MockStore[TMock Mock] struct {
 	data    []TMock
 	rwMutex sync.RWMutex
@@ -245,9 +252,13 @@ func (s *MockStore[TMock]) DeleteAll() {
 
 // Expectation holds metadata related to one http.Request Matcher.
 type Expectation[TValueIn any] struct {
-	// Target is an optional metadata that describes the target of the matcher.
+	Target int
+
+	Key string
+
+	// TargetDescription is an optional metadata that describes the target of the matcher.
 	// Eg.: Header(Content-Type)
-	Target string
+	TargetDescription string
 
 	// Matcher associated with this Expectation.
 	Matcher matcher.Matcher
@@ -271,22 +282,22 @@ const (
 	WeightHigh
 )
 
-type Description struct {
+type Results struct {
 	Buf []string
 }
 
-func (d *Description) Append(v string) {
+func (d *Results) Append(v string) {
 	d.Buf = append(d.Buf, v)
 }
 
-func (d *Description) AppendList(sep string, v ...string) {
+func (d *Results) AppendList(sep string, v ...string) {
 	d.Buf = append(d.Buf, strings.Join(v, sep))
 }
 
-func (d *Description) Len() int {
+func (d *Results) Len() int {
 	return len(d.Buf)
 }
 
-func (d *Description) String() string {
+func (d *Results) String() string {
 	return strings.Join(d.Buf, "\n")
 }

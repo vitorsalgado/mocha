@@ -103,7 +103,7 @@ linters:
     # - testableexamples
     # - testpackage
     # - thelper
-    # - tparallel
+    - tparallel
     - typecheck
     # - unconvert
     # - unparam

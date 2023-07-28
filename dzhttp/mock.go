@@ -2,10 +2,12 @@ package dzhttp
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"net/url"
 	"time"
 
+	"github.com/vitorsalgado/mocha/v3/coretype"
 	"github.com/vitorsalgado/mocha/v3/dzstd"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 )
@@ -193,21 +195,203 @@ func (m *HTTPMock) Prepare() {
 	}
 }
 
-const (
-	targetRequest = "Req"
-	targetScheme  = "Scheme"
-	targetMethod  = "Method"
-	targetURL     = "URL"
-	targetHeader  = "Header"
-	targetQuery   = "Query"
-	targetBody    = "Body"
-	targetForm    = "Field"
-)
+func (m *HTTPMock) Describe() map[string]any {
+	expectations := m.GetExpectations()
+	data := make(map[string]any)
+	request := make(map[string]any)
+	counters := make(map[target]int)
 
-func describeTarget(target, key string) string {
-	if len(key) == 0 {
-		return target
+	for _, v := range expectations {
+		counters[target(v.Target)]++
 	}
 
-	return target + "(" + key + ")"
+	groupedExp := make(map[target][]*HTTPExpectation)
+	for _, v := range expectations {
+		t := target(v.Target)
+		groupedExp[t] = append(groupedExp[t], v)
+	}
+
+	for k, exps := range groupedExp {
+		switch k {
+		case targetQuery, targetQueries, targetHeader, targetFormField:
+			keys := make(map[string]any, counters[k])
+
+			if len(exps) == 1 {
+				matcher := exps[0].Matcher
+				if sd, ok := matcher.(coretype.SelfDescribing); ok {
+					keys[exps[0].Key] = sd.Describe()
+					request[k.FieldName()] = keys
+				}
+
+				continue
+			}
+
+			byKey := make(map[string][]*HTTPExpectation, counters[k])
+			for _, e := range exps {
+				byKey[e.Key] = append(byKey[e.Key], e)
+			}
+
+			for _, e := range exps {
+				size := len(byKey[e.Key])
+				if size == 0 {
+					continue
+				}
+
+				if size == 1 {
+					if sd, ok := e.Matcher.(coretype.SelfDescribing); ok {
+						keys[e.Key] = sd.Describe()
+					}
+				} else {
+					matchers := make([]matcher.Matcher, 0, size)
+					for _, e := range byKey[e.Key] {
+						matchers = append(matchers, e.Matcher)
+					}
+
+					all := matcher.All(matchers...)
+					keys[e.Key] = all.(coretype.SelfDescribing).Describe()
+				}
+			}
+
+			request[k.FieldName()] = keys
+
+		case targetScheme, targetURL, targetURLPath, targetBody:
+			if len(exps) == 1 {
+				matcher := exps[0].Matcher
+				if sd, ok := matcher.(coretype.SelfDescribing); ok {
+					request[k.FieldName()] = sd.Describe()
+				}
+
+				continue
+			}
+
+			matchers := make([]matcher.Matcher, len(exps))
+			for i, e := range exps {
+				matchers[i] = e.Matcher
+			}
+
+			all := matcher.All(matchers...)
+			request[k.FieldName()] = all.(coretype.SelfDescribing).Describe()
+
+		default:
+			for _, e := range exps {
+				if sd, ok := e.Matcher.(coretype.SelfDescribing); ok {
+					switch desc := sd.Describe().(type) {
+					case map[string]any:
+						for k, v := range desc {
+							data[k] = v
+						}
+					}
+				}
+			}
+		}
+	}
+
+	data["id"] = m.ID
+
+	if len(m.Name) > 0 {
+		data["name"] = m.Name
+	}
+
+	if m.Priority != 0 {
+		data["priority"] = m.Priority
+	}
+
+	if len(request) > 0 {
+		data["request"] = request
+	}
+
+	if m.Reply != nil {
+		if sd, ok := m.Reply.(coretype.SelfDescribing); ok {
+			switch desc := sd.Describe().(type) {
+			case map[string]any:
+				for k, v := range desc {
+					data[k] = v
+				}
+			}
+		}
+	}
+
+	return data
+}
+
+func (m *HTTPMock) MarshalJSON() ([]byte, error) {
+	return json.Marshal(m.Describe())
+}
+
+type target int
+
+const (
+	targetUnscoped target = iota
+	targetScheme
+	targetMethod
+	targetURL
+	targetURLPath
+	targetHeader
+	targetQuery
+	targetQueries
+	targetBody
+	targetFormField
+	targetScenario
+)
+
+func (t target) FieldName() string {
+	switch t {
+	case targetScheme:
+		return "scheme"
+	case targetMethod:
+		return "method"
+	case targetURL:
+		return "url"
+	case targetURLPath:
+		return "path"
+	case targetHeader:
+		return "header"
+	case targetQuery:
+		return "query"
+	case targetQueries:
+		return "queries"
+	case targetBody:
+		return "body"
+	case targetFormField:
+		return "form_url_encoded"
+	case targetScenario:
+		return "scenario"
+	default:
+		return ""
+	}
+}
+
+func (t target) String() string {
+	switch t {
+	case targetUnscoped:
+		return "Req"
+	case targetScheme:
+		return "Scheme"
+	case targetMethod:
+		return "Method"
+	case targetURL:
+		return "URL"
+	case targetURLPath:
+		return "URLPath"
+	case targetHeader:
+		return "Header"
+	case targetQuery, targetQueries:
+		return "Query"
+	case targetBody:
+		return "Body"
+	case targetFormField:
+		return "Form"
+	case targetScenario:
+		return "Scenario"
+	default:
+		return "Req"
+	}
+}
+
+func describeTarget(t target, key string) string {
+	if len(key) == 0 {
+		return t.String()
+	}
+
+	return t.String() + "(" + key + ")"
 }

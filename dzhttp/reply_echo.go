@@ -32,3 +32,9 @@ func (e *ReplyEcho) Build(w http.ResponseWriter, r *RequestValues) (*Stub, error
 
 	return nil, nil
 }
+
+func (e *ReplyEcho) Describe() any {
+	return map[string]any{"echo": map[string]any{
+		"stdout_log": e.stdoutLog,
+	}}
+}

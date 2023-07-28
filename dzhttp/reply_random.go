@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"net/http"
 	"sync"
+
+	"github.com/vitorsalgado/mocha/v3/coretype"
 )
 
 var _ Reply = (*RandomReply)(nil)
@@ -61,4 +63,15 @@ func (rep *RandomReply) Build(w http.ResponseWriter, r *RequestValues) (*Stub, e
 	reply := rep.replies[index]
 
 	return reply.Build(w, r)
+}
+
+func (rep *RandomReply) Describe() any {
+	replies := make([]any, 0, len(rep.replies))
+	for _, v := range rep.replies {
+		if sd, ok := v.(coretype.SelfDescribing); ok {
+			replies = append(replies, sd.Describe())
+		}
+	}
+
+	return map[string]any{"responses": replies}
 }

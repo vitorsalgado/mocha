@@ -23,10 +23,10 @@ func UnaryMethod(method string) *UnaryMockBuilder {
 	b.m.unaryExpectations = append(
 		b.m.unaryExpectations,
 		&dzstd.Expectation[*UnaryValueSelectorIn]{
-			Target:        describeTarget(targetMethod, method),
-			Matcher:       matcher.Contain(method),
-			ValueSelector: unarySelectMethod,
-			Weight:        10,
+			TargetDescription: describeTarget(targetMethod, method),
+			Matcher:           matcher.Contain(method),
+			ValueSelector:     unarySelectMethod,
+			Weight:            10,
 		},
 	)
 
@@ -37,10 +37,10 @@ func (b *UnaryMockBuilder) Header(key string, m matcher.Matcher) *UnaryMockBuild
 	b.m.unaryExpectations = append(
 		b.m.unaryExpectations,
 		&dzstd.Expectation[*UnaryValueSelectorIn]{
-			Target:        describeTarget(targetHeader, key),
-			Matcher:       m,
-			ValueSelector: unarySelectHeader(key),
-			Weight:        3,
+			TargetDescription: describeTarget(targetHeader, key),
+			Matcher:           m,
+			ValueSelector:     unarySelectHeader(key),
+			Weight:            3,
 		},
 	)
 
@@ -51,10 +51,10 @@ func (b *UnaryMockBuilder) Field(path string, m matcher.Matcher) *UnaryMockBuild
 	b.m.unaryExpectations = append(
 		b.m.unaryExpectations,
 		&dzstd.Expectation[*UnaryValueSelectorIn]{
-			Target:        describeTarget(targetBodyField, path),
-			Matcher:       matcher.Field(path, m),
-			ValueSelector: unarySelectBody,
-			Weight:        3,
+			TargetDescription: describeTarget(targetBodyField, path),
+			Matcher:           matcher.Field(path, m),
+			ValueSelector:     unarySelectBody,
+			Weight:            3,
 		},
 	)
 	return b

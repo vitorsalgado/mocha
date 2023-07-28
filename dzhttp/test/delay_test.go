@@ -38,6 +38,8 @@ func TestResponseDelay(t *testing.T) {
 }
 
 func TestResponseDelay_SetupFromFile(t *testing.T) {
+	t.Parallel()
+
 	httpClient := &http.Client{}
 	m := NewAPI().CloseWithT(t)
 	m.MustStart()

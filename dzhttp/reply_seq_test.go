@@ -14,6 +14,8 @@ func TestSequentialReply(t *testing.T) {
 	t.Parallel()
 
 	t.Run("should return replies based configure sequence and return error when over", func(t *testing.T) {
+		t.Parallel()
+
 		req, _ := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 		rv := &RequestValues{RawRequest: req, URL: req.URL}
 		builder := Seq(InternalServerError(), BadRequest(), OK(), NotFound())
@@ -39,6 +41,8 @@ func TestSequentialReply(t *testing.T) {
 	})
 
 	t.Run("should return replies based configure sequence and return error when over", func(t *testing.T) {
+		t.Parallel()
+
 		req, err := http.NewRequest(http.MethodGet, "http://localhost:8080", nil)
 		rv := &RequestValues{RawRequest: req, URL: req.URL}
 		require.NoError(t, err)

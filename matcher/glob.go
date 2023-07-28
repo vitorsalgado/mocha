@@ -24,6 +24,10 @@ func (m *globMatcher) Match(v any) (Result, error) {
 	return Result{Message: strings.Join([]string{"Glob(", m.pattern, ") ", text}, "")}, nil
 }
 
+func (m *globMatcher) Describe() any {
+	return []any{"glob", m.pattern}
+}
+
 func GlobMatch(pattern string) Matcher {
 	return &globMatcher{pattern}
 }

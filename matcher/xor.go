@@ -39,6 +39,10 @@ func (m *xorMatcher) Match(v any) (Result, error) {
 	return Result{Message: strings.Join([]string{"XOR()", message}, " ")}, nil
 }
 
+func (m *xorMatcher) Describe() any {
+	return []any{"xor", describe(m.first), describe(m.second)}
+}
+
 // XOR is an exclusive OR matcher.
 func XOR(first Matcher, second Matcher) Matcher {
 	return &xorMatcher{first: first, second: second}

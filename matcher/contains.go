@@ -51,6 +51,10 @@ ret:
 	return Result{Message: strings.Join([]string{"Contain(", mfmt.Stringify(m.expected), ") Got: ", mfmt.Stringify(v)}, "")}, nil
 }
 
+func (m *containsMatcher) Describe() any {
+	return []any{"contains", m.expected}
+}
+
 // Contain passes when the expected value is contained in the incoming value from the request.
 func Contain(expected any) Matcher {
 	return &containsMatcher{expected: expected}

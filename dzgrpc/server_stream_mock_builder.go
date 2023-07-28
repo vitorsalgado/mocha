@@ -23,10 +23,10 @@ func ServerStreamMethod(method string) *ServerStreamMockBuilder {
 	b.m.streamExpectations = append(
 		b.m.streamExpectations,
 		&dzstd.Expectation[*StreamValueSelectorIn]{
-			Target:        describeTarget(targetMethod, method),
-			Matcher:       matcher.Contain(method),
-			ValueSelector: streamSelectMethod,
-			Weight:        10,
+			TargetDescription: describeTarget(targetMethod, method),
+			Matcher:           matcher.Contain(method),
+			ValueSelector:     streamSelectMethod,
+			Weight:            10,
 		},
 	)
 
@@ -37,10 +37,10 @@ func (b *ServerStreamMockBuilder) Header(key string, m matcher.Matcher) *ServerS
 	b.m.streamExpectations = append(
 		b.m.streamExpectations,
 		&dzstd.Expectation[*StreamValueSelectorIn]{
-			Target:        describeTarget(targetHeader, key),
-			Matcher:       m,
-			ValueSelector: streamSelectHeader(key),
-			Weight:        3,
+			TargetDescription: describeTarget(targetHeader, key),
+			Matcher:           m,
+			ValueSelector:     streamSelectHeader(key),
+			Weight:            3,
 		},
 	)
 
@@ -51,10 +51,10 @@ func (b *ServerStreamMockBuilder) Field(path string, m matcher.Matcher) *ServerS
 	b.m.streamExpectations = append(
 		b.m.streamExpectations,
 		&dzstd.Expectation[*StreamValueSelectorIn]{
-			Target:        describeTarget(targetBodyField, path),
-			Matcher:       matcher.Field(path, m),
-			ValueSelector: streamSelectBody,
-			Weight:        3,
+			TargetDescription: describeTarget(targetBodyField, path),
+			Matcher:           matcher.Field(path, m),
+			ValueSelector:     streamSelectBody,
+			Weight:            3,
 		},
 	)
 	return b

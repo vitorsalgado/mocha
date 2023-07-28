@@ -32,6 +32,10 @@ func (m *isContainedInMatcher) Match(v any) (Result, error) {
 	}, nil
 }
 
+func (m *isContainedInMatcher) Describe() any {
+	return []any{"isIn", m.items}
+}
+
 // IsIn checks if the incoming request value is in the given items.
 // Parameter items must be a slice.
 func IsIn(items any) Matcher {

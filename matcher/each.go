@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/vitorsalgado/mocha/v3/coretype"
 	"github.com/vitorsalgado/mocha/v3/matcher/internal/mfmt"
 )
 
@@ -59,6 +60,14 @@ func (m *eachMatcher) Match(v any) (Result, error) {
 	}
 
 	return Result{}, fmt.Errorf("type %s is not supported. accepted types: map, array", valType.String())
+}
+
+func (m *eachMatcher) Describe() any {
+	if sd, ok := m.matcher.(coretype.SelfDescribing); ok {
+		return []any{"each", sd.Describe()}
+	}
+
+	return []any{"each"}
 }
 
 // Each applies the given matcher on all items of the incoming request value.

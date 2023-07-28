@@ -48,6 +48,10 @@ func (m *urlPathMatcher) Match(v any) (Result, error) {
 	return Result{Message: strings.Join([]string{"URLPath(", value, ") ", res.Message}, "")}, nil
 }
 
+func (m *urlPathMatcher) Describe() any {
+	return []any{"urlPath", describe(m.matcher)}
+}
+
 // URLPath compares the URL path with the expected value and matches if they are equal.
 // Comparison is case-insensitive.
 func URLPath(expected string) Matcher {
