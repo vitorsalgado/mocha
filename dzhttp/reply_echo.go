@@ -21,13 +21,19 @@ func (e *ReplyEcho) Log() *ReplyEcho {
 	return e
 }
 
-func (e *ReplyEcho) Build(w http.ResponseWriter, r *RequestValues) (*Stub, error) {
+func (e *ReplyEcho) Build(w http.ResponseWriter, r *RequestValues) (*MockedResponse, error) {
 	w.Header().Add(httpval.HeaderContentType, httpval.MIMETextPlainCharsetUTF8)
 
 	if e.stdoutLog {
-		r.RawRequest.Write(io.MultiWriter(w, os.Stdout))
+		err := r.RawRequest.Write(io.MultiWriter(w, os.Stdout))
+		if err != nil {
+			return nil, err
+		}
 	} else {
-		r.RawRequest.Write(w)
+		err := r.RawRequest.Write(w)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return nil, nil

@@ -9,8 +9,8 @@ import (
 	"github.com/vitorsalgado/mocha/v3/dzhttp/internal/httprec"
 )
 
-// Stub defines the HTTP response that will be served once a Mock is matched for an HTTP Request.
-type Stub struct {
+// MockedResponse defines the HTTP response that will be served once a Mock is matched for an HTTP Request.
+type MockedResponse struct {
 	StatusCode int
 	Header     http.Header
 	Cookies    []*http.Cookie
@@ -19,12 +19,12 @@ type Stub struct {
 	Encoding   string
 }
 
-func newStub() *Stub {
-	return &Stub{Cookies: make([]*http.Cookie, 0), Header: make(http.Header), Trailer: make(http.Header)}
+func newStub() *MockedResponse {
+	return &MockedResponse{Cookies: make([]*http.Cookie, 0), Header: make(http.Header), Trailer: make(http.Header)}
 }
 
 // Gunzip decompresses Gzip body.
-func (s *Stub) Gunzip() ([]byte, error) {
+func (s *MockedResponse) Gunzip() ([]byte, error) {
 	gz, err := gzip.NewReader(bytes.NewReader(s.Body))
 	if err != nil {
 		return nil, err
@@ -35,7 +35,7 @@ func (s *Stub) Gunzip() ([]byte, error) {
 	return io.ReadAll(gz)
 }
 
-func newResponseStub(w http.ResponseWriter, stub *Stub) error {
+func newResponse(w http.ResponseWriter, stub *MockedResponse) error {
 	rw := w.(*httprec.HTTPRec)
 	result := rw.Result()
 

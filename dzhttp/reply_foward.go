@@ -146,7 +146,7 @@ func (r *ProxyReply) SSLVerify(v bool) *ProxyReply {
 }
 
 // Build builds a Reply based on the ProxyReply configuration.
-func (r *ProxyReply) Build(_ http.ResponseWriter, req *RequestValues) (*Stub, error) {
+func (r *ProxyReply) Build(_ http.ResponseWriter, req *RequestValues) (*MockedResponse, error) {
 	path := req.RawRequest.URL.Path
 
 	if r.trimPrefix != "" {

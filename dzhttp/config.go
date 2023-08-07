@@ -133,7 +133,7 @@ type Config struct {
 	// Proxy configures the mock server as a proxy.
 	Proxy *ProxyConfig
 
-	// Record configures Mock Request/Stub recording.
+	// Record configures Mock Request/MockedResponse recording.
 	// Needs to be used with Proxy.
 	Record *RecordConfig
 

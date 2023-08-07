@@ -173,7 +173,7 @@ func (r *recorder) stop() {
 	r.active = false
 }
 
-func (r *recorder) dispatch(req *http.Request, parsedURL *url.URL, rawReqBody []byte, res *Stub) {
+func (r *recorder) dispatch(req *http.Request, parsedURL *url.URL, rawReqBody []byte, res *MockedResponse) {
 	if !r.active {
 		return
 	}
@@ -263,25 +263,27 @@ func (r *recorder) process(arg recArgs) error {
 
 			defer b.Close()
 
-			encoding := arg.response.header.Get(httpval.HeaderContentEncoding)
-			switch encoding {
-			case "gzip":
-				gz, err := gzip.NewReader(bytes.NewReader(arg.response.body))
-				if err != nil {
-					return err
-				}
+			// encoding := arg.response.header.Get(httpval.HeaderContentEncoding)
+			// switch encoding {
+			// case "gzip":
+			// 	gz, err := gzip.NewReader(bytes.NewReader(arg.response.body))
+			// 	if err != nil {
+			// 		return err
+			// 	}
 
-				defer gz.Close()
+			// 	defer gz.Close()
 
-				_, err = io.Copy(b, gz)
-				if err != nil {
-					return err
-				}
+			// 	_, err = io.Copy(b, gz)
+			// 	if err != nil {
+			// 		return err
+			// 	}
 
-				v.Set(_fResponseEncoding, "gzip")
-			default:
-				b.Write(arg.response.body)
-			}
+			// 	v.Set(_fResponseEncoding, "gzip")
+			// default:
+			// 	b.Write(arg.response.body)
+			// }
+
+			b.Write(arg.response.body)
 
 			v.Set(_fResponseBodyFile, bodyFilename)
 

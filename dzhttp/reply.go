@@ -20,26 +20,26 @@ var _ Reply = (*StdReply)(nil)
 
 // Reply defines the contract to set up an HTTP replier.
 type Reply interface {
-	// Build returns an HTTP response Stub to be served; after the HTTP request was matched.
-	// Return a nil Stub if the HTTP response was rendered inside the Build function.
-	Build(w http.ResponseWriter, r *RequestValues) (*Stub, error)
+	// Build returns an HTTP response MockedResponse to be served; after the HTTP request was matched.
+	// Return a nil MockedResponse if the HTTP response was rendered inside the Build function.
+	Build(w http.ResponseWriter, r *RequestValues) (*MockedResponse, error)
 }
 
 type replyOnBeforeBuild interface {
 	beforeBuild(app *HTTPMockApp) error
 }
 
-// StdReply holds the configuration on how the Stub should be built.
+// StdReply holds the configuration on how the MockedResponse should be built.
 type StdReply struct {
-	response            Stub
-	bodyType            bodyType
-	bodyEncoding        bodyEncoding
-	bodyFilename        string
-	bodyTeRender        dzstd.TemplateRenderer
-	bodyFnTeRender      dzstd.TemplateRenderer
-	headerTeRender      dzstd.TemplateRenderer
-	teType              teType
-	teHeader            http.Header
+	response       MockedResponse
+	bodyType       bodyType
+	bodyEncoding   bodyEncoding
+	bodyFilename   string
+	bodyTeRender   dzstd.TemplateRenderer
+	bodyFnTeRender dzstd.TemplateRenderer
+	headerTeRender dzstd.TemplateRenderer
+	teType         teType
+	teHeader       http.Header
 	bodyTemplateContent string
 	teData              any
 	delayedErr          error
@@ -143,19 +143,19 @@ func ServiceUnavailable() *StdReply { return NewReply().Status(http.StatusServic
 // GatewayTimeout creates a new Reply with http.StatusGatewayTimeout already.
 func GatewayTimeout() *StdReply { return NewReply().Status(http.StatusGatewayTimeout) }
 
-// Status sets the HTTP status code for the Stub.
+// Status sets the HTTP status code for the MockedResponse.
 func (rep *StdReply) Status(status int) *StdReply {
 	rep.response.StatusCode = status
 	return rep
 }
 
-// Header adds a header to the Stub.
+// Header adds a header to the MockedResponse.
 func (rep *StdReply) Header(key, value string) *StdReply {
 	rep.response.Header.Add(key, value)
 	return rep
 }
 
-// HeaderArr adds a header with multiple values to the Stub.
+// HeaderArr adds a header with multiple values to the MockedResponse.
 func (rep *StdReply) HeaderArr(key string, values ...string) *StdReply {
 	rep.response.Header[key] = values
 	return rep
@@ -348,8 +348,8 @@ func (rep *StdReply) beforeBuild(app *HTTPMockApp) error {
 	return nil
 }
 
-// Build builds a Stub based on StdReply definition.
-func (rep *StdReply) Build(w http.ResponseWriter, r *RequestValues) (stub *Stub, err error) {
+// Build builds a MockedResponse based on StdReply definition.
+func (rep *StdReply) Build(w http.ResponseWriter, r *RequestValues) (stub *MockedResponse, err error) {
 	stub, err = rep.build(w, r)
 	if err != nil {
 		return nil, fmt.Errorf("reply: %w", err)
@@ -358,7 +358,7 @@ func (rep *StdReply) Build(w http.ResponseWriter, r *RequestValues) (stub *Stub,
 	return stub, nil
 }
 
-func (rep *StdReply) build(_ http.ResponseWriter, r *RequestValues) (stub *Stub, err error) {
+func (rep *StdReply) build(_ http.ResponseWriter, r *RequestValues) (stub *MockedResponse, err error) {
 	if rep.delayedErr != nil {
 		return nil, rep.delayedErr
 	}

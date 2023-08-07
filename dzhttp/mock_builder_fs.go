@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
@@ -547,7 +546,7 @@ func buildMockFromBytes(app *HTTPMockApp, builder *HTTPMockBuilder, content []by
 		var random *RandomReply
 
 		if vi.IsSet(_fResponseRandomSeed) {
-			random = RandWith(rand.New(rand.NewSource(vi.GetInt64(_fResponseRandomSeed))))
+			random = RandWithSeed(vi.GetInt64(_fResponseRandomSeed))
 		} else {
 			random = Rand()
 		}

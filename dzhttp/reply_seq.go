@@ -47,7 +47,7 @@ func (r *SequentialReply) beforeBuild(_ *HTTPMockApp) error {
 
 // Build builds a new response based on the current Mock call sequence.
 // When the sequence is over, it will return an error or a previously configured reply for this scenario.
-func (r *SequentialReply) Build(w http.ResponseWriter, req *RequestValues) (*Stub, error) {
+func (r *SequentialReply) Build(w http.ResponseWriter, req *RequestValues) (*MockedResponse, error) {
 	r.rwMutex.Lock()
 	defer r.rwMutex.Unlock()
 
@@ -83,7 +83,7 @@ func (r *SequentialReply) Describe() any {
 		}
 	}
 
-	desc := map[string]any{"response_sequence": map[string]any{"responses": replies}}
+	desc := map[string]any{"responses": replies}
 
 	if r.replyAfterSequenceEnded != nil {
 		if sd, ok := r.replyAfterSequenceEnded.(coretype.SelfDescribing); ok {
@@ -91,7 +91,7 @@ func (r *SequentialReply) Describe() any {
 		}
 	}
 
-	return desc
+	return map[string]any{"response_sequence": desc}
 }
 
 func (r *SequentialReply) totalHits() int {

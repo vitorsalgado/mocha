@@ -16,6 +16,8 @@ var _randomMu sync.Mutex
 type RandomReply struct {
 	replies []Reply
 	random  *rand.Rand
+	seed    int64
+	seeded  bool
 }
 
 // Rand initializes a new RandomReply.
@@ -29,6 +31,14 @@ func Rand(reply ...Reply) *RandomReply {
 func RandWith(random *rand.Rand, reply ...Reply) *RandomReply {
 	r := Rand(reply...)
 	r.random = random
+
+	return r
+}
+
+// RandWithSeed creates a new RandomReply with a custom *rand.Rand using the given seed.
+func RandWithSeed(seed int64, reply ...Reply) *RandomReply {
+	r := RandWith(rand.New(rand.NewSource(seed)), reply...)
+	r.seed = seed
 
 	return r
 }
@@ -49,7 +59,7 @@ func (rep *RandomReply) beforeBuild(_ *HTTPMockApp) error {
 }
 
 // Build builds a response stub randomly based on previously added Reply implementations.
-func (rep *RandomReply) Build(w http.ResponseWriter, r *RequestValues) (*Stub, error) {
+func (rep *RandomReply) Build(w http.ResponseWriter, r *RequestValues) (*MockedResponse, error) {
 	_randomMu.Lock()
 	defer _randomMu.Unlock()
 
@@ -73,5 +83,10 @@ func (rep *RandomReply) Describe() any {
 		}
 	}
 
-	return map[string]any{"responses": replies}
+	desc := map[string]any{"responses": replies}
+	if rep.seeded {
+		desc["seed"] = rep.seed
+	}
+
+	return map[string]any{"response_random": desc}
 }

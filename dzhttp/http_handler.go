@@ -50,8 +50,8 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			h.app.proxy.ServeHTTP(w, r)
 
 			if h.app.rec != nil {
-				res := Stub{}
-				err := newResponseStub(w, &res)
+				res := MockedResponse{}
+				err = newResponse(w, &res)
 				if err != nil {
 					h.onError(w, reqValues, err)
 					return
@@ -119,23 +119,33 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					h.lifecycle.OnWarning(reqValues, err)
 				}
 			} else {
-				buf := new(bytes.Buffer)
-				gz := gzipper.Get().(*gzip.Writer)
-				defer gzipper.Put(gz)
+				if len(stub.Encoding) > 0 {
+					switch stub.Encoding {
+					case "gzip":
+						buf := new(bytes.Buffer)
+						gz := gzipper.Get().(*gzip.Writer)
+						defer gzipper.Put(gz)
 
-				gz.Reset(buf)
+						gz.Reset(buf)
 
-				_, err := gz.Write(stub.Body)
-				if err != nil {
-					// TODO: handle error
+						_, err = gz.Write(stub.Body)
+						if err != nil {
+							h.lifecycle.OnWarning(reqValues, err)
+						}
+
+						err = gz.Close()
+						if err != nil {
+							h.lifecycle.OnWarning(reqValues, err)
+						}
+
+						_, err = buf.WriteTo(w)
+						if err != nil {
+							h.lifecycle.OnWarning(reqValues, err)
+						}
+					}
+				} else {
+					w.Write(stub.Body)
 				}
-
-				err = gz.Close()
-				if err != nil {
-					// TODO: handle error
-				}
-
-				buf.WriteTo(w)
 			}
 		}
 
@@ -145,8 +155,8 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	} else {
-		stub := Stub{}
-		err = newResponseStub(w, &stub)
+		stub := MockedResponse{}
+		err = newResponse(w, &stub)
 		if err != nil {
 			h.onError(w, reqValues, err)
 			return

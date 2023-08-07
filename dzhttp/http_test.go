@@ -65,7 +65,7 @@ func TestResponseMapperModifyingResponse(t *testing.T) {
 
 	scoped := m.MustMock(Get(URLPath("/test")).
 		Reply(OK()).
-		Map(func(rv *RequestValues, r *Stub) error {
+		Map(func(rv *RequestValues, r *MockedResponse) error {
 			val, _ := rv.App.Parameters().Get(k)
 
 			r.Header.Add("x-param-key", val.(string))

@@ -62,7 +62,7 @@ type CallbackInput struct {
 	Mock *HTTPMock
 
 	// Stub is the HTTP response Stub served.
-	Stub *Stub
+	Stub *MockedResponse
 }
 
 // Callback defines the contract for an action that will be executed after serving a mocked HTTP response.
@@ -86,7 +86,7 @@ type PostActionInput struct {
 	Mock *HTTPMock
 
 	// Stub is the HTTP response Stub served.
-	Stub *Stub
+	Stub *MockedResponse
 
 	// Args allow passing custom arguments to a Callback.
 	Args any
@@ -103,8 +103,8 @@ type PostActionDef struct {
 	RawParameters any
 }
 
-// Mapper is the function definition to be used to map a Mock response Stub before serving it.
-type Mapper func(requestValues *RequestValues, res *Stub) error
+// Mapper is the function definition to be used to map a Mock response MockedResponse before serving it.
+type Mapper func(requestValues *RequestValues, res *MockedResponse) error
 
 // MockFileHandler defines a custom Mock file configuration handler.
 // It lets users define custom fields on mock configuration files that could be handled by a MockFileHandler instance.

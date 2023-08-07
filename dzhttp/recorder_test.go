@@ -317,8 +317,11 @@ func TestRecordSaveResponseBodyToFile(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, http.StatusOK, res.StatusCode)
 
+	bbb, err := io.ReadAll(res.Body)
+	require.NoError(t, err)
+
 	rb := make([]map[string]any, 0)
-	err = json.NewDecoder(res.Body).Decode(&rb)
+	err = json.Unmarshal(bbb, &rb)
 	require.NoError(t, err)
 	assert.Equal(t, data, rb)
 
