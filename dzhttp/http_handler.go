@@ -16,6 +16,23 @@ import (
 	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
+type topResponseWriter struct {
+	chain dzstd.Chain
+	rw    http.ResponseWriter
+}
+
+func (w *topResponseWriter) Header() http.Header {
+	return w.rw.Header()
+}
+
+func (w *topResponseWriter) Write(p []byte) (int, error) {
+	return w.chain.Next(p)
+}
+
+func (w *topResponseWriter) WriteHeader(statusCode int) {
+	w.rw.WriteHeader(statusCode)
+}
+
 type mockHandler struct {
 	app       *HTTPMockApp
 	lifecycle mockHTTPLifecycle
@@ -99,6 +116,11 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
+		if len(mock.Interceptors) > 0 {
+			chain := dzstd.NewChain(append(mock.Interceptors, &dzstd.RootIntereptor{W: w}))
+			w = &topResponseWriter{chain, w}
+		}
+
 		copyHeaders(stub.Header, w.Header())
 
 		for k := range stub.Trailer {
@@ -112,40 +134,32 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(stub.StatusCode)
 
 		if stub.Body != nil {
-			if len(mock.Pipes) > 0 {
-				connector := dzstd.NewConnector(mock.Pipes)
-				_, err = connector.Connect(stub.Body, w)
-				if err != nil {
-					h.lifecycle.OnWarning(reqValues, err)
+			if len(stub.Encoding) > 0 {
+				switch stub.Encoding {
+				case "gzip":
+					buf := new(bytes.Buffer)
+					gz := gzipper.Get().(*gzip.Writer)
+					defer gzipper.Put(gz)
+
+					gz.Reset(buf)
+
+					_, err = gz.Write(stub.Body)
+					if err != nil {
+						h.lifecycle.OnWarning(reqValues, err)
+					}
+
+					err = gz.Close()
+					if err != nil {
+						h.lifecycle.OnWarning(reqValues, err)
+					}
+
+					_, err = buf.WriteTo(w)
+					if err != nil {
+						h.lifecycle.OnWarning(reqValues, err)
+					}
 				}
 			} else {
-				if len(stub.Encoding) > 0 {
-					switch stub.Encoding {
-					case "gzip":
-						buf := new(bytes.Buffer)
-						gz := gzipper.Get().(*gzip.Writer)
-						defer gzipper.Put(gz)
-
-						gz.Reset(buf)
-
-						_, err = gz.Write(stub.Body)
-						if err != nil {
-							h.lifecycle.OnWarning(reqValues, err)
-						}
-
-						err = gz.Close()
-						if err != nil {
-							h.lifecycle.OnWarning(reqValues, err)
-						}
-
-						_, err = buf.WriteTo(w)
-						if err != nil {
-							h.lifecycle.OnWarning(reqValues, err)
-						}
-					}
-				} else {
-					w.Write(stub.Body)
-				}
+				w.Write(stub.Body)
 			}
 		}
 

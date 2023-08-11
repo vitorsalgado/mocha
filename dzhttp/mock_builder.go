@@ -413,8 +413,8 @@ func (b *HTTPMockBuilder) PostAction(input *PostActionDef) *HTTPMockBuilder {
 	return b
 }
 
-func (b *HTTPMockBuilder) Pipe(pipe dzstd.Piping) *HTTPMockBuilder {
-	b.mock.Pipes = append(b.mock.Pipes, pipe)
+func (b *HTTPMockBuilder) Intercept(interceptor ...dzstd.Interceptor) *HTTPMockBuilder {
+	b.mock.Interceptors = append(b.mock.Interceptors, interceptor...)
 
 	return b
 }

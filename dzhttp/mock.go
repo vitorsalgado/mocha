@@ -159,7 +159,7 @@ type HTTPMock struct {
 	// Mappers stores response mappers associated with this Mock.
 	Mappers []Mapper
 
-	Pipes []dzstd.Piping
+	Interceptors []dzstd.Interceptor
 
 	after        []int
 	expectations []*dzstd.Expectation[*HTTPValueSelectorInput]
@@ -172,7 +172,7 @@ func newMock() *HTTPMock {
 		Callbacks:    make([]Callback, 0),
 		PostActions:  make([]*PostActionDef, 0),
 		Mappers:      make([]Mapper, 0),
-		Pipes:        make([]dzstd.Piping, 0),
+		Interceptors: make([]dzstd.Interceptor, 0),
 		expectations: make([]*dzstd.Expectation[*HTTPValueSelectorInput], 0),
 	}
 }
