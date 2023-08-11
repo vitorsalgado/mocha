@@ -25,18 +25,10 @@ func (e *ReplyEcho) Build(w http.ResponseWriter, r *RequestValues) (*MockedRespo
 	w.Header().Add(httpval.HeaderContentType, httpval.MIMETextPlainCharsetUTF8)
 
 	if e.stdoutLog {
-		err := r.RawRequest.Write(io.MultiWriter(w, os.Stdout))
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		err := r.RawRequest.Write(w)
-		if err != nil {
-			return nil, err
-		}
+		return nil, r.RawRequest.Write(io.MultiWriter(w, os.Stdout))
 	}
 
-	return nil, nil
+	return nil, r.RawRequest.Write(w)
 }
 
 func (e *ReplyEcho) Describe() any {
