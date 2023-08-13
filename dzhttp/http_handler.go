@@ -43,7 +43,6 @@ func newMockHandler(app *HTTPMockApp, lifecycle mockHTTPLifecycle) *mockHandler 
 }
 
 func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w = httprec.Wrap(w)
 	parsedURL, urlSegments := h.parseURL(r)
 	parsedBody, rawBody, err := parseRequestBody(h.app, r)
 	reqValues := &RequestValues{time.Now(), r, parsedURL, urlSegments, nil, nil, h.app, nil}
@@ -57,30 +56,36 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.lifecycle.OnRequest(reqValues)
 
 	mocks := h.app.storage.GetEligible()
-	description := dzstd.Results{Buf: make([]string, 0, len(mocks))}
+	description := &dzstd.Results{Buf: make([]string, 0, len(mocks))}
 	result := dzstd.FindMockForRequest(r.Context(), mocks,
-		&HTTPValueSelectorInput{r, parsedURL, r.URL.Query(), r.Form, parsedBody}, &description)
+		&HTTPValueSelectorInput{r, parsedURL, r.URL.Query(), r.Form, parsedBody}, description)
 
+	// no mocks matched with the incoming request
+	// lets check if we need to proxy and record this request.
 	if !result.Pass {
-		if h.app.proxy != nil {
-			// proxy non-matched requests.
-			h.app.proxy.ServeHTTP(w, r)
-
-			if h.app.rec != nil {
-				res := MockedResponse{}
-				err = newResponse(w, &res)
-				if err != nil {
-					h.onError(w, reqValues, err)
-					return
-				}
-
-				h.app.rec.dispatch(r, parsedURL, rawBody, &res)
-			}
-
+		if h.app.proxy == nil {
+			h.onNoMatches(w, reqValues, result, description)
 			return
 		}
 
-		h.onNoMatches(w, reqValues, result, &description)
+		// checking if we should record writes to later record mocks.
+		if h.app.IsRecording() {
+			w = httprec.Wrap(w)
+		}
+
+		// proxying non-matched requests.
+		h.app.proxy.ServeHTTP(w, r)
+
+		if h.app.IsRecording() {
+			res, err := newResponse(w)
+			if err != nil {
+				h.onError(w, reqValues, err)
+				return
+			}
+
+			h.app.rec.dispatch(r, parsedURL, rawBody, res)
+		}
+
 		return
 	}
 
@@ -94,7 +99,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		<-ctxTimeout.Done()
 	}
 
-	stub, err := result.Matched.Reply.Build(w, reqValues)
+	res, err := result.Matched.Reply.Build(w, reqValues)
 	if err != nil {
 		h.onError(w, reqValues, fmt.Errorf(
 			"http: error building reply for request=%s source=%s. %w",
@@ -107,9 +112,9 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	mock.Inc()
 
-	if stub != nil {
+	if res != nil {
 		for i, mapper := range mock.Mappers {
-			if err = mapper(reqValues, stub); err != nil {
+			if err = mapper(reqValues, res); err != nil {
 				mock.Dec()
 				h.onError(w, reqValues, fmt.Errorf("http: error with response mapper at index %d. %w", i, err))
 				return
@@ -117,25 +122,28 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if len(mock.Interceptors) > 0 {
-			chain := dzstd.NewChain(append(mock.Interceptors, &dzstd.RootIntereptor{W: w}))
-			w = &topResponseWriter{chain, w}
+			w = &topResponseWriter{dzstd.NewChain(append(mock.Interceptors, &dzstd.RootIntereptor{W: w})), w}
 		}
 
-		copyHeaders(stub.Header, w.Header())
+		for k, vv := range res.Header {
+			for _, v := range vv {
+				w.Header().Add(k, v)
+			}
+		}
 
-		for k := range stub.Trailer {
+		for k := range res.Trailer {
 			w.Header().Add(httpval.HeaderTrailer, k)
 		}
 
-		for _, cookie := range stub.Cookies {
+		for _, cookie := range res.Cookies {
 			http.SetCookie(w, cookie)
 		}
 
-		w.WriteHeader(stub.StatusCode)
+		w.WriteHeader(res.StatusCode)
 
-		if stub.Body != nil {
-			if len(stub.Encoding) > 0 {
-				switch stub.Encoding {
+		if res.Body != nil {
+			if len(res.Encoding) > 0 {
+				switch res.Encoding {
 				case "gzip":
 					buf := new(bytes.Buffer)
 					gz := gzipper.Get().(*gzip.Writer)
@@ -143,7 +151,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 					gz.Reset(buf)
 
-					_, err = gz.Write(stub.Body)
+					_, err = gz.Write(res.Body)
 					if err != nil {
 						h.lifecycle.OnWarning(reqValues, err)
 					}
@@ -159,24 +167,19 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					}
 				}
 			} else {
-				w.Write(stub.Body)
+				w.Write(res.Body)
 			}
 		}
 
-		for k, v := range stub.Trailer {
+		for k, v := range res.Trailer {
 			for _, vv := range v {
 				w.Header().Add(k, vv)
 			}
 		}
-	} else {
-		stub := MockedResponse{}
-		err = newResponse(w, &stub)
-		if err != nil {
-			h.onError(w, reqValues, err)
-			return
-		}
 	}
 
+	// run matcher events after we sent the mock.
+	// some matcher might need to keep state.
 	for _, idx := range mock.after {
 		err = mock.expectations[idx].Matcher.(matcher.OnMockSent).OnMockSent()
 		if err != nil {
@@ -185,9 +188,9 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	callbackInput := CallbackInput{r, parsedURL, parsedBody, h.app, mock, stub}
+	callbackInput := &CallbackInput{r, parsedURL, parsedBody, h.app, mock, res}
 	for i, callback := range mock.Callbacks {
-		err = callback(&callbackInput)
+		err = callback(callbackInput)
 		if err != nil {
 			h.lifecycle.OnWarning(reqValues, fmt.Errorf(
 				"callback: error with callback %d %T:\n%w",
@@ -200,8 +203,8 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	for i, def := range mock.PostActions {
 		postAction := h.app.config.PostActions[def.Name]
-		input := PostActionInput{r, parsedURL, parsedBody, h.app, mock, stub, def.RawParameters}
-		err = postAction.Run(&input)
+		input := &PostActionInput{r, parsedURL, parsedBody, h.app, mock, res, def.RawParameters}
+		err = postAction.Run(input)
 		if err != nil {
 			h.lifecycle.OnWarning(reqValues, fmt.Errorf(
 				"post_action: error with post action %s(%d) %T:\n%w",
@@ -213,12 +216,12 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	h.lifecycle.OnMatch(reqValues, stub)
+	h.lifecycle.OnMatch(reqValues, res)
 
 	// when proxy is enabled, recording happens some steps before
 	// so, we need to record here only if proxy is disabled.
-	if h.app.rec != nil && h.app.config.Proxy == nil {
-		h.app.rec.dispatch(r, parsedURL, rawBody, stub)
+	if h.app.IsRecording() && h.app.config.Proxy == nil {
+		h.app.rec.dispatch(r, parsedURL, rawBody, res)
 	}
 }
 
@@ -262,12 +265,4 @@ func (h *mockHandler) parseURL(r *http.Request) (*url.URL, []string) {
 	parsedURL, _ := url.Parse(h.app.URL() + reqPath)
 
 	return parsedURL, strings.FieldsFunc(reqPath, func(c rune) bool { return c == '/' })
-}
-
-func copyHeaders(src, dst http.Header) {
-	for k, vv := range src {
-		for _, v := range vv {
-			dst.Add(k, v)
-		}
-	}
 }

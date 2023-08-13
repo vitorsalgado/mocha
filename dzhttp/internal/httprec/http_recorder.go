@@ -1,6 +1,7 @@
 package httprec
 
 import (
+	"io"
 	"net/http"
 	"net/http/httptest"
 )
@@ -8,36 +9,33 @@ import (
 var _ http.ResponseWriter = (*HTTPRec)(nil)
 
 type HTTPRec struct {
-	Wrapped  http.ResponseWriter
+	wrapped  http.ResponseWriter
 	recorder *httptest.ResponseRecorder
+	w        io.Writer
 }
 
 func Wrap(w http.ResponseWriter) *HTTPRec {
-	return &HTTPRec{Wrapped: w, recorder: httptest.NewRecorder()}
+	rec := httptest.NewRecorder()
+	return &HTTPRec{wrapped: w, recorder: rec, w: io.MultiWriter(rec, w)}
 }
 
 func (r *HTTPRec) Header() http.Header {
-	return r.Wrapped.Header()
+	return r.wrapped.Header()
 }
 
 func (r *HTTPRec) Write(buf []byte) (int, error) {
-	n, err := r.recorder.Write(buf)
-	if err != nil {
-		return n, err
-	}
-
-	return r.Wrapped.Write(buf)
+	return r.w.Write(buf)
 }
 
 func (r *HTTPRec) WriteHeader(statusCode int) {
-	for k, v := range r.Wrapped.Header() {
+	for k, v := range r.wrapped.Header() {
 		for _, vv := range v {
 			r.recorder.Header().Add(k, vv)
 		}
 	}
 
 	r.recorder.WriteHeader(statusCode)
-	r.Wrapped.WriteHeader(statusCode)
+	r.wrapped.WriteHeader(statusCode)
 }
 
 func (r *HTTPRec) Result() *http.Response {

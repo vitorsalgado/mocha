@@ -35,13 +35,13 @@ func (s *MockedResponse) Gunzip() ([]byte, error) {
 	return io.ReadAll(gz)
 }
 
-func newResponse(w http.ResponseWriter, stub *MockedResponse) error {
+func newResponse(w http.ResponseWriter) (*MockedResponse, error) {
 	rw := w.(*httprec.HTTPRec)
 	result := rw.Result()
 
 	body, err := io.ReadAll(result.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	defer result.Body.Close()
@@ -56,13 +56,14 @@ func newResponse(w http.ResponseWriter, stub *MockedResponse) error {
 		}
 	}
 
-	stub.StatusCode = result.StatusCode
-	stub.Header = result.Header.Clone()
-	stub.Cookies = result.Cookies()
+	res := new(MockedResponse)
+	res.StatusCode = result.StatusCode
+	res.Header = result.Header.Clone()
+	res.Cookies = result.Cookies()
 
 	if len(body) > 0 {
-		stub.Body = body
+		res.Body = body
 	}
 
-	return nil
+	return res, nil
 }

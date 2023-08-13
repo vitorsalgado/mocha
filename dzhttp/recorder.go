@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"strings"
 	"sync"
+	"sync/atomic"
 
 	"github.com/spf13/viper"
 
@@ -27,7 +28,7 @@ var _regexNoSpecialCharacters = regexp.MustCompile("[^a-z0-9]")
 
 type recorder struct {
 	app    *HTTPMockApp
-	active bool
+	active atomic.Bool
 	config *RecordConfig
 	in     chan recArgs
 	close  chan struct{}
@@ -137,8 +138,17 @@ func newRecorder(app *HTTPMockApp, config *RecordConfig) *recorder {
 }
 
 func (r *recorder) start() {
+	r.mu.Lock()
+
+	if r.active.Load() {
+		r.mu.Unlock()
+		return
+	}
+
 	r.in = make(chan recArgs)
-	r.active = true
+	r.active.Store(true)
+
+	r.mu.Unlock()
 
 	go func() {
 		for {
@@ -165,19 +175,19 @@ func (r *recorder) stop() {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-	if !r.active {
+	if !r.active.Load() {
 		return
 	}
 
 	r.close <- struct{}{}
-	r.active = false
+	r.active.Store(false)
+}
+
+func (r *recorder) isActive() bool {
+	return r.active.Load()
 }
 
 func (r *recorder) dispatch(req *http.Request, parsedURL *url.URL, rawReqBody []byte, res *MockedResponse) {
-	if !r.active {
-		return
-	}
-
 	r.in <- recArgs{
 		request:  recRequest{parsedURL.RequestURI(), req.Method, req.Header.Clone(), req.URL.Query(), rawReqBody},
 		response: recResponse{res.StatusCode, res.Header.Clone(), res.Body},

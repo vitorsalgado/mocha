@@ -78,6 +78,10 @@ type Config struct {
 	// Defaults to the current execution path.
 	RootDir string
 
+	// FailFast skips request matching as soon as a mismatch is found.
+	// Enabling this will turn off the attempt to find the nearest matched mock.
+	FailFast bool
+
 	// TLSConfig defines custom TLS configurations.
 	// This is only used when server is started using HTTPMockApp.StartTLS or HTTPMockApp.MustStartTLS.
 	// If TLSConfig is set, TLSCertificateFs and TLSKeyFs options will be ignored.
@@ -217,6 +221,7 @@ func (c *Config) Apply(conf *Config) error {
 	conf.Name = c.Name
 	conf.Addr = c.Addr
 	conf.RootDir = c.RootDir
+	conf.FailFast = c.FailFast
 	conf.RequestWasNotMatchedStatusCode = c.RequestWasNotMatchedStatusCode
 	conf.RequestBodyParsers = c.RequestBodyParsers
 	conf.MaxBodyParsingLimit = c.MaxBodyParsingLimit
@@ -309,6 +314,13 @@ func (cb *ConfigBuilder) Port(port int) *ConfigBuilder {
 // Defaults to the current execution path.
 func (cb *ConfigBuilder) RootDir(rootDir string) *ConfigBuilder {
 	cb.conf.RootDir = rootDir
+	return cb
+}
+
+// FailFast skips request matching as soon as a mismatch is found.
+// Enabling this will turn off the attempt to find the nearest matched mock.
+func (cb *ConfigBuilder) FailFast(ff bool) *ConfigBuilder {
+	cb.conf.FailFast = ff
 	return cb
 }
 

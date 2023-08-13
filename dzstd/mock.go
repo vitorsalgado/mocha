@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"sort"
-	"strings"
 	"sync"
 
 	"github.com/google/uuid"
 
+	"github.com/vitorsalgado/mocha/v3/internal/encutil"
 	"github.com/vitorsalgado/mocha/v3/matcher"
 )
 
@@ -291,7 +291,7 @@ func (d *Results) Append(v string) {
 }
 
 func (d *Results) AppendList(sep string, v ...string) {
-	d.Buf = append(d.Buf, strings.Join(v, sep))
+	d.Buf = append(d.Buf, encutil.Join(sep, v...))
 }
 
 func (d *Results) Len() int {
@@ -299,5 +299,5 @@ func (d *Results) Len() int {
 }
 
 func (d *Results) String() string {
-	return strings.Join(d.Buf, "\n")
+	return encutil.Join("\n", d.Buf...)
 }

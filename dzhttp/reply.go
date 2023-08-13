@@ -31,19 +31,19 @@ type replyOnBeforeBuild interface {
 
 // StdReply holds the configuration on how the MockedResponse should be built.
 type StdReply struct {
-	response       MockedResponse
-	bodyType       bodyType
-	bodyEncoding   bodyEncoding
-	bodyFilename   string
-	bodyTeRender   dzstd.TemplateRenderer
-	bodyFnTeRender dzstd.TemplateRenderer
-	headerTeRender dzstd.TemplateRenderer
-	teType         teType
-	teHeader       http.Header
-	bodyTemplateContent string
-	teData              any
-	delayedErr          error
-	encoded             bool
+	response             MockedResponse
+	bodyType             bodyType
+	bodyEncoding         bodyEncoding
+	bodyFilename         string
+	bodyTemplateRender   dzstd.TemplateRenderer
+	bodyFnTeRender       dzstd.TemplateRenderer
+	headerTemplateRender dzstd.TemplateRenderer
+	teType               teType
+	teHeader             http.Header
+	bodyTemplateContent  string
+	teData               any
+	delayedErr           error
+	encoded              bool
 }
 
 type bodyType int
@@ -316,7 +316,7 @@ func (rep *StdReply) beforeBuild(app *HTTPMockApp) error {
 			return err
 		}
 
-		rep.bodyTeRender = r
+		rep.bodyTemplateRender = r
 	}
 
 	if rep.teType&_teHeader == _teHeader {
@@ -331,7 +331,7 @@ func (rep *StdReply) beforeBuild(app *HTTPMockApp) error {
 			return err
 		}
 
-		rep.headerTeRender = r
+		rep.headerTemplateRender = r
 	}
 
 	if rep.encoded || len(rep.response.Body) == 0 {
@@ -375,7 +375,7 @@ func (rep *StdReply) build(_ http.ResponseWriter, r *RequestValues) (stub *Mocke
 		}()
 
 		buf := &bytes.Buffer{}
-		err = rep.bodyTeRender.Render(buf, rep.buildTemplateData(r, rep.teData))
+		err = rep.bodyTemplateRender.Render(buf, rep.buildTemplateData(r, rep.teData))
 		if err != nil {
 			return nil, err
 		}
@@ -432,7 +432,7 @@ func (rep *StdReply) build(_ http.ResponseWriter, r *RequestValues) (stub *Mocke
 
 	if rep.teType&_teHeader == _teHeader {
 		buf := &bytes.Buffer{}
-		err = rep.headerTeRender.Render(buf, rep.buildTemplateData(r, rep.teData))
+		err = rep.headerTemplateRender.Render(buf, rep.buildTemplateData(r, rep.teData))
 		if err != nil {
 			return nil, err
 		}

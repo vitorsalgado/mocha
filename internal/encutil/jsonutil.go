@@ -21,12 +21,12 @@ func putBuf(b *bytes.Buffer) {
 	bufPool.Put(b)
 }
 
-func Join(sep string, elems ...string) []byte {
+func Join(sep string, elems ...string) string {
 	switch len(elems) {
 	case 0:
-		return []byte("")
+		return ""
 	case 1:
-		return []byte(elems[0])
+		return elems[0]
 	}
 
 	n := len(sep) * (len(elems) - 1)
@@ -43,7 +43,8 @@ func Join(sep string, elems ...string) []byte {
 		buf.WriteString(s)
 	}
 
+	txt := buf.String()
 	putBuf(buf)
 
-	return buf.Bytes()
+	return txt
 }

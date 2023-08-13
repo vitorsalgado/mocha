@@ -319,6 +319,11 @@ func (app *HTTPMockApp) CloseWithT(t dzstd.TestingT) *HTTPMockApp {
 	return app
 }
 
+// IsRecording checks if mock recording is enabled.
+func (app *HTTPMockApp) IsRecording() bool {
+	return app.rec != nil && app.rec.isActive()
+}
+
 func (app *HTTPMockApp) StopRecording() {
 	app.rec.stop()
 }
