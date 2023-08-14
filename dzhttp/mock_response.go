@@ -9,7 +9,7 @@ import (
 	"github.com/vitorsalgado/mocha/v3/dzhttp/internal/httprec"
 )
 
-// MockedResponse defines the HTTP response that will be served once a Mock is matched for an HTTP Request.
+// MockedResponse defines the HTTP response that will be served once a Mock is matched with an HTTP Request.
 type MockedResponse struct {
 	StatusCode int
 	Header     http.Header
@@ -19,7 +19,7 @@ type MockedResponse struct {
 	Encoding   string
 }
 
-func newStub() *MockedResponse {
+func newResponse() *MockedResponse {
 	return &MockedResponse{Cookies: make([]*http.Cookie, 0), Header: make(http.Header), Trailer: make(http.Header)}
 }
 
@@ -35,7 +35,7 @@ func (s *MockedResponse) Gunzip() ([]byte, error) {
 	return io.ReadAll(gz)
 }
 
-func newResponse(w http.ResponseWriter) (*MockedResponse, error) {
+func responseFromWriter(w http.ResponseWriter) (*MockedResponse, error) {
 	rw := w.(*httprec.HTTPRec)
 	result := rw.Result()
 

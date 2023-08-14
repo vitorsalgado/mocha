@@ -183,7 +183,7 @@ func (r *ProxyReply) Build(_ http.ResponseWriter, req *RequestValues) (*MockedRe
 
 	defer res.Body.Close()
 
-	stub := newStub()
+	stub := newResponse()
 
 	for _, h := range _forbiddenHeaders {
 		res.Header.Del(h)

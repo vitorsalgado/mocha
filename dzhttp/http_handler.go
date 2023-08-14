@@ -77,7 +77,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		h.app.proxy.ServeHTTP(w, r)
 
 		if h.app.IsRecording() {
-			res, err := newResponse(w)
+			res, err := responseFromWriter(w)
 			if err != nil {
 				h.onError(w, reqValues, err)
 				return

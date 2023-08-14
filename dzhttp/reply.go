@@ -74,7 +74,7 @@ var gzipper = &sync.Pool{New: func() any { return gzip.NewWriter(nil) }}
 // NewReply creates a new StdReply. Prefer to use factory functions for each status code.
 func NewReply() *StdReply {
 	return &StdReply{
-		response:     *newStub(),
+		response:     *newResponse(),
 		bodyType:     _bodyDefault,
 		bodyEncoding: _bodyEncodingNone,
 		teHeader:     make(http.Header),
@@ -445,9 +445,7 @@ func (rep *StdReply) build(_ http.ResponseWriter, r *RequestValues) (stub *Mocke
 
 		h := http.Header(mimeHeader)
 		for k, v := range h {
-			for _, vv := range v {
-				rep.Header(k, vv)
-			}
+			rep.HeaderArr(k, v...)
 		}
 	}
 
