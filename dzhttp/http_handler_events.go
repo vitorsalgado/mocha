@@ -1,6 +1,7 @@
 package dzhttp
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"net/http"
@@ -160,7 +161,9 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnRequest(rv *RequestValues) {
 		return
 	}
 
-	buf := strings.Builder{}
+	buf := bufPool.Get().(*bytes.Buffer)
+	buf.Reset()
+	defer bufPool.Put(buf)
 
 	buf.WriteString(fmt.Sprintf("%s %s ---> %s %s\n%s %s",
 		h.cz.BrightBlue(h.cz.Bold("REQUEST RECEIVED")),
@@ -185,7 +188,7 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnRequest(rv *RequestValues) {
 	}
 
 	buf.WriteString("\n\n")
-	fmt.Fprint(h.out, buf.String())
+	buf.WriteTo(h.out)
 }
 
 func (h *builtInDescriptiveMockHTTPLifecycle) OnMatch(rv *RequestValues, s *MockedResponse) {
@@ -193,9 +196,11 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnMatch(rv *RequestValues, s *Mock
 		return
 	}
 
-	buf := strings.Builder{}
+	buf := bufPool.Get().(*bytes.Buffer)
+	buf.Reset()
+	defer bufPool.Put(buf)
 
-	fmt.Fprintf(&buf, "%s %s <--- %s %s\n%s ",
+	fmt.Fprintf(buf, "%s %s <--- %s %s\n%s ",
 		h.cz.BrightGreen(h.cz.Bold("REQUEST MATCHED")),
 		time.Now().Format(time.RFC3339),
 		h.cz.Green(rv.RawRequest.Method),
@@ -215,12 +220,12 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnMatch(rv *RequestValues, s *Mock
 	if h.app.config.LogVerbosity >= LogHeader && len(s.Header) > 0 {
 		buf.WriteString("\n")
 		buf.WriteString(h.cz.Green("Headers: "))
-		fmt.Fprintf(&buf, "%s", redactHeader(s.Header, h.app.config.HeaderNamesToRedact))
+		fmt.Fprintf(buf, "%s", redactHeader(s.Header, h.app.config.HeaderNamesToRedact))
 
 		if len(s.Trailer) > 0 {
 			buf.WriteString("\n")
 			buf.WriteString(h.cz.Green("Trailers: "))
-			fmt.Fprintf(&buf, "%s", redactHeader(s.Trailer, h.app.config.HeaderNamesToRedact))
+			fmt.Fprintf(buf, "%s", redactHeader(s.Trailer, h.app.config.HeaderNamesToRedact))
 		}
 	}
 
@@ -237,8 +242,7 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnMatch(rv *RequestValues, s *Mock
 	}
 
 	buf.WriteString("\n")
-
-	fmt.Fprint(h.out, buf.String())
+	buf.WriteTo(h.out)
 }
 
 func (h *builtInDescriptiveMockHTTPLifecycle) OnNoMatch(

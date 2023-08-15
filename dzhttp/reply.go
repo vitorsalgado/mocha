@@ -18,6 +18,20 @@ import (
 
 var _ Reply = (*StdReply)(nil)
 
+const maxBufSize = 1 << 16
+
+var bufPool = &sync.Pool{
+	New: func() any { return bytes.NewBuffer(make([]byte, 500)) },
+}
+
+func putBuf(b *bytes.Buffer) {
+	if b.Cap() > maxBufSize {
+		return
+	}
+
+	bufPool.Put(b)
+}
+
 // Reply defines the contract to set up an HTTP replier.
 type Reply interface {
 	// Build returns an HTTP response MockedResponse to be served; after the HTTP request was matched.
@@ -31,19 +45,19 @@ type replyOnBeforeBuild interface {
 
 // StdReply holds the configuration on how the MockedResponse should be built.
 type StdReply struct {
-	response             MockedResponse
-	bodyType             bodyType
-	bodyEncoding         bodyEncoding
-	bodyFilename         string
-	bodyTemplateRender   dzstd.TemplateRenderer
-	bodyFnTeRender       dzstd.TemplateRenderer
-	headerTemplateRender dzstd.TemplateRenderer
-	teType               teType
-	teHeader             http.Header
-	bodyTemplateContent  string
-	teData               any
-	delayedErr           error
-	encoded              bool
+	response                 MockedResponse
+	bodyType                 bodyType
+	bodyEncoding             bodyEncoding
+	bodyFilename             string
+	bodyTemplateRenderer     dzstd.TemplateRenderer
+	bodyFuncTemplateRenderer dzstd.TemplateRenderer
+	headerTemplateRender     dzstd.TemplateRenderer
+	teType                   teType
+	templateHeader           http.Header
+	bodyTemplateContent      string
+	teData                   any
+	delayedErr               error
+	encoded                  bool
 }
 
 type bodyType int
@@ -74,10 +88,10 @@ var gzipper = &sync.Pool{New: func() any { return gzip.NewWriter(nil) }}
 // NewReply creates a new StdReply. Prefer to use factory functions for each status code.
 func NewReply() *StdReply {
 	return &StdReply{
-		response:     *newResponse(),
-		bodyType:     _bodyDefault,
-		bodyEncoding: _bodyEncodingNone,
-		teHeader:     make(http.Header),
+		response:       *newResponse(),
+		bodyType:       _bodyDefault,
+		bodyEncoding:   _bodyEncodingNone,
+		templateHeader: make(http.Header),
 	}
 }
 
@@ -157,20 +171,25 @@ func (rep *StdReply) Header(key, value string) *StdReply {
 
 // HeaderArr adds a header with multiple values to the MockedResponse.
 func (rep *StdReply) HeaderArr(key string, values ...string) *StdReply {
-	rep.response.Header[key] = values
+	for _, value := range values {
+		rep.Header(key, value)
+	}
+
 	return rep
 }
 
 // HeaderTemplate adds a header that can have its value changed using templates.
 func (rep *StdReply) HeaderTemplate(key, value string) *StdReply {
-	rep.teHeader.Add(key, value)
+	rep.templateHeader.Add(key, value)
 	rep.teType += _teHeader
 	return rep
 }
 
 // HeaderArrTemplate adds a header with multiple values that can have its value changed using templates.
-func (rep *StdReply) HeaderArrTemplate(key string, value ...string) *StdReply {
-	rep.teHeader[key] = value
+func (rep *StdReply) HeaderArrTemplate(key string, values ...string) *StdReply {
+	for _, value := range values {
+		rep.HeaderTemplate(key, value)
+	}
 	rep.teType += _teHeader
 	return rep
 }
@@ -307,7 +326,7 @@ func (rep *StdReply) beforeBuild(app *HTTPMockApp) error {
 			return err
 		}
 
-		rep.bodyFnTeRender = r
+		rep.bodyFuncTemplateRenderer = r
 	}
 
 	if rep.teType&_teBody == _teBody {
@@ -316,12 +335,14 @@ func (rep *StdReply) beforeBuild(app *HTTPMockApp) error {
 			return err
 		}
 
-		rep.bodyTemplateRender = r
+		rep.bodyTemplateRenderer = r
 	}
 
-	if rep.teType&_teHeader == _teHeader {
-		buf := &bytes.Buffer{}
-		err := rep.teHeader.Write(buf)
+	if len(rep.templateHeader) > 0 {
+		buf := bufPool.Get().(*bytes.Buffer)
+		buf.Reset()
+
+		err := rep.templateHeader.Write(buf)
 		if err != nil {
 			return err
 		}
@@ -332,9 +353,11 @@ func (rep *StdReply) beforeBuild(app *HTTPMockApp) error {
 		}
 
 		rep.headerTemplateRender = r
+
+		putBuf(buf)
 	}
 
-	if rep.encoded || len(rep.response.Body) == 0 {
+	if rep.encoded {
 		return nil
 	}
 
@@ -363,6 +386,29 @@ func (rep *StdReply) build(_ http.ResponseWriter, r *RequestValues) (stub *Mocke
 		return nil, rep.delayedErr
 	}
 
+	if len(rep.templateHeader) > 0 {
+		buf := bufPool.Get().(*bytes.Buffer)
+		buf.Reset()
+
+		err = rep.headerTemplateRender.Render(buf, rep.buildTemplateData(r, rep.teData))
+		if err != nil {
+			return nil, err
+		}
+
+		tp := textproto.NewReader(bufio.NewReader(buf))
+		mimeHeader, err := tp.ReadMIMEHeader()
+		if err != nil {
+			return nil, err
+		}
+
+		h := http.Header(mimeHeader)
+		for k, v := range h {
+			rep.HeaderArr(k, v...)
+		}
+
+		putBuf(buf)
+	}
+
 	switch rep.bodyType {
 	case _bodyTemplate:
 		defer func() {
@@ -374,8 +420,12 @@ func (rep *StdReply) build(_ http.ResponseWriter, r *RequestValues) (stub *Mocke
 			}
 		}()
 
-		buf := &bytes.Buffer{}
-		err = rep.bodyTemplateRender.Render(buf, rep.buildTemplateData(r, rep.teData))
+		buf := bufPool.Get().(*bytes.Buffer)
+		buf.Reset()
+
+		defer putBuf(buf)
+
+		err = rep.bodyTemplateRenderer.Render(buf, rep.buildTemplateData(r, rep.teData))
 		if err != nil {
 			return nil, err
 		}
@@ -392,28 +442,36 @@ func (rep *StdReply) build(_ http.ResponseWriter, r *RequestValues) (stub *Mocke
 				)
 			}
 		}()
+		buf := bufPool.Get().(*bytes.Buffer)
+		buf.Reset()
 
-		buf := &bytes.Buffer{}
-		err = rep.bodyFnTeRender.Render(buf, rep.buildTemplateData(r, rep.teData))
-		if err != nil {
-			return nil, err
+		defer putBuf(buf)
+
+		filename := rep.bodyFilename
+		if rep.teType&_teBodyFilename == _teBodyFilename {
+			err = rep.bodyFuncTemplateRenderer.Render(buf, rep.buildTemplateData(r, rep.teData))
+			if err != nil {
+				return nil, err
+			}
+
+			filename = buf.String()
 		}
 
-		filename := buf.String()
 		file, err := os.Open(filename)
 		if err != nil {
 			return nil, err
 		}
 
-		defer file.Close()
-
-		b, err := io.ReadAll(file)
-		if err != nil {
-			return nil, err
-		}
-
 		if rep.teType&_teBody == _teBody {
+			defer file.Close()
+
 			buf.Reset()
+
+			b, err := io.ReadAll(file)
+			if err != nil {
+				return nil, err
+			}
+
 			t, err := r.App.TemplateEngine().Parse(string(b))
 			if err != nil {
 				return nil, err
@@ -426,62 +484,13 @@ func (rep *StdReply) build(_ http.ResponseWriter, r *RequestValues) (stub *Mocke
 
 			rep.response.Body = buf.Bytes()
 		} else {
-			rep.response.Body = b
-		}
-	}
-
-	if rep.teType&_teHeader == _teHeader {
-		buf := &bytes.Buffer{}
-		err = rep.headerTemplateRender.Render(buf, rep.buildTemplateData(r, rep.teData))
-		if err != nil {
-			return nil, err
+			rep.response.BodyCloser = file
 		}
 
-		tp := textproto.NewReader(bufio.NewReader(buf))
-		mimeHeader, err := tp.ReadMIMEHeader()
-		if err != nil {
-			return nil, err
-		}
-
-		h := http.Header(mimeHeader)
-		for k, v := range h {
-			rep.HeaderArr(k, v...)
-		}
+		rep.response.BodyFilename = filename
 	}
 
 	return &rep.response, nil
-}
-
-func (rep *StdReply) encodeBody() error {
-	if rep.encoded || len(rep.response.Body) == 0 {
-		return nil
-	}
-
-	switch rep.bodyEncoding {
-	case _bodyEncodingGZIP:
-		buf := new(bytes.Buffer)
-		gz := gzipper.Get().(*gzip.Writer)
-		defer gzipper.Put(gz)
-
-		gz.Reset(buf)
-
-		_, err := gz.Write(rep.response.Body)
-		if err != nil {
-			return err
-		}
-
-		err = gz.Close()
-		if err != nil {
-			return err
-		}
-
-		rep.response.Body = buf.Bytes()
-		rep.response.Header.Add(httpval.HeaderContentEncoding, "gzip")
-		rep.response.Encoding = "gzip"
-		rep.encoded = true
-	}
-
-	return nil
 }
 
 func (rep *StdReply) buildTemplateData(r *RequestValues, ext any) *templateData {

@@ -11,12 +11,14 @@ import (
 
 // MockedResponse defines the HTTP response that will be served once a Mock is matched with an HTTP Request.
 type MockedResponse struct {
-	StatusCode int
-	Header     http.Header
-	Cookies    []*http.Cookie
-	Body       []byte
-	Trailer    http.Header
-	Encoding   string
+	StatusCode   int
+	Header       http.Header
+	Trailer      http.Header
+	Cookies      []*http.Cookie
+	Body         []byte
+	BodyCloser   io.ReadCloser
+	BodyFilename string
+	Encoding     string
 }
 
 func newResponse() *MockedResponse {
@@ -24,8 +26,8 @@ func newResponse() *MockedResponse {
 }
 
 // Gunzip decompresses Gzip body.
-func (s *MockedResponse) Gunzip() ([]byte, error) {
-	gz, err := gzip.NewReader(bytes.NewReader(s.Body))
+func (res *MockedResponse) Gunzip() ([]byte, error) {
+	gz, err := gzip.NewReader(bytes.NewReader(res.Body))
 	if err != nil {
 		return nil, err
 	}
@@ -33,6 +35,23 @@ func (s *MockedResponse) Gunzip() ([]byte, error) {
 	defer gz.Close()
 
 	return io.ReadAll(gz)
+}
+
+func (res *MockedResponse) encode(w io.Writer, reader io.Reader) (n int64, err error) {
+	switch res.Encoding {
+	case "gzip":
+		gz := gzipper.Get().(*gzip.Writer)
+		gz.Reset(w)
+
+		defer func() {
+			gz.Close()
+			gzipper.Put(gz)
+		}()
+
+		return io.Copy(gz, reader)
+	}
+
+	return 0, nil
 }
 
 func responseFromWriter(w http.ResponseWriter) (*MockedResponse, error) {

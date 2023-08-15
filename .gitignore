@@ -33,8 +33,5 @@ bin/
 coverage/
 node_modules/
 
-poc_test.go
-tests
-mhttp/cmd/test/
 
-testdata/
+./testdata/

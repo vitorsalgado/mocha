@@ -95,11 +95,9 @@ func TestTemplating_Header(t *testing.T) {
 
 	req, _ := http.NewRequest(http.MethodGet, m.URL()+"/test/templating", nil)
 	res, err := httpClient.Do(req)
-	require.NoError(t, err)
-
-	defer res.Body.Close()
 
 	require.NoError(t, err)
+	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusOK, res.StatusCode)
 	require.Equal(t, "ok", res.Header.Get("test"))
 	require.Equal(t, "test", res.Header.Get("ctx"))

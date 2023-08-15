@@ -2,9 +2,9 @@ package dzhttp
 
 import (
 	"bytes"
-	"compress/gzip"
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -141,33 +141,42 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 		w.WriteHeader(res.StatusCode)
 
-		if res.Body != nil {
+		if len(res.Body) > 0 {
 			if len(res.Encoding) > 0 {
-				switch res.Encoding {
-				case "gzip":
-					buf := new(bytes.Buffer)
-					gz := gzipper.Get().(*gzip.Writer)
-					defer gzipper.Put(gz)
+				buf := bufPool.Get().(*bytes.Buffer)
+				buf.Reset()
 
-					gz.Reset(buf)
-
-					_, err = gz.Write(res.Body)
-					if err != nil {
-						h.lifecycle.OnWarning(reqValues, err)
-					}
-
-					err = gz.Close()
-					if err != nil {
-						h.lifecycle.OnWarning(reqValues, err)
-					}
-
-					_, err = buf.WriteTo(w)
-					if err != nil {
-						h.lifecycle.OnWarning(reqValues, err)
-					}
+				_, err = res.encode(buf, bytes.NewReader(res.Body))
+				if err != nil {
+					h.lifecycle.OnError(reqValues, fmt.Errorf("http: error encoding body: %w", err))
+					return
 				}
+
+				_, err = buf.WriteTo(w)
+				if err != nil {
+					h.lifecycle.OnError(reqValues, fmt.Errorf("http: error writting body: %w", err))
+					return
+				}
+
+				bufPool.Put(buf)
 			} else {
 				w.Write(res.Body)
+			}
+		} else if res.BodyCloser != nil {
+			defer res.BodyCloser.Close()
+
+			if len(res.Encoding) > 0 {
+				_, err = res.encode(w, res.BodyCloser)
+				if err != nil {
+					h.lifecycle.OnError(reqValues, fmt.Errorf("http: error encoding body: %w", err))
+					return
+				}
+			} else {
+				_, err = io.Copy(w, res.BodyCloser)
+				if err != nil {
+					h.lifecycle.OnError(reqValues, fmt.Errorf("http: error writting body: %w", err))
+					return
+				}
 			}
 		}
 
@@ -228,12 +237,14 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *RequestValues, result *dzstd.FindResult[*HTTPMock], desc *dzstd.Results) {
 	defer h.lifecycle.OnNoMatch(r, result, desc)
 
-	buf := bytes.Buffer{}
+	buf := bufPool.Get().(*bytes.Buffer)
+	buf.Reset()
+	defer bufPool.Put(buf)
 
 	buf.WriteString("REQUEST DID NOT MATCH\n")
 
 	if result.ClosestMatch != nil {
-		fmt.Fprintf(&buf, "NEAREST: %s %s\n", result.ClosestMatch.GetID(), result.ClosestMatch.GetName())
+		fmt.Fprintf(buf, "NEAREST: %s %s\n", result.ClosestMatch.GetID(), result.ClosestMatch.GetName())
 	}
 
 	if desc.Len() > 0 {
