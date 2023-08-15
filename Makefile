@@ -5,6 +5,8 @@ PROJECT_NAME=dz
 DOCKER_IMAGE=$(PROJECT_NAME)
 PROTO_MESSAGES = dzgrpc/internal/protobuf
 
+JSONNET_FMT := jsonnetfmt -n 2 --max-blank-lines 2 --string-style s --comment-style s
+
 # allow user specific optional overrides
 -include Makefile.overrides
 
@@ -88,6 +90,10 @@ download: ## download dependencies
 docs: ## show documentation website locally
 	@echo navigate to: http://localhost:6060/pkg/github.com/vitorsalgado/mocha/v3
 	@godoc -http=:6060
+
+fmtj:
+	@find . -name '*.libsonnet' -print -o -name '*.jsonnet' -print | \
+			xargs -n 1 -- $(JSONNET_FMT) -i
 
 .PHONY: tools
 tools: ## install dev tools
