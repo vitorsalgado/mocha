@@ -198,7 +198,7 @@ func (b *HTTPMockBuilder) URL(m matcher.Matcher) *HTTPMockBuilder {
 // URLf sets a matcher to the http.Request url.URL that compares the http.Request url.URL with the given value.
 // The expected value will be formatted with the provided format specifier.
 func (b *HTTPMockBuilder) URLf(format string, a ...any) *HTTPMockBuilder {
-	return b.URL(matcher.StrictEqual(fmt.Sprintf(format, a...)))
+	return b.URL(matcher.GlobMatch(fmt.Sprintf(format, a...)))
 }
 
 // URLPath defines a matcher to be applied to the url.URL path.
@@ -217,13 +217,7 @@ func (b *HTTPMockBuilder) URLPath(m matcher.Matcher) *HTTPMockBuilder {
 // URLPathf sets a Matcher that compares the http.Request url.URL path with the given value, ignoring the case.
 // The expected value will be formatted with the provided format specifier.
 func (b *HTTPMockBuilder) URLPathf(format string, a ...any) *HTTPMockBuilder {
-	return b.URLPath(matcher.StrictEqual(fmt.Sprintf(format, a...)))
-}
-
-// URLPathf sets a Matcher that compares the http.Request url.URL path with the given value, ignoring the case.
-// The expected value will be formatted with the provided format specifier.
-func (b *HTTPMockBuilder) URLFragmentf(format string, a ...any) *HTTPMockBuilder {
-	return b.URLFragment(matcher.StrictEqual(fmt.Sprintf(format, a...)))
+	return b.URLPath(matcher.GlobMatch(fmt.Sprintf(format, a...)))
 }
 
 // URLPath defines a matcher to be applied to the url.URL path.
@@ -237,6 +231,12 @@ func (b *HTTPMockBuilder) URLFragment(m matcher.Matcher) *HTTPMockBuilder {
 	})
 
 	return b
+}
+
+// URLPathf sets a Matcher that compares the http.Request url.URL path with the given value, ignoring the case.
+// The expected value will be formatted with the provided format specifier.
+func (b *HTTPMockBuilder) URLFragmentf(format string, a ...any) *HTTPMockBuilder {
+	return b.URLFragment(matcher.GlobMatch(fmt.Sprintf(format, a...)))
 }
 
 // Header adds a matcher to a specific http.Header key.

@@ -13,6 +13,9 @@ func TestGlob(t *testing.T) {
 		expectedResult bool
 	}{
 		{"*", "/test", true},
+		{"**", "*", true},
+		{"**", "**", true},
+		{"/test/*dev", "/test/*dev", true},
 		{"/*", "/", true},
 		{"/*", "/test", true},
 		{"/test", "/test", true},
