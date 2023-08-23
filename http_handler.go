@@ -100,7 +100,13 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		respondError(w, r, h.evt, err)
 		return
 	}
-
+	copy, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		h.t.Logf(err.Error())
+		respondError(w, r, h.evt, err)
+		return
+	}
+	res.Body = ioutil.NopCloser(bytes.NewBuffer(copy))
 	// map the response using mock mappers.
 	mapperArgs := reply.ResponseMapperArgs{Request: r, Parameters: h.params}
 	for _, mapper := range res.Mappers {
@@ -133,6 +139,7 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if scanner.Err() != nil {
 			h.t.Logf("error writing response body: error=%v", scanner.Err())
 		}
+		res.Body = ioutil.NopCloser(bytes.NewBuffer(copy))
 	}
 
 	// run post actions.
