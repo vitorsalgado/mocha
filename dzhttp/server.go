@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"strconv"
 	"sync"
+
+	"github.com/go-chi/chi/v5"
 )
 
 var _ Server = (*httpTestServer)(nil)
@@ -56,9 +58,13 @@ func newServer() Server {
 }
 
 func (s *httpTestServer) Setup(app *HTTPMockApp, handler http.Handler) error {
+	r := chi.NewRouter()
+	r.Mount(app.config.AdminPath, app.admin.Init())
+	r.Handle("/*", handler)
+
 	s.app = app
 	s.handler = handler
-	s.server = httptest.NewUnstartedServer(handler)
+	s.server = httptest.NewUnstartedServer(r)
 
 	if app.config.Addr != "" {
 		addr := app.config.Addr

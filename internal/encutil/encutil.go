@@ -9,7 +9,7 @@ const maxSize = 1 << 16
 
 var bufPool = &sync.Pool{
 	New: func() any {
-		return bytes.NewBuffer(make([]byte, 500))
+		return bytes.NewBuffer(make([]byte, 0, 500))
 	},
 }
 

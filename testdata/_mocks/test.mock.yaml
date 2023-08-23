@@ -1,0 +1,13 @@
+request:
+  path: /test
+  query:
+    q: test
+    sort:
+      - equal
+      - asc
+
+response:
+  status: 200
+  body: hello world
+  header:
+    content-type: text/plain

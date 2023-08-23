@@ -269,11 +269,13 @@ func (h *builtInDescriptiveMockHTTPLifecycle) OnNoMatch(
 
 	if d.Len() > 0 {
 		if h.app.config.LogVerbosity <= LogHeader {
-			fmt.Fprintf(h.out, "%s: %d", h.cz.Bold("Mismatches"), result.MismatchesCount)
+			fmt.Fprintf(h.out, "%s: %d\n", h.cz.Bold("Mismatches"), result.MismatchesCount)
 		} else {
-			fmt.Fprintf(h.out, "%s(%d):\n%s", h.cz.Bold("Mismatches"), result.MismatchesCount, d.String())
+			fmt.Fprintf(h.out, "%s(%d):\n%s\n", h.cz.Bold("Mismatches"), result.MismatchesCount, d.String())
 		}
 	}
+
+	h.out.Write([]byte("\n"))
 }
 
 func (h *builtInDescriptiveMockHTTPLifecycle) OnWarning(r *RequestValues, err error) {

@@ -19,6 +19,7 @@ func TestLen_String(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			result, err := Len(tc.size).Match(tc.value)
 

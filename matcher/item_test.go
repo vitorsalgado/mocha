@@ -31,6 +31,7 @@ func TestItem(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(strconv.Itoa(tc.index), func(t *testing.T) {
 			res, err := Item(tc.index, tc.matcher).Match(v)
 

@@ -15,6 +15,7 @@
 # vendor/
 
 *.tmp
+/tmp/
 
 .env
 

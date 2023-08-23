@@ -54,7 +54,7 @@ var (
 	//go:embed banner.txt
 	_banner      string
 	_description = fmt.Sprintf(`%s
-Flexible HTTP mocking tool for Go. 
+Flexible HTTP mocking tool for Go.
 Supported mock file extensions: %s
 
 For more information, visit: %s`,
@@ -97,7 +97,7 @@ func run(ctx context.Context, custom ...dzhttp.Configurer) {
 			m.MustStart()
 
 			fmt.Println(_banner)
-			_ = m.PrintConfig(os.Stdin)
+			fmt.Println(m.DescribeConfig())
 
 			<-ctx.Done()
 

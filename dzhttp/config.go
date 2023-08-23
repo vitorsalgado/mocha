@@ -74,6 +74,14 @@ type Config struct {
 	// UseHTTP2 enables HTTP/2
 	UseHTTP2 bool
 
+	// AdminPath sets the URL path to the Admin endpoints.
+	// Defaults to /__admin.
+	AdminPath string
+
+	// AdminEnabled enable/disable Admin endpoints.
+	// Defaults to true.
+	AdminEnabled bool
+
 	// RootDir defines the root directory where the server will start looking for configurations and mocks.
 	// Defaults to the current execution path.
 	RootDir string
@@ -220,6 +228,8 @@ type forwardConfig struct {
 func (c *Config) Apply(conf *Config) error {
 	conf.Name = c.Name
 	conf.Addr = c.Addr
+	conf.AdminPath = c.AdminPath
+	conf.AdminEnabled = c.AdminEnabled
 	conf.RootDir = c.RootDir
 	conf.FailFast = c.FailFast
 	conf.RequestWasNotMatchedStatusCode = c.RequestWasNotMatchedStatusCode
@@ -269,6 +279,7 @@ type ConfigBuilder struct {
 
 func defaultConfig() *Config {
 	return &Config{
+		AdminPath:                      "/__admin",
 		RequestWasNotMatchedStatusCode: StatusNoMatch,
 		MockFileSearchPatterns:         ConfigMockFilePattern,
 		RequestBodyParsers:             make([]RequestBodyParser, 0),

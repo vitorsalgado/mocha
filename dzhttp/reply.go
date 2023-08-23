@@ -21,7 +21,7 @@ var _ Reply = (*StdReply)(nil)
 const maxBufSize = 1 << 16
 
 var bufPool = &sync.Pool{
-	New: func() any { return bytes.NewBuffer(make([]byte, 500)) },
+	New: func() any { return bytes.NewBuffer(make([]byte, 0, 500)) },
 }
 
 func putBuf(b *bytes.Buffer) {
