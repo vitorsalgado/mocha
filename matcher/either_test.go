@@ -20,6 +20,7 @@ func TestEither(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			result, err := Either(tc.matchers[0], tc.matchers[1]).Match("test")
 			require.NoError(t, err)
