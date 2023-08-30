@@ -25,12 +25,7 @@ func TestScoped(t *testing.T) {
 	m2 := newTestMock()
 	m3 := newTestMock()
 
-	repo := dzstd.NewStore[dzstd.Mock]()
-	repo.Save(m1)
-	repo.Save(m2)
-	repo.Save(m3)
-
-	scoped := dzstd.NewScope(repo, []string{m1.GetID(), m2.GetID(), m3.GetID()})
+	scoped := dzstd.NewScope(nil, []*testMock{m1, m2, m3})
 
 	require.Equal(t, 3, len(scoped.GetAll()))
 	require.Equal(t, m1, scoped.Get(m1.GetID()))
@@ -68,7 +63,7 @@ func TestScoped(t *testing.T) {
 	})
 
 	t.Run("should return total hits from store", func(t *testing.T) {
-		require.Equal(t, 3, scoped.Hits())
+		require.EqualValues(t, 3, scoped.Hits())
 		scoped.AssertNumberOfCalls(t, 3)
 	})
 
@@ -129,7 +124,7 @@ func TestScoped(t *testing.T) {
 			require.NoError(t, err)
 			require.NoError(t, res.Body.Close())
 			require.Equal(t, http.StatusOK, res.StatusCode)
-			require.Equal(t, 1, s1.Hits())
+			require.Equal(t, int64(1), s1.Hits())
 
 			s1.AssertNumberOfCalls(t, 1)
 		})
@@ -141,7 +136,7 @@ func TestScoped(t *testing.T) {
 			require.NoError(t, err)
 			require.NoError(t, res.Body.Close())
 			require.Equal(t, http.StatusOK, res.StatusCode)
-			require.Equal(t, 2, s1.Hits())
+			require.EqualValues(t, 2, s1.Hits())
 
 			s1.AssertNumberOfCalls(t, 2)
 		})
@@ -175,16 +170,10 @@ func TestScopedDelete(t *testing.T) {
 	m2 := newTestMock()
 	m3 := newTestMock()
 
-	repo := dzstd.NewStore[dzstd.Mock]()
-	repo.Save(m1)
-	repo.Save(m2)
-	repo.Save(m3)
-
-	scoped := dzstd.NewScope(repo, []string{m1.GetID(), m2.GetID(), m3.GetID()})
+	scoped := dzstd.NewScope(nil, []*testMock{m1, m2, m3})
 
 	require.True(t, scoped.Delete(m1.GetID()))
 	require.False(t, scoped.Delete("unknown"))
 
 	require.Nil(t, scoped.Get(m1.GetID()))
-	require.Nil(t, repo.Get(m1.GetID()))
 }

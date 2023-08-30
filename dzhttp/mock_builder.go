@@ -444,7 +444,7 @@ func (b *HTTPMockBuilder) Reply(rep Reply) *HTTPMockBuilder {
 // Enabled define if the Mock will be enabled or disabled.
 // All mocks are enabled by default.
 func (b *HTTPMockBuilder) Enabled(enabled bool) *HTTPMockBuilder {
-	b.mock.Enabled = enabled
+	b.mock.Switch(enabled)
 
 	return b
 }

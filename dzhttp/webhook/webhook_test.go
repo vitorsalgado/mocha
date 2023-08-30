@@ -38,7 +38,7 @@ func TestWebHook_Run(t *testing.T) {
 		name          string
 		targetMock    *dzhttp.HTTPMockBuilder
 		webhookDef    *dzhttp.PostActionDef
-		expectedCalls int
+		expectedCalls int64
 	}{
 		{"basic with default method",
 			dzhttp.Getf("/third_party/hook").
@@ -143,6 +143,7 @@ func TestWebHook_Run(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			defer target.Clean()
 			defer m.Clean()
@@ -335,6 +336,7 @@ func TestWebHook_InvalidFiles(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			m := dzhttp.NewAPI(dzhttp.Setup().PostAction(Name, New())).CloseWithT(t)
 			_, err := m.Mock(dzhttp.FromFile(tc.filename))

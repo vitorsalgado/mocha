@@ -24,6 +24,7 @@ func TestEnabledDisabledMocks(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.path, func(t *testing.T) {
 			res, err := httpClient.Get(m.URL(tc.path))
 

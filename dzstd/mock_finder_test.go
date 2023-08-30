@@ -31,6 +31,7 @@ func TestMockMatches(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			desc := &dzstd.Results{}
 			pass, _ := dzstd.Match(context.Background(), params, desc, []*dzstd.Expectation[*dzhttp.HTTPValueSelectorInput]{{

@@ -119,21 +119,21 @@ func TestMochaAssertions(t *testing.T) {
 		Get(URLPath("/test-ok")).
 			Reply(OK()))
 
-	require.Equal(t, 0, scoped.Hits())
+	require.EqualValues(t, 0, scoped.Hits())
 	require.False(t, m.AssertCalled(ft))
 	require.True(t, m.AssertNotCalled(ft))
 	require.True(t, m.AssertNumberOfCalls(ft, 0))
-	require.Equal(t, 0, m.Hits())
+	require.EqualValues(t, 0, m.Hits())
 
 	res, err := http.Get(m.URL() + "/test-ok")
 	require.NoError(t, err)
 	require.NoError(t, res.Body.Close())
 	require.Equal(t, http.StatusOK, res.StatusCode)
-	require.Equal(t, 1, scoped.Hits())
+	require.EqualValues(t, 1, scoped.Hits())
 	require.True(t, m.AssertCalled(ft))
 	require.False(t, m.AssertNotCalled(ft))
 	require.True(t, m.AssertNumberOfCalls(ft, 1))
-	require.Equal(t, 1, m.Hits())
+	require.EqualValues(t, 1, m.Hits())
 }
 
 func TestMochaEnableDisable(t *testing.T) {
@@ -384,7 +384,7 @@ func TestMochaConcurrentRequests(t *testing.T) {
 
 	wg.Wait()
 
-	require.Equal(t, 54*jobs, m.Hits())
+	require.EqualValues(t, 54*jobs, m.Hits())
 }
 
 func TestSettingOnlyPort(t *testing.T) {

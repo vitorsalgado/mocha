@@ -1,6 +1,7 @@
 package test
 
 import (
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -15,6 +16,8 @@ func TestHTTPMethods(t *testing.T) {
 
 	m := NewAPI().CloseWithT(t)
 	m.MustStart()
+
+	defer m.Close()
 
 	path1 := "/test/1"
 	path2 := "/test/2"
@@ -67,8 +70,9 @@ func TestHTTPMethods(t *testing.T) {
 		{http.MethodTrace, path3, Request().Method(http.MethodTrace).URLPathf(path3), 506},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.method, func(t *testing.T) {
+	for i, tc := range testCases {
+		tc := tc
+		t.Run(fmt.Sprintf("%d_%s", i, tc.method), func(t *testing.T) {
 			m.MustMock(tc.mock.Reply(Status(tc.status)))
 
 			req, _ := http.NewRequest(tc.method, m.URL(tc.path), nil)

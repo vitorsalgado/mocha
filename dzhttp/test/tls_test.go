@@ -39,6 +39,7 @@ func TestTLS(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			m := NewAPI(tc.config).CloseWithT(t)
 			m.MustStartTLS()

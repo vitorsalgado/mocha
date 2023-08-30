@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
 
 	"github.com/spf13/cobra"
@@ -28,28 +29,6 @@ const (
 `
 )
 
-type dockerConfigurer struct {
-}
-
-func (c *dockerConfigurer) Apply(conf *dzhttp.Config) error {
-	host := strings.TrimSpace(os.Getenv(_dockerHostEnv))
-	if host == "" {
-		host = "0.0.0.0:"
-	}
-
-	if !strings.HasSuffix(host, ":") {
-		host += ":"
-	}
-
-	if conf.UseHTTPS {
-		conf.Addr = host + "8443"
-	} else {
-		conf.Addr = host + "8080"
-	}
-
-	return nil
-}
-
 var (
 	//go:embed banner.txt
 	_banner      string
@@ -62,6 +41,8 @@ For more information, visit: %s`,
 		strings.Join(viper.SupportedExts, ", "),
 		_gitRepository,
 	)
+
+	locker sync.Mutex
 )
 
 func main() {
@@ -106,6 +87,9 @@ func run(ctx context.Context, custom ...dzhttp.Configurer) {
 	}
 
 	rootCmd.AddCommand(versionCmd())
+
+	locker.Lock()
+	defer locker.Unlock()
 
 	err := rootCmd.Execute()
 	if err != nil {

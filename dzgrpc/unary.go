@@ -11,14 +11,6 @@ import (
 	"github.com/vitorsalgado/mocha/v3/dzstd"
 )
 
-type GRPCUnaryMock struct {
-	*GRPCMock
-}
-
-func (u *GRPCUnaryMock) GetExpectations() []*dzstd.Expectation[*UnaryValueSelectorIn] {
-	return u.unaryExpectations
-}
-
 type UnaryValueSelector func(ctx context.Context, in *UnaryValueSelectorIn) any
 
 type UnaryValueSelectorIn struct {
@@ -52,17 +44,15 @@ func (in *Interceptors) UnaryInterceptor(
 	}
 
 	rawBody := string(b)
-	mocks := in.app.storage.GetAll()
-	wrappedMocks := make([]*GRPCUnaryMock, len(mocks))
-	for i, v := range mocks {
-		wrappedMocks[i] = &GRPCUnaryMock{v}
-	}
-
-	description := dzstd.Results{Buf: make([]string, 0, len(mocks))}
-	result := dzstd.FindMockForRequest(ctx, wrappedMocks, &UnaryValueSelectorIn{
-		RequestMessage: rawBody,
-		Info:           info,
-	}, &description)
+	description := dzstd.Results{Buf: make([]string, 0)}
+	result, err := dzstd.FindMockForRequest(
+		ctx,
+		in.app.storage,
+		func(m *GRPCMock) []*dzstd.Expectation[*UnaryValueSelectorIn] { return m.unaryExpectations },
+		&UnaryValueSelectorIn{rawBody, info},
+		&description,
+		&dzstd.FindOptions{FailFast: false},
+	)
 
 	if !result.Pass {
 		return nil, interceptError("unary: request was not matched with any mock")

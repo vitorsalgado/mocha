@@ -61,6 +61,7 @@ func TestBuilderFs_FromBytes(t *testing.T) {
 	httpClient := &http.Client{}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.filename, func(t *testing.T) {
 			m := NewAPI()
 			m.MustStart()

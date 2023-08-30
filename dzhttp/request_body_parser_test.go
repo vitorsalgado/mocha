@@ -48,6 +48,7 @@ func TestRequestBodyParsers_CanParse(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			assert.Equal(t, tc.expected, tc.parser.CanParse(tc.contentType, tc.req))
 		})
@@ -81,6 +82,7 @@ func TestRequestBodyParsers_Parse(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			b, err := tc.parser.Parse(tc.body, tc.req)
 

@@ -123,6 +123,7 @@ func TestFormUrlEncoded_FromFileMock(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			req, _ := http.NewRequest(http.MethodPost, m.URL()+"/test", strings.NewReader(tc.data().Encode()))
 			req.Header.Add(httpval.HeaderContentType, httpval.MIMEFormURLEncoded)

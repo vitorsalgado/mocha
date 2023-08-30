@@ -1,10 +1,13 @@
 package dzstd
 
 import (
+	"context"
 	"fmt"
 	"strings"
 	"sync"
 )
+
+var _ MockApp[*BaseMock] = (*baseApp)(nil)
 
 // Configurer lets users configure the Mock API.
 type Configurer[TConfig any] interface {
@@ -36,7 +39,7 @@ type Assertions interface {
 }
 
 type MockApp[TMock Mock] interface {
-	Hits() int
+	Hits() int64
 	Enable()
 	Disable()
 	Clean()
@@ -45,7 +48,7 @@ type MockApp[TMock Mock] interface {
 type MockBag[TMock Mock, TMockApp MockApp[TMock]] struct {
 	rwMutex sync.RWMutex
 	app     TMockApp
-	store   *MockStore[TMock]
+	store   MockRepository[TMock]
 	scopes  []*Scope[TMock]
 }
 
@@ -53,7 +56,7 @@ func (a *MockBag[TMock, TMockApp]) Add(builders ...Builder[TMock, TMockApp]) (*S
 	a.rwMutex.Lock()
 	defer a.rwMutex.Unlock()
 
-	added := make([]string, len(builders))
+	added := make([]TMock, len(builders))
 
 	for i, b := range builders {
 		mock, err := b.Build(a.app)
@@ -63,8 +66,11 @@ func (a *MockBag[TMock, TMockApp]) Add(builders ...Builder[TMock, TMockApp]) (*S
 
 		mock.Prepare()
 
-		a.store.Save(mock)
-		added[i] = mock.GetID()
+		if err := a.store.Save(context.Background(), mock); err != nil {
+			return nil, err
+		}
+
+		added[i] = mock
 	}
 
 	scope := NewScope[TMock](a.store, added)
@@ -85,7 +91,7 @@ type BaseApp[TMock Mock, TMockApp MockApp[TMock]] struct {
 	rwMutex sync.RWMutex
 }
 
-func NewBaseApp[TMock Mock, TMockApp MockApp[TMock]](app TMockApp, store *MockStore[TMock]) *BaseApp[TMock, TMockApp] {
+func NewBaseApp[TMock Mock, TMockApp MockApp[TMock]](app TMockApp, store MockRepository[TMock]) *BaseApp[TMock, TMockApp] {
 	return &BaseApp[TMock, TMockApp]{mockBag: &MockBag[TMock, TMockApp]{app: app, store: store}}
 }
 
@@ -131,11 +137,8 @@ func (app *BaseApp[TMock, TMockApp]) MustMock(builders ...Builder[TMock, TMockAp
 }
 
 // Hits returns the total matched request hits.
-func (app *BaseApp[TMock, TMockApp]) Hits() int {
-	app.rwMutex.RLock()
-	defer app.rwMutex.RUnlock()
-
-	hits := 0
+func (app *BaseApp[TMock, TMockApp]) Hits() int64 {
+	hits := int64(0)
 
 	for _, s := range app.mockBag.List() {
 		hits += s.Hits()
@@ -171,6 +174,7 @@ func (app *BaseApp[TMock, TMockApp]) Clean() {
 
 	for _, s := range app.mockBag.List() {
 		s.Clean()
+		s.Sync(context.Background())
 	}
 }
 
@@ -253,7 +257,7 @@ func (app *BaseApp[TMock, TMockApp]) AssertNotCalled(t TestingT) bool {
 
 // AssertNumberOfCalls asserts that the sum of matched request hits
 // is equal to the given expected value.
-func (app *BaseApp[TMock, TMockApp]) AssertNumberOfCalls(t TestingT, expected int) bool {
+func (app *BaseApp[TMock, TMockApp]) AssertNumberOfCalls(t TestingT, expected int64) bool {
 	t.Helper()
 
 	hits := app.Hits()
@@ -266,3 +270,12 @@ func (app *BaseApp[TMock, TMockApp]) AssertNumberOfCalls(t TestingT, expected in
 
 	return false
 }
+
+type baseApp struct {
+	BaseApp[*BaseMock, *baseApp]
+}
+
+func (a *baseApp) Hits() int64 { return 0 }
+func (a *baseApp) Enable()     {}
+func (a *baseApp) Disable()    {}
+func (a *baseApp) Clean()      {}

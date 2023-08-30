@@ -1,6 +1,7 @@
 package dzstd
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -8,68 +9,108 @@ import (
 
 func TestInMemoryStorage(t *testing.T) {
 	st := NewStore[*BaseMock]()
+	ctx := context.Background()
 
-	mock1 := &BaseMock{ID: "1", Name: "mock_1", Enabled: true, Priority: 0}
-	mock2 := &BaseMock{ID: "2", Name: "mock_2", Enabled: true, Priority: 1}
-	mock3 := &BaseMock{ID: "3", Name: "mock_3", Enabled: true, Priority: 2}
+	mock1 := &BaseMock{ID: "1", Name: "mock_1", enabled: true, Priority: 0}
+	mock2 := &BaseMock{ID: "2", Name: "mock_2", enabled: true, Priority: 1}
+	mock3 := &BaseMock{ID: "3", Name: "mock_3", enabled: true, Priority: 2}
 
-	st.Save(mock1)
-	st.Save(mock2)
-	st.Save(mock3)
+	err := st.Save(ctx, mock1)
+	require.NoError(t, err)
 
-	require.Equal(t, mock1, st.Get(mock1.ID))
+	err = st.Save(ctx, mock2)
+	require.NoError(t, err)
 
-	m := st.GetAll()[0]
+	err = st.Save(ctx, mock3)
+	require.NoError(t, err)
+
+	mock, err := st.Get(ctx, mock1.ID)
+	require.NoError(t, err)
+	require.Equal(t, mock1, mock)
+
+	mocks, err := st.GetAll(ctx)
+	require.NoError(t, err)
+
+	m := mocks[0]
 	require.Equal(t, m.ID, "1")
 	require.Equal(t, m.Name, "mock_1")
 
 	m.Disable()
 
-	mocks := st.GetEligible()
-	require.Len(t, mocks, 2)
+	eligible := make([]*BaseMock, 0)
+	done := make(chan struct{})
+	out, err := st.FindEligible(ctx, done)
+	for v := range out {
+		eligible = append(eligible, v)
+	}
 
-	mocks = st.GetAll()
-	require.Len(t, mocks, 3)
+	require.NoError(t, err)
+	require.Len(t, eligible, 2)
 
-	st.Delete("2")
-	mocks = st.GetAll()
-	require.Len(t, mocks, 2)
+	eligible, err = st.GetAll(ctx)
+	require.NoError(t, err)
+	require.Len(t, eligible, 3)
 
-	mocks = st.GetEligible()
-	require.Len(t, mocks, 1)
-	require.Equal(t, "3", mocks[0].ID)
+	err = st.Delete(ctx, "2")
+	require.NoError(t, err)
+	eligible, err = st.GetAll(ctx)
+	require.NoError(t, err)
+	require.Len(t, eligible, 2)
 
-	st.DeleteAll()
+	eligible = make([]*BaseMock, 0)
+	out, err = st.FindEligible(ctx, done)
+	for v := range out {
+		eligible = append(eligible, v)
+	}
 
-	mocks = st.GetAll()
+	require.NoError(t, err)
+	require.Len(t, eligible, 1)
+	require.Equal(t, "3", eligible[0].ID)
 
-	require.Len(t, mocks, 0)
+	err = st.DeleteAll(ctx)
+	require.NoError(t, err)
 
-	st.Save(&BaseMock{ID: "10", Name: "mock_ext_1", Enabled: true, Priority: 0, Source: "ext"})
-	st.Save(&BaseMock{ID: "11", Name: "mock_11", Enabled: true, Priority: 0})
+	eligible, err = st.GetAll(ctx)
+	require.NoError(t, err)
+	require.Len(t, eligible, 0)
 
-	require.Len(t, st.GetAll(), 2)
+	err = st.Save(ctx, &BaseMock{ID: "10", Name: "mock_ext_1", enabled: true, Priority: 0, Source: "ext"})
+	require.NoError(t, err)
+	err = st.Save(ctx, &BaseMock{ID: "11", Name: "mock_11", enabled: true, Priority: 0})
+	require.NoError(t, err)
 
-	st.DeleteExternal()
+	all, err := st.GetAll(ctx)
+	require.NoError(t, err)
+	require.Len(t, all, 2)
 
-	mocks = st.GetAll()
+	err = st.DeleteExternal(ctx)
+	require.NoError(t, err)
 
-	require.Len(t, mocks, 1)
-	require.Equal(t, "11", mocks[0].ID)
+	eligible, err = st.GetAll(ctx)
+	require.NoError(t, err)
+	require.Len(t, eligible, 1)
+	require.Equal(t, "11", eligible[0].ID)
 
-	st.DeleteAll()
+	err = st.DeleteAll(ctx)
+	require.NoError(t, err)
 
-	require.Len(t, st.GetAll(), 0)
+	all, err = st.GetAll(ctx)
+	require.NoError(t, err)
+	require.Len(t, all, 0)
 
-	st.DeleteExternal()
+	err = st.DeleteExternal(ctx)
+	require.NoError(t, err)
 }
 
 func TestDeleteExt(t *testing.T) {
+	ctx := context.Background()
 	st := NewStore[*BaseMock]()
-	st.Save(&BaseMock{ID: "10", Name: "mock_ext_1", Enabled: true, Priority: 0, Source: "ext"})
-	st.Save(&BaseMock{ID: "10", Name: "mock_ext_2", Enabled: true, Priority: 0, Source: "ext"})
 
-	st.DeleteExternal()
+	require.NoError(t, st.Save(ctx, &BaseMock{ID: "10", Name: "mock_ext_1", enabled: true, Priority: 0, Source: "ext"}))
+	require.NoError(t, st.Save(ctx, &BaseMock{ID: "10", Name: "mock_ext_2", enabled: true, Priority: 0, Source: "ext"}))
+	require.NoError(t, st.DeleteExternal(ctx))
 
-	require.Len(t, st.GetAll(), 0)
+	all, err := st.GetAll(ctx)
+	require.NoError(t, err)
+	require.Len(t, all, 0)
 }

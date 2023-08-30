@@ -167,7 +167,7 @@ func (b *mockBuilderFromFile) build(app *HTTPMockApp) (mock *HTTPMock, err error
 
 	b.builder.SetSource(b.filename)
 
-	return buildMockFromBytes(app, b.builder, content, ext)
+	return buildMockFromBytes(app, b.builder, content, ext, true)
 }
 
 type mockBuilderFromBytes struct {
@@ -187,7 +187,7 @@ func (b *mockBuilderFromBytes) Build(app *HTTPMockApp) (mock *HTTPMock, err erro
 		}
 	}()
 
-	mock, err = buildMockFromBytes(app, b.builder, b.bytes, b.ext)
+	mock, err = buildMockFromBytes(app, b.builder, b.bytes, b.ext, true)
 	if err != nil {
 		return nil, fmt.Errorf("mock: error building mock from byte array.\n%w", err)
 	}
@@ -275,17 +275,26 @@ func buildReply(vi *viper.Viper) (Reply, error) {
 	return res, nil
 }
 
-func buildMockFromBytes(app *HTTPMockApp, builder *HTTPMockBuilder, content []byte, ext string) (*HTTPMock, error) {
-	tmpl, err := template.New("").Parse(string(content))
-	if err != nil {
-		return nil, err
-	}
+func buildMockFromBytes(app *HTTPMockApp, builder *HTTPMockBuilder, content []byte, ext string, useTemplate bool) (*HTTPMock, error) {
+	var buf *bytes.Buffer
+	if useTemplate {
+		tmpl, err := template.New("").Parse(string(content))
+		if err != nil {
+			return nil, err
+		}
 
-	d := &mockFileData{App: &templateAppWrapper{app}}
-	buf := &bytes.Buffer{}
-	err = tmpl.Execute(buf, d)
-	if err != nil {
-		return nil, err
+		d := &mockFileData{App: &templateAppWrapper{app}}
+		buf = bufPool.Get().(*bytes.Buffer)
+		buf.Reset()
+
+		defer buf.Reset()
+
+		err = tmpl.Execute(buf, d)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		buf = bytes.NewBuffer(content)
 	}
 
 	loader := gojsonschema.NewBytesLoader(_mockJSONSchema)
@@ -310,7 +319,7 @@ func buildMockFromBytes(app *HTTPMockApp, builder *HTTPMockBuilder, content []by
 	// Setting defaults before reading the configuration file
 	vi.SetDefault(_fEnabled, true)
 
-	err = vi.ReadConfig(buf)
+	err := vi.ReadConfig(buf)
 	if err != nil {
 		return nil, err
 	}

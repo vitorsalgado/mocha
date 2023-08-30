@@ -32,22 +32,22 @@ func TestRace(t *testing.T) {
 
 	wg.Wait()
 
-	assert.Equal(t, (jobs*2)+2, m.Hits())
+	assert.EqualValues(t, (jobs*2)+2, m.Hits())
 }
 
 func TestMock(t *testing.T) {
 	m := newMock()
 
 	t.Run("should init enabled", func(t *testing.T) {
-		assert.True(t, m.Enabled)
+		assert.True(t, m.IsEnabled())
 	})
 
 	t.Run("should disable mock when calling .Disable()", func(t *testing.T) {
 		m.Disable()
-		assert.False(t, m.Enabled)
+		assert.False(t, m.IsEnabled())
 
 		m.Enable()
-		assert.True(t, m.Enabled)
+		assert.True(t, m.IsEnabled())
 	})
 
 	t.Run("should return called when it was hit", func(t *testing.T) {

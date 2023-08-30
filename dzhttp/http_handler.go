@@ -21,17 +21,9 @@ type topResponseWriter struct {
 	rw    http.ResponseWriter
 }
 
-func (w *topResponseWriter) Header() http.Header {
-	return w.rw.Header()
-}
-
-func (w *topResponseWriter) Write(p []byte) (int, error) {
-	return w.chain.Next(p)
-}
-
-func (w *topResponseWriter) WriteHeader(statusCode int) {
-	w.rw.WriteHeader(statusCode)
-}
+func (w *topResponseWriter) Header() http.Header         { return w.rw.Header() }
+func (w *topResponseWriter) Write(p []byte) (int, error) { return w.chain.Next(p) }
+func (w *topResponseWriter) WriteHeader(statusCode int)  { w.rw.WriteHeader(statusCode) }
 
 type mockHandler struct {
 	app       *HTTPMockApp
@@ -55,16 +47,26 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	h.lifecycle.OnRequest(reqValues)
 
-	mocks := h.app.storage.GetEligible()
-	description := &dzstd.Results{Buf: make([]string, 0, len(mocks))}
-	result := dzstd.FindMockForRequest(r.Context(), mocks,
-		&HTTPValueSelectorInput{r, parsedURL, r.URL.Query(), r.Form, parsedBody}, description)
+	results := &dzstd.Results{Buf: make([]string, 0)}
+	selectorInput := &HTTPValueSelectorInput{r, parsedURL, r.URL.Query(), r.Form, parsedBody}
+	result, err := dzstd.FindMockForRequest(
+		r.Context(),
+		h.app.storage,
+		func(mock *HTTPMock) []*dzstd.Expectation[*HTTPValueSelectorInput] { return mock.expectations },
+		selectorInput,
+		results,
+		&dzstd.FindOptions{FailFast: h.app.config.FailFast},
+	)
+	if err != nil {
+		h.lifecycle.OnError(reqValues, fmt.Errorf("http: error finding eligible mocks for request. %w", err))
+		return
+	}
 
 	// no mocks matched with the incoming request
 	// lets check if we need to proxy and record this request.
 	if !result.Pass {
 		if h.app.proxy == nil {
-			h.onNoMatches(w, reqValues, result, description)
+			h.onNoMatches(w, reqValues, result, results)
 			return
 		}
 
@@ -242,13 +244,17 @@ func (h *mockHandler) onNoMatches(w http.ResponseWriter, r *RequestValues, resul
 	defer bufPool.Put(buf)
 
 	buf.WriteString("REQUEST DID NOT MATCH\n")
+	buf.WriteString(r.RawRequest.Method)
+	buf.WriteString(" ")
+	buf.WriteString(r.URL.String())
+	buf.WriteString("\n\n")
 
 	if result.ClosestMatch != nil {
 		fmt.Fprintf(buf, "NEAREST: %s %s\n", result.ClosestMatch.GetID(), result.ClosestMatch.GetName())
 	}
 
 	if desc.Len() > 0 {
-		buf.WriteString("MISSES:\n")
+		fmt.Fprintf(buf, "MISSES(%d):\n", result.MismatchesCount)
 		buf.WriteString(desc.String())
 	}
 

@@ -1,6 +1,7 @@
 package dzhttp
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"net/http"
@@ -14,9 +15,11 @@ func TestFileLoader_Load(t *testing.T) {
 	loader := &fileLoader{}
 
 	err := loader.Load(app)
+	all, err := app.storage.GetAll(context.Background())
+	require.NoError(t, err)
 
 	require.NoError(t, err)
-	require.Equal(t, 2, len(app.storage.GetAll()))
+	require.Equal(t, 2, len(all))
 }
 
 func TestFileLoader_LoadWithError(t *testing.T) {

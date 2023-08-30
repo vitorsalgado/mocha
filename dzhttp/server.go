@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/go-chi/chi/v5"
@@ -58,8 +59,13 @@ func newServer() Server {
 }
 
 func (s *httpTestServer) Setup(app *HTTPMockApp, handler http.Handler) error {
+	admPath := app.config.AdminPath
+	if !strings.HasPrefix(admPath, "/") {
+		admPath = "/" + admPath
+	}
+
 	r := chi.NewRouter()
-	r.Mount(app.config.AdminPath, app.admin.Init())
+	r.Mount(admPath, app.admin.Init())
 	r.Handle("/*", handler)
 
 	s.app = app

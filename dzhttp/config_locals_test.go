@@ -28,6 +28,7 @@ func TestLocalsUsingDifferentExtensions(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			cl := UseConfig(tc.filename, "testdata/config_locals/diff_ext")
 			config := &Config{}

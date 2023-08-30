@@ -1,6 +1,7 @@
 package dzhttp
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -44,7 +45,7 @@ type HTTPMockApp struct {
 
 	config             *Config
 	server             Server
-	storage            *dzstd.MockStore[*HTTPMock]
+	storage            dzstd.MockRepository[*HTTPMock]
 	scenarioStore      *mfeat.ScenarioStore
 	cancel             context.CancelFunc
 	requestBodyParsers []RequestBodyParser
@@ -60,6 +61,7 @@ type HTTPMockApp struct {
 	logger             *zerolog.Logger
 	startOnce          sync.Once
 	random             *rand.Rand
+	admin              *Admin
 }
 
 // NewAPI creates a new HTTPMockApp mock server with the given configurations.
@@ -174,6 +176,7 @@ func NewAPI(config ...Configurer) *HTTPMockApp {
 	app.requestBodyParsers = parsers
 	app.extensions = make(map[string]dzstd.Extension)
 	app.colorizer = colors
+	app.admin = &Admin{app, store}
 
 	if app.config.Forward != nil {
 		app.MustMock(Request().
@@ -355,44 +358,45 @@ func (app *HTTPMockApp) Data() map[string]any {
 	return app.data
 }
 
-// PrintConfig prints key configurations using the given io.Writer.
-func (app *HTTPMockApp) PrintConfig(w io.Writer) error {
-	s := strings.Builder{}
+// DescribeConfig describes key configurations of the currrent HTTPMockApp instance.
+func (app *HTTPMockApp) DescribeConfig() string {
+	buf := bufPool.Get().(*bytes.Buffer)
+	buf.Reset()
+
+	defer putBuf(buf)
 
 	if app.Name() != "" {
-		s.WriteString("Server Name: ")
-		s.WriteString(app.Name())
-		s.WriteString("\n")
+		buf.WriteString("Server Name: ")
+		buf.WriteString(app.Name())
+		buf.WriteString("\n")
 	}
 
-	s.WriteString("Mock Search Patterns: ")
-	s.WriteString(strings.Join(app.config.MockFileSearchPatterns, ", "))
-	s.WriteString("\n")
+	buf.WriteString("Mock Search Patterns: ")
+	buf.WriteString(strings.Join(app.config.MockFileSearchPatterns, ", "))
+	buf.WriteString("\n")
 
-	s.WriteString("Log: ")
-	s.WriteString(app.config.LogVerbosity.String())
-	s.WriteString("\n")
+	buf.WriteString("Log: ")
+	buf.WriteString(app.config.LogVerbosity.String())
+	buf.WriteString("\n")
 
 	if app.config.Proxy != nil {
-		s.WriteString("Reverse Proxy: ")
-		s.WriteString("enabled")
-		s.WriteString("\n")
+		buf.WriteString("Reverse Proxy: ")
+		buf.WriteString("enabled")
+		buf.WriteString("\n")
 	}
 
 	if app.config.Record != nil {
-		s.WriteString("Recording: ")
-		s.WriteString(app.config.Record.SaveDir)
-		s.WriteString("\n")
+		buf.WriteString("Recording: ")
+		buf.WriteString(app.config.Record.SaveDir)
+		buf.WriteString("\n")
 	}
 
-	s.WriteString("\n")
-	s.WriteString("Listening: ")
-	s.WriteString(app.URL())
-	s.WriteString("\n")
+	buf.WriteString("\n")
+	buf.WriteString("Listening: ")
+	buf.WriteString(app.URL())
+	buf.WriteString("\n")
 
-	_, err := fmt.Fprint(w, s.String())
-
-	return err
+	return buf.String()
 }
 
 // --

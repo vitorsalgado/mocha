@@ -291,6 +291,7 @@ func TestSimpleJSONValues(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			scoped := m.MustMock(Postf("/test").Body(JSONPath("$", Eq(tc.value))).Reply(Status(tc.status)))
 

@@ -172,17 +172,18 @@ func (in *Interceptors) StreamInterceptor(
 	}
 
 	rawBody := string(b)
-	mocks := in.app.storage.GetAll()
-	wrappedMocks := make([]*GRPCStreamMock, len(mocks))
-	for i, v := range mocks {
-		wrappedMocks[i] = &GRPCStreamMock{v}
+	description := dzstd.Results{Buf: make([]string, 0)}
+	result, err := dzstd.FindMockForRequest(
+		stream.Context(),
+		in.app.storage,
+		func(m *GRPCMock) []*dzstd.Expectation[*StreamValueSelectorIn] { return m.streamExpectations },
+		&StreamValueSelectorIn{RequestMessage: rawBody, Info: info},
+		&description,
+		&dzstd.FindOptions{FailFast: false},
+	)
+	if err != nil {
+		return nil
 	}
-
-	description := dzstd.Results{Buf: make([]string, 0, len(mocks))}
-	result := dzstd.FindMockForRequest(stream.Context(), wrappedMocks, &StreamValueSelectorIn{
-		RequestMessage: rawBody,
-		Info:           info,
-	}, &description)
 
 	if !result.Pass {
 		return status.Error(codes.NotFound, "stream: request was not matched with any mock")

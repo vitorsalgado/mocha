@@ -65,6 +65,7 @@ func TestPriority_DefaultIsZero(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.url, func(t *testing.T) {
 			res, err := httpClient.Get(m.URL() + tc.url)
 
@@ -100,6 +101,7 @@ func TestPriority_LowestShouldBeServed(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.url, func(t *testing.T) {
 			res, err := httpClient.Get(m.URL() + tc.url)
 

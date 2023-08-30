@@ -1,46 +1,69 @@
 package dzstd
 
 import (
-	"reflect"
+	"context"
 	"strings"
+	"sync"
 )
 
-// Scope holds keeps a reference to a group of mocks.
+// Scope keeps a reference to a group of mocks.
 // With a Scope instance, it is possible to verify if one or a group of mocks were called,
 // how many times they were called and so on.
 type Scope[TMock Mock] struct {
-	store *MockStore[TMock]
-	ids   map[string]struct{}
+	mocks      map[string]TMock
+	del        map[string]struct{}
+	repository MockRepository[TMock]
+	rwmu       sync.RWMutex
 }
 
-func NewScope[TMock Mock](store *MockStore[TMock], ids []string) *Scope[TMock] {
-	datum := make(map[string]struct{}, len(ids))
-	for _, id := range ids {
-		datum[id] = struct{}{}
+func NewScope[TMock Mock](repository MockRepository[TMock], mocks []TMock) *Scope[TMock] {
+	scoped := &Scope[TMock]{mocks: make(map[string]TMock, len(mocks)), del: make(map[string]struct{}), repository: repository}
+	for _, m := range mocks {
+		scoped.mocks[m.GetID()] = m
 	}
 
-	return &Scope[TMock]{store, datum}
+	return scoped
+}
+
+func (s *Scope[TMock]) IDs() []string {
+	s.rwmu.RLock()
+	defer s.rwmu.RUnlock()
+
+	ids := make([]string, 0, len(s.mocks))
+	for _, id := range s.mocks {
+		ids = append(ids, id.GetID())
+	}
+
+	return ids
+}
+
+func (s *Scope[TMock]) Exists(id string) bool {
+	s.rwmu.RLock()
+	defer s.rwmu.RUnlock()
+
+	_, exists := s.mocks[id]
+	return exists
 }
 
 // Get returns a Mock with the given ID.
 func (s *Scope[TMock]) Get(id string) TMock {
-	_, ok := s.ids[id]
-	if !ok {
-		var result TMock
-		return result
-	}
+	s.rwmu.RLock()
+	defer s.rwmu.RUnlock()
 
-	return s.store.Get(id)
+	return s.mocks[id]
 }
 
 // GetAll returns all Mock instances kept in this Scope.
 func (s *Scope[TMock]) GetAll() []TMock {
-	mocks := make([]TMock, 0, len(s.ids))
+	s.rwmu.RLock()
+	defer s.rwmu.RUnlock()
 
-	for id := range s.ids {
-		if m := s.store.Get(id); !reflect.ValueOf(m).IsZero() {
-			mocks = append(mocks, m)
-		}
+	mocks := make([]TMock, len(s.mocks))
+	i := 0
+
+	for _, m := range s.mocks {
+		mocks[i] = m
+		i++
 	}
 
 	return mocks
@@ -48,9 +71,12 @@ func (s *Scope[TMock]) GetAll() []TMock {
 
 // GetPending returns all Mock instances that were not called at least once.
 func (s *Scope[TMock]) GetPending() []TMock {
-	mocks := make([]TMock, 0, len(s.ids))
+	s.rwmu.RLock()
+	defer s.rwmu.RUnlock()
 
-	for _, m := range s.GetAll() {
+	mocks := make([]TMock, 0, len(s.mocks))
+
+	for _, m := range s.mocks {
 		if !m.HasBeenCalled() {
 			mocks = append(mocks, m)
 		}
@@ -61,9 +87,12 @@ func (s *Scope[TMock]) GetPending() []TMock {
 
 // GetCalled returns all Mock instances that were called.
 func (s *Scope[TMock]) GetCalled() []TMock {
-	mocks := make([]TMock, 0, len(s.ids))
+	s.rwmu.RLock()
+	defer s.rwmu.RUnlock()
 
-	for _, m := range s.GetAll() {
+	mocks := make([]TMock, 0, len(s.mocks))
+
+	for _, m := range s.mocks {
 		if m.HasBeenCalled() {
 			mocks = append(mocks, m)
 		}
@@ -74,6 +103,9 @@ func (s *Scope[TMock]) GetCalled() []TMock {
 
 // HasBeenCalled returns true if all Scope Mock instances were called at least once.
 func (s *Scope[TMock]) HasBeenCalled() bool {
+	s.rwmu.RLock()
+	defer s.rwmu.RUnlock()
+
 	for _, m := range s.GetAll() {
 		if !m.HasBeenCalled() {
 			return false
@@ -111,33 +143,65 @@ func (s *Scope[TMock]) Enable() {
 
 // Delete removes a by ID, as long as it is scoped by this instance.
 func (s *Scope[TMock]) Delete(id string) bool {
-	_, ok := s.ids[id]
+	s.rwmu.Lock()
+	defer s.rwmu.Unlock()
+
+	_, ok := s.mocks[id]
 	if !ok {
 		return false
 	}
 
-	s.store.Delete(id)
-	delete(s.ids, id)
+	delete(s.mocks, id)
+	s.del[id] = struct{}{}
 
 	return true
 }
 
 // Clean all scoped Mock instances.
 func (s *Scope[TMock]) Clean() {
-	for id := range s.ids {
-		s.store.Delete(id)
-		delete(s.ids, id)
+	for id := range s.mocks {
+		s.Delete(id)
 	}
 }
 
 // Hits returns the sum of the Scope store calls.
-func (s *Scope[TMock]) Hits() int {
-	total := 0
+func (s *Scope[TMock]) Hits() int64 {
+	total := int64(0)
 	for _, m := range s.GetAll() {
 		total += m.Hits()
 	}
 
 	return total
+}
+
+func (s *Scope[TMock]) Sync(ctx context.Context) error {
+	s.rwmu.RLock()
+	defer s.rwmu.RUnlock()
+
+	mocks := make([]TMock, 0, len(s.mocks))
+	for _, v := range s.mocks {
+		mocks = append(mocks, v)
+	}
+
+	if err := s.repository.Save(ctx, mocks...); err != nil {
+		return err
+	}
+
+	ids := make([]string, 0, len(s.mocks))
+	for k := range s.del {
+		ids = append(ids, k)
+	}
+
+	for _, id := range ids {
+		err := s.repository.Delete(ctx, id)
+		if err != nil {
+			return err
+		}
+
+		delete(s.del, id)
+	}
+
+	return nil
 }
 
 // AssertCalled reports an error if there are still pending Mock instances.
@@ -192,7 +256,7 @@ func (s *Scope[TMock]) AssertNotCalled(t TestingT) bool {
 
 // AssertNumberOfCalls asserts that the sum of matched request hits
 // is equal to the given expected value.
-func (s *Scope[TMock]) AssertNumberOfCalls(t TestingT, expected int) bool {
+func (s *Scope[TMock]) AssertNumberOfCalls(t TestingT, expected int64) bool {
 	t.Helper()
 
 	hits := s.Hits()
