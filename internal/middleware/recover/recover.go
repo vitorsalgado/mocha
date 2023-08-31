@@ -21,8 +21,8 @@ func Recover(next http.Handler) http.Handler {
 
 				w.Header().Set(headers.ContentType, mimetypes.TextPlain)
 				w.WriteHeader(http.StatusTeapot)
-				w.Write([]byte(fmt.Sprintf("%s - an unexpected error has occurred", http.StatusText(http.StatusTeapot))))
-				w.Write([]byte(fmt.Sprintf("%v", recovery)))
+				_, _ = w.Write([]byte(fmt.Sprintf("%s - an unexpected error has occurred", http.StatusText(http.StatusTeapot))))
+				_, _ = w.Write([]byte(fmt.Sprintf("%v", recovery)))
 			}
 		}()
 

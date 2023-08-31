@@ -135,7 +135,10 @@ func (h *mockHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if res.Body != nil {
 		scanner := bufio.NewScanner(res.Body)
 		for scanner.Scan() {
-			w.Write(scanner.Bytes())
+			_, err := w.Write(scanner.Bytes())
+			if err != nil {
+				h.t.Logf("error writing reponse body: error=%v", err.Error())
+			}
 		}
 
 		if scanner.Err() != nil {
@@ -192,7 +195,7 @@ func respondNonMatched(w http.ResponseWriter, r *http.Request, result *findResul
 
 	w.Header().Add(headers.ContentType, mimetypes.TextPlain)
 	w.WriteHeader(http.StatusTeapot)
-	w.Write([]byte(builder.String()))
+	_, _ = w.Write([]byte(builder.String()))
 }
 
 func respondError(w http.ResponseWriter, r *http.Request, evt *hooks.Emitter, err error) {
@@ -201,6 +204,6 @@ func respondError(w http.ResponseWriter, r *http.Request, evt *hooks.Emitter, er
 	w.Header().Add(headers.ContentType, mimetypes.TextPlain)
 	w.WriteHeader(http.StatusTeapot)
 
-	w.Write([]byte("Request did not match. An error occurred.\n"))
-	w.Write([]byte(fmt.Sprintf("%v", err)))
+	_, _ = w.Write([]byte("Request did not match. An error occurred.\n"))
+	_, _ = w.Write([]byte(fmt.Sprintf("%v", err)))
 }

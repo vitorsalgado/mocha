@@ -23,7 +23,10 @@ func TestForward(t *testing.T) {
 			assert.Equal(t, "proxied", r.Header.Get("x-proxy"))
 
 			w.WriteHeader(http.StatusCreated)
-			w.Write([]byte("hello world"))
+			_, err := w.Write([]byte("hello world"))
+			if err != nil {
+				t.Fatal(err)
+			}
 		}))
 
 		defer dest.Close()
@@ -61,7 +64,7 @@ func TestForward(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			w.Write(b)
+			_, _ = w.Write(b)
 		}))
 
 		defer dest.Close()

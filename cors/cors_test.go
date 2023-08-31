@@ -19,7 +19,10 @@ func TestCORS(t *testing.T) {
 	handler := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("content-type", "text/plain")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(msg))
+		_, err := w.Write([]byte(msg))
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	t.Run("should allow request", func(t *testing.T) {

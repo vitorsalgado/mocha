@@ -29,7 +29,10 @@ func TestForward(t *testing.T) {
 		}
 
 		w.WriteHeader(http.StatusOK)
-		w.Write(b)
+		_, err = w.Write(b)
+		if err != nil {
+			t.Fatal(err)
+		}
 	}))
 
 	defer dest.Close()
