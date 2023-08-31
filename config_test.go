@@ -110,7 +110,10 @@ func TestConfig(t *testing.T) {
 					w.Header().Add("intercepted", "true")
 					w.Header().Add(headers.ContentType, mimetypes.TextPlain)
 					w.WriteHeader(http.StatusBadRequest)
-					w.Write([]byte(msg))
+					_, err := w.Write([]byte(msg))
+					if err != nil {
+						log.Fatal(err)
+					}
 				})
 		}
 

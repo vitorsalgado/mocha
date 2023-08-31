@@ -20,7 +20,10 @@ func TestMiddlewaresComposition(t *testing.T) {
 		w.Header().Add("x-two", r.Header.Get("x-two"))
 		w.Header().Add("content-type", "text/plain")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(msg))
+		_, err := w.Write([]byte(msg))
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	ts := httptest.NewServer(Compose(one, two, recover.Recover).Root(http.HandlerFunc(fn)))
