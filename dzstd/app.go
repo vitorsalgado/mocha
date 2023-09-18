@@ -42,19 +42,19 @@ type MockApp[TMock Mock] interface {
 	Hits() int64
 	Enable()
 	Disable()
-	Clean()
+	Clean() error
 }
 
 type MockBag[TMock Mock, TMockApp MockApp[TMock]] struct {
-	rwMutex sync.RWMutex
-	app     TMockApp
-	store   MockRepository[TMock]
-	scopes  []*Scope[TMock]
+	rwm        sync.RWMutex
+	app        TMockApp
+	repository MockRepository[TMock]
+	scopes     []*Scope[TMock]
 }
 
 func (a *MockBag[TMock, TMockApp]) Add(builders ...Builder[TMock, TMockApp]) (*Scope[TMock], error) {
-	a.rwMutex.Lock()
-	defer a.rwMutex.Unlock()
+	a.rwm.Lock()
+	defer a.rwm.Unlock()
 
 	added := make([]TMock, len(builders))
 
@@ -66,33 +66,33 @@ func (a *MockBag[TMock, TMockApp]) Add(builders ...Builder[TMock, TMockApp]) (*S
 
 		mock.Prepare()
 
-		if err := a.store.Save(context.Background(), mock); err != nil {
+		if err := a.repository.Save(context.Background(), mock); err != nil {
 			return nil, err
 		}
 
 		added[i] = mock
 	}
 
-	scope := NewScope[TMock](a.store, added)
+	scope := NewScope[TMock](a.repository, added)
 	a.scopes = append(a.scopes, scope)
 
 	return scope, nil
 }
 
 func (a *MockBag[TMock, TMockApp]) List() []*Scope[TMock] {
-	a.rwMutex.RLock()
-	defer a.rwMutex.RUnlock()
+	a.rwm.RLock()
+	defer a.rwm.RUnlock()
 
 	return a.scopes
 }
 
 type BaseApp[TMock Mock, TMockApp MockApp[TMock]] struct {
 	mockBag *MockBag[TMock, TMockApp]
-	rwMutex sync.RWMutex
+	rwm     sync.RWMutex
 }
 
-func NewBaseApp[TMock Mock, TMockApp MockApp[TMock]](app TMockApp, store MockRepository[TMock]) *BaseApp[TMock, TMockApp] {
-	return &BaseApp[TMock, TMockApp]{mockBag: &MockBag[TMock, TMockApp]{app: app, store: store}}
+func NewBaseApp[TMock Mock, TMockApp MockApp[TMock]](app TMockApp, repo MockRepository[TMock]) *BaseApp[TMock, TMockApp] {
+	return &BaseApp[TMock, TMockApp]{mockBag: &MockBag[TMock, TMockApp]{app: app, repository: repo}}
 }
 
 // Mock adds one or multiple request mocks.
@@ -108,8 +108,8 @@ func NewBaseApp[TMock Mock, TMockApp MockApp[TMock]](app TMockApp, store MockRep
 //
 //	assert.True(txtTemplate, scoped.HasBeenCalled())
 func (app *BaseApp[TMock, TMockApp]) Mock(builders ...Builder[TMock, TMockApp]) (*Scope[TMock], error) {
-	app.rwMutex.Lock()
-	defer app.rwMutex.Unlock()
+	app.rwm.Lock()
+	defer app.rwm.Unlock()
 
 	return app.mockBag.Add(builders...)
 }
@@ -149,8 +149,8 @@ func (app *BaseApp[TMock, TMockApp]) Hits() int64 {
 
 // Enable enables all mocks.
 func (app *BaseApp[TMock, TMockApp]) Enable() {
-	app.rwMutex.Lock()
-	defer app.rwMutex.Unlock()
+	app.rwm.Lock()
+	defer app.rwm.Unlock()
 
 	for _, scoped := range app.mockBag.List() {
 		scoped.Enable()
@@ -159,8 +159,8 @@ func (app *BaseApp[TMock, TMockApp]) Enable() {
 
 // Disable disables all mocks.
 func (app *BaseApp[TMock, TMockApp]) Disable() {
-	app.rwMutex.Lock()
-	defer app.rwMutex.Unlock()
+	app.rwm.Lock()
+	defer app.rwm.Unlock()
 
 	for _, scoped := range app.mockBag.List() {
 		scoped.Disable()
@@ -168,14 +168,18 @@ func (app *BaseApp[TMock, TMockApp]) Disable() {
 }
 
 // Clean removes all scoped mocks.
-func (app *BaseApp[TMock, TMockApp]) Clean() {
-	app.rwMutex.Lock()
-	defer app.rwMutex.Unlock()
+func (app *BaseApp[TMock, TMockApp]) Clean() error {
+	app.rwm.Lock()
+	defer app.rwm.Unlock()
 
-	for _, s := range app.mockBag.List() {
-		s.Clean()
-		s.Sync(context.Background())
+	for i, s := range app.mockBag.List() {
+		err := s.Clean(context.Background())
+		if err != nil {
+			return fmt.Errorf("error cleaning mocks from scope %d. %w", i, err)
+		}
 	}
+
+	return nil
 }
 
 // --
@@ -275,7 +279,7 @@ type baseApp struct {
 	BaseApp[*BaseMock, *baseApp]
 }
 
-func (a *baseApp) Hits() int64 { return 0 }
-func (a *baseApp) Enable()     {}
-func (a *baseApp) Disable()    {}
-func (a *baseApp) Clean()      {}
+func (a *baseApp) Hits() int64  { return 0 }
+func (a *baseApp) Enable()      {}
+func (a *baseApp) Disable()     {}
+func (a *baseApp) Clean() error { return nil }

@@ -38,7 +38,7 @@ func (s *InMemMockStore[TMock]) FindEligible(_ context.Context, done chan struct
 	copy(mocks, s.data)
 	s.rwMutex.RUnlock()
 
-	out := make(chan TMock)
+	out := make(chan TMock, len(mocks))
 	go func(mocks []TMock) {
 		defer close(out)
 		for _, mock := range mocks {

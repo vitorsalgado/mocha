@@ -314,6 +314,8 @@ func TestMochaConcurrency(t *testing.T) {
 	m.Close()
 
 	wg.Wait()
+
+	t.Log("done")
 }
 
 func TestMochaConcurrentRequests(t *testing.T) {

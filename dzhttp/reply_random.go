@@ -58,7 +58,7 @@ func (rep *RandomReply) beforeBuild(_ *HTTPMockApp) error {
 	return nil
 }
 
-// Build builds a response stub randomly based on previously added Reply implementations.
+// Build builds a response randomly based on previously added replies.
 func (rep *RandomReply) Build(w http.ResponseWriter, r *RequestValues) (*MockedResponse, error) {
 	_randomMu.Lock()
 	defer _randomMu.Unlock()

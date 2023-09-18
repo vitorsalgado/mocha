@@ -3,8 +3,10 @@ package dzgrpc
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
@@ -53,6 +55,9 @@ func (in *Interceptors) UnaryInterceptor(
 		&description,
 		&dzstd.FindOptions{FailFast: false},
 	)
+	if err != nil {
+		return nil, status.Error(codes.Internal, fmt.Errorf("unary: error finding mock for request: %w", err).Error())
+	}
 
 	if !result.Pass {
 		return nil, interceptError("unary: request was not matched with any mock")
@@ -109,7 +114,7 @@ func (u *BuiltInUnaryReply) Message(msg any) *BuiltInUnaryReply {
 	return u
 }
 
-func (u *BuiltInUnaryReply) Build(ctx context.Context, rv *UnaryRequestValues) (any, error) {
+func (u *BuiltInUnaryReply) Build(ctx context.Context, _ *UnaryRequestValues) (any, error) {
 	err := grpc.SendHeader(ctx, u.response.Header)
 	if err != nil {
 		return nil, err

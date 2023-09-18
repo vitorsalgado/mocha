@@ -182,7 +182,7 @@ func (in *Interceptors) StreamInterceptor(
 		&dzstd.FindOptions{FailFast: false},
 	)
 	if err != nil {
-		return nil
+		return status.Error(codes.Internal, fmt.Errorf("stream: error finding mock for request: %w", err).Error())
 	}
 
 	if !result.Pass {

@@ -26,7 +26,9 @@ build: ## build binaries
 
 .PHONY: test
 test: ## run tests
-	@go test -timeout 60000ms -race -v ./... -race
+	@go test -timeout 60000ms -race -v ./...
+test-fail: ## run tests and print the name of failed ones
+	@go test -timeout 60000ms -race -v ./... | tee /dev/stderr | rg FAIL: | sed 's/^--- FAIL: //' | sed 's/ ([[:digit:]]*.[[:digit:]]*s)//'
 
 .PHONY: test-ci
 test-ci: ## run tests with code coverage and generate reports

@@ -55,7 +55,7 @@ func NewGRPC(config ...dzstd.Configurer[*Config]) *GRPCMockApp {
 		srv.RegisterService(conf.ServiceDesc, conf.Service)
 	}
 
-	app.BaseApp = dzstd.NewBaseApp(app, store)
+	app.BaseApp = dzstd.NewBaseApp[*GRPCMock, *GRPCMockApp](app, store)
 	app.storage = store
 	app.config = conf
 	app.server = srv

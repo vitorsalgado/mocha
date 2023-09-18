@@ -67,5 +67,5 @@ func (a *Admin) get(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add(httpval.HeaderContentType, httpval.MIMEApplicationCharsetUTF8)
 	w.WriteHeader(http.StatusOK)
 
-	json.NewEncoder(w).Encode(mock.Describe())
+	_ = json.NewEncoder(w).Encode(mock.Describe())
 }

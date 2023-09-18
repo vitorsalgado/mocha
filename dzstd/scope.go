@@ -158,10 +158,12 @@ func (s *Scope[TMock]) Delete(id string) bool {
 }
 
 // Clean all scoped Mock instances.
-func (s *Scope[TMock]) Clean() {
+func (s *Scope[TMock]) Clean(ctx context.Context) error {
 	for id := range s.mocks {
 		s.Delete(id)
 	}
+
+	return s.Sync(ctx)
 }
 
 // Hits returns the sum of the Scope store calls.

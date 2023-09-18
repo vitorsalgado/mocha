@@ -1,6 +1,7 @@
 package dzstd_test
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"testing"
@@ -25,7 +26,10 @@ func TestScoped(t *testing.T) {
 	m2 := newTestMock()
 	m3 := newTestMock()
 
-	scoped := dzstd.NewScope(nil, []*testMock{m1, m2, m3})
+	repo := dzstd.NewStore[*testMock]()
+	repo.Save(context.Background(), m1, m2, m3)
+
+	scoped := dzstd.NewScope(repo, []*testMock{m1, m2, m3})
 
 	require.Equal(t, 3, len(scoped.GetAll()))
 	require.Equal(t, m1, scoped.Get(m1.GetID()))
@@ -68,7 +72,9 @@ func TestScoped(t *testing.T) {
 	})
 
 	t.Run("should clean all store associated with NewScope when calling .Clean()", func(t *testing.T) {
-		scoped.Clean()
+		err := scoped.Clean(context.Background())
+		require.NoError(t, err)
+
 		require.Equal(t, 0, len(scoped.GetPending()))
 		require.True(t, scoped.AssertNumberOfCalls(t, 0))
 		require.False(t, scoped.IsPending())

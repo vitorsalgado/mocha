@@ -29,7 +29,7 @@ func TestCallbacks(t *testing.T) {
 				require.NotNil(t, input.URL)
 				require.NotNil(t, input.Mock)
 				require.NotNil(t, input.RawRequest)
-				require.NotNil(t, input.Stub)
+				require.NotNil(t, input.MockedResponse)
 				require.NotNil(t, input.ParsedBody)
 				require.Equal(t, http.MethodPost, input.RawRequest.Method)
 				require.Equal(t, "/test", input.URL.Path)

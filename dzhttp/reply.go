@@ -372,16 +372,16 @@ func (rep *StdReply) beforeBuild(app *HTTPMockApp) error {
 }
 
 // Build builds a MockedResponse based on StdReply definition.
-func (rep *StdReply) Build(w http.ResponseWriter, r *RequestValues) (stub *MockedResponse, err error) {
-	stub, err = rep.build(w, r)
+func (rep *StdReply) Build(w http.ResponseWriter, r *RequestValues) (res *MockedResponse, err error) {
+	res, err = rep.build(w, r)
 	if err != nil {
 		return nil, fmt.Errorf("reply: %w", err)
 	}
 
-	return stub, nil
+	return res, nil
 }
 
-func (rep *StdReply) build(_ http.ResponseWriter, r *RequestValues) (stub *MockedResponse, err error) {
+func (rep *StdReply) build(_ http.ResponseWriter, r *RequestValues) (res *MockedResponse, err error) {
 	if rep.delayedErr != nil {
 		return nil, rep.delayedErr
 	}

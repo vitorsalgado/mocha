@@ -15,6 +15,8 @@ func TestFileLoader_Load(t *testing.T) {
 	loader := &fileLoader{}
 
 	err := loader.Load(app)
+	require.NoError(t, err)
+
 	all, err := app.storage.GetAll(context.Background())
 	require.NoError(t, err)
 

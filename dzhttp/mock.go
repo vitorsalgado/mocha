@@ -61,8 +61,8 @@ type CallbackInput struct {
 	// Mock is the matched Mock for the current HTTP request.
 	Mock *HTTPMock
 
-	// Stub is the HTTP response Stub served.
-	Stub *MockedResponse
+	// MockedResponse is the HTTP response MockedResponse served.
+	MockedResponse *MockedResponse
 }
 
 // Callback defines the contract for an action that will be executed after serving a mocked HTTP response.
@@ -85,8 +85,8 @@ type PostActionInput struct {
 	// Mock is the matched Mock for the current HTTP request.
 	Mock *HTTPMock
 
-	// Stub is the HTTP response Stub served.
-	Stub *MockedResponse
+	// MockedResponse is the HTTP response MockedResponse served.
+	MockedResponse *MockedResponse
 
 	// Args allow passing custom arguments to a Callback.
 	Args any

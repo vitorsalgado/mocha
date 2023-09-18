@@ -13,7 +13,7 @@ type FunctionReply struct {
 	fn func(http.ResponseWriter, *RequestValues) (*MockedResponse, error)
 }
 
-// Function returns a FunctionReply that builds a response stub using the given function.
+// Function returns a FunctionReply that builds a response using the given function.
 func Function(fn func(http.ResponseWriter, *RequestValues) (*MockedResponse, error)) *FunctionReply {
 	return &FunctionReply{fn: fn}
 }

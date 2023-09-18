@@ -2,6 +2,7 @@ package dzhttp
 
 import (
 	"compress/gzip"
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -293,7 +294,7 @@ func TestForward(t *testing.T) {
 
 		require.Equal(t, StatusNoMatch, res.StatusCode)
 
-		s2.Clean()
+		s2.Clean(context.Background())
 		s2 = m.MustMock(Getf("/test").Reply(From(target.URL()).SkipSSLVerify()))
 
 		res, err = httpClient.Get(m.URL() + "/test")
