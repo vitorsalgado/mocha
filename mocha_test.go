@@ -402,3 +402,34 @@ func TestMocha_Silently(t *testing.T) {
 	assert.Equal(t, 201, res.StatusCode)
 	assert.Equal(t, string(body), "hello world")
 }
+
+func TestDelete(t *testing.T) {
+	m := New(t)
+	m.Start()
+
+	scoped := m.AddMocks(
+		Delete(expect.URLPath("/test")).
+			Header("test", expect.ToEqual("hello")).
+			Query("filter", expect.ToEqual("all")).
+			Reply(reply.
+				Created().
+				BodyString("deleted")))
+
+	req, _ := http.NewRequest(http.MethodDelete, m.URL()+"/test?filter=all", http.NoBody)
+	req.Header.Add("test", "hello")
+	req.Header.Add("Content-Type", "application/json")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	assert.True(t, scoped.Called())
+	assert.Equal(t, 201, res.StatusCode)
+	assert.Equal(t, string(body), "deleted")
+}

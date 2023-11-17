@@ -25,7 +25,7 @@ type RequestBodyParser interface {
 // parseRequestBody tests given parsers until it finds one that can parse the request body.
 // User provided RequestBodyParser takes precedence.
 func parseRequestBody(r *http.Request, parsers []RequestBodyParser) (any, error) {
-	if r.Body != nil && r.Method != http.MethodGet && r.Method != http.MethodHead {
+	if r.Body != nil && r.Method != http.MethodGet && r.Method != http.MethodHead && r.Method != http.MethodDelete {
 		b, err := io.ReadAll(r.Body)
 		if err != nil {
 			return nil, err
