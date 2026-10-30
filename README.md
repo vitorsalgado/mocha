@@ -1,3 +1,6 @@
+> [!WARNING]
+> This repository is no longer maintained. Use [vlatte](https://github.com/caffeine-projects/vlatte) instead.
+
 <h1 id="mocha-top" align="center">Mocha</h1>
 
 <div align="center">
